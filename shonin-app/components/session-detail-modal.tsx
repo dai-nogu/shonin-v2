@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { X, Clock, Calendar, MapPin, Star, Tag, MessageSquare, Target, TrendingUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,22 @@ interface SessionDetailModalProps {
 }
 
 export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }: SessionDetailModalProps) {
+  // モーダルが開いている間は背景スクロールを無効にする
+  useEffect(() => {
+    if (isOpen) {
+      // モーダルが開いた時：背景スクロールを無効化
+      document.body.style.overflow = 'hidden'
+    } else {
+      // モーダルが閉じた時：背景スクロールを復元
+      document.body.style.overflow = 'unset'
+    }
+
+    // クリーンアップ：コンポーネントがアンマウントされる時にスクロールを復元
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
   if (!isOpen || !session) return null
 
   const formatDuration = (seconds: number) => {

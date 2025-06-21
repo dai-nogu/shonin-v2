@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye } from "lucide-react"
+import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmStartModal } from "./confirm-start-modal"
 import { SessionDetailModal } from "./session-detail-modal"
+import { AllActivitiesModal } from "./all-activities-modal"
 import type { SessionData, CompletedSession } from "./time-tracker"
 
 interface QuickStartActivity {
@@ -36,6 +37,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [activeTab, setActiveTab] = useState("most-recorded")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
+  const [showAllActivitiesModal, setShowAllActivitiesModal] = useState(false)
 
   // アクティビティアイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
@@ -235,6 +237,14 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
   }
 
+  const handleShowAllActivities = () => {
+    setShowAllActivitiesModal(true)
+  }
+
+  const handleCloseAllActivities = () => {
+    setShowAllActivitiesModal(false)
+  }
+
   const renderActivityList = (activities: QuickStartActivity[], emptyMessage: string) => {
     if (activities.length === 0) {
       return (
@@ -399,6 +409,20 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 getMostRecordedActivities(),
                 "まだ十分なデータがありません"
               )}
+              {/* 記録順タブ：全セッション数が3つを超える場合のみ表示 */}
+              {completedSessions.length > 3 && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowAllActivities}
+                    className="text-gray-400 hover:text-white hover:bg-gray-800"
+                  >
+                    <MoreHorizontal className="w-4 h-4 mr-1" />
+                    もっと見る
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="recent" className="mt-4">
@@ -406,12 +430,40 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 getRecentActivities(),
                 "最近のアクティビティがありません"
               )}
+              {/* 最新タブ：ユニークなアクティビティが3つを超える場合のみ表示 */}
+              {getRecentActivities().length > 3 && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowAllActivities}
+                    className="text-gray-400 hover:text-white hover:bg-gray-800"
+                  >
+                    <MoreHorizontal className="w-4 h-4 mr-1" />
+                    もっと見る
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="yesterday" className="mt-4">
               {renderActivityList(
                 getYesterdayActivities(),
                 "昨日のアクティビティがありません"
+              )}
+              {/* 昨日タブ：昨日のアクティビティが3つを超える場合のみ表示 */}
+              {getYesterdayActivities().length > 3 && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowAllActivities}
+                    className="text-gray-400 hover:text-white hover:bg-gray-800"
+                  >
+                    <MoreHorizontal className="w-4 h-4 mr-1" />
+                    もっと見る
+                  </Button>
+                </div>
               )}
             </TabsContent>
           </Tabs>
@@ -431,6 +483,13 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         session={selectedSession}
         onClose={handleCloseDetail}
         onStartSimilar={handleStartSimilar}
+      />
+
+      <AllActivitiesModal
+        isOpen={showAllActivitiesModal}
+        completedSessions={completedSessions}
+        onClose={handleCloseAllActivities}
+        onStartActivity={onStartActivity}
       />
     </>
   )
