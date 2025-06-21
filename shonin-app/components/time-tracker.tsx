@@ -1,0 +1,67 @@
+"use client"
+
+import { useState } from "react"
+import { ActivitySelector } from "./activity-selector"
+import { ActiveSession } from "./active-session"
+import { QuickStart } from "./quick-start"
+
+export interface Activity {
+  id: string
+  name: string
+  category: string
+  icon: string
+  color: string
+}
+
+export interface SessionData {
+  activityId: string
+  activityName: string
+  startTime: Date
+  tags: string[]
+  location: string
+  notes: string
+}
+
+export interface CompletedSession extends SessionData {
+  id: string
+  duration: number
+  endTime: Date
+  mood: number
+  achievements: string
+  challenges: string
+}
+
+export function TimeTracker() {
+  const [isActive, setIsActive] = useState(false)
+  const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
+  const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
+
+  const handleStartSession = (sessionData: SessionData) => {
+    setCurrentSession(sessionData)
+    setIsActive(true)
+  }
+
+  const handleEndSession = () => {
+    setIsActive(false)
+    setCurrentSession(null)
+  }
+
+  const handleSaveSession = (sessionData: CompletedSession) => {
+    const newSession = {
+      ...sessionData,
+      id: Date.now().toString(), // 簡単なID生成
+    }
+    setCompletedSessions((prev) => [newSession, ...prev])
+  }
+
+  if (isActive && currentSession) {
+    return <ActiveSession session={currentSession} onEnd={handleEndSession} onSave={handleSaveSession} />
+  }
+
+  return (
+    <div className="space-y-6">
+      <QuickStart onStartActivity={handleStartSession} />
+      <ActivitySelector onStart={handleStartSession} />
+    </div>
+  )
+}
