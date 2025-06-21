@@ -20,6 +20,7 @@ export interface SessionData {
   tags: string[]
   location: string
   notes: string
+  targetTime?: number // 目標時間（分単位）
 }
 
 export interface CompletedSession extends SessionData {

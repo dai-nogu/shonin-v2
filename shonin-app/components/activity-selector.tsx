@@ -25,6 +25,8 @@ interface ActivitySelectorProps {
 export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
+  const [targetHours, setTargetHours] = useState("")
+  const [targetMinutes, setTargetMinutes] = useState("")
   const [isStarting, setIsStarting] = useState(false)
 
   const handleStart = async () => {
@@ -38,12 +40,17 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     const activity = PREDEFINED_ACTIVITIES.find((a) => a.id === selectedActivity)
     if (!activity) return
 
+    // 目標時間を分に変換
+    const targetTimeInMinutes = 
+      (parseInt(targetHours) || 0) * 60 + (parseInt(targetMinutes) || 0)
+
     const sessionData: SessionData = {
       activityId: selectedActivity,
       activityName: activity.name,
       startTime: new Date(),
       tags: [], // タグは終了時に設定
       location,
+      targetTime: targetTimeInMinutes > 0 ? targetTimeInMinutes : undefined,
       notes: "",
     }
 
@@ -113,6 +120,44 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
           />
         </div>
 
+        {/* 目標時間設定 */}
+        <div className="space-y-2">
+          <Label className="text-gray-300 flex items-center">
+            <Target className="w-4 h-4 mr-2" />
+            目標時間（オプション）
+          </Label>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <Input
+                type="number"
+                placeholder="0"
+                value={targetHours}
+                onChange={(e) => setTargetHours(e.target.value)}
+                min="0"
+                max="23"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+              />
+              <span className="text-gray-300 text-sm">時間</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Input
+                type="number"
+                placeholder="0"
+                value={targetMinutes}
+                onChange={(e) => setTargetMinutes(e.target.value)}
+                min="0"
+                max="59"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+              />
+              <span className="text-gray-300 text-sm">分</span>
+            </div>
+          </div>
+          {(targetHours || targetMinutes) && (
+            <div className="text-sm text-green-400 mt-1">
+              目標: {targetHours || "0"}時間{targetMinutes || "0"}分
+            </div>
+          )}
+        </div>
 
         {/* 開始ボタン */}
         <Button

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Pause, Play, Square, MessageSquare, Camera, Mic, Edit3, Save, RotateCcw } from "lucide-react"
+import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -125,6 +125,35 @@ export function ActiveSession({ session, onEnd, onSave }: ActiveSessionProps) {
                 minute: "2-digit",
               })}
             </div>
+            
+            {/* 目標時間と進捗表示 */}
+            {session.targetTime && (
+              <div className="space-y-2 mt-4">
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+                  <span>目標: {Math.floor(session.targetTime / 60)}時間{session.targetTime % 60}分</span>
+                </div>
+                <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      elapsedTime >= session.targetTime * 60
+                        ? "bg-green-500"
+                        : elapsedTime >= session.targetTime * 60 * 0.8
+                        ? "bg-yellow-500"
+                        : "bg-blue-500"
+                    }`}
+                    style={{
+                      width: `${Math.min((elapsedTime / (session.targetTime * 60)) * 100, 100)}%`,
+                    }}
+                  />
+                </div>
+                <div className="text-xs text-gray-400">
+                  進捗: {Math.round((elapsedTime / (session.targetTime * 60)) * 100)}%
+                  {elapsedTime >= session.targetTime * 60 && (
+                    <span className="text-green-400 ml-2">🎉 目標達成！</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* タグ表示 */}
@@ -202,104 +231,96 @@ export function ActiveSession({ session, onEnd, onSave }: ActiveSessionProps) {
         </CardContent>
       </Card>
 
-      {/* アクション・メモカード */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <Button
-              onClick={() => setShowNotes(!showNotes)}
-              variant={showNotes ? "default" : "outline"}
-              className={
-                showNotes
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-              }
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              メモ
-            </Button>
+      {/* アクション・メモカード（終了時のみ表示） */}
+      {sessionState === "ended" && (
+        <Card className="bg-gray-900 border-gray-800">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Button
+                onClick={() => setShowNotes(!showNotes)}
+                variant={showNotes ? "default" : "outline"}
+                className={
+                  showNotes
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                }
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                メモ
+              </Button>
 
-            <Button variant="outline" className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700">
-              <Camera className="w-4 h-4 mr-2" />
-              写真
-            </Button>
+              <Button variant="outline" className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700">
+                <Camera className="w-4 h-4 mr-2" />
+                写真
+              </Button>
+            </div>
 
-            <Button variant="outline" className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700">
-              <Mic className="w-4 h-4 mr-2" />
-              音声
-            </Button>
+            {/* メモ・振り返り入力エリア */}
+            {showNotes && (
+              <div className="space-y-4">
+                {/* 気分評価 */}
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm font-medium">今の気分はどうですか？</Label>
+                  <div className="flex justify-center space-x-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <Button
+                        key={rating}
+                        onClick={() => setMood(rating)}
+                        variant={mood === rating ? "default" : "outline"}
+                        size="sm"
+                        className={
+                          mood === rating
+                            ? "bg-green-500 hover:bg-green-600"
+                            : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                        }
+                      >
+                        {rating === 1 && "😞"}
+                        {rating === 2 && "😐"}
+                        {rating === 3 && "🙂"}
+                        {rating === 4 && "😊"}
+                        {rating === 5 && "😄"}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
-            <Button variant="outline" className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700">
-              <Edit3 className="w-4 h-4 mr-2" />
-              編集
-            </Button>
-          </div>
+                {/* 学びや成果 */}
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm font-medium">今日学んだことや成果</Label>
+                  <Textarea
+                    placeholder="どんなことを学びましたか？どんな成果がありましたか？"
+                    value={achievements}
+                    onChange={(e) => setAchievements(e.target.value)}
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                  />
+                </div>
 
-          {/* メモ・振り返り入力エリア */}
-          {showNotes && (
-            <div className="space-y-4">
-              {/* 気分評価 */}
-              <div className="space-y-2">
-                <Label className="text-gray-300 text-sm font-medium">今の気分はどうですか？</Label>
-                <div className="flex justify-center space-x-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <Button
-                      key={rating}
-                      onClick={() => setMood(rating)}
-                      variant={mood === rating ? "default" : "outline"}
-                      size="sm"
-                      className={
-                        mood === rating
-                          ? "bg-green-500 hover:bg-green-600"
-                          : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                      }
-                    >
-                      {rating === 1 && "😞"}
-                      {rating === 2 && "😐"}
-                      {rating === 3 && "🙂"}
-                      {rating === 4 && "😊"}
-                      {rating === 5 && "😄"}
-                    </Button>
-                  ))}
+                {/* 課題や改善点 */}
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm font-medium">課題や次回への改善点</Label>
+                  <Textarea
+                    placeholder="どんな課題がありましたか？次回はどう改善しますか？"
+                    value={challenges}
+                    onChange={(e) => setChallenges(e.target.value)}
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                  />
+                </div>
+
+                {/* 自由記述メモ */}
+                <div className="space-y-2">
+                  <Label className="text-gray-300 text-sm font-medium">その他のメモ</Label>
+                  <Textarea
+                    placeholder="その他、記録しておきたいことがあれば..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                  />
                 </div>
               </div>
-
-              {/* 学びや成果 */}
-              <div className="space-y-2">
-                <Label className="text-gray-300 text-sm font-medium">今日学んだことや成果</Label>
-                <Textarea
-                  placeholder="どんなことを学びましたか？どんな成果がありましたか？"
-                  value={achievements}
-                  onChange={(e) => setAchievements(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
-                />
-              </div>
-
-              {/* 課題や改善点 */}
-              <div className="space-y-2">
-                <Label className="text-gray-300 text-sm font-medium">課題や次回への改善点</Label>
-                <Textarea
-                  placeholder="どんな課題がありましたか？次回はどう改善しますか？"
-                  value={challenges}
-                  onChange={(e) => setChallenges(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
-                />
-              </div>
-
-              {/* 自由記述メモ */}
-              <div className="space-y-2">
-                <Label className="text-gray-300 text-sm font-medium">その他のメモ</Label>
-                <Textarea
-                  placeholder="その他、記録しておきたいことがあれば..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
-                />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* 励ましメッセージ */}
       <Card className="bg-gradient-to-r from-green-500 to-blue-500 bg-opacity-20 border-green-500 border-opacity-30">
