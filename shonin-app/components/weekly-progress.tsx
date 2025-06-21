@@ -4,21 +4,51 @@ import { BarChart3, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {
+  completedSessions: CompletedSession[]
   onWeekViewClick?: () => void
 }
 
-export function WeeklyProgress({ onWeekViewClick }: WeeklyProgressProps) {
-  const weekData = [
-    { day: "月", hours: 3.5, progress: 87 },
-    { day: "火", hours: 2.8, progress: 70 },
-    { day: "水", hours: 4.2, progress: 100 },
-    { day: "木", hours: 3.1, progress: 77 },
-    { day: "金", hours: 2.5, progress: 62 },
-    { day: "土", hours: 1.8, progress: 45 },
-    { day: "日", hours: 2.7, progress: 67 },
-  ]
+export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
+  // 今週の開始日（月曜日）を取得
+  const getWeekStart = () => {
+    const today = new Date()
+    const day = today.getDay()
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1) // 月曜日を週の開始とする
+    return new Date(today.setDate(diff))
+  }
+
+  // 今週の各日のデータを計算
+  const weekStart = getWeekStart()
+  const weekData = []
+  const dayNames = ["月", "火", "水", "木", "金", "土", "日"]
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(weekStart)
+    date.setDate(weekStart.getDate() + i)
+    
+    // その日のセッションを取得
+    const daySessions = completedSessions.filter(session => {
+      const sessionDate = new Date(session.endTime)
+      return sessionDate.toDateString() === date.toDateString()
+    })
+
+    // その日の合計時間を計算（秒を時間に変換）
+    const totalSeconds = daySessions.reduce((sum, session) => sum + session.duration, 0)
+    const hours = totalSeconds / 3600
+
+    // 進捗率を計算（1日4時間を目標とする）
+    const targetHours = 4
+    const progress = Math.min((hours / targetHours) * 100, 100)
+
+    weekData.push({
+      day: dayNames[i],
+      hours: hours,
+      progress: progress
+    })
+  }
 
   const totalHours = weekData.reduce((sum, day) => sum + day.hours, 0)
 
@@ -46,7 +76,9 @@ export function WeeklyProgress({ onWeekViewClick }: WeeklyProgressProps) {
           <div key={day.day} className="flex items-center space-x-3">
             <span className="text-gray-300 w-4">{day.day}</span>
             <Progress value={day.progress} className="flex-1 h-2" />
-            <span className="text-gray-400 text-sm w-12 text-right">{day.hours}h</span>
+            <span className="text-gray-400 text-sm w-12 text-right">
+              {day.hours > 0 ? `${day.hours.toFixed(1)}h` : "0h"}
+            </span>
           </div>
         ))}
 

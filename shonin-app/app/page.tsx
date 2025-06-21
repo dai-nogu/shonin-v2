@@ -133,7 +133,7 @@ export default function Dashboard() {
                 {/* メインエリア - 2列分 */}
                 <div className="lg:col-span-2 space-y-6">
                   <WelcomeCard />
-                  <TimeTracker onStartSession={handleStartSession} />
+                  <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
                 </div>
 
                 {/* サイドバー - 1列分 */}
@@ -147,8 +147,8 @@ export default function Dashboard() {
                     sessionState={sessionState}
                   />
                   
-                  <TodaysStats />
-                  <WeeklyProgress onWeekViewClick={handleWeekViewTransition} />
+                  <TodaysStats completedSessions={completedSessions} />
+                  <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
                   <GoalProgress />
                 </div>
               </div>
