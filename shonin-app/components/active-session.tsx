@@ -13,13 +13,14 @@ interface ActiveSessionProps {
   session: SessionData
   onEnd: () => void
   onSave: (sessionData: any) => void
+  sessionState: "active" | "paused" | "ended"
+  onTogglePause: () => void
 }
 
 type SessionState = "active" | "paused" | "ended"
 
-export function ActiveSession({ session, onEnd, onSave }: ActiveSessionProps) {
+export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause }: ActiveSessionProps) {
   const [elapsedTime, setElapsedTime] = useState(0)
-  const [sessionState, setSessionState] = useState<SessionState>("active")
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
   const [mood, setMood] = useState<number>(3)
@@ -54,16 +55,15 @@ export function ActiveSession({ session, onEnd, onSave }: ActiveSessionProps) {
   }
 
   const handleTogglePause = () => {
-    setSessionState(sessionState === "active" ? "paused" : "active")
+    onTogglePause()
   }
 
   const handleEnd = () => {
-    setSessionState("ended")
     setShowNotes(true) // 終了時に自動でメモ欄を表示
+    onEnd() // 外部の終了処理を呼び出し
   }
 
   const handleResume = () => {
-    setSessionState("active")
     setShowNotes(false)
   }
 

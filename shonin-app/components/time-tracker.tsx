@@ -32,31 +32,13 @@ export interface CompletedSession extends SessionData {
   challenges: string
 }
 
-export function TimeTracker() {
-  const [isActive, setIsActive] = useState(false)
-  const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
-  const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
+interface TimeTrackerProps {
+  onStartSession: (sessionData: SessionData) => void
+}
 
+export function TimeTracker({ onStartSession }: TimeTrackerProps) {
   const handleStartSession = (sessionData: SessionData) => {
-    setCurrentSession(sessionData)
-    setIsActive(true)
-  }
-
-  const handleEndSession = () => {
-    setIsActive(false)
-    setCurrentSession(null)
-  }
-
-  const handleSaveSession = (sessionData: CompletedSession) => {
-    const newSession = {
-      ...sessionData,
-      id: Date.now().toString(), // 簡単なID生成
-    }
-    setCompletedSessions((prev) => [newSession, ...prev])
-  }
-
-  if (isActive && currentSession) {
-    return <ActiveSession session={currentSession} onEnd={handleEndSession} onSave={handleSaveSession} />
+    onStartSession(sessionData)
   }
 
   return (
