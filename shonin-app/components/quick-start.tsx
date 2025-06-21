@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmStartModal } from "./confirm-start-modal"
 import { SessionDetailModal } from "./session-detail-modal"
-import { AllActivitiesModal } from "./all-activities-modal"
+import { ActivityCountModal } from "./activity-count-modal"
+import { RecentSessionsModal } from "./recent-sessions-modal"
 import type { SessionData, CompletedSession } from "./time-tracker"
 
 interface QuickStartActivity {
@@ -37,7 +38,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [activeTab, setActiveTab] = useState("most-recorded")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
-  const [showAllActivitiesModal, setShowAllActivitiesModal] = useState(false)
+  const [showActivityCountModal, setShowActivityCountModal] = useState(false)
+  const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
 
   // アクティビティアイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
@@ -69,7 +71,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
   }
 
-  // データの記録が多い順（総時間ベース）
+  // アクティビティ別（実行回数が多い順）
   const getMostRecordedActivities = (): QuickStartActivity[] => {
     const activityStats = new Map<string, { totalTime: number; sessionCount: number; latestSession: CompletedSession }>()
     
@@ -91,7 +93,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     })
 
     return Array.from(activityStats.entries())
-      .sort((a, b) => b[1].totalTime - a[1].totalTime)
+      .sort((a, b) => b[1].sessionCount - a[1].sessionCount) // 実行回数順に変更
       .slice(0, 3)
       .map(([activityName, stats]) => {
         const activityInfo = activityIcons[activityName] || {
@@ -117,18 +119,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       })
   }
 
-  // 最新のアクティビティ
+  // 最新のセッション（最新登録順）
   const getRecentActivities = (): QuickStartActivity[] => {
-    const activityMap = new Map<string, CompletedSession>()
-    
-    completedSessions.forEach(session => {
-      const existing = activityMap.get(session.activityName)
-      if (!existing || new Date(session.endTime) > new Date(existing.endTime)) {
-        activityMap.set(session.activityName, session)
-      }
-    })
-
-    return Array.from(activityMap.values())
+    return completedSessions
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .slice(0, 3)
       .map(session => {
@@ -237,12 +230,20 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
   }
 
-  const handleShowAllActivities = () => {
-    setShowAllActivitiesModal(true)
+  const handleShowActivityCount = () => {
+    setShowActivityCountModal(true)
   }
 
-  const handleCloseAllActivities = () => {
-    setShowAllActivitiesModal(false)
+  const handleCloseActivityCount = () => {
+    setShowActivityCountModal(false)
+  }
+
+  const handleShowRecentSessions = () => {
+    setShowRecentSessionsModal(true)
+  }
+
+  const handleCloseRecentSessions = () => {
+    setShowRecentSessionsModal(false)
   }
 
   const renderActivityList = (activities: QuickStartActivity[], emptyMessage: string) => {
@@ -382,18 +383,18 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-gray-800">
               <TabsTrigger 
-                value="most-recorded" 
-                className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
-              >
-                <BarChart3 className="w-4 h-4 mr-1" />
-                記録順
-              </TabsTrigger>
-              <TabsTrigger 
                 value="recent" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
                 <History className="w-4 h-4 mr-1" />
                 最新
+              </TabsTrigger>
+              <TabsTrigger 
+                value="most-recorded" 
+                className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
+              >
+                <BarChart3 className="w-4 h-4 mr-1" />
+                回数順
               </TabsTrigger>
               <TabsTrigger 
                 value="yesterday" 
@@ -409,13 +410,13 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 getMostRecordedActivities(),
                 "まだ十分なデータがありません"
               )}
-              {/* 記録順タブ：全セッション数が3つを超える場合のみ表示 */}
-              {completedSessions.length > 3 && (
+              {/* 回数順タブ：ユニークなアクティビティが3つを超える場合のみ表示 */}
+              {getMostRecordedActivities().length >= 3 && Array.from(new Set(completedSessions.map(s => s.activityName))).length > 3 && (
                 <div className="flex justify-end mt-4">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleShowAllActivities}
+                    onClick={handleShowActivityCount}
                     className="text-gray-400 hover:text-white hover:bg-gray-800"
                   >
                     <MoreHorizontal className="w-4 h-4 mr-1" />
@@ -430,13 +431,13 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 getRecentActivities(),
                 "最近のアクティビティがありません"
               )}
-              {/* 最新タブ：ユニークなアクティビティが3つを超える場合のみ表示 */}
-              {getRecentActivities().length > 3 && (
+              {/* 最新タブ：全セッション数が3つを超える場合のみ表示 */}
+              {completedSessions.length > 3 && (
                 <div className="flex justify-end mt-4">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleShowAllActivities}
+                    onClick={handleShowRecentSessions}
                     className="text-gray-400 hover:text-white hover:bg-gray-800"
                   >
                     <MoreHorizontal className="w-4 h-4 mr-1" />
@@ -457,7 +458,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleShowAllActivities}
+                    onClick={handleShowRecentSessions}
                     className="text-gray-400 hover:text-white hover:bg-gray-800"
                   >
                     <MoreHorizontal className="w-4 h-4 mr-1" />
@@ -485,10 +486,17 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         onStartSimilar={handleStartSimilar}
       />
 
-      <AllActivitiesModal
-        isOpen={showAllActivitiesModal}
+      <ActivityCountModal
+        isOpen={showActivityCountModal}
         completedSessions={completedSessions}
-        onClose={handleCloseAllActivities}
+        onClose={handleCloseActivityCount}
+        onStartActivity={onStartActivity}
+      />
+
+      <RecentSessionsModal
+        isOpen={showRecentSessionsModal}
+        completedSessions={completedSessions}
+        onClose={handleCloseRecentSessions}
         onStartActivity={onStartActivity}
       />
     </>
