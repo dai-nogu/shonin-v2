@@ -14,26 +14,11 @@ export function TodaysStats() {
       <CardContent className="space-y-4">
         <div>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-300">今日の目標</span>
+            <span className="text-gray-300">取り組んだ時間
+            </span>
             <span className="text-green-400 font-mono">2h 45m / 4h</span>
           </div>
           <Progress value={68} className="h-2" />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <CheckCircle className="w-4 h-4 text-blue-400 mr-2" />
-            <span className="text-gray-300">完了したタスク</span>
-          </div>
-          <span className="text-white font-bold">3/5</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Flame className="w-4 h-4 text-red-400 mr-2" />
-            <span className="text-gray-300">連続記録</span>
-          </div>
-          <span className="text-white font-bold">7日</span>
         </div>
       </CardContent>
     </Card>

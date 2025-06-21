@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Home, Calendar, BarChart3, Target, Settings } from "lucide-react"
 import {
   Sidebar,
@@ -55,6 +55,10 @@ interface AppSidebarProps {
 
 export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSidebarProps) {
   const [activePage, setActivePage] = useState(currentPage)
+
+  useEffect(() => {
+    setActivePage(currentPage)
+  }, [currentPage])
 
   const handlePageChange = (pageId: string) => {
     setActivePage(pageId)

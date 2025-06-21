@@ -12,7 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja" suppressHydrationWarning className="dark">
-      <body className={`${inter.className} dark`}>
+      <body className={`${inter.className} dark`} suppressHydrationWarning>
         <SidebarProvider>
           {children}
         </SidebarProvider>
