@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import type { CompletedSession } from "./time-tracker"
 
 interface CalendarSession {
   id: string
@@ -17,9 +18,10 @@ interface CalendarSession {
 interface CalendarViewProps {
   viewMode?: "month" | "week"
   onViewModeChange?: (mode: "month" | "week") => void
+  completedSessions: CompletedSession[]
 }
 
-export function CalendarView({ viewMode = "month", onViewModeChange }: CalendarViewProps) {
+export function CalendarView({ viewMode = "month", onViewModeChange, completedSessions }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [internalViewMode, setInternalViewMode] = useState(viewMode)
 
@@ -27,14 +29,64 @@ export function CalendarView({ viewMode = "month", onViewModeChange }: CalendarV
     setInternalViewMode(viewMode)
   }, [viewMode])
 
-  // サンプルデータ
-  const sessions: CalendarSession[] = [
-    { id: "1", date: "2024-01-15", activity: "読書", duration: 90, color: "bg-blue-500", icon: "📚" },
-    { id: "2", date: "2024-01-15", activity: "プログラミング", duration: 135, color: "bg-purple-500", icon: "💻" },
-    { id: "3", date: "2024-01-16", activity: "運動", duration: 45, color: "bg-red-500", icon: "🏃" },
-    { id: "4", date: "2024-01-17", activity: "読書", duration: 60, color: "bg-blue-500", icon: "📚" },
-    { id: "5", date: "2024-01-18", activity: "音楽練習", duration: 75, color: "bg-yellow-500", icon: "🎵" },
-  ]
+  // CompletedSessionをCalendarSessionに変換する関数
+  const convertToCalendarSessions = (sessions: CompletedSession[]): CalendarSession[] => {
+    return sessions.map((session) => {
+      // セッションデータの安全性チェック
+      if (!session || !session.endTime) {
+        return {
+          id: session?.id || Date.now().toString(),
+          date: new Date().toISOString().split('T')[0],
+          activity: "不明なアクティビティ",
+          duration: 0,
+          color: "bg-gray-500",
+          icon: "📝"
+        }
+      }
+
+      // アクティビティ名に応じてアイコンと色を設定
+      const getActivityStyle = (activity: string) => {
+        if (!activity) {
+          return { icon: "📝", color: "bg-gray-500" }
+        }
+        
+        const activityLower = activity.toLowerCase()
+        if (activityLower.includes('読書') || activityLower.includes('本')) {
+          return { icon: "📚", color: "bg-blue-500" }
+        } else if (activityLower.includes('プログラミング') || activityLower.includes('コード') || activityLower.includes('開発')) {
+          return { icon: "💻", color: "bg-purple-500" }
+        } else if (activityLower.includes('運動') || activityLower.includes('筋トレ') || activityLower.includes('ジム')) {
+          return { icon: "🏃", color: "bg-red-500" }
+        } else if (activityLower.includes('音楽') || activityLower.includes('楽器')) {
+          return { icon: "🎵", color: "bg-yellow-500" }
+        } else if (activityLower.includes('勉強') || activityLower.includes('学習')) {
+          return { icon: "📖", color: "bg-green-500" }
+        } else if (activityLower.includes('英語') || activityLower.includes('語学')) {
+          return { icon: "🌍", color: "bg-teal-500" }
+        } else if (activityLower.includes('絵') || activityLower.includes('デザイン') || activityLower.includes('アート')) {
+          return { icon: "🎨", color: "bg-pink-500" }
+        } else {
+          return { icon: "📝", color: "bg-gray-500" }
+        }
+      }
+
+      const style = getActivityStyle(session.activity)
+      const sessionDate = new Date(session.endTime)
+      const dateStr = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, "0")}-${String(sessionDate.getDate()).padStart(2, "0")}`
+
+      return {
+        id: session.id || Date.now().toString(),
+        date: dateStr,
+        activity: session.activity || "不明なアクティビティ",
+        duration: Math.floor((session.duration || 0) / 60), // 秒を分に変換
+        color: style.color,
+        icon: style.icon
+      }
+    })
+  }
+
+  // 実際のセッションデータを変換
+  const sessions: CalendarSession[] = convertToCalendarSessions(completedSessions)
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60)
@@ -104,6 +156,26 @@ export function CalendarView({ viewMode = "month", onViewModeChange }: CalendarV
   const getTotalTimeForDate = (date: Date | number | null) => {
     const daySessions = getSessionsForDate(date)
     return daySessions.reduce((total, session) => total + session.duration, 0)
+  }
+
+  // 現在の期間（月または週）のセッションを取得
+  const getCurrentPeriodSessions = () => {
+    if (internalViewMode === "month") {
+      const year = currentDate.getFullYear()
+      const month = currentDate.getMonth()
+      return sessions.filter(session => {
+        const sessionDate = new Date(session.date)
+        return sessionDate.getFullYear() === year && sessionDate.getMonth() === month
+      })
+    } else {
+      const weekDays = getWeekDays(currentDate)
+      const weekStart = weekDays[0]
+      const weekEnd = weekDays[6]
+      return sessions.filter(session => {
+        const sessionDate = new Date(session.date)
+        return sessionDate >= weekStart && sessionDate <= weekEnd
+      })
+    }
   }
 
   const navigateMonth = (direction: "prev" | "next") => {
@@ -390,7 +462,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange }: CalendarV
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-green-400">
-                {formatDuration(sessions.reduce((total, session) => total + session.duration, 0))}
+                {(() => {
+                  const periodSessions = getCurrentPeriodSessions()
+                  const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
+                  return formatDuration(totalTime)
+                })()}
               </div>
               <div className="text-sm text-gray-400">
                 {internalViewMode === "month" ? "今月の総時間" : "今週の総時間"}
@@ -400,7 +476,9 @@ export function CalendarView({ viewMode = "month", onViewModeChange }: CalendarV
 
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-400">{sessions.length}</div>
+              <div className="text-2xl font-bold text-blue-400">
+                {getCurrentPeriodSessions().length}
+              </div>
               <div className="text-sm text-gray-400">
                 {internalViewMode === "month" ? "今月のセッション数" : "今週のセッション数"}
               </div>
@@ -410,11 +488,13 @@ export function CalendarView({ viewMode = "month", onViewModeChange }: CalendarV
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-purple-400">
-                {sessions.length > 0
-                  ? formatDuration(
-                      Math.floor(sessions.reduce((total, session) => total + session.duration, 0) / sessions.length),
-                    )
-                  : "0m"}
+                {(() => {
+                  const periodSessions = getCurrentPeriodSessions()
+                  if (periodSessions.length === 0) return "0m"
+                  const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
+                  const averageTime = Math.floor(totalTime / periodSessions.length)
+                  return formatDuration(averageTime)
+                })()}
               </div>
               <div className="text-sm text-gray-400">平均セッション時間</div>
             </CardContent>

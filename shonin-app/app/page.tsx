@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Header } from "@/components/header"
 import { WelcomeCard } from "@/components/welcome-card"
-import { TodaysStats } from "@/components/todays-stats"
+import { AIFeedback } from "@/components/ai-feedback"
 import { WeeklyProgress } from "@/components/weekly-progress"
 import { GoalProgress } from "@/components/goal-progress"
 import { TimeTracker } from "@/components/time-tracker"
@@ -92,7 +92,11 @@ export default function Dashboard() {
         return null
         
       case "calendar":
-        return <CalendarView viewMode={calendarViewMode} onViewModeChange={setCalendarViewMode} />
+        return <CalendarView 
+          viewMode={calendarViewMode} 
+          onViewModeChange={setCalendarViewMode} 
+          completedSessions={completedSessions}
+        />
         
       case "analytics":
         return (
@@ -132,7 +136,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* メインエリア - 2列分 */}
                 <div className="lg:col-span-2 space-y-6">
-                  <WelcomeCard />
+                  <WelcomeCard completedSessions={completedSessions} />
                   <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
                 </div>
 
@@ -147,7 +151,7 @@ export default function Dashboard() {
                     sessionState={sessionState}
                   />
                   
-                  <TodaysStats completedSessions={completedSessions} />
+                  <AIFeedback completedSessions={completedSessions} />
                   <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
                   <GoalProgress />
                 </div>
