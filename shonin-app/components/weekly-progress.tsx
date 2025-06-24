@@ -4,6 +4,7 @@ import { BarChart3, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { formatDuration } from "@/lib/format-duration"
 import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {
@@ -35,22 +36,21 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       return sessionDate.toDateString() === date.toDateString()
     })
 
-    // その日の合計時間を計算（秒を時間に変換）
+    // その日の合計時間を計算（秒単位で保持）
     const totalSeconds = daySessions.reduce((sum, session) => sum + session.duration, 0)
-    const hours = totalSeconds / 3600
 
-    // 進捗率を計算（1日4時間を目標とする）
-    const targetHours = 4
-    const progress = Math.min((hours / targetHours) * 100, 100)
+    // 進捗率を計算（1日4時間=14400秒を目標とする）
+    const targetSeconds = 4 * 3600 // 4時間を秒に変換
+    const progress = Math.min((totalSeconds / targetSeconds) * 100, 100)
 
     weekData.push({
       day: dayNames[i],
-      hours: hours,
+      totalSeconds: totalSeconds,
       progress: progress
     })
   }
 
-  const totalHours = weekData.reduce((sum, day) => sum + day.hours, 0)
+  const totalWeekSeconds = weekData.reduce((sum, day) => sum + day.totalSeconds, 0)
 
   return (
     <Card className="bg-gray-900 border-gray-800">
@@ -77,14 +77,16 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
             <span className="text-gray-300 w-4">{day.day}</span>
             <Progress value={day.progress} className="flex-1 h-2" />
             <span className="text-gray-400 text-sm w-12 text-right">
-              {day.hours > 0 ? `${day.hours.toFixed(1)}h` : "0h"}
+              {formatDuration(day.totalSeconds)}
             </span>
           </div>
         ))}
 
         <div className="pt-4 border-t border-gray-800">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-400">{totalHours.toFixed(1)}h</div>
+            <div className="text-2xl font-bold text-green-400">
+              {formatDuration(totalWeekSeconds)}
+            </div>
             <div className="text-sm text-gray-400">今週の合計</div>
           </div>
         </div>

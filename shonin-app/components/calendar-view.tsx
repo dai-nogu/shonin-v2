@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, Calendar, Clock, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { formatDuration } from "@/lib/format-duration"
 import type { CompletedSession } from "./time-tracker"
 
 interface CalendarSession {
@@ -24,6 +26,9 @@ interface CalendarViewProps {
 export function CalendarView({ viewMode = "month", onViewModeChange, completedSessions }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [internalViewMode, setInternalViewMode] = useState(viewMode)
+  const [selectedDateSessions, setSelectedDateSessions] = useState<CalendarSession[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalDate, setModalDate] = useState<string>("")
 
   useEffect(() => {
     setInternalViewMode(viewMode)
@@ -70,15 +75,15 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         }
       }
 
-      const style = getActivityStyle(session.activity)
+      const style = getActivityStyle(session.activityName)
       const sessionDate = new Date(session.endTime)
       const dateStr = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, "0")}-${String(sessionDate.getDate()).padStart(2, "0")}`
 
       return {
         id: session.id || Date.now().toString(),
         date: dateStr,
-        activity: session.activity || "不明なアクティビティ",
-        duration: Math.floor((session.duration || 0) / 60), // 秒を分に変換
+        activity: session.activityName || "不明なアクティビティ",
+        duration: session.duration || 0, // 秒単位のまま保持
         color: style.color,
         icon: style.icon
       }
@@ -87,15 +92,6 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
   // 実際のセッションデータを変換
   const sessions: CalendarSession[] = convertToCalendarSessions(completedSessions)
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    if (hours > 0) {
-      return `${hours}h ${mins}m`
-    }
-    return `${mins}m`
-  }
 
   const handleViewModeChange = (mode: "month" | "week") => {
     setInternalViewMode(mode)
@@ -297,7 +293,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                       </div>
 
                       <div className="space-y-1">
-                        {daySessions.slice(0, 3).map((session) => (
+                        {daySessions.slice(0, 2).map((session) => (
                           <div
                             key={session.id}
                             className={`text-xs p-1 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
@@ -309,8 +305,13 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                             <div className="text-gray-300 text-xs">{formatDuration(session.duration)}</div>
                           </div>
                         ))}
-                        {daySessions.length > 3 && (
-                          <div className="text-xs text-gray-400 text-center">+{daySessions.length - 3} more</div>
+                        {daySessions.length > 2 && (
+                          <div 
+                            className="text-xs text-gray-400 text-center cursor-pointer hover:text-gray-200 py-1 rounded bg-gray-700 bg-opacity-50"
+                            onClick={() => openSessionModal(day, daySessions)}
+                          >
+                            その他+{daySessions.length - 2}
+                          </div>
                         )}
                       </div>
                     </>
@@ -393,7 +394,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                   </div>
 
                   <div className="space-y-2">
-                    {daySessions.map((session) => (
+                    {daySessions.slice(0, 2).map((session) => (
                       <div
                         key={session.id}
                         className={`text-xs p-2 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
@@ -405,6 +406,14 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                         <div className="text-gray-300 text-xs">{formatDuration(session.duration)}</div>
                       </div>
                     ))}
+                    {daySessions.length > 2 && (
+                      <div 
+                        className="text-xs text-gray-400 text-center cursor-pointer hover:text-gray-200 py-1 rounded bg-gray-700 bg-opacity-50"
+                        onClick={() => openSessionModal(day, daySessions)}
+                      >
+                        その他+{daySessions.length - 2}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -413,6 +422,20 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         </CardContent>
       </>
     )
+  }
+
+  // セッション詳細モーダルを開く
+  const openSessionModal = (date: Date | number, sessions: CalendarSession[]) => {
+    setSelectedDateSessions(sessions)
+    
+    let dateStr: string
+    if (date instanceof Date) {
+      dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+    } else {
+      dateStr = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${date}日`
+    }
+    setModalDate(dateStr)
+    setIsModalOpen(true)
   }
 
   return (
@@ -490,7 +513,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
               <div className="text-2xl font-bold text-purple-400">
                 {(() => {
                   const periodSessions = getCurrentPeriodSessions()
-                  if (periodSessions.length === 0) return "0m"
+                  if (periodSessions.length === 0) return "0"
                   const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
                   const averageTime = Math.floor(totalTime / periodSessions.length)
                   return formatDuration(averageTime)
@@ -501,6 +524,47 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
           </Card>
         </div>
       </div>
+
+      {/* セッション詳細モーダル */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">{modalDate}のアクティビティ</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto">
+            {selectedDateSessions.map((session) => (
+              <div 
+                key={session.id} 
+                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{session.icon}</span>
+                    <span className="text-white font-medium">{session.activity}</span>
+                  </div>
+                  <div className="flex items-center text-green-400 text-sm">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatDuration(session.duration)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {selectedDateSessions.length === 0 && (
+              <div className="text-center text-gray-400 py-8">
+                この日はアクティビティがありません
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => setIsModalOpen(false)}
+              className="bg-gray-700 hover:bg-gray-600 text-white"
+            >
+              閉じる
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
