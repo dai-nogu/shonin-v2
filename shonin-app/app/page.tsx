@@ -5,7 +5,7 @@ import { Header } from "@/components/header"
 import { WelcomeCard } from "@/components/welcome-card"
 import { AIFeedback } from "@/components/ai-feedback"
 import { WeeklyProgress } from "@/components/weekly-progress"
-import { GoalProgress } from "@/components/goal-progress"
+
 import { TimeTracker } from "@/components/time-tracker"
 import { CalendarView } from "@/components/calendar-view"
 import { ActiveSession } from "@/components/active-session"
@@ -153,7 +153,6 @@ export default function Dashboard() {
                   
                   <AIFeedback completedSessions={completedSessions} />
                   <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
-                  <GoalProgress />
                 </div>
               </div>
             </main>
