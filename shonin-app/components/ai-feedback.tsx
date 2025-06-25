@@ -8,25 +8,81 @@ interface AIFeedbackProps {
 }
 
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
-  // 週次フィードバック（仮データ）
+  // 先週の日付を計算
+  const getLastWeekString = () => {
+    const today = new Date()
+    
+    // 今週の日曜日を取得
+    const currentSunday = new Date(today)
+    currentSunday.setDate(today.getDate() - today.getDay())
+    
+    // 先週の日曜日を取得
+    const lastSunday = new Date(currentSunday)
+    lastSunday.setDate(currentSunday.getDate() - 7)
+    
+    // 先週の土曜日を取得
+    const lastSaturday = new Date(lastSunday)
+    lastSaturday.setDate(lastSunday.getDate() + 6)
+    
+    // 日付をフォーマット（月/日形式）
+    const formatDate = (date: Date) => {
+      return `${date.getMonth() + 1}/${date.getDate()}`
+    }
+    
+    return `${formatDate(lastSunday)} 〜 ${formatDate(lastSaturday)}`
+  }
+
+  // 週次フィードバック
   const weeklyFeedback = {
     type: "週次",
-    date: "2024年1月第2週",
-    message: "今週は合計15時間の学習を達成しました！特にプログラミングの集中力が向上しています。来週は復習時間を増やすことをお勧めします。",
-    score: 85,
-    achievements: ["集中力向上", "継続達成"]
+    date: getLastWeekString(),
+    message: "先週は合計15時間の学習を達成しました！特にプログラミングの集中力が向上しています。今週は復習時間を増やすことをお勧めします。",
   }
 
-  // 月次フィードバック（仮データ）
+  // 先月の日付を計算
+  const getLastMonthString = () => {
+    const today = new Date()
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0)
+    
+    const formatDate = (date: Date) => {
+      return `${date.getMonth() + 1}/${date.getDate()}`
+    }
+    
+    return `${formatDate(lastMonth)} 〜 ${formatDate(lastMonthEnd)}`
+  }
+
+  // 来月1日の日付を計算
+  const getNextMonthFirstDay = () => {
+    const today = new Date()
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+    return `${nextMonth.getMonth() + 1}/${nextMonth.getDate()}`
+  }
+
+  // 来週月曜日の日付を計算
+  const getNextWeekMonday = () => {
+    const today = new Date()
+    
+    // 今週の月曜日を計算
+    const thisWeekMonday = new Date(today)
+    const daysSinceMonday = (today.getDay() + 6) % 7 // 月曜日を0とする
+    thisWeekMonday.setDate(today.getDate() - daysSinceMonday)
+    
+    // 来週の月曜日（今週の月曜日 + 7日）
+    const nextWeekMonday = new Date(thisWeekMonday)
+    nextWeekMonday.setDate(thisWeekMonday.getDate() + 7)
+    
+    return `${nextWeekMonday.getMonth() + 1}/${nextWeekMonday.getDate()}`
+  }
+
+  // 先月フィードバック
   const monthlyFeedback = {
     type: "月次",
-    date: "2024年1月",
-    message: "1月は目標の80%を達成！学習習慣が定着してきています。来月は新しい分野にチャレンジしてみましょう。",
-    score: 80,
-    achievements: ["習慣定着", "目標達成"]
+    date: getLastMonthString(),
+    message: "先月は目標の80%を達成！学習習慣が定着してきています。今月は新しい分野にチャレンジしてみましょう。",
   }
 
-  const currentFeedback = weeklyFeedback // 週次と月次を切り替える実装は後で追加
+  const feedbacks = [weeklyFeedback, monthlyFeedback]
 
   return (
     <Card className="bg-gray-900 border-gray-800">
@@ -36,51 +92,41 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           AIフィードバック
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* フィードバック種別 */}
-        <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="bg-blue-600 text-white">
-            <Calendar className="w-3 h-3 mr-1" />
-            {currentFeedback.type}フィードバック
-          </Badge>
-          <span className="text-xs text-gray-400">{currentFeedback.date}</span>
-        </div>
-
-        {/* スコア表示 */}
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center">
-            <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
-            <span className="text-green-400 font-bold text-lg">{currentFeedback.score}点</span>
-          </div>
-          <div className="text-sm text-gray-400">/ 100点</div>
-        </div>
-
-        {/* フィードバックメッセージ */}
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="flex items-start space-x-2">
-            <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-            <p className="text-gray-300 text-sm leading-relaxed">
-              {currentFeedback.message}
-            </p>
-          </div>
-        </div>
-
-        {/* 達成項目 */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-300 mb-2">今週の成果</h4>
-          <div className="flex flex-wrap gap-1">
-            {currentFeedback.achievements.map((achievement, index) => (
-              <Badge key={index} variant="outline" className="text-xs border-green-600 text-green-400">
-                {achievement}
+      <CardContent className="space-y-6">
+        {feedbacks.map((feedback, index) => (
+          <div key={feedback.type} className={index > 0 ? "pt-4 border-t border-gray-800" : ""}>
+            {/* フィードバック種別 */}
+            <div className="flex items-center justify-between mb-3">
+              <Badge variant="secondary" className="bg-blue-600 text-white">
+                <Calendar className="w-3 h-3 mr-1" />
+                {feedback.type}フィードバック
               </Badge>
-            ))}
-          </div>
-        </div>
+              <span className="text-xs text-gray-400">{feedback.date}</span>
+            </div>
 
-        {/* 次回フィードバック予告 */}
-        <div className="text-xs text-gray-500 pt-2 border-t border-gray-800">
-          次回の月次フィードバック: 2月1日予定
-        </div>
+            {/* フィードバックメッセージ */}
+            <div className="bg-gray-800 rounded-lg p-3">
+              <div className="flex items-start space-x-2">
+                <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  {feedback.message}
+                </p>
+              </div>
+            </div>
+
+            {/* 次回フィードバック予告 */}
+            <div className="text-xs text-gray-500 pt-2">
+              {feedback.type === "週次" && (
+                <div>次回の週次フィードバック: {getNextWeekMonday()}予定</div>
+              )}
+              {feedback.type === "月次" && (
+                <div>次回の月次フィードバック: {getNextMonthFirstDay()}予定</div>
+              )}
+            </div>
+          </div>
+        ))}
+
+
       </CardContent>
     </Card>
   )
