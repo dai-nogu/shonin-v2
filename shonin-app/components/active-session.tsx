@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
   const [mood, setMood] = useState<number>(3)
   const [achievements, setAchievements] = useState("")
   const [challenges, setChallenges] = useState("")
+  const achievementsRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -42,6 +43,23 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       if (interval) clearInterval(interval)
     }
   }, [sessionState, session.startTime])
+
+  // セッションが終了状態になった時にメモ欄を自動表示
+  useEffect(() => {
+    if (sessionState === "ended") {
+      setShowNotes(true)
+    }
+  }, [sessionState])
+
+  // 終了画面に遷移した時にメモ入力欄にフォーカス
+  useEffect(() => {
+    if (sessionState === "ended" && showNotes && achievementsRef.current) {
+      // 少し遅延させてフォーカス
+      setTimeout(() => {
+        achievementsRef.current?.focus()
+      }, 100)
+    }
+  }, [sessionState, showNotes])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -288,6 +306,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 <div className="space-y-2">
                   <Label className="text-gray-300 text-sm font-medium">今日学んだことや成果</Label>
                   <Textarea
+                    ref={achievementsRef}
                     placeholder="どんなことを学びましたか？どんな成果がありましたか？"
                     value={achievements}
                     onChange={(e) => setAchievements(e.target.value)}
