@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Play, Pause, Clock, Target } from "lucide-react"
+import { Play, Pause, Clock, Target, Square } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { SessionData } from "./time-tracker"
@@ -11,6 +11,7 @@ interface ActiveActivitySidebarProps {
   isActive: boolean
   onViewSession: () => void
   onTogglePause: () => void
+  onEnd: () => void
   sessionState: "active" | "paused" | "ended"
 }
 
@@ -19,6 +20,7 @@ export function ActiveActivitySidebar({
   isActive, 
   onViewSession, 
   onTogglePause,
+  onEnd,
   sessionState 
 }: ActiveActivitySidebarProps) {
   const [elapsedTime, setElapsedTime] = useState(0)
@@ -144,24 +146,35 @@ export function ActiveActivitySidebar({
           </Button>
           
           {sessionState !== "ended" && (
-            <Button
-              onClick={onTogglePause}
-              variant="outline"
-              size="sm"
-              className="w-full bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-            >
-              {sessionState === "paused" ? (
-                <>
-                  <Play className="w-3 h-3 mr-1" />
-                  再開
-                </>
-              ) : (
-                <>
-                  <Pause className="w-3 h-3 mr-1" />
-                  一時停止
-                </>
-              )}
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={onTogglePause}
+                variant="outline"
+                size="sm"
+                className="flex-1 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              >
+                {sessionState === "paused" ? (
+                  <>
+                    <Play className="w-3 h-3 mr-1" />
+                    再開
+                  </>
+                ) : (
+                  <>
+                    <Pause className="w-3 h-3 mr-1" />
+                    一時停止
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                onClick={onEnd}
+                size="sm"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Square className="w-3 h-3 mr-1" />
+                終了
+              </Button>
+            </div>
           )}
         </div>
       </CardContent>

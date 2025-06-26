@@ -46,6 +46,7 @@ export default function Dashboard() {
   // セッション終了
   const handleEndSession = () => {
     setSessionState("ended")
+    setCurrentPage("session") // 終了画面に遷移
   }
 
   // セッション保存
@@ -148,6 +149,7 @@ export default function Dashboard() {
                     isActive={isSessionActive}
                     onViewSession={handleViewSession}
                     onTogglePause={handleTogglePause}
+                    onEnd={handleEndSession}
                     sessionState={sessionState}
                   />
                   
