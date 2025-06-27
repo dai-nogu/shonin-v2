@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play, MapPin, Target } from "lucide-react"
+import { Play, MapPin, Target, Plus, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,49 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [targetHours, setTargetHours] = useState("")
   const [targetMinutes, setTargetMinutes] = useState("")
   const [isStarting, setIsStarting] = useState(false)
+  const [customActivities, setCustomActivities] = useState<Activity[]>([])
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newActivityName, setNewActivityName] = useState("")
+  const [newActivityCategory, setNewActivityCategory] = useState("")
+  const [newActivityIcon, setNewActivityIcon] = useState("")
+
+
+
+  // 全アクティビティ（定義済み + カスタム）
+  const allActivities = [...PREDEFINED_ACTIVITIES, ...customActivities]
+
+  // アクティビティ追加
+  const handleAddActivity = () => {
+    if (!newActivityName.trim()) return
+
+    const newActivity: Activity = {
+      id: `custom-${Date.now()}`,
+      name: newActivityName.trim(),
+      category: newActivityCategory.trim() || "その他",
+      icon: newActivityIcon.trim() || "📝",
+      color: "bg-gray-500" // カスタムアクティビティはグレー
+    }
+
+    const updatedActivities = [...customActivities, newActivity]
+    setCustomActivities(updatedActivities)
+
+    // フォームをリセット
+    setNewActivityName("")
+    setNewActivityCategory("")
+    setNewActivityIcon("")
+    setShowAddForm(false)
+  }
+
+  // アクティビティ削除
+  const handleDeleteActivity = (activityId: string) => {
+    const updatedActivities = customActivities.filter(a => a.id !== activityId)
+    setCustomActivities(updatedActivities)
+    
+    // 削除されたアクティビティが選択されていた場合、選択を解除
+    if (selectedActivity === activityId) {
+      setSelectedActivity("")
+    }
+  }
 
   const handleStart = async () => {
     if (!selectedActivity) return
@@ -37,7 +80,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     // 少し遅延を入れて開始感を演出
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    const activity = PREDEFINED_ACTIVITIES.find((a) => a.id === selectedActivity)
+    const activity = allActivities.find((a) => a.id === selectedActivity)
     if (!activity) return
 
     // 目標時間を分に変換
@@ -58,7 +101,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     setIsStarting(false)
   }
 
-  const selectedActivityData = PREDEFINED_ACTIVITIES.find((a) => a.id === selectedActivity)
+  const selectedActivityData = allActivities.find((a) => a.id === selectedActivity)
 
   return (
     <Card className="bg-gray-900 border-gray-800">
@@ -68,119 +111,217 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* アクティビティ選択 */}
-        <div className="space-y-2">
-          <Label className="text-gray-300">アクティビティを選択</Label>
-          <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-              <SelectValue placeholder="何に取り組みますか？" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700">
-              {PREDEFINED_ACTIVITIES.map((activity) => (
-                <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <span>{activity.icon}</span>
-                    <span>{activity.name}</span>
-                    <span className="ml-2 text-xs text-gray-400">({activity.category})</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* 選択されたアクティビティのプレビュー */}
-        {selectedActivityData && (
-          <div className={`p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-12 h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-2xl`}
-              >
-                {selectedActivityData.icon}
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">{selectedActivityData.name}</h3>
-                <p className="text-gray-300 text-sm">{selectedActivityData.category}</p>
-              </div>
-            </div>
+        {/* アクティビティ選択 - フォーム表示時は隠す */}
+        {!showAddForm && (
+          <div className="space-y-2">
+            <Label className="text-gray-300">アクティビティを選択</Label>
+            <Select value={selectedActivity} onValueChange={setSelectedActivity}>
+              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectValue placeholder="何に取り組みますか？" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {allActivities.map((activity) => (
+                  <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center space-x-2">
+                        <span>{activity.icon}</span>
+                        <span>{activity.name}</span>
+                        <span className="ml-2 text-xs text-gray-400">({activity.category})</span>
+                      </div>
+                      {activity.id.startsWith('custom-') && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteActivity(activity.id)
+                          }}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+                
+                {/* アクティビティ追加ボタン */}
+                <div className="p-2 border-t border-gray-600">
+                  <Button
+                    onClick={() => setShowAddForm(true)}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    新しいアクティビティを追加
+                  </Button>
+                </div>
+              </SelectContent>
+            </Select>
           </div>
         )}
 
-        {/* 場所設定 */}
-        <div className="space-y-2">
-          <Label className="text-gray-300 flex items-center">
-            <MapPin className="w-4 h-4 mr-2" />
-            場所（オプション）
-          </Label>
-          <Input
-            placeholder="どこで取り組みますか？"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-          />
-        </div>
+        {/* アクティビティ追加フォーム */}
+        {showAddForm && (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white text-lg">新しいアクティビティを追加</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-gray-300">アクティビティ名 *</Label>
+                <Input
+                  placeholder="例: 日記を書く"
+                  value={newActivityName}
+                  onChange={(e) => setNewActivityName(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-gray-300">カテゴリ</Label>
+                <Input
+                  placeholder="例: 習慣"
+                  value={newActivityCategory}
+                  onChange={(e) => setNewActivityCategory(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-gray-300">アイコン（絵文字）</Label>
+                <Input
+                  placeholder="例: ✍️"
+                  value={newActivityIcon}
+                  onChange={(e) => setNewActivityIcon(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  maxLength={2}
+                />
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button
+                  onClick={handleAddActivity}
+                  disabled={!newActivityName.trim()}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  追加
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowAddForm(false)
+                    setNewActivityName("")
+                    setNewActivityCategory("")
+                    setNewActivityIcon("")
+                  }}
+                  variant="outline"
+                  className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                >
+                  キャンセル
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* 目標時間設定 */}
-        <div className="space-y-2">
-          <Label className="text-gray-300 flex items-center">
-            <Target className="w-4 h-4 mr-2" />
-            目標時間（オプション）
-          </Label>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
+        {/* フォーム表示時以外の通常の内容 */}
+        {!showAddForm && (
+          <>
+            {/* 選択されたアクティビティのプレビュー */}
+            {selectedActivityData && (
+              <div className={`p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`w-12 h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-2xl`}
+                  >
+                    {selectedActivityData.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold">{selectedActivityData.name}</h3>
+                    <p className="text-gray-300 text-sm">{selectedActivityData.category}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 場所設定 */}
+            <div className="space-y-2">
+              <Label className="text-gray-300 flex items-center">
+                <MapPin className="w-4 h-4 mr-2" />
+                場所（オプション）
+              </Label>
               <Input
-                type="number"
-                placeholder="0"
-                value={targetHours}
-                onChange={(e) => setTargetHours(e.target.value)}
-                min="0"
-                max="23"
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+                placeholder="どこで取り組みますか？"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
               />
-              <span className="text-gray-300 text-sm">時間</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                placeholder="0"
-                value={targetMinutes}
-                onChange={(e) => setTargetMinutes(e.target.value)}
-                min="0"
-                max="59"
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
-              />
-              <span className="text-gray-300 text-sm">分</span>
-            </div>
-          </div>
-          {(targetHours || targetMinutes) && (
-            <div className="text-sm text-green-400 mt-1">
-              目標: {targetHours || "0"}時間{targetMinutes || "0"}分
-            </div>
-          )}
-        </div>
 
-        {/* 開始ボタン */}
-        <Button
-          onClick={handleStart}
-          disabled={!selectedActivity || isStarting}
-          size="lg"
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-4 text-lg disabled:opacity-50"
-        >
-          {isStarting ? (
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>開始中...</span>
+            {/* 目標時間設定 */}
+            <div className="space-y-2">
+              <Label className="text-gray-300 flex items-center">
+                <Target className="w-4 h-4 mr-2" />
+                目標時間（オプション）
+              </Label>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={targetHours}
+                    onChange={(e) => setTargetHours(e.target.value)}
+                    min="0"
+                    max="23"
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+                  />
+                  <span className="text-gray-300 text-sm">時間</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={targetMinutes}
+                    onChange={(e) => setTargetMinutes(e.target.value)}
+                    min="0"
+                    max="59"
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+                  />
+                  <span className="text-gray-300 text-sm">分</span>
+                </div>
+              </div>
+              {(targetHours || targetMinutes) && (
+                <div className="text-sm text-green-400 mt-1">
+                  目標: {targetHours || "0"}時間{targetMinutes || "0"}分
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <Play className="w-5 h-5" />
-              <span>記録開始</span>
-            </div>
-          )}
-        </Button>
 
-        {/* 励ましメッセージ */}
-        <div className="text-center text-gray-400 text-sm italic">"誰も見ていなくても、私たちは見ています"</div>
+            {/* 開始ボタン */}
+            <Button
+              onClick={handleStart}
+              disabled={!selectedActivity || isStarting}
+              size="lg"
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-4 text-lg disabled:opacity-50"
+            >
+              {isStarting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>開始中...</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Play className="w-5 h-5" />
+                  <span>記録開始</span>
+                </div>
+              )}
+            </Button>
+
+            {/* 励ましメッセージ */}
+            <div className="text-center text-gray-400 text-sm italic">"誰も見ていなくても、私たちは見ています"</div>
+          </>
+        )}
       </CardContent>
     </Card>
   )
