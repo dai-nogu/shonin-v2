@@ -33,6 +33,22 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [newActivityName, setNewActivityName] = useState("")
   const [newActivityCategory, setNewActivityCategory] = useState("")
   const [newActivityIcon, setNewActivityIcon] = useState("")
+  const [newActivityColor, setNewActivityColor] = useState("bg-blue-500")
+
+  const colorOptions = [
+    { value: "bg-blue-500", label: "青", color: "#3b82f6" },
+    { value: "bg-purple-500", label: "紫", color: "#8b5cf6" },
+    { value: "bg-red-500", label: "赤", color: "#ef4444" },
+    { value: "bg-green-500", label: "緑", color: "#22c55e" },
+    { value: "bg-yellow-500", label: "黄", color: "#eab308" },
+    { value: "bg-orange-500", label: "オレンジ", color: "#f97316" },
+    { value: "bg-pink-500", label: "ピンク", color: "#ec4899" },
+    { value: "bg-indigo-500", label: "インディゴ", color: "#6366f1" },
+    { value: "bg-teal-500", label: "ティール", color: "#14b8a6" },
+    { value: "bg-emerald-500", label: "エメラルド", color: "#10b981" },
+    { value: "bg-cyan-500", label: "シアン", color: "#06b6d4" },
+    { value: "bg-gray-500", label: "グレー", color: "#6b7280" },
+  ]
 
 
 
@@ -48,7 +64,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       name: newActivityName.trim(),
       category: newActivityCategory.trim() || "その他",
       icon: newActivityIcon.trim() || "📝",
-      color: "bg-gray-500" // カスタムアクティビティはグレー
+      color: newActivityColor // 選択された色を使用
     }
 
     const updatedActivities = [...customActivities, newActivity]
@@ -58,6 +74,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     setNewActivityName("")
     setNewActivityCategory("")
     setNewActivityIcon("")
+    setNewActivityColor("bg-blue-500")
     setShowAddForm(false)
   }
 
@@ -95,6 +112,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       location,
       targetTime: targetTimeInMinutes > 0 ? targetTimeInMinutes : undefined,
       notes: "",
+      activityColor: activity.color,
+      activityIcon: activity.icon,
     }
 
     onStart(sessionData)
@@ -190,6 +209,29 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-gray-300">色</Label>
+                <div className="grid grid-cols-6 gap-2">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setNewActivityColor(color.value)}
+                      className={`w-10 h-10 rounded-full border-2 transition-all ${
+                        newActivityColor === color.value 
+                          ? "border-white ring-2 ring-green-400" 
+                          : "border-gray-600 hover:border-gray-400"
+                      }`}
+                      style={{ backgroundColor: color.color }}
+                      title={color.label}
+                    />
+                  ))}
+                </div>
+                <div className="text-xs text-gray-400">
+                  選択中: {colorOptions.find(c => c.value === newActivityColor)?.label}
+                </div>
+              </div>
+
               <div className="flex space-x-2">
                 <Button
                   onClick={handleAddActivity}
@@ -204,6 +246,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     setNewActivityName("")
                     setNewActivityCategory("")
                     setNewActivityIcon("")
+                    setNewActivityColor("bg-blue-500")
                   }}
                   variant="outline"
                   className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"

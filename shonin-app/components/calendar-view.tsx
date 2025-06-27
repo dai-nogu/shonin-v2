@@ -49,8 +49,15 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         }
       }
 
-      // アクティビティ名に応じてアイコンと色を設定
-      const getActivityStyle = (activity: string) => {
+      // セッションに保存された色・アイコン情報を優先し、なければ名前から推測
+      const getActivityStyle = (session: CompletedSession) => {
+        // セッションに色・アイコンが保存されている場合はそれを使用
+        if (session.activityColor && session.activityIcon) {
+          return { icon: session.activityIcon, color: session.activityColor }
+        }
+
+        // 保存されていない場合は名前から推測（従来の方法）
+        const activity = session.activityName
         if (!activity) {
           return { icon: "📝", color: "bg-gray-500" }
         }
@@ -75,7 +82,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         }
       }
 
-      const style = getActivityStyle(session.activityName)
+      const style = getActivityStyle(session)
       const sessionDate = new Date(session.endTime)
       const dateStr = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, "0")}-${String(sessionDate.getDate()).padStart(2, "0")}`
 

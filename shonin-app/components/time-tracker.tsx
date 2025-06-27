@@ -21,6 +21,8 @@ export interface SessionData {
   location: string
   notes: string
   targetTime?: number // 目標時間（分単位）
+  activityColor?: string // アクティビティの色
+  activityIcon?: string // アクティビティのアイコン
 }
 
 export interface CompletedSession extends SessionData {

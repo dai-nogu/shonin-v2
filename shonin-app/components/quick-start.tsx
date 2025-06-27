@@ -41,14 +41,45 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
   const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
 
-  // アクティビティアイコンマッピング
-  const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
-    "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
-    "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
-    "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
-    "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
-    "英語学習": { icon: "🌍", color: "bg-green-500", category: "学習" },
-    "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
+  // セッションから色・アイコン情報を取得、なければ従来のマッピングを使用
+  const getActivityStyle = (session: CompletedSession) => {
+    // セッションに色・アイコンが保存されている場合はそれを使用
+    if (session.activityColor && session.activityIcon) {
+      return { 
+        icon: session.activityIcon, 
+        color: session.activityColor,
+        category: getCategoryByName(session.activityName)
+      }
+    }
+
+    // 保存されていない場合は従来のマッピングを使用
+    const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
+      "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
+      "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
+      "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
+      "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
+      "英語学習": { icon: "🌍", color: "bg-green-500", category: "学習" },
+      "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
+    }
+
+    return activityIcons[session.activityName] || {
+      icon: "📝",
+      color: "bg-gray-500",
+      category: "その他"
+    }
+  }
+
+  // アクティビティ名からカテゴリを推測
+  const getCategoryByName = (activityName: string) => {
+    const name = activityName.toLowerCase()
+    if (name.includes('読書') || name.includes('プログラミング') || name.includes('英語') || name.includes('勉強') || name.includes('学習')) {
+      return "学習"
+    } else if (name.includes('運動') || name.includes('瞑想') || name.includes('健康')) {
+      return "健康"
+    } else if (name.includes('音楽') || name.includes('趣味')) {
+      return "趣味"
+    }
+    return "その他"
   }
 
   const formatDuration = (seconds: number) => {
@@ -96,11 +127,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       .sort((a, b) => b[1].sessionCount - a[1].sessionCount) // 実行回数順に変更
       .slice(0, 3)
       .map(([activityName, stats]) => {
-        const activityInfo = activityIcons[activityName] || {
-          icon: "📝",
-          color: "bg-gray-500",
-          category: "その他"
-        }
+        const activityInfo = getActivityStyle(stats.latestSession)
 
         return {
           id: stats.latestSession.id,
@@ -125,11 +152,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .slice(0, 3)
       .map(session => {
-        const activityInfo = activityIcons[session.activityName] || {
-          icon: "📝",
-          color: "bg-gray-500",
-          category: "その他"
-        }
+        const activityInfo = getActivityStyle(session)
 
         return {
           id: session.id,
@@ -160,11 +183,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .slice(0, 3)
       .map(session => {
-        const activityInfo = activityIcons[session.activityName] || {
-          icon: "📝",
-          color: "bg-gray-500",
-          category: "その他"
-        }
+        const activityInfo = getActivityStyle(session)
 
         return {
           id: session.id,
