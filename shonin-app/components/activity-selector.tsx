@@ -178,17 +178,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
-              
-              <div className="space-y-2">
-                <Label className="text-gray-300">カテゴリ</Label>
-                <Input
-                  placeholder="例: 習慣"
-                  value={newActivityCategory}
-                  onChange={(e) => setNewActivityCategory(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                />
-              </div>
-              
+
               <div className="space-y-2">
                 <Label className="text-gray-300">アイコン（絵文字）</Label>
                 <Input
@@ -199,7 +189,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   maxLength={2}
                 />
               </div>
-              
+
               <div className="flex space-x-2">
                 <Button
                   onClick={handleAddActivity}

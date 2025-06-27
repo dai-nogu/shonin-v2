@@ -376,7 +376,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
               return (
                 <div
                   key={index}
-                  className={`min-h-[200px] p-3 border border-gray-800 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer ${
+                  className={`min-h-[280px] p-3 border border-gray-800 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer ${
                     todayCheck ? "ring-2 ring-green-500" : ""
                   }`}
                 >
