@@ -133,23 +133,23 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
         </div>
 
         <div className="grid grid-cols-3 gap-6">
-          <div className="text-center">
-            <Clock className="w-8 h-8 mx-auto mb-2" />
-            <div className={`font-bold ${totalSeconds > 0 ? 'text-3xl' : 'text-2xl'}`}>
+          <div className="text-center flex flex-col items-center justify-between h-20">
+            <Clock className="w-6 h-6" />
+            <div className={`font-bold ${totalSeconds > 0 ? 'text-2xl' : 'text-base'} leading-tight`}>
               {formatTime(totalHours, totalMinutes)}
             </div>
             <div className="text-sm text-green-100">今日の記録</div>
           </div>
 
-          <div className="text-center">
-            <Target className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-3xl font-bold">{streakDays}</div>
+          <div className="text-center flex flex-col items-center justify-between h-20">
+            <Target className="w-6 h-6" />
+            <div className="text-2xl font-bold leading-tight">{streakDays}</div>
             <div className="text-sm text-green-100">連続記録日</div>
           </div>
 
-          <div className="text-center">
-            <TrendingUp className="w-8 h-8 mx-auto mb-2" />
-            <div className="text-3xl font-bold">{weeklyGrowth}</div>
+          <div className="text-center flex flex-col items-center justify-between h-20">
+            <TrendingUp className="w-6 h-6" />
+            <div className="text-2xl font-bold leading-tight">{weeklyGrowth}</div>
             <div className="text-sm text-green-100">先週比</div>
           </div>
         </div>

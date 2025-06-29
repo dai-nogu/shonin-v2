@@ -33,20 +33,21 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [newActivityName, setNewActivityName] = useState("")
   const [newActivityCategory, setNewActivityCategory] = useState("")
   const [newActivityIcon, setNewActivityIcon] = useState("")
-  const [newActivityColor, setNewActivityColor] = useState("bg-blue-500")
+  const [newActivityColor, setNewActivityColor] = useState("bg-red-500")
+  const [hoveredColor, setHoveredColor] = useState<string | null>(null)
 
   const colorOptions = [
-    { value: "bg-blue-500", label: "青", color: "#3b82f6" },
-    { value: "bg-purple-500", label: "紫", color: "#8b5cf6" },
-    { value: "bg-red-500", label: "赤", color: "#ef4444" },
-    { value: "bg-green-500", label: "緑", color: "#22c55e" },
-    { value: "bg-yellow-500", label: "黄", color: "#eab308" },
+    { value: "bg-red-500", label: "レッド", color: "#ef4444" },
+    { value: "bg-blue-500", label: "ブルー", color: "#3b82f6" },
+    { value: "bg-yellow-500", label: "イエロー", color: "#eab308" },
+    { value: "bg-green-500", label: "グリーン", color: "#22c55e" },
+    { value: "bg-purple-500", label: "パープル", color: "#8b5cf6" },
     { value: "bg-orange-500", label: "オレンジ", color: "#f97316" },
     { value: "bg-pink-500", label: "ピンク", color: "#ec4899" },
-    { value: "bg-indigo-500", label: "インディゴ", color: "#6366f1" },
-    { value: "bg-teal-500", label: "ティール", color: "#14b8a6" },
+    { value: "bg-teal-500", label: "ライトブルー", color: "#91f0ff" },
     { value: "bg-emerald-500", label: "エメラルド", color: "#10b981" },
-    { value: "bg-cyan-500", label: "シアン", color: "#06b6d4" },
+    { value: "bg-cyan-500", label: "ブラウン", color: "#d0430b" },
+    { value: "bg-indigo-500", label: "インディゴ", color: "#6366f1" },
     { value: "bg-gray-500", label: "グレー", color: "#6b7280" },
   ]
 
@@ -74,7 +75,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     setNewActivityName("")
     setNewActivityCategory("")
     setNewActivityIcon("")
-    setNewActivityColor("bg-blue-500")
+    setNewActivityColor("bg-red-500")
+    setHoveredColor(null)
     setShowAddForm(false)
   }
 
@@ -211,20 +213,28 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
               <div className="space-y-2">
                 <Label className="text-gray-300">色</Label>
-                <div className="grid grid-cols-6 gap-2">
+                <div className="grid grid-cols-6 gap-2 relative">
                   {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      onClick={() => setNewActivityColor(color.value)}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${
-                        newActivityColor === color.value 
-                          ? "border-white ring-2 ring-green-400" 
-                          : "border-gray-600 hover:border-gray-400"
-                      }`}
-                      style={{ backgroundColor: color.color }}
-                      title={color.label}
-                    />
+                    <div key={color.value} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setNewActivityColor(color.value)}
+                        onMouseEnter={() => setHoveredColor(color.value)}
+                        onMouseLeave={() => setHoveredColor(null)}
+                        className={`w-10 h-10 rounded-full border-2 transition-all ${
+                          newActivityColor === color.value 
+                            ? "border-white ring-2 ring-green-400" 
+                            : "border-gray-600 hover:border-gray-400"
+                        }`}
+                        style={{ backgroundColor: color.color }}
+                      />
+                      {hoveredColor === color.value && (
+                        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-10">
+                          {color.label}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <div className="text-xs text-gray-400">
@@ -246,7 +256,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     setNewActivityName("")
                     setNewActivityCategory("")
                     setNewActivityIcon("")
-                    setNewActivityColor("bg-blue-500")
+                    setNewActivityColor("bg-red-500")
+                    setHoveredColor(null)
                   }}
                   variant="outline"
                   className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
