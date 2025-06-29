@@ -29,12 +29,6 @@ const menuItems = [
     id: "calendar",
   },
   {
-    title: "統計・分析",
-    url: "/analytics",
-    icon: BarChart3,
-    id: "analytics",
-  },
-  {
     title: "目標管理",
     url: "/goals",
     icon: Target,
