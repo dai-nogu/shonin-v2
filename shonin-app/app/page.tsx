@@ -6,6 +6,7 @@ import { WelcomeCard } from "@/components/welcome-card"
 import { AIFeedback } from "@/components/ai-feedback"
 import { WeeklyProgress } from "@/components/weekly-progress"
 import { Settings } from "@/components/settings"
+import { Goals } from "@/components/goals"
 
 import { TimeTracker } from "@/components/time-tracker"
 import { CalendarView } from "@/components/calendar-view"
@@ -111,14 +112,7 @@ export default function Dashboard() {
         )
         
       case "goals":
-        return (
-          <div className="min-h-screen bg-gray-950 text-white">
-            <div className="border-b border-gray-800 p-6">
-              <h1 className="text-2xl font-bold">目標管理</h1>
-            </div>
-            <div className="p-8 text-center text-gray-400">目標管理ページ（開発中）</div>
-          </div>
-        )
+        return <Goals onBack={() => setCurrentPage("dashboard")} />
         
       case "settings":
         return <Settings onBack={() => setCurrentPage("dashboard")} />
