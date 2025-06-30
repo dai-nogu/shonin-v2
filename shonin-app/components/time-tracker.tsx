@@ -23,6 +23,7 @@ export interface SessionData {
   targetTime?: number // 目標時間（分単位）
   activityColor?: string // アクティビティの色
   activityIcon?: string // アクティビティのアイコン
+  goalId?: string // 紐付ける目標のID
 }
 
 export interface CompletedSession extends SessionData {

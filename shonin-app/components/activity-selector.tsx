@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play, MapPin, Target, Plus, Trash2 } from "lucide-react"
+import { Play, MapPin, Target, Plus, Trash2, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +27,44 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [location, setLocation] = useState("")
   const [targetHours, setTargetHours] = useState("")
   const [targetMinutes, setTargetMinutes] = useState("")
+  const [selectedGoal, setSelectedGoal] = useState("")
   const [isStarting, setIsStarting] = useState(false)
+
+  // 今日が平日かどうかを判定
+  const isWeekday = () => {
+    const today = new Date().getDay() // 0=日曜, 1=月曜, ..., 6=土曜
+    return today >= 1 && today <= 5 // 月曜〜金曜
+  }
+
+  // 目標選択時に目標時間を自動設定
+  const handleGoalSelection = (goalId: string) => {
+    setSelectedGoal(goalId)
+    
+    if (goalId && goalId !== "none") {
+      const selectedGoalData = availableGoals.find(goal => goal.id === goalId)
+      if (selectedGoalData) {
+        const targetHours = isWeekday() ? selectedGoalData.weekdayHours : selectedGoalData.weekendHours
+        setTargetHours(targetHours.toString())
+        setTargetMinutes("0") // 分はデフォルトで0
+      }
+    } else {
+      // 「紐付けしない」が選択された場合は目標時間をクリア
+      setTargetHours("")
+      setTargetMinutes("")
+    }
+  }
+
+  // 仮の目標データ（実際は目標管理から取得）
+  const availableGoals = [
+    { 
+      id: "1", 
+      title: "プログラミングスキル向上", 
+      targetValue: 240,
+      weekdayHours: 2,
+      weekendHours: 5
+    },
+    // 実際の実装では getActiveGoals() から取得
+  ]
   const [customActivities, setCustomActivities] = useState<Activity[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
@@ -116,6 +153,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       notes: "",
       activityColor: activity.color,
       activityIcon: activity.icon,
+      goalId: selectedGoal && selectedGoal !== "none" ? selectedGoal : undefined,
     }
 
     onStart(sessionData)
@@ -303,10 +341,43 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               />
             </div>
 
+            {/* 目標との紐付け */}
+            {availableGoals.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-gray-300 flex items-center">
+                  <Target className="w-4 h-4 mr-2" />
+                  目標と紐付け
+                </Label>
+                                 <Select value={selectedGoal} onValueChange={handleGoalSelection}>
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                    <SelectValue placeholder="目標を選択" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="none" className="text-white hover:bg-gray-700">
+                      紐付けしない
+                    </SelectItem>
+                    {availableGoals.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700">
+                        <div className="flex items-center justify-between w-full">
+                          <span>{goal.title}</span>
+                          <span className="text-xs text-gray-400 ml-2">目標: {goal.targetValue}時間</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedGoal && selectedGoal !== "none" && (
+                  <div className="text-sm text-green-400">
+                    この活動が選択した目標の進捗に反映されます
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 目標時間設定 */}
             <div className="space-y-2">
               <Label className="text-gray-300 flex items-center">
-                <Target className="w-4 h-4 mr-2" />
+                <Clock className="w-4 h-4 mr-2" />
                 目標時間（オプション）
               </Label>
               <div className="flex items-center space-x-3">
@@ -338,6 +409,11 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               {(targetHours || targetMinutes) && (
                 <div className="text-sm text-green-400 mt-1">
                   目標: {targetHours || "0"}時間{targetMinutes || "0"}分
+                  {selectedGoal && selectedGoal !== "none" && (
+                    <span className="text-xs text-gray-400 ml-2">
+                      ({isWeekday() ? "平日" : "土日"}の目標時間から自動設定)
+                    </span>
+                  )}
                 </div>
               )}
             </div>
