@@ -26,8 +26,6 @@ export function Settings({ onBack }: SettingsProps) {
 
   // 地域・時間設定
   const [timezone, setTimezone] = useState("Asia/Tokyo")
-  const [timeFormat, setTimeFormat] = useState("24")
-  const [weekStart, setWeekStart] = useState("monday")
 
   // 通知設定
   const [goalReminders, setGoalReminders] = useState(true)
@@ -183,46 +181,20 @@ export function Settings({ onBack }: SettingsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label className="text-gray-300">タイムゾーン</Label>
-                <Select value={timezone} onValueChange={setTimezone}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="Asia/Tokyo">日本 (JST)</SelectItem>
-                    <SelectItem value="America/New_York">ニューヨーク (EST)</SelectItem>
-                    <SelectItem value="Europe/London">ロンドン (GMT)</SelectItem>
-                    <SelectItem value="Asia/Shanghai">上海 (CST)</SelectItem>
-                    <SelectItem value="Australia/Sydney">シドニー (AEDT)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-300">時間表示形式</Label>
-                <Select value={timeFormat} onValueChange={setTimeFormat}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="24">24時間表示</SelectItem>
-                    <SelectItem value="12">12時間表示 (AM/PM)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-gray-300">週の開始日</Label>
-                <Select value={weekStart} onValueChange={setWeekStart}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="monday">月曜日</SelectItem>
-                    <SelectItem value="sunday">日曜日</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">タイムゾーン</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="Asia/Tokyo">日本 (JST)</SelectItem>
+                  <SelectItem value="America/New_York">ニューヨーク (EST)</SelectItem>
+                  <SelectItem value="Europe/London">ロンドン (GMT)</SelectItem>
+                  <SelectItem value="Asia/Shanghai">上海 (CST)</SelectItem>
+                  <SelectItem value="Australia/Sydney">シドニー (AEDT)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
