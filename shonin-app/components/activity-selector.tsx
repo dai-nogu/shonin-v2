@@ -1,22 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { Play, MapPin, Target, Plus, Trash2, Clock } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Play, MapPin, Target, Plus, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { SessionData, Activity } from "./time-tracker"
-
-const PREDEFINED_ACTIVITIES: Activity[] = [
-  { id: "1", name: "読書", category: "学習", icon: "📚", color: "bg-blue-500" },
-  { id: "2", name: "プログラミング", category: "学習", icon: "💻", color: "bg-purple-500" },
-  { id: "3", name: "運動", category: "健康", icon: "🏃", color: "bg-red-500" },
-  { id: "4", name: "音楽練習", category: "趣味", icon: "🎵", color: "bg-yellow-500" },
-  { id: "5", name: "英語学習", category: "学習", icon: "🌍", color: "bg-green-500" },
-  { id: "6", name: "瞑想", category: "健康", icon: "🧘", color: "bg-indigo-500" },
-]
+import type { SessionData } from "./time-tracker"
+import { useActivities, type Activity } from "@/contexts/activities-context"
 
 interface ActivitySelectorProps {
   onStart: (session: SessionData) => void
@@ -65,13 +57,22 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     },
     // 実際の実装では getActiveGoals() から取得
   ]
-  const [customActivities, setCustomActivities] = useState<Activity[]>([])
+  const { activities: customActivities, addActivity } = useActivities()
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
-  const [newActivityCategory, setNewActivityCategory] = useState("")
   const [newActivityIcon, setNewActivityIcon] = useState("")
   const [newActivityColor, setNewActivityColor] = useState("bg-red-500")
   const [hoveredColor, setHoveredColor] = useState<string | null>(null)
+  
+  // アクティビティ名入力フィールドのref
+  const activityNameInputRef = useRef<HTMLInputElement>(null)
+
+  // フォームが開いた時にアクティビティ名フィールドにフォーカス
+  useEffect(() => {
+    if (showAddForm && activityNameInputRef.current) {
+      activityNameInputRef.current.focus()
+    }
+  }, [showAddForm])
 
   const colorOptions = [
     { value: "bg-red-500", label: "レッド", color: "#ef4444" },
@@ -88,45 +89,32 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     { value: "bg-gray-500", label: "グレー", color: "#6b7280" },
   ]
 
-
-
-  // 全アクティビティ（定義済み + カスタム）
-  const allActivities = [...PREDEFINED_ACTIVITIES, ...customActivities]
+  // 全アクティビティ（カスタムのみ）
+  const allActivities = customActivities
 
   // アクティビティ追加
   const handleAddActivity = () => {
     if (!newActivityName.trim()) return
 
-    const newActivity: Activity = {
-      id: `custom-${Date.now()}`,
+    const activityId = addActivity({
       name: newActivityName.trim(),
-      category: newActivityCategory.trim() || "その他",
-      icon: newActivityIcon.trim() || "📝",
+      category: "",
+      icon: newActivityIcon.trim(),
       color: newActivityColor // 選択された色を使用
-    }
+    })
 
-    const updatedActivities = [...customActivities, newActivity]
-    setCustomActivities(updatedActivities)
+    // 追加したアクティビティを自動選択
+    setSelectedActivity(activityId)
 
     // フォームをリセット
     setNewActivityName("")
-    setNewActivityCategory("")
     setNewActivityIcon("")
     setNewActivityColor("bg-red-500")
     setHoveredColor(null)
     setShowAddForm(false)
   }
 
-  // アクティビティ削除
-  const handleDeleteActivity = (activityId: string) => {
-    const updatedActivities = customActivities.filter(a => a.id !== activityId)
-    setCustomActivities(updatedActivities)
-    
-    // 削除されたアクティビティが選択されていた場合、選択を解除
-    if (selectedActivity === activityId) {
-      setSelectedActivity("")
-    }
-  }
+
 
   const handleStart = async () => {
     if (!selectedActivity) return
@@ -180,26 +168,14 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700">
                 {allActivities.map((activity) => (
-                  <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center space-x-2">
-                        <span>{activity.icon}</span>
-                        <span>{activity.name}</span>
-                        <span className="ml-2 text-xs text-gray-400">({activity.category})</span>
-                      </div>
-                      {activity.id.startsWith('custom-') && (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteActivity(activity.id)
-                          }}
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                  <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
+                    <div className="flex items-center space-x-3">
+                      {activity.icon ? (
+                        <span className="text-lg">{activity.icon}</span>
+                      ) : (
+                        <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
                       )}
+                      <span className="text-base">{activity.name}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -231,6 +207,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               <div className="space-y-2">
                 <Label className="text-gray-300">アクティビティ名 *</Label>
                 <Input
+                  ref={activityNameInputRef}
                   placeholder="例: 日記を書く"
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value)}
@@ -292,7 +269,6 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   onClick={() => {
                     setShowAddForm(false)
                     setNewActivityName("")
-                    setNewActivityCategory("")
                     setNewActivityIcon("")
                     setNewActivityColor("bg-red-500")
                     setHoveredColor(null)
@@ -317,11 +293,10 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   <div
                     className={`w-12 h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-2xl`}
                   >
-                    {selectedActivityData.icon}
+                    {selectedActivityData.icon || null}
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">{selectedActivityData.name}</h3>
-                    <p className="text-gray-300 text-sm">{selectedActivityData.category}</p>
                   </div>
                 </div>
               </div>
