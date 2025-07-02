@@ -4,7 +4,6 @@ import { useEffect } from "react"
 import { X, Clock, Calendar, MapPin, Star, Tag, MessageSquare, Target, TrendingUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import type { CompletedSession } from "./time-tracker"
 
@@ -44,14 +43,14 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
   }
 
   const formatDateTime = (date: Date) => {
-    return new Date(date).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      weekday: "long"
-    })
+    const d = new Date(date)
+    const year = d.getFullYear()
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+    const weekday = weekdays[d.getDay()]
+    
+    return `${year}/${month}/${day} ${weekday}曜日`
   }
 
   const getMoodEmoji = (mood: number) => {
@@ -64,19 +63,11 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
     return texts[mood - 1] || "普通"
   }
 
-  // アクティビティアイコンマッピング
-  const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
-    "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
-    "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
-    "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
-    "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
-    "英語学習": { icon: "🌍", color: "bg-green-500", category: "学習" },
-    "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
-  }
 
-  const activityInfo = activityIcons[session.activityName] || {
-    icon: "📝",
-    color: "bg-gray-500",
+
+  const activityInfo = {
+    icon: session.activityIcon || "📝",
+    color: session.activityColor || "bg-gray-500",
     category: "その他"
   }
 
@@ -86,7 +77,6 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
         activityId: session.id,
         activityName: session.activityName,
         startTime: new Date(),
-        tags: [],
         location: session.location,
         notes: "",
         targetTime: session.targetTime
@@ -117,14 +107,9 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-white">{session.activityName}</h2>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Badge variant="secondary" className="bg-gray-700 text-gray-300">
-                    {activityInfo.category}
-                  </Badge>
-                  <div className="flex items-center text-green-400">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span className="font-mono text-lg">{formatDuration(session.duration)}</span>
-                  </div>
+                <div className="flex items-center text-green-400 mt-1">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span className="font-mono text-lg">{formatDuration(session.duration)}</span>
                 </div>
               </div>
             </div>
@@ -143,7 +128,7 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
                 <div className="text-white">
                   <div>{formatDateTime(session.startTime)}</div>
                   <div className="text-sm text-gray-400 mt-1">
-                    {formatDateTime(session.startTime)} ～ {formatDateTime(session.endTime)}
+                    {session.startTime.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} ～ {session.endTime.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
                   </div>
                 </div>
               </CardContent>
@@ -219,24 +204,7 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
             </CardContent>
           </Card>
 
-          {/* タグ */}
-          {session.tags.length > 0 && (
-            <Card className="bg-gray-800 border-gray-700">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2 mb-3">
-                  <Tag className="w-4 h-4 text-cyan-400" />
-                  <span className="text-gray-300 font-medium">タグ</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {session.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="bg-gray-700 text-gray-300">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
 
           {/* 学びや成果 */}
           {session.achievements && (

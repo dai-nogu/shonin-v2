@@ -10,7 +10,6 @@ interface Activity {
   name: string
   duration: string
   date: string
-  tags: string[]
   rating: number
   category: string
   icon: string
@@ -52,7 +51,6 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
               </div>
               <div>
                 <h3 className="text-white font-semibold text-lg">{activity.name}</h3>
-                <p className="text-gray-300 text-sm">{activity.category}</p>
               </div>
             </div>
 
@@ -68,26 +66,14 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
               </div>
             </div>
 
-            {/* タグ（オプション） */}
-            {showTags && activity.tags.length > 0 && (
-              <div className="mt-3">
-                <div className="text-gray-400 text-sm mb-2">前回のタグ:</div>
-                <div className="flex flex-wrap gap-2">
-                  {activity.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+
           </div>
 
           {/* 確認メッセージ */}
           <div className="text-center">
             <p className="text-gray-300 mb-2">このアクティビティで時間記録を開始しますか？</p>
             <p className="text-gray-400 text-sm">
-              {showTags ? "前回のタグが自動で設定されます" : "タグは終了時に設定できます"}
+              準備ができたら開始ボタンを押してください
             </p>
           </div>
 

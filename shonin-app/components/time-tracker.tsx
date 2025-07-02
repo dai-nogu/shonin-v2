@@ -17,7 +17,6 @@ export interface SessionData {
   activityId: string
   activityName: string
   startTime: Date
-  tags: string[]
   location: string
   notes: string
   targetTime?: number // 目標時間（分単位）

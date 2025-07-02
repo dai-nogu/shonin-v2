@@ -174,16 +174,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             )}
           </div>
 
-          {/* タグ表示 */}
-          {session.tags.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2">
-              {session.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="bg-gray-700 text-gray-300">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
+
 
           {/* 制御ボタン */}
           <div className="flex justify-center space-x-4">

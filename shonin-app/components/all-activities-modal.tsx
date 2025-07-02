@@ -21,7 +21,6 @@ interface ActivityItem {
   name: string
   duration: string
   date: string
-  tags: string[]
   rating: number
   category: string
   icon: string
@@ -102,7 +101,6 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatDate(new Date(session.endTime)),
-          tags: session.tags,
           rating: session.mood,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -131,7 +129,6 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatDate(new Date(session.endTime)),
-          tags: session.tags,
           rating: session.mood,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -157,7 +154,6 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
         activityId: activity.id,
         activityName: activity.name,
         startTime: new Date(),
-        tags: [],
         location: activity.location || "",
         notes: "",
         targetTime: activity.session.targetTime

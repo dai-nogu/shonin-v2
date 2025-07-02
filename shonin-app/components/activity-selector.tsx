@@ -135,7 +135,6 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       activityId: selectedActivity,
       activityName: activity.name,
       startTime: new Date(),
-      tags: [], // タグは終了時に設定
       location,
       targetTime: targetTimeInMinutes > 0 ? targetTimeInMinutes : undefined,
       notes: "",
@@ -306,7 +305,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             <div className="space-y-2">
               <Label className="text-gray-300 flex items-center">
                 <MapPin className="w-4 h-4 mr-2" />
-                場所（オプション）
+                場所
               </Label>
               <Input
                 placeholder="どこで取り組みますか？"
@@ -353,7 +352,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             <div className="space-y-2">
               <Label className="text-gray-300 flex items-center">
                 <Clock className="w-4 h-4 mr-2" />
-                目標時間（オプション）
+                目標時間
               </Label>
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">

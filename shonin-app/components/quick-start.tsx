@@ -17,7 +17,6 @@ interface QuickStartActivity {
   name: string
   duration: string
   date: string
-  tags: string[]
   rating: number
   category: string
   icon: string
@@ -65,7 +64,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return activityIcons[session.activityName] || {
       icon: "📝",
       color: "bg-gray-500",
-      category: "その他"
+      category: ""
     }
   }
 
@@ -79,7 +78,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     } else if (name.includes('音楽') || name.includes('趣味')) {
       return "趣味"
     }
-    return "その他"
+    return ""
   }
 
   const formatDuration = (seconds: number) => {
@@ -133,8 +132,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           id: stats.latestSession.id,
           name: activityName,
           duration: formatDuration(stats.totalTime),
-          date: `${stats.sessionCount}回`,
-          tags: stats.latestSession.tags,
+          date: formatDate(new Date(stats.latestSession.endTime)),
           rating: stats.latestSession.mood,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -159,7 +157,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatDate(new Date(session.endTime)),
-          tags: session.tags,
           rating: session.mood,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -193,7 +190,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             hour: "2-digit",
             minute: "2-digit"
           }),
-          tags: session.tags,
           rating: session.mood,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -214,7 +210,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         activityId: selectedActivity.id,
         activityName: selectedActivity.name,
         startTime: new Date(),
-        tags: [],
         location: selectedActivity.location || "",
         notes: "",
       }
@@ -290,9 +285,11 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
                   <h3 className="text-white font-medium truncate">{activity.name}</h3>
-                  <Badge variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                    {activity.category}
-                  </Badge>
+                  {activity.category && (
+                    <Badge variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
+                      {activity.category}
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-4 text-sm text-gray-400">
