@@ -12,9 +12,10 @@ import { useActivities, type Activity } from "@/contexts/activities-context"
 
 interface ActivitySelectorProps {
   onStart: (session: SessionData) => void
+  onGoalSettingClick?: () => void
 }
 
-export function ActivitySelector({ onStart }: ActivitySelectorProps) {
+export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelectorProps) {
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
   const [targetHours, setTargetHours] = useState("")
@@ -354,7 +355,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                       <p className="text-gray-400 text-xs mt-1">目標を設定すると進捗を自動で追跡できます</p>
                     </div>
                     <Button
-                      onClick={() => {/* 目標管理ページへの遷移を実装 */}}
+                      onClick={onGoalSettingClick}
                       variant="outline"
                       size="sm"
                       className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"

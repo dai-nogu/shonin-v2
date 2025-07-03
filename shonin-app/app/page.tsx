@@ -71,6 +71,11 @@ export default function Dashboard() {
     setCurrentPage("session")
   }
 
+  // 目標管理画面への遷移
+  const handleGoalSettingClick = () => {
+    setCurrentPage("goals")
+  }
+
   // 一時停止/再開
   const handleTogglePause = () => {
     setSessionState(sessionState === "active" ? "paused" : "active")
@@ -132,7 +137,7 @@ export default function Dashboard() {
                 {/* メインエリア - 2列分 */}
                 <div className="lg:col-span-2 space-y-6">
                   <WelcomeCard completedSessions={completedSessions} />
-                  <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
+                  <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
                 </div>
 
                 {/* サイドバー - 1列分 */}

@@ -369,7 +369,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           {sessionState === "ended" && (
             <>
               <p className="text-white font-medium">🎉 お疲れさまでした！</p>
-              <p className="text-gray-300 text-sm mt-1">あなたの努力は確実に積み重なっています</p>
+              <p className="text-white text-sm mt-1">あなたの努力は確実に積み重なっています</p>
             </>
           )}
         </CardContent>
