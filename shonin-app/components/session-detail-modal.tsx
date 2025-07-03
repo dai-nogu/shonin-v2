@@ -87,8 +87,14 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <Card 
+        className="bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardHeader className="relative">
           <Button
             onClick={onClose}

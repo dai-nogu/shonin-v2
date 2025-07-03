@@ -46,15 +46,14 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     }
   }
 
-  // 仮の目標データ（実際は目標管理から取得）
-  const availableGoals = [
-    { 
-      id: "1", 
-      title: "プログラミングスキル向上", 
-      targetValue: 240,
-      weekdayHours: 2,
-      weekendHours: 5
-    },
+  // 目標データ（実際は目標管理から取得）
+  const availableGoals: Array<{
+    id: string;
+    title: string;
+    targetValue: number;
+    weekdayHours: number;
+    weekendHours: number;
+  }> = [
     // 実際の実装では getActiveGoals() から取得
   ]
   const { activities: customActivities, addActivity } = useActivities()
@@ -316,37 +315,56 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             </div>
 
             {/* 目標との紐付け */}
-            {availableGoals.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-gray-300 flex items-center">
-                  <Target className="w-4 h-4 mr-2" />
-                  目標と紐付け
-                </Label>
-                                 <Select value={selectedGoal} onValueChange={handleGoalSelection}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                    <SelectValue placeholder="目標を選択" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="none" className="text-white hover:bg-gray-700">
-                      紐付けしない
-                    </SelectItem>
-                    {availableGoals.map((goal) => (
-                      <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700">
-                        <div className="flex items-center justify-between w-full">
-                          <span>{goal.title}</span>
-                          <span className="text-xs text-gray-400 ml-2">目標: {goal.targetValue}時間</span>
-                        </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300 flex items-center">
+                <Target className="w-4 h-4 mr-2" />
+                目標と紐付け
+              </Label>
+              {availableGoals.length > 0 ? (
+                <>
+                  <Select value={selectedGoal} onValueChange={handleGoalSelection}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                      <SelectValue placeholder="目標を選択" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700">
+                      <SelectItem value="none" className="text-white hover:bg-gray-700">
+                        紐付けしない
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedGoal && selectedGoal !== "none" && (
-                  <div className="text-sm text-green-400">
-                    この活動が選択した目標の進捗に反映されます
+                      {availableGoals.map((goal) => (
+                        <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700">
+                          <div className="flex items-center justify-between w-full">
+                            <span>{goal.title}</span>
+                            <span className="text-xs text-gray-400 ml-2">目標: {goal.targetValue}時間</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedGoal && selectedGoal !== "none" && (
+                    <div className="text-sm text-green-400">
+                      この活動が選択した目標の進捗に反映されます
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-300 text-sm">まだ目標が設定されていません</p>
+                      <p className="text-gray-400 text-xs mt-1">目標を設定すると進捗を自動で追跡できます</p>
+                    </div>
+                    <Button
+                      onClick={() => {/* 目標管理ページへの遷移を実装 */}}
+                      variant="outline"
+                      size="sm"
+                      className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                    >
+                      目標を設定
+                    </Button>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
             {/* 目標時間設定 */}
             <div className="space-y-2">

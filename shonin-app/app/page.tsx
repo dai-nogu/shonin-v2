@@ -76,6 +76,11 @@ export default function Dashboard() {
     setSessionState(sessionState === "active" ? "paused" : "active")
   }
 
+  // セッション再開（終了状態からアクティブ状態に戻る）
+  const handleResumeSession = () => {
+    setSessionState("active")
+  }
+
   const renderContent = () => {
     switch (currentPage) {
       case "session":
@@ -87,6 +92,7 @@ export default function Dashboard() {
               onSave={handleSaveSession}
               sessionState={sessionState}
               onTogglePause={handleTogglePause}
+              onResume={handleResumeSession}
             />
           )
         }

@@ -15,12 +15,15 @@ interface ActiveSessionProps {
   onSave: (sessionData: any) => void
   sessionState: "active" | "paused" | "ended"
   onTogglePause: () => void
+  onResume: () => void
 }
 
 type SessionState = "active" | "paused" | "ended"
 
-export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause }: ActiveSessionProps) {
+export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [pausedTime, setPausedTime] = useState(0) // 一時停止中の累積時間
+  const [lastActiveTime, setLastActiveTime] = useState(session.startTime) // 最後にactiveになった時刻
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
   const [mood, setMood] = useState<number>(3)
@@ -34,15 +37,29 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
     if (sessionState === "active") {
       interval = setInterval(() => {
         const now = new Date()
-        const elapsed = Math.floor((now.getTime() - session.startTime.getTime()) / 1000)
-        setElapsedTime(elapsed)
+        const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
+        setElapsedTime(pausedTime + activeElapsed)
       }, 1000)
     }
 
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [sessionState, session.startTime])
+  }, [sessionState, lastActiveTime, pausedTime])
+
+  // sessionStateが変わった時の処理
+  useEffect(() => {
+    const now = new Date()
+    
+    if (sessionState === "paused") {
+      // 一時停止時：現在の経過時間を累積一時停止時間に保存
+      const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
+      setPausedTime(prev => prev + activeElapsed)
+    } else if (sessionState === "active") {
+      // 再開時：新しい開始時刻を記録
+      setLastActiveTime(now)
+    }
+  }, [sessionState])
 
   // セッションが終了状態になった時にメモ欄を自動表示
   useEffect(() => {
@@ -83,6 +100,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
   const handleResume = () => {
     setShowNotes(false)
+    // セッション状態をactiveに戻す
+    onResume() // 終了状態からアクティブ状態に戻る
   }
 
   const handleSave = () => {
@@ -190,7 +209,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   <RotateCcw className="w-5 h-5 mr-2" />
                   再開
                 </Button>
-                <Button onClick={handleSave} size="lg" className="bg-green-600 hover:bg-green-700">
+                <Button onClick={handleSave} size="lg" className="bg-green-600 hover:bg-green-700 text-white">
                   <Save className="w-5 h-5 mr-2" />
                   保存
                 </Button>
@@ -250,8 +269,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 variant={showNotes ? "default" : "outline"}
                 className={
                   showNotes
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
                 }
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
@@ -349,7 +368,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           )}
           {sessionState === "ended" && (
             <>
-              <p className="text-blue-400 font-medium">🎉 お疲れさまでした！</p>
+              <p className="text-white font-medium">🎉 お疲れさまでした！</p>
               <p className="text-gray-300 text-sm mt-1">あなたの努力は確実に積み重なっています</p>
             </>
           )}

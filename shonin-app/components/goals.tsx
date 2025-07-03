@@ -28,21 +28,7 @@ interface GoalsProps {
 }
 
 export function Goals({ onBack }: GoalsProps) {
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: "1",
-      title: "プログラミングスキル向上",
-      motivation: "転職して年収を上げたい。自分でサービスを作れるようになりたい。",
-      targetValue: 240,
-      currentValue: 45,
-      unit: "時間",
-      deadline: "2024-12-31",
-      weekdayHours: 2,
-      weekendHours: 5,
-      createdAt: "2024-01-15",
-      status: "active"
-    }
-  ])
+  const [goals, setGoals] = useState<Goal[]>([])
 
   const [isAddingGoal, setIsAddingGoal] = useState(false)
   const [editingGoal, setEditingGoal] = useState<string | null>(null)
@@ -242,7 +228,18 @@ export function Goals({ onBack }: GoalsProps) {
       </div>
 
       <div className="p-6 container mx-auto max-w-4xl">
-
+        {/* 目標追加ボタン */}
+        {!isAddingGoal && goals.length > 0 && (
+          <div className="mb-6">
+            <Button
+              onClick={() => setIsAddingGoal(true)}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              目標を追加
+            </Button>
+          </div>
+        )}
 
         {/* 目標追加フォーム */}
         {isAddingGoal && (

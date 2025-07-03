@@ -24,22 +24,49 @@ export function ActiveActivitySidebar({
   sessionState 
 }: ActiveActivitySidebarProps) {
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [pausedTime, setPausedTime] = useState(0) // 一時停止中の累積時間
+  const [lastActiveTime, setLastActiveTime] = useState<Date | null>(null) // 最後にactiveになった時刻
+
+  // activeSessionが変わった時の初期化
+  useEffect(() => {
+    if (activeSession) {
+      setLastActiveTime(activeSession.startTime)
+      setPausedTime(0)
+      setElapsedTime(0)
+    }
+  }, [activeSession])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
 
-    if (isActive && activeSession && sessionState === "active") {
+    if (isActive && activeSession && sessionState === "active" && lastActiveTime) {
       interval = setInterval(() => {
         const now = new Date()
-        const elapsed = Math.floor((now.getTime() - activeSession.startTime.getTime()) / 1000)
-        setElapsedTime(elapsed)
+        const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
+        setElapsedTime(pausedTime + activeElapsed)
       }, 1000)
     }
 
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isActive, activeSession, sessionState])
+  }, [isActive, activeSession, sessionState, lastActiveTime, pausedTime])
+
+  // sessionStateが変わった時の処理
+  useEffect(() => {
+    if (!activeSession || !lastActiveTime) return
+    
+    const now = new Date()
+    
+    if (sessionState === "paused") {
+      // 一時停止時：現在の経過時間を累積一時停止時間に保存
+      const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
+      setPausedTime(prev => prev + activeElapsed)
+    } else if (sessionState === "active") {
+      // 再開時：新しい開始時刻を記録
+      setLastActiveTime(now)
+    }
+  }, [sessionState, activeSession, lastActiveTime])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)

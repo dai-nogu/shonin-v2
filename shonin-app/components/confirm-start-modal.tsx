@@ -28,8 +28,14 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
   if (!isOpen || !activity) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="bg-gray-900 border-gray-800 max-w-md w-full mx-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onCancel}
+    >
+      <Card 
+        className="bg-gray-900 border-gray-800 max-w-md w-full mx-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardHeader className="relative">
           <Button
             onClick={onCancel}
@@ -55,14 +61,14 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
             </div>
 
             {/* 前回の記録情報 */}
-            <div className="bg-gray-800 bg-opacity-50 rounded p-3 space-y-2">
+            <div className="bg-opacity-50 rounded p-3 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">前回の記録時間:</span>
+                <span>前回の記録時間:</span>
                 <span className="text-green-400 font-mono">{activity.duration}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">前回の実施日:</span>
-                <span className="text-gray-300">{activity.date}</span>
+                <span>前回の実施日:</span>
+                <span>{activity.date}</span>
               </div>
             </div>
 

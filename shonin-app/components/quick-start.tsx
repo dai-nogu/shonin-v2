@@ -51,6 +51,15 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       }
     }
 
+    // 色だけが保存されている場合
+    if (session.activityColor) {
+      return {
+        icon: session.activityIcon || "",
+        color: session.activityColor,
+        category: getCategoryByName(session.activityName)
+      }
+    }
+
     // 保存されていない場合は従来のマッピングを使用
     const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
       "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
@@ -62,7 +71,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
 
     return activityIcons[session.activityName] || {
-      icon: "📝",
+      icon: "",
       color: "bg-gray-500",
       category: ""
     }
@@ -279,7 +288,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           >
             <div className="flex items-center space-x-3 flex-1">
               <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center text-lg`}>
-                {activity.icon}
+                {activity.icon || ""}
               </div>
 
               <div className="flex-1 min-w-0">
