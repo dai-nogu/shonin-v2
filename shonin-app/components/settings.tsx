@@ -38,7 +38,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   const [goalReminders, setGoalReminders] = useState(true)
 
   // アクティビティ管理
-  const { activities: customActivities, deleteActivity } = useActivities()
+  const { activities: customActivities, loading: activitiesLoading, deleteActivity } = useActivities()
 
   const [isSaving, setIsSaving] = useState(false)
 
@@ -51,7 +51,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     alert("設定が保存されました")
   }
 
-  const handleDeleteActivity = (activityId: string) => {
+  const handleDeleteActivity = async (activityId: string) => {
     // 現在進行中のアクティビティかどうかをチェック
     if (isSessionActive && currentSession && currentSession.activityId === activityId) {
       alert("現在進行中のアクティビティは削除できません。\nセッションを終了してから削除してください。")
@@ -59,7 +59,10 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     }
     
     if (confirm("このアクティビティを削除しますか？")) {
-      deleteActivity(activityId)
+      const success = await deleteActivity(activityId)
+      if (!success) {
+        alert("アクティビティの削除に失敗しました。")
+      }
     }
   }
 
@@ -229,8 +232,14 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {customActivities.map((activity) => (
+                {activitiesLoading ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p>アクティビティを読み込み中...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {customActivities.map((activity) => (
                     <div
                       key={activity.id}
                       className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700"
@@ -264,15 +273,16 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                       </Button>
                     </div>
                   ))}
-                  
-                  {customActivities.length === 0 && (
-                    <div className="text-center py-8 text-gray-400">
-                      <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>カスタムアクティビティがありません</p>
-                      <p className="text-sm">ダッシュボードで新しいアクティビティを追加できます</p>
-                    </div>
-                  )}
-                </div>
+                    
+                    {customActivities.length === 0 && (
+                      <div className="text-center py-8 text-gray-400">
+                        <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>カスタムアクティビティがありません</p>
+                        <p className="text-sm">ダッシュボードで新しいアクティビティを追加できます</p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <div className="pt-2 border-t border-gray-700">
                   <p className="text-sm text-gray-400">

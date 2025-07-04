@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { ActivitiesProvider } from "@/contexts/activities-context"
+import { SessionsProvider } from "@/contexts/sessions-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,9 +16,11 @@ export default function RootLayout({
     <html lang="ja" suppressHydrationWarning className="dark">
       <body className={`${inter.className} dark`} suppressHydrationWarning>
         <ActivitiesProvider>
-          <SidebarProvider>
-            {children}
-          </SidebarProvider>
+          <SessionsProvider>
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
+          </SessionsProvider>
         </ActivitiesProvider>
       </body>
     </html>

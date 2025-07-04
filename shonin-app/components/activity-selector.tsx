@@ -57,7 +57,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   }> = [
     // 実際の実装では getActiveGoals() から取得
   ]
-  const { activities: customActivities, addActivity } = useActivities()
+  const { activities: customActivities, loading: activitiesLoading, addActivity } = useActivities()
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
   const [newActivityIcon, setNewActivityIcon] = useState("")
@@ -93,25 +93,28 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const allActivities = customActivities
 
   // アクティビティ追加
-  const handleAddActivity = () => {
+  const handleAddActivity = async () => {
     if (!newActivityName.trim()) return
 
-    const activityId = addActivity({
+    const activityId = await addActivity({
       name: newActivityName.trim(),
-      category: "",
-      icon: newActivityIcon.trim(),
+      icon: newActivityIcon.trim() || null,
       color: newActivityColor // 選択された色を使用
     })
 
-    // 追加したアクティビティを自動選択
-    setSelectedActivity(activityId)
+    if (activityId) {
+      // 追加したアクティビティを自動選択
+      setSelectedActivity(activityId)
 
-    // フォームをリセット
-    setNewActivityName("")
-    setNewActivityIcon("")
-    setNewActivityColor("bg-red-500")
-    setHoveredColor(null)
-    setShowAddForm(false)
+      // フォームをリセット
+      setNewActivityName("")
+      setNewActivityIcon("")
+      setNewActivityColor("bg-red-500")
+      setHoveredColor(null)
+      setShowAddForm(false)
+    } else {
+      alert("アクティビティの追加に失敗しました。")
+    }
   }
 
 
@@ -135,6 +138,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       activityId: selectedActivity,
       activityName: activity.name,
       startTime: new Date(),
+      tags: [], // 後でタグ機能を追加予定
       location,
       targetTime: targetTimeInMinutes > 0 ? targetTimeInMinutes : undefined,
       notes: "",

@@ -1,23 +1,23 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, ReactNode } from "react"
+import { useActivitiesDb } from "@/hooks/use-activities-db"
 
 export interface Activity {
   id: string
   name: string
-  category: string
-  icon: string
+  icon: string | null
   color: string
 }
 
-// 初期のアクティビティデータ（空の状態から開始）
-const INITIAL_ACTIVITIES: Activity[] = []
-
 interface ActivitiesContextType {
   activities: Activity[]
-  addActivity: (activity: Omit<Activity, "id">) => string
-  deleteActivity: (activityId: string) => void
+  loading: boolean
+  error: string | null
+  addActivity: (activity: Omit<Activity, "id">) => Promise<string | null>
+  deleteActivity: (activityId: string) => Promise<boolean>
   getActivity: (activityId: string) => Activity | undefined
+  refetch: () => Promise<void>
 }
 
 const ActivitiesContext = createContext<ActivitiesContextType | undefined>(undefined)
@@ -27,32 +27,34 @@ interface ActivitiesProviderProps {
 }
 
 export function ActivitiesProvider({ children }: ActivitiesProviderProps) {
-  const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES)
+  const {
+    activities,
+    loading,
+    error,
+    addActivity: addActivityDb,
+    deleteActivity: deleteActivityDb,
+    getActivity,
+    refetch,
+  } = useActivitiesDb()
 
-  const addActivity = (activity: Omit<Activity, "id">) => {
-    const newActivity: Activity = {
-      ...activity,
-      id: `custom-${Date.now()}`,
-    }
-    setActivities(prev => [...prev, newActivity])
-    return newActivity.id
+  const addActivity = async (activity: Omit<Activity, "id">) => {
+    return await addActivityDb(activity)
   }
 
-  const deleteActivity = (activityId: string) => {
-    setActivities(prev => prev.filter(activity => activity.id !== activityId))
-  }
-
-  const getActivity = (activityId: string) => {
-    return activities.find(activity => activity.id === activityId)
+  const deleteActivity = async (activityId: string) => {
+    return await deleteActivityDb(activityId)
   }
 
   return (
     <ActivitiesContext.Provider
       value={{
         activities,
+        loading,
+        error,
         addActivity,
         deleteActivity,
         getActivity,
+        refetch,
       }}
     >
       {children}
