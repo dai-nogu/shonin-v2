@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
-import { useSessionTimer } from "@/hooks/use-session-timer"
+import { useSessions } from "@/contexts/sessions-context"
 
 interface ActiveSessionProps {
   session: SessionData
@@ -20,8 +20,6 @@ interface ActiveSessionProps {
   onTogglePause: () => void
   onResume: () => void
 }
-
-type SessionState = "active" | "paused" | "ended"
 
 export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
   const [notes, setNotes] = useState("")
@@ -35,10 +33,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
   // 振り返りデータベースフック
   const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
   
-  // 共通の時間計算フック
-  const { elapsedTime, formattedTime } = useSessionTimer(session, sessionState)
-
-
+  // セッションコンテキストから一元化された時間データを取得
+  const { elapsedTime, formattedTime } = useSessions()
 
   // セッションが終了状態になった時にメモ欄を自動表示
   useEffect(() => {
@@ -56,8 +52,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       }, 100)
     }
   }, [sessionState, showNotes])
-
-
 
   const handleTogglePause = () => {
     onTogglePause()
@@ -198,8 +192,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
               </div>
             )}
           </div>
-
-
 
           {/* 制御ボタン */}
           <div className="flex justify-center space-x-4">

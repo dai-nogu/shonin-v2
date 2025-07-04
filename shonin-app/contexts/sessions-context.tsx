@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react"
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 
 export interface SessionData {
@@ -31,6 +31,9 @@ interface SessionsContextType {
   currentSession: SessionData | null
   isSessionActive: boolean
   sessionState: SessionState
+  // タイマー管理（一元化）
+  elapsedTime: number
+  formattedTime: string
   // セッション操作
   startSession: (sessionData: SessionData) => void
   endSession: () => void
@@ -65,6 +68,72 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
   const [isSessionActive, setIsSessionActive] = useState(false)
   const [sessionState, setSessionState] = useState<SessionState>("active")
+
+  // 一元化されたタイマー状態（useRefを使用）
+  const [elapsedTime, setElapsedTime] = useState(0)
+  const pausedTimeRef = useRef(0) // 一時停止中の累積時間
+  const lastActiveTimeRef = useRef<Date | null>(null) // 最後にactiveになった時刻
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // セッションが変わった時の初期化
+  useEffect(() => {
+    if (currentSession) {
+      lastActiveTimeRef.current = currentSession.startTime
+      pausedTimeRef.current = 0
+      setElapsedTime(0)
+    }
+  }, [currentSession])
+
+  // リアルタイム時間更新
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+
+    if (currentSession && sessionState === "active" && lastActiveTimeRef.current) {
+      intervalRef.current = setInterval(() => {
+        const now = new Date()
+        const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current!.getTime()) / 1000)
+        setElapsedTime(pausedTimeRef.current + activeElapsed)
+      }, 1000)
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [currentSession, sessionState])
+
+  // sessionStateが変わった時の処理
+  useEffect(() => {
+    if (!currentSession || !lastActiveTimeRef.current) return
+    
+    const now = new Date()
+    
+    if (sessionState === "paused") {
+      // 一時停止時：現在の経過時間を累積一時停止時間に保存
+      const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+      pausedTimeRef.current = pausedTimeRef.current + activeElapsed
+      setElapsedTime(pausedTimeRef.current) // 表示時間も更新
+      console.log(`一時停止: 現在のアクティブ時間=${activeElapsed}秒, 累積実働時間=${pausedTimeRef.current}秒`)
+    } else if (sessionState === "active") {
+      // 再開時：新しい開始時刻を記録
+      lastActiveTimeRef.current = now
+      console.log(`再開: 累積実働時間=${pausedTimeRef.current}秒から再開`)
+    }
+  }, [sessionState, currentSession])
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    }
+    return `${minutes}:${secs.toString().padStart(2, "0")}`
+  }
 
   const startSession = (sessionData: SessionData) => {
     setCurrentSession(sessionData)
@@ -133,6 +202,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         currentSession,
         isSessionActive,
         sessionState,
+        elapsedTime,
+        formattedTime: formatTime(elapsedTime),
         startSession,
         endSession,
         pauseSession,
