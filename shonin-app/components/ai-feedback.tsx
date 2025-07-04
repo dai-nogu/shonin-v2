@@ -36,7 +36,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const weeklyFeedback = {
     type: "週次",
     date: getLastWeekString(),
-    message: "先週は合計15時間の学習を達成しました！特にプログラミングの集中力が向上しています。今週は復習時間を増やすことをお勧めします。",
+    message: "",
   }
 
   // 先月の日付を計算
@@ -79,7 +79,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const monthlyFeedback = {
     type: "月次",
     date: getLastMonthString(),
-    message: "先月は目標の80%を達成！学習習慣が定着してきています。今月は新しい分野にチャレンジしてみましょう。",
+    message: "",
   }
 
   const feedbacks = [weeklyFeedback, monthlyFeedback]

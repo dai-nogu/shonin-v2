@@ -13,9 +13,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface SettingsProps {
   onBack: () => void
+  currentSession?: {
+    activityId: string
+    activityName: string
+  } | null
+  isSessionActive?: boolean
 }
 
-export function Settings({ onBack }: SettingsProps) {
+export function Settings({ onBack, currentSession, isSessionActive }: SettingsProps) {
   // ユーザー情報
   const [name, setName] = useState("山田太郎")
   const [email, setEmail] = useState("yamada@example.com")
@@ -47,6 +52,12 @@ export function Settings({ onBack }: SettingsProps) {
   }
 
   const handleDeleteActivity = (activityId: string) => {
+    // 現在進行中のアクティビティかどうかをチェック
+    if (isSessionActive && currentSession && currentSession.activityId === activityId) {
+      alert("現在進行中のアクティビティは削除できません。\nセッションを終了してから削除してください。")
+      return
+    }
+    
     if (confirm("このアクティビティを削除しますか？")) {
       deleteActivity(activityId)
     }
@@ -213,6 +224,9 @@ export function Settings({ onBack }: SettingsProps) {
                   <Activity className="w-5 h-5 mr-2" />
                   アクティビティ管理
                 </CardTitle>
+                <p className="text-gray-400 text-sm">
+                  カスタムアクティビティの管理ができます。進行中のアクティビティは削除できません。
+                </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -228,12 +242,23 @@ export function Settings({ onBack }: SettingsProps) {
                           <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
                         )}
                         <span className="text-white font-medium">{activity.name}</span>
+                        {/* 現在進行中のアクティビティの場合は表示 */}
+                        {isSessionActive && currentSession && currentSession.activityId === activity.id && (
+                          <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">
+                            進行中
+                          </span>
+                        )}
                       </div>
                       <Button
                         onClick={() => handleDeleteActivity(activity.id)}
                         variant="ghost"
                         size="sm"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/20 p-2"
+                        disabled={isSessionActive && currentSession && currentSession.activityId === activity.id}
+                        className={`p-2 ${
+                          isSessionActive && currentSession && currentSession.activityId === activity.id
+                            ? "text-gray-500 cursor-not-allowed opacity-50"
+                            : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                        }`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { WelcomeCard } from "@/components/welcome-card"
 import { AIFeedback } from "@/components/ai-feedback"
@@ -86,6 +86,13 @@ export default function Dashboard() {
     setSessionState("active")
   }
 
+  // セッション画面でセッションが存在しない場合にダッシュボードに戻る
+  useEffect(() => {
+    if (currentPage === "session" && !isSessionActive) {
+      setCurrentPage("dashboard")
+    }
+  }, [currentPage, isSessionActive])
+
   const renderContent = () => {
     switch (currentPage) {
       case "session":
@@ -101,8 +108,7 @@ export default function Dashboard() {
             />
           )
         }
-        // セッションがない場合はダッシュボードに戻る
-        setCurrentPage("dashboard")
+        // セッションがない場合は何も表示しない（useEffectでダッシュボードに戻る）
         return null
         
       case "calendar":
@@ -126,7 +132,14 @@ export default function Dashboard() {
         return <Goals onBack={() => setCurrentPage("dashboard")} />
         
       case "settings":
-        return <Settings onBack={() => setCurrentPage("dashboard")} />
+        return <Settings 
+          onBack={() => setCurrentPage("dashboard")} 
+          currentSession={currentSession ? {
+            activityId: currentSession.activityId,
+            activityName: currentSession.activityName
+          } : null}
+          isSessionActive={isSessionActive}
+        />
         
       default:
         return (

@@ -66,7 +66,7 @@ export function ActiveActivitySidebar({
       // 再開時：新しい開始時刻を記録
       setLastActiveTime(now)
     }
-  }, [sessionState, activeSession, lastActiveTime])
+  }, [sessionState, activeSession])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
