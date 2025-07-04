@@ -36,7 +36,7 @@ interface SessionsContextType {
   endSession: () => void
   pauseSession: () => void
   resumeSession: () => void
-  saveSession: (completedSession: CompletedSession) => Promise<void>
+  saveSession: (completedSession: CompletedSession) => Promise<string | null>
   // データベース操作
   refetch: () => Promise<void>
   getSessionsByDateRange: (startDate: string, endDate: string) => Promise<SessionWithActivity[]>
@@ -84,7 +84,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     setSessionState("active")
   }
 
-  const saveSession = async (completedSession: CompletedSession) => {
+  const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
     try {
       const sessionId = await addSession({
         activity_id: completedSession.activityId,
@@ -96,6 +96,16 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         achievements: completedSession.achievements || null,
         challenges: completedSession.challenges || null,
         location: completedSession.location || null,
+        
+        // 詳細振り返り情報（統合）
+        mood_score: (completedSession as any).moodScore || null,
+        mood_notes: (completedSession as any).moodNotes || null,
+        detailed_achievements: (completedSession as any).detailedAchievements || null,
+        achievement_satisfaction: (completedSession as any).achievementSatisfaction || null,
+        detailed_challenges: (completedSession as any).detailedChallenges || null,
+        challenge_severity: (completedSession as any).challengeSeverity || null,
+        reflection_notes: (completedSession as any).reflectionNotes || null,
+        reflection_duration: (completedSession as any).reflectionDuration || null,
       })
 
       if (sessionId && completedSession.tags.length > 0) {
@@ -106,6 +116,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setCurrentSession(null)
       setIsSessionActive(false)
       setSessionState("active")
+      
+      return sessionId
     } catch (error) {
       console.error("セッション保存エラー:", error)
       throw error

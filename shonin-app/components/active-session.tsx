@@ -8,11 +8,14 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import type { SessionData } from "./time-tracker"
+import { SessionReflection } from "@/types/database"
+import { useReflectionsDb } from "@/hooks/use-reflections-db"
+import { useSessionTimer } from "@/hooks/use-session-timer"
 
 interface ActiveSessionProps {
   session: SessionData
   onEnd: () => void
-  onSave: (sessionData: any) => void
+  onSave: (sessionData: any) => Promise<string | null> | string | null
   sessionState: "active" | "paused" | "ended"
   onTogglePause: () => void
   onResume: () => void
@@ -21,45 +24,21 @@ interface ActiveSessionProps {
 type SessionState = "active" | "paused" | "ended"
 
 export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
-  const [elapsedTime, setElapsedTime] = useState(0)
-  const [pausedTime, setPausedTime] = useState(0) // 一時停止中の累積時間
-  const [lastActiveTime, setLastActiveTime] = useState(session.startTime) // 最後にactiveになった時刻
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
   const [mood, setMood] = useState<number>(3)
   const [achievements, setAchievements] = useState("")
   const [challenges, setChallenges] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
   const achievementsRef = useRef<HTMLTextAreaElement>(null)
+  
+  // 振り返りデータベースフック
+  const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
+  
+  // 共通の時間計算フック
+  const { elapsedTime, formattedTime } = useSessionTimer(session, sessionState)
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout
 
-    if (sessionState === "active") {
-      interval = setInterval(() => {
-        const now = new Date()
-        const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
-        setElapsedTime(pausedTime + activeElapsed)
-      }, 1000)
-    }
-
-    return () => {
-      if (interval) clearInterval(interval)
-    }
-  }, [sessionState, lastActiveTime, pausedTime])
-
-  // sessionStateが変わった時の処理
-  useEffect(() => {
-    const now = new Date()
-    
-    if (sessionState === "paused") {
-      // 一時停止時：現在の経過時間を累積一時停止時間に保存
-      const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
-      setPausedTime(prev => prev + activeElapsed)
-    } else if (sessionState === "active") {
-      // 再開時：新しい開始時刻を記録
-      setLastActiveTime(now)
-    }
-  }, [sessionState])
 
   // セッションが終了状態になった時にメモ欄を自動表示
   useEffect(() => {
@@ -78,16 +57,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
     }
   }, [sessionState, showNotes])
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
 
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-    }
-    return `${minutes}:${secs.toString().padStart(2, "0")}`
-  }
 
   const handleTogglePause = () => {
     onTogglePause()
@@ -104,19 +74,55 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
     onResume() // 終了状態からアクティブ状態に戻る
   }
 
-  const handleSave = () => {
-    const sessionData = {
-      ...session,
-      duration: elapsedTime,
-      endTime: new Date(),
-      notes,
-      mood,
-      achievements,
-      challenges,
-    }
+  const handleSave = async () => {
+    if (isSaving) return // 重複保存を防ぐ
+    
+    setIsSaving(true)
+    
+    try {
+      // まずセッションデータを保存
+      const sessionData = {
+        ...session,
+        duration: elapsedTime,
+        endTime: new Date(),
+        notes,
+        mood,
+        achievements,
+        challenges,
+      }
 
-    onSave(sessionData)
-    onEnd()
+             // セッションデータを外部保存処理に渡し、セッションIDを取得
+       const result = onSave(sessionData)
+       const savedSessionId = result instanceof Promise ? await result : result
+       
+       // セッションが正常に保存された場合のみ振り返りデータを保存
+       if (savedSessionId && (achievements.trim() || challenges.trim() || mood !== 3)) {
+        const reflectionData: SessionReflection = {
+          moodScore: mood,
+          achievements: achievements.trim() || '特になし',
+          challenges: challenges.trim() || '特になし',
+          additionalNotes: notes.trim() || undefined,
+          reflectionDuration: undefined, // 今回は振り返り時間は記録しない
+        }
+        
+        const reflectionId = await saveReflection(savedSessionId, reflectionData)
+        
+        if (reflectionId) {
+          console.log('振り返りデータも保存されました:', reflectionId)
+        } else if (reflectionError) {
+          console.error('振り返りデータの保存に失敗:', reflectionError)
+          // 振り返り保存失敗の場合もセッション自体は保存されているので継続
+        }
+      }
+      
+      onEnd()
+    } catch (error) {
+      console.error('保存処理でエラーが発生:', error)
+      // エラーが発生してもセッション終了は継続
+      onEnd()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getStatusInfo = () => {
@@ -153,7 +159,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             <div
               className={`text-6xl font-mono font-bold ${sessionState === "ended" ? "text-blue-400" : "text-white"}`}
             >
-              {formatTime(elapsedTime)}
+              {formattedTime}
             </div>
             <div className="text-gray-400 text-sm">
               開始時刻:{" "}
@@ -209,9 +215,14 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   <RotateCcw className="w-5 h-5 mr-2" />
                   再開
                 </Button>
-                <Button onClick={handleSave} size="lg" className="bg-green-600 hover:bg-green-700 text-white">
+                <Button 
+                  onClick={handleSave} 
+                  size="lg" 
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  disabled={isSaving || isReflectionLoading}
+                >
                   <Save className="w-5 h-5 mr-2" />
-                  保存
+                  {isSaving || isReflectionLoading ? "保存中..." : "保存"}
                 </Button>
               </>
             ) : (
@@ -254,6 +265,13 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           {sessionState === "ended" && (
             <div className="bg-blue-500 bg-opacity-20 border border-blue-500 border-opacity-30 rounded-lg p-3">
               <p className="text-blue-400 text-sm">✏️ お疲れさまでした！振り返りを記録して保存しましょう。</p>
+            </div>
+          )}
+
+          {/* エラー表示 */}
+          {reflectionError && (
+            <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-3">
+              <p className="text-red-400 text-sm">⚠️ {reflectionError}</p>
             </div>
           )}
         </CardContent>

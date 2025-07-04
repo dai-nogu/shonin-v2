@@ -10,6 +10,7 @@ import { ConfirmStartModal } from "./confirm-start-modal"
 import { SessionDetailModal } from "./session-detail-modal"
 import { ActivityCountModal } from "./activity-count-modal"
 import { RecentSessionsModal } from "./recent-sessions-modal"
+import { useActivities } from "@/contexts/activities-context"
 import type { SessionData, CompletedSession } from "./time-tracker"
 
 interface QuickStartActivity {
@@ -39,6 +40,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
   const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
+  
+  // アクティビティ管理フック
+  const { activities, addActivity } = useActivities()
 
   // セッションから色・アイコン情報を取得、なければ従来のマッピングを使用
   const getActivityStyle = (session: CompletedSession) => {
@@ -213,14 +217,54 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     setShowModal(true)
   }
 
-  const handleConfirmStart = () => {
+  const handleConfirmStart = async () => {
     if (selectedActivity && onStartActivity) {
+      let activityId = selectedActivity.id
+      
+      // データベースに対応するアクティビティが存在するかチェック
+      const correspondingSession = completedSessions.find(session => 
+        session.activityName === selectedActivity.name
+      )
+      
+      if (correspondingSession) {
+        // 既存のセッションがある場合はそのアクティビティIDを使用
+        activityId = correspondingSession.activityId
+      } else {
+        // データベースに直接アクティビティが存在するかチェック
+        const existingActivity = activities.find(activity => 
+          activity.name === selectedActivity.name
+        )
+        
+        if (existingActivity) {
+          activityId = existingActivity.id
+        } else {
+          // アクティビティが存在しない場合は新規作成
+          console.log('Creating new activity for QuickStart:', selectedActivity.name)
+          const newActivityId = await addActivity({
+            name: selectedActivity.name,
+            icon: selectedActivity.icon || null,
+            color: selectedActivity.color,
+          })
+          
+          if (newActivityId) {
+            activityId = newActivityId
+          } else {
+            console.error('Failed to create activity for QuickStart')
+            return
+          }
+        }
+      }
+      
       const sessionData: SessionData = {
-        activityId: selectedActivity.id,
+        activityId: activityId,
         activityName: selectedActivity.name,
         startTime: new Date(),
+        tags: [], // タグは後で設定可能にする
         location: selectedActivity.location || "",
         notes: "",
+        // アクティビティの色とアイコン情報を保持
+        activityColor: selectedActivity.color,
+        activityIcon: selectedActivity.icon,
       }
       onStartActivity(sessionData)
     }
