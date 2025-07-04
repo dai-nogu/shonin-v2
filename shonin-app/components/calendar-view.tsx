@@ -56,6 +56,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
           return { icon: session.activityIcon, color: session.activityColor }
         }
 
+        // 色だけが保存されている場合
+        if (session.activityColor) {
+          return { icon: session.activityIcon || "", color: session.activityColor }
+        }
+
         // 保存されていない場合は名前から推測（従来の方法）
         const activity = session.activityName
         if (!activity) {
@@ -306,7 +311,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                             className={`text-xs p-1 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
                           >
                             <div className="flex items-center space-x-1">
-                              <span>{session.icon}</span>
+                              {session.icon ? (
+                                <span>{session.icon}</span>
+                              ) : (
+                                <div className={`w-3 h-3 rounded-full ${session.color}`}></div>
+                              )}
                               <span className="text-white truncate">{session.activity}</span>
                             </div>
                             <div className="text-gray-300 text-xs">{formatDuration(session.duration)}</div>
@@ -407,7 +416,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                         className={`text-xs p-2 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
                       >
                         <div className="flex items-center space-x-1 mb-1">
-                          <span>{session.icon}</span>
+                          {session.icon ? (
+                            <span>{session.icon}</span>
+                          ) : (
+                            <div className={`w-3 h-3 rounded-full ${session.color}`}></div>
+                          )}
                           <span className="text-white truncate">{session.activity}</span>
                         </div>
                         <div className="text-gray-300 text-xs">{formatDuration(session.duration)}</div>

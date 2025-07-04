@@ -292,7 +292,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   <div
                     className={`w-12 h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-2xl`}
                   >
-                    {selectedActivityData.icon || null}
+                    {selectedActivityData.icon}
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">{selectedActivityData.name}</h3>
