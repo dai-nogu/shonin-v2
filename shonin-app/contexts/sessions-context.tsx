@@ -7,7 +7,6 @@ export interface SessionData {
   activityId: string
   activityName: string
   startTime: Date
-  tags: string[]
   location: string
   notes: string
 }
@@ -58,7 +57,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     loading,
     error,
     addSession,
-    addSessionTags,
     getSessionsByDateRange,
     getActivityStats,
     refetch,
@@ -182,10 +180,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         reflection_notes: (completedSession as any).reflectionNotes || null,
         reflection_duration: (completedSession as any).reflectionDuration || null,
       })
-
-      if (sessionId && completedSession.tags.length > 0) {
-        await addSessionTags(sessionId, completedSession.tags)
-      }
 
       // セッション終了
       setCurrentSession(null)

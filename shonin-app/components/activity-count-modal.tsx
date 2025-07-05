@@ -130,7 +130,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
         activityId: activity.id,
         activityName: activity.name,
         startTime: new Date(),
-        tags: [],
         location: activity.latestSession.location || "",
         notes: "",
         targetTime: activity.latestSession.targetTime

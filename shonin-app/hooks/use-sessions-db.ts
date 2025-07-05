@@ -14,9 +14,6 @@ export interface SessionWithActivity extends Session {
     icon: string | null
     color: string
   }
-  session_tags?: Array<{
-    tag_name: string
-  }>
 }
 
 // テスト用のダミーユーザーID
@@ -41,9 +38,6 @@ export function useSessionsDb() {
             name,
             icon,
             color
-          ),
-          session_tags (
-            tag_name
           )
         `)
         .eq('user_id', DUMMY_USER_ID)
@@ -145,32 +139,7 @@ export function useSessionsDb() {
     }
   }
 
-  // セッションタグを追加
-  const addSessionTags = async (sessionId: string, tags: string[]): Promise<boolean> => {
-    try {
-      console.log('Adding session tags:', sessionId, tags)
 
-      const tagInserts = tags.map(tag => ({
-        session_id: sessionId,
-        tag_name: tag,
-      }))
-
-      const { error } = await supabase
-        .from('session_tags')
-        .insert(tagInserts)
-
-      if (error) {
-        console.error('Tags insert error:', error)
-        throw error
-      }
-
-      return true
-    } catch (err) {
-      console.error('Error in addSessionTags:', err)
-      setError(err instanceof Error ? err.message : 'タグの追加に失敗しました')
-      return false
-    }
-  }
 
   // 期間指定でセッションを取得
   const getSessionsByDateRange = async (startDate: string, endDate: string): Promise<SessionWithActivity[]> => {
@@ -185,9 +154,6 @@ export function useSessionsDb() {
             name,
             icon,
             color
-          ),
-          session_tags (
-            tag_name
           )
         `)
         .eq('user_id', DUMMY_USER_ID)
@@ -263,7 +229,7 @@ export function useSessionsDb() {
     addSession,
     updateSession,
     deleteSession,
-    addSessionTags,
+
     getSessionsByDateRange,
     getActivityStats,
     refetch: fetchSessions,

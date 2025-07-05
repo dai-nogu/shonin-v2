@@ -20,7 +20,6 @@ interface SessionItem {
   name: string
   duration: string
   date: string
-  tags: string[]
   rating: number
   category: string
   icon: string
@@ -109,7 +108,6 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatRelativeTime(new Date(session.endTime)),
-          tags: session.tags,
           rating: session.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -131,7 +129,6 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
         activityId: sessionItem.id,
         activityName: sessionItem.name,
         startTime: new Date(),
-        tags: [],
         location: sessionItem.location || "",
         notes: "",
         targetTime: sessionItem.session.targetTime

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, Clock, Calendar, Star, Tag, MapPin, Plus } from "lucide-react"
+import { ArrowLeft, Clock, Calendar, Star, MapPin, Plus } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -50,8 +50,7 @@ export function SessionHistory({ sessions, onBack, onStartNew }: SessionHistoryP
 
   const filteredSessions = sessions.filter((session) => {
     const matchesSearch =
-      session.activityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      session.activityName.toLowerCase().includes(searchTerm.toLowerCase())
 
     if (selectedFilter === "all") return matchesSearch
     // 他のフィルター条件を追加可能
@@ -113,7 +112,7 @@ export function SessionHistory({ sessions, onBack, onStartNew }: SessionHistoryP
         <CardContent className="p-4">
           <div className="flex space-x-4">
             <Input
-              placeholder="アクティビティやタグで検索..."
+              placeholder="アクティビティで検索..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
@@ -154,28 +153,15 @@ export function SessionHistory({ sessions, onBack, onStartNew }: SessionHistoryP
                       </div>
                     </div>
 
-                    {/* タグと場所 */}
-                    <div className="flex items-center space-x-4 mb-3">
-                      {session.tags.length > 0 && (
-                        <div className="flex items-center space-x-2">
-                          <Tag className="w-4 h-4 text-gray-400" />
-                          <div className="flex flex-wrap gap-1">
-                            {session.tags.map((tag) => (
-                              <Badge key={tag} variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {session.location && (
+                    {/* 場所 */}
+                    {session.location && (
+                      <div className="flex items-center space-x-4 mb-3">
                         <div className="flex items-center text-gray-400 text-sm">
                           <MapPin className="w-4 h-4 mr-1" />
                           {session.location}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* 成果と課題 */}
                     {(session.achievements || session.challenges) && (

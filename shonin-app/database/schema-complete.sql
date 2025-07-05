@@ -5,7 +5,6 @@
 -- ==========================================
 
 -- 既存のテーブルを削除（もしあれば）
-DROP TABLE IF EXISTS public.session_tags CASCADE;
 DROP TABLE IF EXISTS public.sessions CASCADE;
 DROP TABLE IF EXISTS public.activities CASCADE;
 DROP TABLE IF EXISTS public.goals CASCADE;
@@ -76,15 +75,7 @@ CREATE TABLE IF NOT EXISTS public.sessions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create session_tags table (タグをセッションごとに管理)
-CREATE TABLE IF NOT EXISTS public.session_tags (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    session_id UUID REFERENCES public.sessions(id) ON DELETE CASCADE NOT NULL,
-    tag_name TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    -- 同じセッションに同じタグが重複しないようにユニーク制約
-    UNIQUE(session_id, tag_name)
-);
+
 
 -- セッション写真・メディアテーブル
 CREATE TABLE IF NOT EXISTS public.session_media (
@@ -163,15 +154,7 @@ INSERT INTO public.sessions (
 4, '5km を45分で完走できた。朝の清々しい空気の中で気持ちよく走れた。', '最後の1kmでペースが落ちた。普段の練習不足を感じる。週3回は走りたい。', '朝早い時間で公園が静かで良かった。')
 ON CONFLICT (id) DO NOTHING;
 
--- テスト用のサンプルタグを挿入
-INSERT INTO public.session_tags (session_id, tag_name) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '自己啓発'),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '集中'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'React'),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '学習'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '筋トレ'),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '健康')
-ON CONFLICT (session_id, tag_name) DO NOTHING;
+
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_activities_user_id ON public.activities(user_id);
@@ -179,8 +162,7 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON public.sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_activity_id ON public.sessions(activity_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON public.sessions(start_time);
 CREATE INDEX IF NOT EXISTS idx_sessions_end_time ON public.sessions(end_time);
-CREATE INDEX IF NOT EXISTS idx_session_tags_session_id ON public.session_tags(session_id);
-CREATE INDEX IF NOT EXISTS idx_session_tags_tag_name ON public.session_tags(tag_name);
+
 CREATE INDEX IF NOT EXISTS idx_goals_user_id ON public.goals(user_id);
 CREATE INDEX IF NOT EXISTS idx_ai_feedback_user_id ON public.ai_feedback(user_id);
 
@@ -265,7 +247,7 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
 -- ==========================================
 -- 
 -- 特徴:
--- 1. 基本機能（アクティビティ、セッション、タグ）
+-- 1. 基本機能（アクティビティ、セッション）
 -- 2. 統合振り返り機能（詳細な気分・成果・課題記録）
 -- 3. AI分析結果保存（感情分析、キーワード抽出）
 -- 4. メディアファイル対応（写真・動画・音声）

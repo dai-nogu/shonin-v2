@@ -138,12 +138,11 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       activityId: selectedActivity,
       activityName: activity.name,
       startTime: new Date(),
-      tags: [], // 後でタグ機能を追加予定
       location,
       targetTime: targetTimeInMinutes > 0 ? targetTimeInMinutes : undefined,
       notes: "",
       activityColor: activity.color,
-      activityIcon: activity.icon,
+      activityIcon: activity.icon || undefined,
       goalId: selectedGoal && selectedGoal !== "none" ? selectedGoal : undefined,
     }
 

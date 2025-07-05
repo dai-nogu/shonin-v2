@@ -12,7 +12,6 @@ interface RecentActivity {
   name: string
   duration: string
   date: string
-  tags: string[]
   rating: number
   category: string
   icon: string
@@ -33,7 +32,6 @@ export function RecentActivities({ onStartActivity }: RecentActivitiesProps) {
       name: "読書",
       duration: "1h 30m",
       date: "今日",
-      tags: ["自己啓発", "集中"],
       rating: 4,
       category: "学習",
       icon: "📚",
@@ -44,7 +42,6 @@ export function RecentActivities({ onStartActivity }: RecentActivitiesProps) {
       name: "プログラミング",
       duration: "2h 15m",
       date: "昨日",
-      tags: ["React", "学習"],
       rating: 5,
       category: "学習",
       icon: "💻",
@@ -55,7 +52,6 @@ export function RecentActivities({ onStartActivity }: RecentActivitiesProps) {
       name: "運動",
       duration: "45m",
       date: "昨日",
-      tags: ["筋トレ", "健康"],
       rating: 4,
       category: "健康",
       icon: "🏃",
@@ -74,7 +70,6 @@ export function RecentActivities({ onStartActivity }: RecentActivitiesProps) {
         activityId: selectedActivity.id,
         activityName: selectedActivity.name,
         startTime: new Date(),
-        tags: selectedActivity.tags,
         location: "",
         notes: "",
       }
@@ -118,13 +113,6 @@ export function RecentActivities({ onStartActivity }: RecentActivitiesProps) {
                 </div>
                 <div className="flex items-center space-x-2 mb-2">
                   <span className="text-gray-400 text-sm">📅 {activity.date}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {activity.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
                 </div>
               </div>
               <div className="flex items-center ml-4">

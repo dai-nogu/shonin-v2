@@ -259,7 +259,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         activityId: activityId,
         activityName: selectedActivity.name,
         startTime: new Date(),
-        tags: [], // タグは後で設定可能にする
         location: selectedActivity.location || "",
         notes: "",
         // アクティビティの色とアイコン情報を保持

@@ -172,26 +172,7 @@ export interface Database {
           updated_at?: string
         }
       }
-      session_tags: {
-        Row: {
-          id: string
-          session_id: string
-          tag_name: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          session_id: string
-          tag_name: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          session_id?: string
-          tag_name?: string
-          created_at?: string
-        }
-      }
+
       goals: {
         Row: {
           id: string
