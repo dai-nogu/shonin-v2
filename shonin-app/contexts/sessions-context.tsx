@@ -117,6 +117,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       pausedTimeRef.current = pausedTimeRef.current + activeElapsed
       setElapsedTime(pausedTimeRef.current) // 表示時間も更新
       console.log(`一時停止: 現在のアクティブ時間=${activeElapsed}秒, 累積実働時間=${pausedTimeRef.current}秒`)
+    } else if (sessionState === "ended") {
+      // 終了時：現在の経過時間を累積一時停止時間に保存
+      const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+      pausedTimeRef.current = pausedTimeRef.current + activeElapsed
+      setElapsedTime(pausedTimeRef.current) // 表示時間も更新
+      console.log(`終了: 現在のアクティブ時間=${activeElapsed}秒, 最終実働時間=${pausedTimeRef.current}秒`)
     } else if (sessionState === "active") {
       // 再開時：新しい開始時刻を記録
       lastActiveTimeRef.current = now
