@@ -66,8 +66,8 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
 
 
   const activityInfo = {
-    icon: session.activityIcon || "📝",
-    color: session.activityColor || "bg-gray-500",
+    icon: session.activityIcon,
+    color: session.activityColor,
     category: "その他"
   }
 
@@ -192,19 +192,19 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
                 <span className="text-gray-300 font-medium">気分</span>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="text-3xl">{getMoodEmoji(session.mood)}</div>
+                <div className="text-3xl">{getMoodEmoji(session.mood || 3)}</div>
                 <div>
                   <div className="flex items-center space-x-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
                         className={`w-4 h-4 ${
-                          star <= session.mood ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
+                          star <= (session.mood || 3) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
                         }`}
                       />
                     ))}
                   </div>
-                  <div className="text-white mt-1">{getMoodText(session.mood)}</div>
+                  <div className="text-white mt-1">{getMoodText(session.mood || 3)}</div>
                 </div>
               </div>
             </CardContent>
@@ -243,30 +243,12 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
             <Card className="bg-gray-800 border-gray-700">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2 mb-3">
-                  <MessageSquare className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-300 font-medium">その他のメモ</span>
                 </div>
                 <div className="text-white whitespace-pre-wrap">{session.notes}</div>
               </CardContent>
             </Card>
           )}
-
-          {/* アクションボタン */}
-          <div className="flex space-x-3 pt-4">
-            <Button
-              onClick={handleStartSimilar}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-            >
-              同じアクティビティを開始
-            </Button>
-            <Button
-              onClick={onClose}
-              variant="outline"
-              className="flex-1 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-            >
-              閉じる
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>

@@ -99,8 +99,8 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .map(session => {
         const activityInfo = activityIcons[session.activityName] || {
-          icon: "📝",
-          color: "bg-gray-500",
+          icon: session.activityIcon,
+          color: session.activityColor,
           category: "その他"
         }
 
@@ -110,7 +110,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
           duration: formatDuration(session.duration),
           date: formatRelativeTime(new Date(session.endTime)),
           tags: session.tags,
-          rating: session.mood,
+          rating: session.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
@@ -164,8 +164,14 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <Card className="bg-gray-900 border-gray-800 max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden">
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <Card 
+          className="bg-gray-900 border-gray-800 max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
           <CardHeader className="relative">
             <Button
               onClick={onClose}

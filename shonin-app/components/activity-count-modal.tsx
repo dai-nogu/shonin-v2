@@ -101,8 +101,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
       .sort((a, b) => b[1].sessionCount - a[1].sessionCount)
       .map(([activityName, stats]) => {
         const activityInfo = activityIcons[activityName] || {
-          icon: "📝",
-          color: "bg-gray-500",
+          icon: stats.latestSession.activityIcon,
+          color: stats.latestSession.activityColor,
           category: "その他"
         }
 
@@ -163,8 +163,14 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <Card className="bg-gray-900 border-gray-800 max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden">
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <Card 
+          className="bg-gray-900 border-gray-800 max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
           <CardHeader className="relative">
             <Button
               onClick={onClose}
@@ -229,7 +235,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         <Star
                           key={star}
                           className={`w-3 h-3 ${
-                            star <= activity.latestSession.mood ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
+                            star <= (activity.latestSession.mood || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
                           }`}
                         />
                       ))}
