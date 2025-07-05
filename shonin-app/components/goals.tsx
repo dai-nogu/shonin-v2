@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
+import { useGoalsDb, type GoalFormData } from "@/hooks/use-goals-db"
 
 interface Goal {
   id: string
@@ -28,8 +29,18 @@ interface GoalsProps {
 }
 
 export function Goals({ onBack }: GoalsProps) {
-  const [goals, setGoals] = useState<Goal[]>([])
+  // データベースフック
+  const { 
+    goals: dbGoals, 
+    loading, 
+    error, 
+    addGoal, 
+    updateGoal, 
+    deleteGoal: deleteGoalFromDb 
+  } = useGoalsDb()
 
+  // ローカルステート
+  const [goals, setGoals] = useState<Goal[]>([])
   const [isAddingGoal, setIsAddingGoal] = useState(false)
   const [editingGoal, setEditingGoal] = useState<string | null>(null)
   const [newGoal, setNewGoal] = useState({
@@ -85,6 +96,26 @@ export function Goals({ onBack }: GoalsProps) {
     return calculateWeeklyHours(weekdayHours, weekendHours) * 4
   }
 
+  // データベースからの目標を変換
+  useEffect(() => {
+    if (dbGoals) {
+      const convertedGoals: Goal[] = dbGoals.map(goal => ({
+        id: goal.id,
+        title: goal.title,
+        motivation: goal.description || '',
+        targetValue: Math.round((goal.target_duration || 0) / 3600), // 秒から時間に変換
+        currentValue: Math.round((goal.current_value || 0) / 3600), // 秒から時間に変換
+        unit: goal.unit || '時間',
+        deadline: goal.deadline || '',
+        weekdayHours: goal.weekday_hours || 0,
+        weekendHours: goal.weekend_hours || 0,
+        createdAt: goal.created_at.split('T')[0],
+        status: goal.status || 'active'
+      }))
+      setGoals(convertedGoals)
+    }
+  }, [dbGoals])
+
   // 新規目標の自動計算
   useEffect(() => {
     const calculated = calculateTotalHours(newGoal.deadline, newGoal.weekdayHours, newGoal.weekendHours)
@@ -109,34 +140,34 @@ export function Goals({ onBack }: GoalsProps) {
     return diffDays
   }
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     if (!newGoal.title || !newGoal.deadline || newGoal.calculatedHours === 0) return
 
-    const goal: Goal = {
-      id: Date.now().toString(),
+    const goalData: GoalFormData = {
       title: newGoal.title,
       motivation: newGoal.motivation,
-      targetValue: newGoal.calculatedHours,
-      currentValue: 0,
-      unit: newGoal.unit,
       deadline: newGoal.deadline,
       weekdayHours: newGoal.weekdayHours,
       weekendHours: newGoal.weekendHours,
-      createdAt: new Date().toISOString().split('T')[0],
-      status: "active"
+      calculatedHours: newGoal.calculatedHours
     }
 
-    setGoals([...goals, goal])
-    setNewGoal({
-      title: "",
-      motivation: "",
-      unit: "時間",
-      deadline: "",
-      weekdayHours: 0,
-      weekendHours: 0,
-      calculatedHours: 0
-    })
-    setIsAddingGoal(false)
+    const goalId = await addGoal(goalData)
+    
+    if (goalId) {
+      setNewGoal({
+        title: "",
+        motivation: "",
+        unit: "時間",
+        deadline: "",
+        weekdayHours: 0,
+        weekendHours: 0,
+        calculatedHours: 0
+      })
+      setIsAddingGoal(false)
+    } else {
+      alert('目標の追加に失敗しました')
+    }
   }
 
   const handleEditGoal = (goalId: string) => {
@@ -155,7 +186,7 @@ export function Goals({ onBack }: GoalsProps) {
     }
   }
 
-  const handleUpdateGoal = () => {
+  const handleUpdateGoal = async () => {
     console.log("保存開始:", { editGoal, editingGoal })
     
     if (!editGoal.title || !editGoal.deadline || !editingGoal) {
@@ -167,33 +198,31 @@ export function Goals({ onBack }: GoalsProps) {
     const calculatedTargetValue = calculateTotalHours(editGoal.deadline, editGoal.weekdayHours, editGoal.weekendHours)
     console.log("計算された目標値:", calculatedTargetValue)
 
-    setGoals(goals.map(goal => 
-      goal.id === editingGoal 
-        ? { 
-            ...goal, 
-            title: editGoal.title,
-            motivation: editGoal.motivation,
-            unit: editGoal.unit,
-            deadline: editGoal.deadline,
-            weekdayHours: editGoal.weekdayHours,
-            weekendHours: editGoal.weekendHours,
-            targetValue: calculatedTargetValue
-          }
-        : goal
-    ))
+    const goalData: GoalFormData = {
+      title: editGoal.title,
+      motivation: editGoal.motivation,
+      deadline: editGoal.deadline,
+      weekdayHours: editGoal.weekdayHours,
+      weekendHours: editGoal.weekendHours,
+      calculatedHours: calculatedTargetValue
+    }
+
+    const success = await updateGoal(editingGoal, goalData)
     
-    console.log("保存完了")
-    
-    setEditGoal({
-      title: "",
-      motivation: "",
-      unit: "時間",
-      deadline: "",
-      weekdayHours: 0,
-      weekendHours: 0,
-      calculatedHours: 0
-    })
-    setEditingGoal(null)
+    if (success) {
+      setEditGoal({
+        title: "",
+        motivation: "",
+        unit: "時間",
+        deadline: "",
+        weekdayHours: 0,
+        weekendHours: 0,
+        calculatedHours: 0
+      })
+      setEditingGoal(null)
+    } else {
+      alert('目標の更新に失敗しました')
+    }
   }
 
   const handleCancelEdit = () => {
@@ -209,14 +238,59 @@ export function Goals({ onBack }: GoalsProps) {
     })
   }
 
-  const handleDeleteGoal = (goalId: string) => {
+  const handleDeleteGoal = async (goalId: string) => {
     const confirmed = confirm("この目標を削除しますか？")
     if (confirmed) {
-      setGoals(goals.filter(goal => goal.id !== goalId))
+      const success = await deleteGoalFromDb(goalId)
+      if (!success) {
+        alert('目標の削除に失敗しました')
+      }
     }
   }
 
 
+
+  // ローディング状態
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white">
+        <div className="border-b border-gray-800 p-6">
+          <h1 className="text-2xl font-bold flex items-center">
+            <Target className="w-6 h-6 mr-2" />
+            目標管理
+          </h1>
+        </div>
+        <div className="p-6 container mx-auto max-w-4xl">
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-400">目標を読み込み中...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // エラー状態
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white">
+        <div className="border-b border-gray-800 p-6">
+          <h1 className="text-2xl font-bold flex items-center">
+            <Target className="w-6 h-6 mr-2" />
+            目標管理
+          </h1>
+        </div>
+        <div className="p-6 container mx-auto max-w-4xl">
+          <div className="text-center py-12">
+            <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
+            <Button onClick={() => window.location.reload()} className="bg-blue-500 hover:bg-blue-600">
+              再読み込み
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">

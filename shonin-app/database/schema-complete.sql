@@ -1,6 +1,6 @@
 -- ==========================================
 -- SHONIN アプリ 完全版スキーマ
--- 基本機能 + 統合振り返り機能
+-- 基本機能 + 統合振り返り機能 + 目標管理機能
 -- Supabase SQL Editorで実行してください
 -- ==========================================
 
@@ -75,8 +75,6 @@ CREATE TABLE IF NOT EXISTS public.sessions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-
-
 -- セッション写真・メディアテーブル
 CREATE TABLE IF NOT EXISTS public.session_media (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -96,7 +94,7 @@ CREATE TABLE IF NOT EXISTS public.session_media (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create goals table
+-- Create goals table (完全版：週間時間設定対応)
 CREATE TABLE IF NOT EXISTS public.goals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
@@ -105,6 +103,14 @@ CREATE TABLE IF NOT EXISTS public.goals (
     target_duration INTEGER, -- in seconds
     deadline DATE,
     is_completed BOOLEAN DEFAULT false,
+    
+    -- 週間時間設定（新規追加）
+    weekday_hours INTEGER DEFAULT 0, -- 平日（月〜金）の1日あたりの目標時間
+    weekend_hours INTEGER DEFAULT 0, -- 土日の1日あたりの目標時間
+    current_value INTEGER DEFAULT 0, -- 現在の進捗値（秒単位）
+    unit TEXT DEFAULT '時間', -- 目標の単位（時間、分、回数など）
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused')), -- 目標のステータス
+    
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -154,8 +160,6 @@ INSERT INTO public.sessions (
 4, '5km を45分で完走できた。朝の清々しい空気の中で気持ちよく走れた。', '最後の1kmでペースが落ちた。普段の練習不足を感じる。週3回は走りたい。', '朝早い時間で公園が静かで良かった。')
 ON CONFLICT (id) DO NOTHING;
 
-
-
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_activities_user_id ON public.activities(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON public.sessions(user_id);
@@ -164,6 +168,8 @@ CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON public.sessions(start_time
 CREATE INDEX IF NOT EXISTS idx_sessions_end_time ON public.sessions(end_time);
 
 CREATE INDEX IF NOT EXISTS idx_goals_user_id ON public.goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_goals_status ON public.goals(status);
+CREATE INDEX IF NOT EXISTS idx_goals_deadline ON public.goals(deadline);
 CREATE INDEX IF NOT EXISTS idx_ai_feedback_user_id ON public.ai_feedback(user_id);
 
 -- 振り返り・AI分析用インデックス
@@ -173,6 +179,13 @@ CREATE INDEX IF NOT EXISTS idx_sessions_ai_analyzed ON public.sessions(ai_analyz
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON public.sessions(created_at);
 CREATE INDEX IF NOT EXISTS idx_session_media_session_id ON public.session_media(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_media_media_type ON public.session_media(media_type);
+
+-- カラムコメントを追加
+COMMENT ON COLUMN public.goals.weekday_hours IS '平日（月〜金）の1日あたりの目標時間';
+COMMENT ON COLUMN public.goals.weekend_hours IS '土日の1日あたりの目標時間';
+COMMENT ON COLUMN public.goals.current_value IS '現在の進捗値（秒単位）';
+COMMENT ON COLUMN public.goals.unit IS '目標の単位（時間、分、回数など）';
+COMMENT ON COLUMN public.goals.status IS '目標のステータス（active: 進行中, completed: 完了, paused: 一時停止）';
 
 -- AIフィードバック生成用のビュー（分析しやすくするため）
 CREATE OR REPLACE VIEW public.sessions_for_ai_analysis AS
@@ -243,7 +256,7 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
 -- ==========================================
--- 実行完了 - 完全版スキーマ
+-- 実行完了 - 完全版スキーマ（目標管理機能統合版）
 -- ==========================================
 -- 
 -- 特徴:
@@ -251,12 +264,26 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
 -- 2. 統合振り返り機能（詳細な気分・成果・課題記録）
 -- 3. AI分析結果保存（感情分析、キーワード抽出）
 -- 4. メディアファイル対応（写真・動画・音声）
--- 5. サンプルデータ付き（すぐにテスト可能）
+-- 5. 目標管理機能（週間時間設定、進捗追跡）
+-- 6. サンプルデータ付き（すぐにテスト可能）
+-- 
+-- 目標管理機能の新機能:
+-- - weekday_hours: 平日の1日あたりの目標時間
+-- - weekend_hours: 土日の1日あたりの目標時間
+-- - current_value: 現在の進捗値（秒単位）
+-- - unit: 目標の単位
+-- - status: 目標のステータス（active/completed/paused）
 -- 
 -- AI分析用クエリ例:
 -- SELECT * FROM sessions_for_ai_analysis 
 -- WHERE user_id = '00000000-0000-0000-0000-000000000000'
 -- ORDER BY created_at DESC LIMIT 10;
+-- 
+-- 目標管理クエリ例:
+-- SELECT * FROM goals 
+-- WHERE user_id = '00000000-0000-0000-0000-000000000000' 
+-- AND status = 'active'
+-- ORDER BY deadline ASC;
 -- 
 -- RLS is DISABLED for testing - DO NOT USE IN PRODUCTION
 -- 本番環境では適切なRLSポリシーを設定してください

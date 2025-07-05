@@ -182,6 +182,11 @@ export interface Database {
           target_duration: number | null
           deadline: string | null
           is_completed: boolean
+          weekday_hours: number
+          weekend_hours: number
+          current_value: number
+          unit: string
+          status: 'active' | 'completed' | 'paused'
           created_at: string
           updated_at: string
         }
@@ -193,6 +198,11 @@ export interface Database {
           target_duration?: number | null
           deadline?: string | null
           is_completed?: boolean
+          weekday_hours?: number
+          weekend_hours?: number
+          current_value?: number
+          unit?: string
+          status?: 'active' | 'completed' | 'paused'
           created_at?: string
           updated_at?: string
         }
@@ -204,6 +214,11 @@ export interface Database {
           target_duration?: number | null
           deadline?: string | null
           is_completed?: boolean
+          weekday_hours?: number
+          weekend_hours?: number
+          current_value?: number
+          unit?: string
+          status?: 'active' | 'completed' | 'paused'
           created_at?: string
           updated_at?: string
         }
@@ -363,8 +378,9 @@ export interface SessionMedia {
   isMainImage: boolean;
 }
 
-export interface SessionWithReflection extends CompletedSession {
-  reflection?: SessionReflection;
-  media?: SessionMedia[];
-  sentimentAnalysis?: SessionSentimentAnalysisDatabase;
-} 
+// CompletedSessionは@/components/time-trackerで定義されています
+// export interface SessionWithReflection extends CompletedSession {
+//   reflection?: SessionReflection;
+//   media?: SessionMedia[];
+//   sentimentAnalysis?: SessionSentimentAnalysisDatabase;
+// } 
