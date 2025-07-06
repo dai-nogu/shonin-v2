@@ -27,9 +27,12 @@ export function useGoalsDb() {
   const [error, setError] = useState<string | null>(null)
 
   // 目標を取得
-  const fetchGoals = async () => {
+  const fetchGoals = async (forceLoading = false) => {
     try {
-      setLoading(true)
+      // データが既に存在する場合はローディング状態をスキップ
+      if (forceLoading || goals.length === 0) {
+        setLoading(true)
+      }
       console.log('Fetching goals...')
       
       const { data, error } = await supabase
@@ -90,7 +93,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      await fetchGoals() // リストを更新
+      await fetchGoals(true) // リストを更新（強制ローディング）
       console.log('Goal added successfully:', data.id)
       return data.id
     } catch (err) {
@@ -125,7 +128,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      await fetchGoals() // リストを更新
+      await fetchGoals(true) // リストを更新（強制ローディング）
       return true
     } catch (err) {
       console.error('Error in updateGoal:', err)
@@ -149,7 +152,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      await fetchGoals() // リストを更新
+      await fetchGoals(true) // リストを更新（強制ローディング）
       return true
     } catch (err) {
       console.error('Error in deleteGoal:', err)
@@ -177,7 +180,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      await fetchGoals() // リストを更新
+      await fetchGoals(true) // リストを更新（強制ローディング）
       return true
     } catch (err) {
       console.error('Error in completeGoal:', err)

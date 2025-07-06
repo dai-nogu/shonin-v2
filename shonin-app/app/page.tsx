@@ -19,6 +19,7 @@ import type { SessionData, CompletedSession } from "@/components/time-tracker"
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState("dashboard")
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">("month")
+  const [isInitialized, setIsInitialized] = useState(false)
   
   // セッション管理をコンテキストから取得
   const {
@@ -32,6 +33,37 @@ export default function Dashboard() {
     resumeSession,
     saveSession,
   } = useSessions()
+
+  // localStorageからページ状態を復元
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedPage = localStorage.getItem('shonin-current-page')
+      const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
+      
+      if (savedPage) {
+        setCurrentPage(savedPage)
+      }
+      if (savedViewMode && (savedViewMode === 'month' || savedViewMode === 'week')) {
+        setCalendarViewMode(savedViewMode)
+      }
+      
+      setIsInitialized(true)
+    }
+  }, [])
+
+  // ページ状態をlocalStorageに保存
+  useEffect(() => {
+    if (isInitialized && typeof window !== 'undefined') {
+      localStorage.setItem('shonin-current-page', currentPage)
+    }
+  }, [currentPage, isInitialized])
+
+  // カレンダービューモードをlocalStorageに保存
+  useEffect(() => {
+    if (isInitialized && typeof window !== 'undefined') {
+      localStorage.setItem('shonin-calendar-view-mode', calendarViewMode)
+    }
+  }, [calendarViewMode, isInitialized])
 
   const handlePageChange = (pageId: string) => {
     setCurrentPage(pageId)
@@ -55,13 +87,15 @@ export default function Dashboard() {
   }
 
   // セッション保存
-  const handleSaveSession = async (sessionData: CompletedSession) => {
+  const handleSaveSession = async (sessionData: CompletedSession): Promise<string | null> => {
     try {
-      await saveSession(sessionData)
+      const sessionId = await saveSession(sessionData)
       setCurrentPage("dashboard") // ダッシュボードに戻る
+      return sessionId
     } catch (error) {
       console.error("セッション保存エラー:", error)
       // エラーハンドリング - 必要に応じてユーザーに通知
+      return null
     }
   }
 
@@ -96,6 +130,18 @@ export default function Dashboard() {
     }
   }, [currentPage, isSessionActive])
 
+  // 初期化が完了するまでローディング表示
+  if (!isInitialized) {
+    return (
+      <div className="fixed inset-0 bg-gray-950 text-white flex items-center justify-center z-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
   // CompletedSessionの型に合わせて変換
   const completedSessions: CompletedSession[] = sessions
     .filter(session => session.end_time)
@@ -114,7 +160,7 @@ export default function Dashboard() {
       challenges: session.challenges || undefined,
       // アクティビティの色とアイコン情報を追加
       activityColor: session.activities?.color,
-      activityIcon: session.activities?.icon,
+      activityIcon: session.activities?.icon || undefined,
     }))
 
   console.log('Completed sessions for QuickStart:', completedSessions)

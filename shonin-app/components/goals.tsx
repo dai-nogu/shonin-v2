@@ -250,25 +250,7 @@ export function Goals({ onBack }: GoalsProps) {
 
 
 
-  // ローディング状態
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <div className="border-b border-gray-800 p-6">
-          <h1 className="text-2xl font-bold flex items-center">
-            <Target className="w-6 h-6 mr-2" />
-            目標管理
-          </h1>
-        </div>
-        <div className="p-6 container mx-auto max-w-4xl">
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-400">目標を読み込み中...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   // エラー状態
   if (error) {
@@ -622,7 +604,7 @@ export function Goals({ onBack }: GoalsProps) {
           })}
         </div>
 
-        {goals.length === 0 && !isAddingGoal && (
+        {!loading && goals.length === 0 && !isAddingGoal && (
           <div className="text-center py-12">
             <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-400 mb-2">目標がまだありません</h3>
