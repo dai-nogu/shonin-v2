@@ -116,7 +116,8 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
     const firstDay = new Date(year, month, 1)
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
+    // 月曜日を週の開始にするため、日曜日を6、月曜日を0にする
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7
 
     const days = []
 
@@ -136,7 +137,8 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
   const getWeekDays = (date: Date) => {
     const startOfWeek = new Date(date)
     const day = startOfWeek.getDay()
-    const diff = startOfWeek.getDate() - day // 日曜日を週の開始とする
+    // 月曜日を週の開始とする（月曜日=1なので、1を引く）
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1)
     startOfWeek.setDate(diff)
 
     const weekDays = []
@@ -269,7 +271,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         <CardContent>
           {/* 曜日ヘッダー */}
           <div className="grid grid-cols-7 gap-1 mb-2">
-            {["日", "月", "火", "水", "木", "金", "土"].map((day) => (
+            {["月", "火", "水", "木", "金", "土", "日"].map((day) => (
               <div key={day} className="p-2 text-center text-gray-400 font-medium text-sm">
                 {day}
               </div>
@@ -387,7 +389,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
               const daySessions = getSessionsForDate(day)
               const totalTime = getTotalTimeForDate(day)
               const todayCheck = isToday(day)
-              const dayNames = ["日", "月", "火", "水", "木", "金", "土"]
+              const dayNames = ["月", "火", "水", "木", "金", "土", "日"]
 
               return (
                 <div
@@ -397,7 +399,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                   }`}
                 >
                   <div className="text-center mb-3">
-                    <div className="text-gray-400 text-sm">{dayNames[index]}</div>
+                    <div className="text-gray-400 text-sm">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
                     <div className={`text-lg font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
                       {day.getDate()}
                     </div>
