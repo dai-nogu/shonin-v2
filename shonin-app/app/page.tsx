@@ -43,8 +43,8 @@ export default function Dashboard() {
   }
 
   // セッション開始
-  const handleStartSession = (sessionData: SessionData) => {
-    startSession(sessionData)
+  const handleStartSession = async (sessionData: SessionData) => {
+    await startSession(sessionData)
     setCurrentPage("session") // セッション専用ページに遷移
   }
 

@@ -34,7 +34,7 @@ interface SessionsContextType {
   elapsedTime: number
   formattedTime: string
   // セッション操作
-  startSession: (sessionData: SessionData) => void
+  startSession: (sessionData: SessionData) => Promise<void>
   endSession: () => void
   pauseSession: () => void
   resumeSession: () => void
@@ -57,6 +57,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     loading,
     error,
     addSession,
+    updateSession,
     getSessionsByDateRange,
     getActivityStats,
     refetch,
@@ -66,21 +67,91 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
   const [isSessionActive, setIsSessionActive] = useState(false)
   const [sessionState, setSessionState] = useState<SessionState>("active")
+  const [isRestoring, setIsRestoring] = useState(true)
+  const [isRestoredSession, setIsRestoredSession] = useState(false)
 
   // 一元化されたタイマー状態（useRefを使用）
   const [elapsedTime, setElapsedTime] = useState(0)
   const pausedTimeRef = useRef(0) // 一時停止中の累積時間
   const lastActiveTimeRef = useRef<Date | null>(null) // 最後にactiveになった時刻
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const previousSessionStateRef = useRef<SessionState>("active")
 
-  // セッションが変わった時の初期化
+  // ページロード時に進行中セッションを復元
   useEffect(() => {
-    if (currentSession) {
+    const restoreActiveSession = async () => {
+      if (!sessions || sessions.length === 0) {
+        setIsRestoring(false)
+        return
+      }
+
+      // end_timeがnullの進行中セッションを探す
+      const activeSession = sessions.find(session => !session.end_time)
+      
+      if (activeSession && activeSession.activities) {
+        console.log('進行中セッションを復元中:', activeSession)
+        
+        // SessionDataに変換
+        const sessionData: SessionData = {
+          activityId: activeSession.activity_id,
+          activityName: activeSession.activities.name,
+          startTime: new Date(activeSession.start_time),
+          location: activeSession.location || '',
+          targetTime: undefined, // 目標時間は復元時には設定しない
+          notes: '',
+          activityColor: activeSession.activities.color,
+          activityIcon: activeSession.activities.icon,
+          goalId: undefined, // 目標IDも復元時には設定しない
+        }
+
+        // 経過時間を計算
+        const now = new Date()
+        const startTime = new Date(activeSession.start_time)
+        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
+        
+        // タイマー状態を設定（復元時は元の開始時刻を基準にする）
+        lastActiveTimeRef.current = startTime
+        pausedTimeRef.current = 0
+        setElapsedTime(elapsed)
+        
+        // 復元フラグを設定
+        setIsRestoredSession(true)
+        
+        // 前回の状態を復元時の状態に設定
+        previousSessionStateRef.current = "active"
+        
+        // セッション状態を復元
+        setCurrentSession(sessionData)
+        setIsSessionActive(true)
+        setSessionState("active")
+        
+        console.log('進行中セッションを復元しました:', {
+          sessionData,
+          elapsedTime: elapsed,
+          formattedTime: formatTime(elapsed)
+        })
+      }
+      
+      setIsRestoring(false)
+    }
+
+    if (!loading) {
+      restoreActiveSession()
+    }
+  }, [sessions, loading])
+
+  // セッションが変わった時の初期化（復元時は除く）
+  useEffect(() => {
+    if (currentSession && !isRestoredSession) {
       lastActiveTimeRef.current = currentSession.startTime
       pausedTimeRef.current = 0
       setElapsedTime(0)
     }
-  }, [currentSession])
+    // 復元フラグをリセット
+    if (isRestoredSession) {
+      setIsRestoredSession(false)
+    }
+  }, [currentSession, isRestoredSession])
 
   // リアルタイム時間更新
   useEffect(() => {
@@ -108,6 +179,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     if (!currentSession || !lastActiveTimeRef.current) return
     
     const now = new Date()
+    const previousState = previousSessionStateRef.current
     
     if (sessionState === "paused") {
       // 一時停止時：現在の経過時間を累積一時停止時間に保存
@@ -116,16 +188,25 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setElapsedTime(pausedTimeRef.current) // 表示時間も更新
       console.log(`一時停止: 現在のアクティブ時間=${activeElapsed}秒, 累積実働時間=${pausedTimeRef.current}秒`)
     } else if (sessionState === "ended") {
-      // 終了時：現在の経過時間を累積一時停止時間に保存
-      const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
-      pausedTimeRef.current = pausedTimeRef.current + activeElapsed
-      setElapsedTime(pausedTimeRef.current) // 表示時間も更新
-      console.log(`終了: 現在のアクティブ時間=${activeElapsed}秒, 最終実働時間=${pausedTimeRef.current}秒`)
+      // 終了時：一時停止中からの終了の場合は追加計算しない
+      if (previousState === "active") {
+        // アクティブ状態からの終了の場合のみ時間を追加
+        const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+        pausedTimeRef.current = pausedTimeRef.current + activeElapsed
+        setElapsedTime(pausedTimeRef.current) // 表示時間も更新
+        console.log(`終了(アクティブから): 現在のアクティブ時間=${activeElapsed}秒, 最終実働時間=${pausedTimeRef.current}秒`)
+      } else {
+        // 一時停止中からの終了の場合は現在の表示時間をそのまま使用
+        console.log(`終了(一時停止から): 最終実働時間=${pausedTimeRef.current}秒（追加計算なし）`)
+      }
     } else if (sessionState === "active") {
       // 再開時：新しい開始時刻を記録
       lastActiveTimeRef.current = now
       console.log(`再開: 累積実働時間=${pausedTimeRef.current}秒から再開`)
     }
+    
+    // 前回の状態を記録
+    previousSessionStateRef.current = sessionState
   }, [sessionState, currentSession])
 
   const formatTime = (seconds: number) => {
@@ -139,10 +220,36 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     return `${minutes}:${secs.toString().padStart(2, "0")}`
   }
 
-  const startSession = (sessionData: SessionData) => {
-    setCurrentSession(sessionData)
-    setIsSessionActive(true)
-    setSessionState("active")
+  const startSession = async (sessionData: SessionData) => {
+    // データベースに進行中セッションを保存
+    try {
+      await addSession({
+        activity_id: sessionData.activityId,
+        start_time: sessionData.startTime.toISOString(),
+        end_time: null, // 進行中なのでend_timeはnull
+        duration: 0,
+        location: sessionData.location || null,
+        notes: null,
+        mood: null,
+        achievements: null,
+        challenges: null,
+      })
+      
+      // 復元フラグをリセット（新規セッション）
+      setIsRestoredSession(false)
+      setCurrentSession(sessionData)
+      setIsSessionActive(true)
+      setSessionState("active")
+      
+      console.log('セッションを開始し、データベースに保存しました')
+    } catch (error) {
+      console.error('セッション開始時のDB保存エラー:', error)
+      // エラーが発生してもセッションは開始する
+      setIsRestoredSession(false)
+      setCurrentSession(sessionData)
+      setIsSessionActive(true)
+      setSessionState("active")
+    }
   }
 
   const endSession = () => {
@@ -159,34 +266,52 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
   const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
     try {
-      const sessionId = await addSession({
-        activity_id: completedSession.activityId,
-        start_time: completedSession.startTime.toISOString(),
-        end_time: completedSession.endTime.toISOString(),
-        duration: completedSession.duration,
-        notes: completedSession.notes || null,
-        mood: completedSession.mood || null,
-        achievements: completedSession.achievements || null,
-        challenges: completedSession.challenges || null,
-        location: completedSession.location || null,
-        
-        // 詳細振り返り情報（統合）
-        mood_score: (completedSession as any).moodScore || null,
-        mood_notes: (completedSession as any).moodNotes || null,
-        detailed_achievements: (completedSession as any).detailedAchievements || null,
-        achievement_satisfaction: (completedSession as any).achievementSatisfaction || null,
-        detailed_challenges: (completedSession as any).detailedChallenges || null,
-        challenge_severity: (completedSession as any).challengeSeverity || null,
-        reflection_notes: (completedSession as any).reflectionNotes || null,
-        reflection_duration: (completedSession as any).reflectionDuration || null,
-      })
-
-      // セッション終了
-      setCurrentSession(null)
-      setIsSessionActive(false)
-      setSessionState("active")
+      // 進行中セッションを更新する場合と新規作成する場合を分ける
+      const activeSession = sessions.find(session => !session.end_time)
       
-      return sessionId
+      if (activeSession) {
+        // 既存の進行中セッションを更新
+        const success = await updateSession(activeSession.id, {
+          end_time: completedSession.endTime.toISOString(),
+          duration: completedSession.duration,
+          notes: completedSession.notes || null,
+          mood: completedSession.mood || null,
+          achievements: completedSession.achievements || null,
+          challenges: completedSession.challenges || null,
+        })
+        
+        if (success) {
+          // セッション終了
+          setCurrentSession(null)
+          setIsSessionActive(false)
+          setSessionState("active")
+          
+          console.log('進行中セッションを更新しました:', activeSession.id)
+          return activeSession.id
+        } else {
+          throw new Error('セッション更新に失敗しました')
+        }
+      } else {
+        // 新規セッションとして保存（従来の処理）
+        const sessionId = await addSession({
+          activity_id: completedSession.activityId,
+          start_time: completedSession.startTime.toISOString(),
+          end_time: completedSession.endTime.toISOString(),
+          duration: completedSession.duration,
+          notes: completedSession.notes || null,
+          mood: completedSession.mood || null,
+          achievements: completedSession.achievements || null,
+          challenges: completedSession.challenges || null,
+          location: completedSession.location || null,
+        })
+
+        // セッション終了
+        setCurrentSession(null)
+        setIsSessionActive(false)
+        setSessionState("active")
+        
+        return sessionId
+      }
     } catch (error) {
       console.error("セッション保存エラー:", error)
       throw error
@@ -197,7 +322,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     <SessionsContext.Provider
       value={{
         sessions,
-        loading,
+        loading: loading || isRestoring,
         error,
         currentSession,
         isSessionActive,
