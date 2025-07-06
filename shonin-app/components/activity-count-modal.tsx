@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, BarChart3, Star, MapPin } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+
 import { SessionDetailModal } from "./session-detail-modal"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
@@ -207,9 +207,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <h3 className="text-white font-medium truncate">{activity.name}</h3>
-                        <Badge variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                          {activity.category}
-                        </Badge>
                       </div>
 
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
@@ -220,9 +217,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         <div className="flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span>合計 {formatDuration(activity.totalTime)}</span>
-                        </div>
-                        <div className="flex items-center space-x-1 text-xs">
-                          <span>最新: {formatDate(new Date(activity.latestSession.endTime))}</span>
                         </div>
                       </div>
                     </div>

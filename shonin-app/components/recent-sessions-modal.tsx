@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, Calendar, Star, MapPin, History } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+
 import { SessionDetailModal } from "./session-detail-modal"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
@@ -206,9 +206,6 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <h3 className="text-white font-medium truncate">{sessionItem.name}</h3>
-                        <Badge variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                          {sessionItem.category}
-                        </Badge>
                       </div>
 
                       <div className="flex items-center space-x-4 text-sm text-gray-400">

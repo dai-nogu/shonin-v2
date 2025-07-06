@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmStartModal } from "./confirm-start-modal"
 import { SessionDetailModal } from "./session-detail-modal"
@@ -114,6 +114,20 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
   }
 
+  const formatRelativeTime = (date: Date) => {
+    const now = new Date()
+    const diffTime = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+    const diffMinutes = Math.floor(diffTime / (1000 * 60))
+
+    if (diffMinutes < 60) return `${diffMinutes}分前`
+    if (diffHours < 24) return `${diffHours}時間前`
+    if (diffDays === 1) return "昨日"
+    if (diffDays < 7) return `${diffDays}日前`
+    return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
+  }
+
   // アクティビティ別（実行回数が多い順）
   const getMostRecordedActivities = (): QuickStartActivity[] => {
     const activityStats = new Map<string, { totalTime: number; sessionCount: number; latestSession: CompletedSession }>()
@@ -169,7 +183,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           id: session.id,
           name: session.activityName,
           duration: formatDuration(session.duration),
-          date: formatDate(new Date(session.endTime)),
+          date: formatRelativeTime(new Date(session.endTime)),
           rating: session.mood,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -337,36 +351,37 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
                   <h3 className="text-white font-medium truncate">{activity.name}</h3>
-                  {activity.category && (
-                    <Badge variant="secondary" className="bg-gray-700 text-gray-300 text-xs">
-                      {activity.category}
-                    </Badge>
-                  )}
                 </div>
 
                 <div className="flex items-center space-x-4 text-sm text-gray-400">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{activity.duration}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {activeTab === "most-recorded" ? (
-                      <>
+                  {activeTab === "most-recorded" ? (
+                    <>
+                      <div className="flex items-center space-x-1">
                         <BarChart3 className="w-3 h-3" />
-                        <span>{activity.date}</span>
-                      </>
-                    ) : (
-                      <>
+                        <span className="font-medium text-green-400">{activity.sessionCount}回</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-3 h-3" />
+                        <span>合計 {activity.duration}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{activity.duration}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
-                        <span>{activity.date}</span>
-                      </>
-                    )}
-                  </div>
-                  {activity.location && (
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-3 h-3" />
-                      <span className="truncate">{activity.location}</span>
-                    </div>
+                        <span className="text-blue-400">{activity.date}</span>
+                      </div>
+                      {activity.location && (
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{activity.location}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
