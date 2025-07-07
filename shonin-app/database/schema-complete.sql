@@ -94,6 +94,18 @@ CREATE TABLE IF NOT EXISTS public.session_media (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- セッション写真専用テーブル（写真アップロード機能用）
+CREATE TABLE IF NOT EXISTS public.session_photos (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    session_id UUID REFERENCES public.sessions(id) ON DELETE CASCADE NOT NULL,
+    file_name TEXT NOT NULL,
+    file_path TEXT NOT NULL, -- Supabase Storageのパス
+    file_size INTEGER NOT NULL,
+    file_type TEXT NOT NULL, -- MIMEタイプ
+    public_url TEXT NOT NULL, -- パブリックアクセスURL
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create goals table (完全版：週間時間設定対応)
 CREATE TABLE IF NOT EXISTS public.goals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -179,6 +191,8 @@ CREATE INDEX IF NOT EXISTS idx_sessions_ai_analyzed ON public.sessions(ai_analyz
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON public.sessions(created_at);
 CREATE INDEX IF NOT EXISTS idx_session_media_session_id ON public.session_media(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_media_media_type ON public.session_media(media_type);
+CREATE INDEX IF NOT EXISTS idx_session_photos_session_id ON public.session_photos(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_photos_uploaded_at ON public.session_photos(uploaded_at);
 
 -- カラムコメントを追加
 COMMENT ON COLUMN public.goals.weekday_hours IS '平日（月〜金）の1日あたりの目標時間';
@@ -264,8 +278,9 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
 -- 2. 統合振り返り機能（詳細な気分・成果・課題記録）
 -- 3. AI分析結果保存（感情分析、キーワード抽出）
 -- 4. メディアファイル対応（写真・動画・音声）
--- 5. 目標管理機能（週間時間設定、進捗追跡）
--- 6. サンプルデータ付き（すぐにテスト可能）
+-- 5. 写真アップロード機能（session_photos テーブル）
+-- 6. 目標管理機能（週間時間設定、進捗追跡）
+-- 7. サンプルデータ付き（すぐにテスト可能）
 -- 
 -- 目標管理機能の新機能:
 -- - weekday_hours: 平日の1日あたりの目標時間

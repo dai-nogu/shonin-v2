@@ -252,6 +252,38 @@ export interface Database {
           created_at?: string
         }
       }
+      session_photos: {
+        Row: {
+          id: string
+          session_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          public_url: string
+          uploaded_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          public_url: string
+          uploaded_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          public_url?: string
+          uploaded_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

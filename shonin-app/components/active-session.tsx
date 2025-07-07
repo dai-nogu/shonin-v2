@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw } from "lucide-react"
+import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,7 @@ import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useSessions } from "@/contexts/sessions-context"
+import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
 
 interface ActiveSessionProps {
   session: SessionData
@@ -24,11 +25,16 @@ interface ActiveSessionProps {
 export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
+  const [showPhotos, setShowPhotos] = useState(false)
   const [mood, setMood] = useState<number>(3)
   const [achievements, setAchievements] = useState("")
   const [challenges, setChallenges] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([])
+  const [savedPhotos, setSavedPhotos] = useState<UploadedPhoto[]>([])
+  const [isUploading, setIsUploading] = useState(false)
   const achievementsRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   // 振り返りデータベースフック
   const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
@@ -64,8 +70,28 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
   const handleResume = () => {
     setShowNotes(false)
+    setShowPhotos(false)
     // セッション状態をactiveに戻す
     onResume() // 終了状態からアクティブ状態に戻る
+  }
+
+  // 写真アップロード処理
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files && files.length > 0) {
+      const newPhotos = Array.from(files)
+      setUploadedPhotos(prev => [...prev, ...newPhotos])
+    }
+  }
+
+  // 写真削除処理
+  const handlePhotoRemove = (index: number) => {
+    setUploadedPhotos(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // 写真選択ボタンクリック
+  const handlePhotoButtonClick = () => {
+    fileInputRef.current?.click()
   }
 
   const handleSave = async () => {
@@ -85,9 +111,24 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
         challenges,
       }
 
-             // セッションデータを外部保存処理に渡し、セッションIDを取得
-       const result = onSave(sessionData)
-       const savedSessionId = result instanceof Promise ? await result : result
+      // セッションデータを外部保存処理に渡し、セッションIDを取得
+      const result = onSave(sessionData)
+      const savedSessionId = result instanceof Promise ? await result : result
+      
+      // 写真をアップロード
+      if (uploadedPhotos.length > 0 && savedSessionId) {
+        try {
+          setIsUploading(true)
+          const uploadedPhotoResults = await uploadPhotos(uploadedPhotos, savedSessionId)
+          setSavedPhotos(uploadedPhotoResults)
+          setUploadedPhotos([]) // アップロード完了後にクリア
+        } catch (photoError) {
+          console.error('写真アップロードエラー:', photoError)
+          // 写真アップロードに失敗してもセッション保存は継続
+        } finally {
+          setIsUploading(false)
+        }
+      }
        
        // セッションが正常に保存された場合のみ振り返りデータを保存
        if (savedSessionId && (achievements.trim() || challenges.trim() || mood !== 3)) {
@@ -211,10 +252,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   onClick={handleSave} 
                   size="lg" 
                   className="bg-green-600 hover:bg-green-700 text-white"
-                  disabled={isSaving || isReflectionLoading}
+                  disabled={isSaving || isReflectionLoading || isUploading}
                 >
                   <Save className="w-5 h-5 mr-2" />
-                  {isSaving || isReflectionLoading ? "保存中..." : "保存"}
+                  {isUploading ? "写真アップロード中..." : (isSaving || isReflectionLoading ? "保存中..." : "保存")}
                 </Button>
               </>
             ) : (
@@ -275,7 +316,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-3 mb-4">
               <Button
-                onClick={() => setShowNotes(!showNotes)}
+                onClick={() => {
+                  setShowNotes(!showNotes)
+                  setShowPhotos(false) // 写真タブを閉じる
+                }}
                 variant={showNotes ? "default" : "outline"}
                 className={
                   showNotes
@@ -287,14 +331,119 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 メモ
               </Button>
 
-              <Button variant="outline" className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700">
+              <Button 
+                onClick={() => {
+                  setShowPhotos(!showPhotos)
+                  setShowNotes(false) // メモタブを閉じる
+                }}
+                variant={showPhotos ? "default" : "outline"}
+                className={
+                  showPhotos
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                }
+              >
                 <Camera className="w-4 h-4 mr-2" />
                 写真
+                {(uploadedPhotos.length + savedPhotos.length) > 0 && (
+                  <span className="ml-1 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {uploadedPhotos.length + savedPhotos.length}
+                  </span>
+                )}
               </Button>
             </div>
 
+            {/* 隠しファイル入力 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
+
+            {/* 写真アップロードエリア */}
+            {showPhotos && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-gray-300 text-sm font-medium">写真を追加</Label>
+                  <Button
+                    onClick={handlePhotoButtonClick}
+                    size="sm"
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    disabled={isUploading}
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    {isUploading ? "アップロード中..." : "写真を選択"}
+                  </Button>
+                </div>
+
+                {/* アップロードされた写真のプレビュー */}
+                {(uploadedPhotos.length > 0 || savedPhotos.length > 0) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* 保存済みの写真 */}
+                    {savedPhotos.map((photo, index) => (
+                      <div key={`saved-${photo.id}`} className="relative group">
+                        <img
+                          src={photo.url}
+                          alt={`保存済み写真 ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-green-500"
+                        />
+                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                          ✓ 保存済み
+                        </div>
+                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          {photo.fileName}
+                        </div>
+                      </div>
+                    ))}
+                    {/* アップロード待ちの写真 */}
+                    {uploadedPhotos.map((photo, index) => (
+                      <div key={`pending-${index}`} className="relative group">
+                        <img
+                          src={URL.createObjectURL(photo)}
+                          alt={`アップロード予定写真 ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-gray-600"
+                        />
+                        <Button
+                          onClick={() => handlePhotoRemove(index)}
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 p-0"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                        <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                          保存待ち
+                        </div>
+                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          {photo.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {uploadedPhotos.length === 0 && savedPhotos.length === 0 && (
+                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+                    <Camera className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm mb-2">写真をアップロードして記録を残しましょう</p>
+                    <Button
+                      onClick={handlePhotoButtonClick}
+                      variant="outline"
+                      size="sm"
+                      className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      写真を選択
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* メモ・振り返り入力エリア */}
-            {showNotes && (
+            {showNotes && !showPhotos && (
               <div className="space-y-4">
                 {/* 気分評価 */}
                 <div className="space-y-2">
