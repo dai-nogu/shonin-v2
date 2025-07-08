@@ -35,6 +35,8 @@ export interface CompletedSession extends SessionData {
   // アクティビティ情報
   activityColor?: string
   activityIcon?: string
+  // 目標ID（SessionDataから継承されるが明示的に記載）
+  goalId?: string
 }
 
 interface TimeTrackerProps {

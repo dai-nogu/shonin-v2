@@ -22,6 +22,9 @@ interface Goal {
   weekendHours: number
   createdAt: string
   status: "active" | "completed" | "paused"
+  // 生の秒値も保持
+  targetDurationSeconds?: number
+  currentValueSeconds?: number
 }
 
 interface GoalsProps {
@@ -96,6 +99,22 @@ export function Goals({ onBack }: GoalsProps) {
     return calculateWeeklyHours(weekdayHours, weekendHours) * 4
   }
 
+  // 秒を時間.分の小数形式に変換する関数
+  const formatSecondsToDecimalHours = (seconds: number): number => {
+    return Math.round((seconds / 3600) * 100) / 100 // 小数点2桁で四捨五入
+  }
+
+  // 秒を時間:分の文字列形式に変換する関数
+  const formatSecondsToTimeString = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`
+    }
+    return `${minutes}m`
+  }
+
   // データベースからの目標を変換
   useEffect(() => {
     if (dbGoals) {
@@ -103,14 +122,17 @@ export function Goals({ onBack }: GoalsProps) {
         id: goal.id,
         title: goal.title,
         motivation: goal.description || '',
-        targetValue: Math.round((goal.target_duration || 0) / 3600), // 秒から時間に変換
-        currentValue: Math.round((goal.current_value || 0) / 3600), // 秒から時間に変換
+        targetValue: formatSecondsToDecimalHours(goal.target_duration || 0), // 秒から小数時間に変換
+        currentValue: formatSecondsToDecimalHours(goal.current_value || 0), // 秒から小数時間に変換
         unit: goal.unit || '時間',
         deadline: goal.deadline || '',
         weekdayHours: goal.weekday_hours || 0,
         weekendHours: goal.weekend_hours || 0,
         createdAt: goal.created_at.split('T')[0],
-        status: goal.status || 'active'
+        status: goal.status || 'active',
+        // 生の秒値も保持
+        targetDurationSeconds: goal.target_duration || 0,
+        currentValueSeconds: goal.current_value || 0
       }))
       setGoals(convertedGoals)
     }
@@ -486,7 +508,7 @@ export function Goals({ onBack }: GoalsProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-300">進捗状況</span>
                       <span className="text-sm font-medium text-white">
-                        {goal.currentValue} / {goal.targetValue} {goal.unit} ({Math.round(progressPercentage)}%)
+                        {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
                       </span>
                     </div>
                     <Progress value={progressPercentage} className="h-2" />

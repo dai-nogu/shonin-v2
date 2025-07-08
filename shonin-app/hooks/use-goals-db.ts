@@ -19,6 +19,7 @@ export interface GoalFormData {
   weekdayHours: number
   weekendHours: number
   calculatedHours: number
+  addDuration?: number // 進捗更新用：追加する時間（秒単位）
 }
 
 export function useGoalsDb() {
@@ -108,6 +109,12 @@ export function useGoalsDb() {
     try {
       console.log('Updating goal:', id, goalData)
 
+      // 進捗更新の場合は別処理
+      if (goalData.addDuration !== undefined) {
+        console.log('進捗更新モードで処理します:', { goalId: id, addDuration: goalData.addDuration })
+        return await updateGoalProgress(id, goalData.addDuration)
+      }
+
       const goalUpdate: GoalUpdate = {
         title: goalData.title,
         description: goalData.motivation,
@@ -133,6 +140,51 @@ export function useGoalsDb() {
     } catch (err) {
       console.error('Error in updateGoal:', err)
       setError(err instanceof Error ? err.message : '目標の更新に失敗しました')
+      return false
+    }
+  }
+
+  // 目標の進捗を更新（時間を加算）
+  const updateGoalProgress = async (id: string, additionalSeconds: number): Promise<boolean> => {
+    try {
+      console.log('Updating goal progress:', id, `+${additionalSeconds}秒`)
+
+      // データベースから最新の目標を取得
+      const { data: currentGoal, error: fetchError } = await supabase
+        .from('goals')
+        .select('current_value')
+        .eq('id', id)
+        .eq('user_id', DUMMY_USER_ID)
+        .single()
+
+      if (fetchError || !currentGoal) {
+        console.error('Goal fetch error:', fetchError)
+        throw new Error('目標が見つかりません')
+      }
+
+      // 新しい進捗値を計算
+      const newCurrentValue = (currentGoal.current_value || 0) + additionalSeconds
+
+      const { error } = await supabase
+        .from('goals')
+        .update({
+          current_value: newCurrentValue,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('user_id', DUMMY_USER_ID)
+
+      if (error) {
+        console.error('Goal progress update error:', error)
+        throw error
+      }
+
+      await fetchGoals(true) // リストを更新（強制ローディング）
+      console.log(`目標進捗を更新: ${currentGoal.current_value || 0}秒 → ${newCurrentValue}秒`)
+      return true
+    } catch (err) {
+      console.error('Error in updateGoalProgress:', err)
+      setError(err instanceof Error ? err.message : '目標進捗の更新に失敗しました')
       return false
     }
   }

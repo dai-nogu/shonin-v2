@@ -64,6 +64,7 @@ export interface Database {
           id: string
           user_id: string
           activity_id: string
+          goal_id: string | null // 目標ID（追加）
           start_time: string
           end_time: string | null
           duration: number
@@ -101,6 +102,7 @@ export interface Database {
           id?: string
           user_id: string
           activity_id: string
+          goal_id?: string | null // 目標ID（追加）
           start_time: string
           end_time?: string | null
           duration?: number
@@ -138,6 +140,7 @@ export interface Database {
           id?: string
           user_id?: string
           activity_id?: string
+          goal_id?: string | null // 目標ID（追加）
           start_time?: string
           end_time?: string | null
           duration?: number

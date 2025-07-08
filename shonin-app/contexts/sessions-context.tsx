@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react"
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
+import { useGoalsDb } from "@/hooks/use-goals-db"
 
 export interface SessionData {
   activityId: string
@@ -18,6 +19,8 @@ export interface CompletedSession extends SessionData {
   mood?: number
   achievements?: string
   challenges?: string
+  // 目標ID（SessionDataから継承されるが明示的に記載）
+  goalId?: string
 }
 
 export type SessionState = "active" | "paused" | "ended"
@@ -52,30 +55,74 @@ interface SessionsProviderProps {
 }
 
 export function SessionsProvider({ children }: SessionsProviderProps) {
-  const {
-    sessions,
-    loading,
-    error,
-    addSession,
-    updateSession,
-    getSessionsByDateRange,
-    getActivityStats,
-    refetch,
+  // データベースフック
+  const { 
+    sessions, 
+    loading, 
+    error, 
+    addSession, 
+    updateSession, 
+    refetch, 
+    getSessionsByDateRange, 
+    getActivityStats 
   } = useSessionsDb()
+  
+  // 目標管理フック
+  const { updateGoal } = useGoalsDb()
 
-  // 現在のセッション状態
+  // セッション状態管理
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
   const [isSessionActive, setIsSessionActive] = useState(false)
   const [sessionState, setSessionState] = useState<SessionState>("active")
+  const [elapsedTime, setElapsedTime] = useState(0)
   const [isRestoring, setIsRestoring] = useState(true)
   const [isRestoredSession, setIsRestoredSession] = useState(false)
 
-  // 一元化されたタイマー状態（useRefを使用）
-  const [elapsedTime, setElapsedTime] = useState(0)
-  const pausedTimeRef = useRef(0) // 一時停止中の累積時間
-  const lastActiveTimeRef = useRef<Date | null>(null) // 最後にactiveになった時刻
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  // タイマー関連のref
+  const lastActiveTimeRef = useRef<Date>(new Date())
+  const pausedTimeRef = useRef<number>(0)
   const previousSessionStateRef = useRef<SessionState>("active")
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // セッション保存時に目標の進捗を更新する関数
+  const updateGoalProgress = async (sessionData: CompletedSession) => {
+    if (!sessionData.goalId) {
+      console.log('目標IDが設定されていないため、進捗更新をスキップします')
+      return
+    }
+
+    try {
+      console.log('目標進捗更新を開始:', { 
+        goalId: sessionData.goalId, 
+        duration: sessionData.duration,
+        activityName: sessionData.activityName 
+      })
+
+      // セッションの時間を秒単位で取得
+      const sessionDurationSeconds = sessionData.duration
+
+      // 目標の現在の進捗を更新（秒単位で加算）
+      // updateGoal関数は既存の実装を活用し、current_valueを更新
+      const success = await updateGoal(sessionData.goalId, {
+        // 進捗更新のためのフラグ（新しいフィールド）
+        addDuration: sessionDurationSeconds
+      })
+
+      if (success) {
+        console.log(`目標進捗を更新しました: goalId=${sessionData.goalId}, +${sessionDurationSeconds}秒`)
+      } else {
+        console.error('目標進捗の更新が失敗しました（updateGoalがfalseを返しました）')
+      }
+    } catch (error) {
+      console.error('目標進捗の更新に失敗:', error)
+      console.error('エラー詳細:', { 
+        goalId: sessionData.goalId, 
+        duration: sessionData.duration,
+        errorMessage: error instanceof Error ? error.message : String(error)
+      })
+      // エラーが発生してもセッション保存は継続
+    }
+  }
 
   // ページロード時に進行中セッションを復元
   useEffect(() => {
@@ -101,7 +148,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           notes: '',
           activityColor: activeSession.activities.color,
           activityIcon: activeSession.activities.icon,
-          goalId: undefined, // 目標IDも復元時には設定しない
+          goalId: activeSession.goal_id || undefined, // 目標IDを復元
         }
 
         // 経過時間を計算
@@ -233,6 +280,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         mood: null,
         achievements: null,
         challenges: null,
+        goal_id: sessionData.goalId || null, // 目標IDを保存
       })
       
       // 復元フラグをリセット（新規セッション）
@@ -266,6 +314,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
   const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
     try {
+      let sessionId: string | null = null
+      
       // 進行中セッションを更新する場合と新規作成する場合を分ける
       const activeSession = sessions.find(session => !session.end_time)
       
@@ -281,19 +331,14 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         })
         
         if (success) {
-          // セッション終了
-          setCurrentSession(null)
-          setIsSessionActive(false)
-          setSessionState("active")
-          
+          sessionId = activeSession.id
           console.log('進行中セッションを更新しました:', activeSession.id)
-          return activeSession.id
         } else {
           throw new Error('セッション更新に失敗しました')
         }
       } else {
         // 新規セッションとして保存（従来の処理）
-        const sessionId = await addSession({
+        sessionId = await addSession({
           activity_id: completedSession.activityId,
           start_time: completedSession.startTime.toISOString(),
           end_time: completedSession.endTime.toISOString(),
@@ -303,15 +348,26 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           achievements: completedSession.achievements || null,
           challenges: completedSession.challenges || null,
           location: completedSession.location || null,
+          goal_id: completedSession.goalId || null, // 目標IDを保存
         })
-
-        // セッション終了
-        setCurrentSession(null)
-        setIsSessionActive(false)
-        setSessionState("active")
-        
-        return sessionId
       }
+
+      // 目標の進捗を更新（セッション保存成功後）
+      if (sessionId) {
+        console.log('セッション保存成功、目標進捗更新を実行:', {
+          sessionId,
+          goalId: completedSession.goalId,
+          hasGoalId: !!completedSession.goalId
+        })
+        await updateGoalProgress(completedSession)
+      }
+
+      // セッション終了
+      setCurrentSession(null)
+      setIsSessionActive(false)
+      setSessionState("active")
+      
+      return sessionId
     } catch (error) {
       console.error("セッション保存エラー:", error)
       throw error

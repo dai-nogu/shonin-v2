@@ -34,11 +34,33 @@ CREATE TABLE IF NOT EXISTS public.activities (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create sessions table (基本機能 + 統合振り返り機能)
+-- Create goals table (完全版：週間時間設定対応)
+CREATE TABLE IF NOT EXISTS public.goals (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    target_duration INTEGER, -- in seconds
+    deadline DATE,
+    is_completed BOOLEAN DEFAULT false,
+    
+    -- 週間時間設定（新規追加）
+    weekday_hours INTEGER DEFAULT 0, -- 平日（月〜金）の1日あたりの目標時間
+    weekend_hours INTEGER DEFAULT 0, -- 土日の1日あたりの目標時間
+    current_value INTEGER DEFAULT 0, -- 現在の進捗値（秒単位）
+    unit TEXT DEFAULT '時間', -- 目標の単位（時間、分、回数など）
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused')), -- 目標のステータス
+    
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create sessions table (基本機能 + 統合振り返り機能 + 目標連動機能)
 CREATE TABLE IF NOT EXISTS public.sessions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
     activity_id UUID REFERENCES public.activities(id) ON DELETE CASCADE NOT NULL,
+    goal_id UUID REFERENCES public.goals(id) ON DELETE SET NULL, -- 関連する目標のID（NULL許可）
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE, -- NULL許可（進行中セッション用）
     duration INTEGER DEFAULT 0, -- in seconds
@@ -106,27 +128,6 @@ CREATE TABLE IF NOT EXISTS public.session_photos (
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create goals table (完全版：週間時間設定対応)
-CREATE TABLE IF NOT EXISTS public.goals (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT,
-    target_duration INTEGER, -- in seconds
-    deadline DATE,
-    is_completed BOOLEAN DEFAULT false,
-    
-    -- 週間時間設定（新規追加）
-    weekday_hours INTEGER DEFAULT 0, -- 平日（月〜金）の1日あたりの目標時間
-    weekend_hours INTEGER DEFAULT 0, -- 土日の1日あたりの目標時間
-    current_value INTEGER DEFAULT 0, -- 現在の進捗値（秒単位）
-    unit TEXT DEFAULT '時間', -- 目標の単位（時間、分、回数など）
-    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused')), -- 目標のステータス
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- Create ai_feedback table
 CREATE TABLE IF NOT EXISTS public.ai_feedback (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -176,6 +177,7 @@ ON CONFLICT (id) DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_activities_user_id ON public.activities(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON public.sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_activity_id ON public.sessions(activity_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_goal_id ON public.sessions(goal_id); -- 目標連動用インデックス
 CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON public.sessions(start_time);
 CREATE INDEX IF NOT EXISTS idx_sessions_end_time ON public.sessions(end_time);
 
@@ -200,6 +202,7 @@ COMMENT ON COLUMN public.goals.weekend_hours IS '土日の1日あたりの目標
 COMMENT ON COLUMN public.goals.current_value IS '現在の進捗値（秒単位）';
 COMMENT ON COLUMN public.goals.unit IS '目標の単位（時間、分、回数など）';
 COMMENT ON COLUMN public.goals.status IS '目標のステータス（active: 進行中, completed: 完了, paused: 一時停止）';
+COMMENT ON COLUMN public.sessions.goal_id IS '関連する目標のID（NULL許可）';
 
 -- AIフィードバック生成用のビュー（分析しやすくするため）
 CREATE OR REPLACE VIEW public.sessions_for_ai_analysis AS
@@ -207,6 +210,7 @@ SELECT
     id,
     user_id,
     activity_id,
+    goal_id, -- 目標ID追加
     start_time,
     end_time,
     duration,
@@ -280,7 +284,8 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
 -- 4. メディアファイル対応（写真・動画・音声）
 -- 5. 写真アップロード機能（session_photos テーブル）
 -- 6. 目標管理機能（週間時間設定、進捗追跡）
--- 7. サンプルデータ付き（すぐにテスト可能）
+-- 7. **目標とセッションの連動機能（goal_id追加）**
+-- 8. サンプルデータ付き（すぐにテスト可能）
 -- 
 -- 目標管理機能の新機能:
 -- - weekday_hours: 平日の1日あたりの目標時間
@@ -288,6 +293,11 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
 -- - current_value: 現在の進捗値（秒単位）
 -- - unit: 目標の単位
 -- - status: 目標のステータス（active/completed/paused）
+-- 
+-- セッション連動機能の新機能:
+-- - sessions.goal_id: 各セッションが紐付く目標のID
+-- - 自動進捗更新: セッション完了時に目標の current_value が自動更新
+-- - 分単位の正確な進捗追跡
 -- 
 -- AI分析用クエリ例:
 -- SELECT * FROM sessions_for_ai_analysis 
@@ -299,6 +309,19 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
 -- WHERE user_id = '00000000-0000-0000-0000-000000000000' 
 -- AND status = 'active'
 -- ORDER BY deadline ASC;
+-- 
+-- 目標別セッション集計クエリ例:
+-- SELECT 
+--   g.title as 目標名,
+--   g.target_duration / 3600 as 目標時間_h,
+--   g.current_value / 3600 as 現在進捗_h,
+--   ROUND((g.current_value::decimal / g.target_duration) * 100, 1) as 達成率_percent,
+--   COUNT(s.id) as セッション数
+-- FROM goals g 
+-- LEFT JOIN sessions s ON g.id = s.goal_id AND s.end_time IS NOT NULL
+-- WHERE g.user_id = '00000000-0000-0000-0000-000000000000'
+-- GROUP BY g.id, g.title, g.target_duration, g.current_value
+-- ORDER BY 達成率_percent DESC;
 -- 
 -- RLS is DISABLED for testing - DO NOT USE IN PRODUCTION
 -- 本番環境では適切なRLSポリシーを設定してください
