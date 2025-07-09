@@ -10,6 +10,10 @@ export interface SessionData {
   startTime: Date
   location: string
   notes: string
+  targetTime?: number // 目標時間（分単位）
+  activityColor?: string // アクティビティの色
+  activityIcon?: string // アクティビティのアイコン
+  goalId?: string // 紐付ける目標のID
 }
 
 export interface CompletedSession extends SessionData {
@@ -64,7 +68,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     updateSession, 
     refetch, 
     getSessionsByDateRange, 
-    getActivityStats 
+    getActivityStats, 
+    deleteSession 
   } = useSessionsDb()
   
   // 目標管理フック
@@ -85,7 +90,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // セッション保存時に目標の進捗を更新する関数
-  const updateGoalProgress = async (sessionData: CompletedSession) => {
+  const updateSessionGoalProgress = async (sessionData: CompletedSession) => {
     if (!sessionData.goalId) {
       console.log('目標IDが設定されていないため、進捗更新をスキップします')
       return
@@ -106,12 +111,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       const success = await updateGoal(sessionData.goalId, {
         // 進捗更新のためのフラグ（新しいフィールド）
         addDuration: sessionDurationSeconds
-      })
+      } as any)
 
       if (success) {
         console.log(`目標進捗を更新しました: goalId=${sessionData.goalId}, +${sessionDurationSeconds}秒`)
       } else {
-        console.error('目標進捗の更新が失敗しました（updateGoalがfalseを返しました）')
+        console.error('目標進捗の更新が失敗しました')
       }
     } catch (error) {
       console.error('目標進捗の更新に失敗:', error)
@@ -147,7 +152,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           targetTime: undefined, // 目標時間は復元時には設定しない
           notes: '',
           activityColor: activeSession.activities.color,
-          activityIcon: activeSession.activities.icon,
+          activityIcon: activeSession.activities.icon || undefined,
           goalId: activeSession.goal_id || undefined, // 目標IDを復元
         }
 
@@ -312,54 +317,149 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     setSessionState("active")
   }
 
-  const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
-    try {
-      let sessionId: string | null = null
-      
-      // 進行中セッションを更新する場合と新規作成する場合を分ける
-      const activeSession = sessions.find(session => !session.end_time)
-      
-      if (activeSession) {
-        // 既存の進行中セッションを更新
-        const success = await updateSession(activeSession.id, {
-          end_time: completedSession.endTime.toISOString(),
-          duration: completedSession.duration,
-          notes: completedSession.notes || null,
-          mood: completedSession.mood || null,
-          achievements: completedSession.achievements || null,
-          challenges: completedSession.challenges || null,
+  // 日付跨ぎを考慮したセッション分割関数
+  const splitSessionByDate = (startTime: Date, endTime: Date, totalDuration: number) => {
+    const sessions: Array<{
+      startTime: Date
+      endTime: Date
+      duration: number
+      date: string
+    }> = []
+
+    let currentStart = new Date(startTime)
+    let remainingDuration = totalDuration
+
+    while (currentStart < endTime && remainingDuration > 0) {
+      // 現在の日付の終了時刻（23:59:59）
+      const dayEnd = new Date(currentStart)
+      dayEnd.setHours(23, 59, 59, 999)
+
+      // セッションの実際の終了時刻
+      const sessionEnd = endTime < dayEnd ? endTime : dayEnd
+
+      // この日のセッション時間を計算
+      const sessionDuration = Math.floor((sessionEnd.getTime() - currentStart.getTime()) / 1000)
+      const actualDuration = Math.min(sessionDuration, remainingDuration)
+
+      if (actualDuration > 0) {
+        sessions.push({
+          startTime: new Date(currentStart),
+          endTime: new Date(currentStart.getTime() + actualDuration * 1000),
+          duration: actualDuration,
+          date: currentStart.toISOString().split('T')[0]
         })
-        
-        if (success) {
-          sessionId = activeSession.id
-          console.log('進行中セッションを更新しました:', activeSession.id)
-        } else {
-          throw new Error('セッション更新に失敗しました')
-        }
-      } else {
-        // 新規セッションとして保存（従来の処理）
-        sessionId = await addSession({
-          activity_id: completedSession.activityId,
-          start_time: completedSession.startTime.toISOString(),
-          end_time: completedSession.endTime.toISOString(),
-          duration: completedSession.duration,
-          notes: completedSession.notes || null,
-          mood: completedSession.mood || null,
-          achievements: completedSession.achievements || null,
-          challenges: completedSession.challenges || null,
-          location: completedSession.location || null,
-          goal_id: completedSession.goalId || null, // 目標IDを保存
-        })
+
+        remainingDuration -= actualDuration
       }
 
-      // 目標の進捗を更新（セッション保存成功後）
-      if (sessionId) {
+      // 次の日の開始時刻（00:00:00）
+      currentStart = new Date(dayEnd)
+      currentStart.setDate(currentStart.getDate() + 1)
+      currentStart.setHours(0, 0, 0, 0)
+    }
+
+    return sessions
+  }
+
+  const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
+    try {
+      let mainSessionId: string | null = null
+      
+      // 進行中セッションがあるかチェック
+      const activeSession = sessions.find(session => !session.end_time)
+      
+      // セッションが日付を跨ぐかチェック
+      const startDate = completedSession.startTime.toISOString().split('T')[0]
+      const endDate = completedSession.endTime.toISOString().split('T')[0]
+      
+      if (startDate === endDate) {
+        // 同じ日のセッション（従来の処理）
+        if (activeSession) {
+          // 既存の進行中セッションを更新
+          const success = await updateSession(activeSession.id, {
+            end_time: completedSession.endTime.toISOString(),
+            duration: completedSession.duration,
+            notes: completedSession.notes || null,
+            mood: completedSession.mood || null,
+            achievements: completedSession.achievements || null,
+            challenges: completedSession.challenges || null,
+          })
+          
+          if (success) {
+            mainSessionId = activeSession.id
+            console.log('進行中セッションを更新しました:', activeSession.id)
+          } else {
+            throw new Error('セッション更新に失敗しました')
+          }
+        } else {
+          // 新規セッションとして保存
+          mainSessionId = await addSession({
+            activity_id: completedSession.activityId,
+            start_time: completedSession.startTime.toISOString(),
+            end_time: completedSession.endTime.toISOString(),
+            duration: completedSession.duration,
+            notes: completedSession.notes || null,
+            mood: completedSession.mood || null,
+            achievements: completedSession.achievements || null,
+            challenges: completedSession.challenges || null,
+            location: completedSession.location || null,
+            goal_id: completedSession.goalId || null,
+          })
+        }
+      } else {
+        // 日付を跨ぐセッション - 分割して保存
+        console.log('日付跨ぎセッションを分割して保存します')
+        
+        const splitSessions = splitSessionByDate(
+          completedSession.startTime,
+          completedSession.endTime,
+          completedSession.duration
+        )
+
+        console.log('分割されたセッション:', splitSessions)
+
+        // 既存の進行中セッションがあれば削除（分割されたセッションで置き換える）
+        if (activeSession) {
+          await deleteSession(activeSession.id)
+        }
+
+        // 分割されたセッションをそれぞれ保存
+        for (let i = 0; i < splitSessions.length; i++) {
+          const splitSession = splitSessions[i]
+          
+          // メモや気分などの情報は開始日のセッションに保存
+          // （前日に終了して翌日に保存した場合、前日のセッションに記録される）
+          const isStartSession = i === 0 // 最初のセッション（開始日）をメインとする
+          
+          const sessionId = await addSession({
+            activity_id: completedSession.activityId,
+            start_time: splitSession.startTime.toISOString(),
+            end_time: splitSession.endTime.toISOString(),
+            duration: splitSession.duration,
+            notes: isStartSession ? (completedSession.notes || null) : null, // メモは開始日のセッションに
+            mood: isStartSession ? (completedSession.mood || null) : null, // 気分も開始日のセッションに
+            achievements: isStartSession ? (completedSession.achievements || null) : null,
+            challenges: isStartSession ? (completedSession.challenges || null) : null,
+            location: completedSession.location || null,
+            goal_id: completedSession.goalId || null,
+          })
+
+          if (isStartSession) {
+            mainSessionId = sessionId
+          }
+
+          console.log(`分割セッション${i + 1}を保存: ${splitSession.date}, ${splitSession.duration}秒`)
+        }
+      }
+
+      // 目標の進捗を更新（分割された全セッションの合計時間で更新）
+      if (mainSessionId) {
         console.log('セッション保存成功、目標進捗更新を実行:', {
-          sessionId,
+          sessionId: mainSessionId,
           goalId: completedSession.goalId,
           hasGoalId: !!completedSession.goalId
         })
-        await updateGoalProgress(completedSession)
+        await updateSessionGoalProgress(completedSession)
       }
 
       // セッション終了
@@ -367,7 +467,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setIsSessionActive(false)
       setSessionState("active")
       
-      return sessionId
+      return mainSessionId
     } catch (error) {
       console.error("セッション保存エラー:", error)
       throw error
