@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
-import { X, Clock, Calendar, MapPin, Star, Tag, MessageSquare, Target, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { X, Clock, Calendar, MapPin, Star, Tag, MessageSquare, Target, TrendingUp, Camera, Image } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { getSessionPhotos, type UploadedPhoto } from "@/lib/upload-photo"
 import type { CompletedSession } from "./time-tracker"
 
 interface SessionDetailModalProps {
@@ -15,6 +16,9 @@ interface SessionDetailModalProps {
 }
 
 export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }: SessionDetailModalProps) {
+  const [sessionPhotos, setSessionPhotos] = useState<UploadedPhoto[]>([])
+  const [loadingPhotos, setLoadingPhotos] = useState(false)
+
   // モーダルが開いている間は背景スクロールを無効にする
   useEffect(() => {
     if (isOpen) {
@@ -30,6 +34,33 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
       document.body.style.overflow = 'unset'
     }
   }, [isOpen])
+
+  // セッションの写真を取得
+  useEffect(() => {
+    const fetchSessionPhotos = async () => {
+      if (!session?.id) return
+
+      setLoadingPhotos(true)
+      try {
+        const photos = await getSessionPhotos(session.id)
+        setSessionPhotos(photos)
+      } catch (error) {
+        console.error('写真の取得に失敗:', error)
+        setSessionPhotos([])
+      } finally {
+        setLoadingPhotos(false)
+      }
+    }
+
+    // モーダルが開いている場合のみ写真を取得
+    if (isOpen && session) {
+      fetchSessionPhotos()
+    } else {
+      // モーダルが閉じたら写真データをクリア
+      setSessionPhotos([])
+      setLoadingPhotos(false)
+    }
+  }, [isOpen, session])
 
   if (!isOpen || !session) return null
 
@@ -62,8 +93,6 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
     const texts = ["とても悪い", "悪い", "普通", "良い", "とても良い"]
     return texts[mood - 1] || "普通"
   }
-
-
 
   const activityInfo = {
     icon: session.activityIcon,
@@ -210,8 +239,6 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
             </CardContent>
           </Card>
 
-
-
           {/* 学びや成果 */}
           {session.achievements && (
             <Card className="bg-gray-800 border-gray-700">
@@ -243,12 +270,64 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
             <Card className="bg-gray-800 border-gray-700">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2 mb-3">
+                  <MessageSquare className="w-4 h-4 text-blue-400" />
                   <span className="text-gray-300 font-medium">その他のメモ</span>
                 </div>
                 <div className="text-white whitespace-pre-wrap">{session.notes}</div>
               </CardContent>
             </Card>
           )}
+
+          {/* 写真セクション */}
+          {sessionPhotos.length > 0 && (
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Camera className="w-4 h-4 text-purple-400" />
+                  <span className="text-gray-300 font-medium">写真</span>
+                  <span className="text-gray-400 text-sm">({sessionPhotos.length}枚)</span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {sessionPhotos.map((photo, index) => (
+                    <div key={photo.id} className="relative group">
+                      <img
+                        src={photo.url}
+                        alt={`セッション写真 ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border border-gray-600 hover:border-purple-400 transition-colors cursor-pointer"
+                        onClick={() => window.open(photo.url, '_blank')}
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        {photo.fileName}
+                      </div>
+                      <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Image className="w-3 h-3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* アクションボタン */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+            >
+              閉じる
+            </Button>
+            {onStartSimilar && (
+              <Button
+                onClick={handleStartSimilar}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                同じ設定で開始
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
