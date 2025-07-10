@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { getSessionPhotos, type UploadedPhoto } from "@/lib/upload-photo"
+import { useGoalsDb } from "@/hooks/use-goals-db"
 import type { CompletedSession } from "./time-tracker"
 
 interface SessionDetailModalProps {
@@ -18,6 +19,12 @@ interface SessionDetailModalProps {
 export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }: SessionDetailModalProps) {
   const [sessionPhotos, setSessionPhotos] = useState<UploadedPhoto[]>([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
+  
+  // 目標管理フック
+  const { getGoal } = useGoalsDb()
+  
+  // 目標情報を取得
+  const goalInfo = session?.goalId ? getGoal(session.goalId) : null
 
   // モーダルが開いている間は背景スクロールを無効にする
   useEffect(() => {
@@ -108,7 +115,9 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
         startTime: new Date(),
         location: session.location,
         notes: "",
-        targetTime: session.targetTime
+        targetTime: session.targetTime,
+        // 目標IDを保持
+        goalId: session.goalId,
       }
       onStartSimilar(sessionData)
     }
@@ -177,6 +186,22 @@ export function SessionDetailModal({ isOpen, session, onClose, onStartSimilar }:
                     <span className="text-gray-300 font-medium">場所</span>
                   </div>
                   <div className="text-white">{session.location}</div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* 目標情報 */}
+            {goalInfo && (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Target className="w-4 h-4 text-blue-400" />
+                    <span className="text-gray-300 font-medium">関連する目標</span>
+                  </div>
+                  <div className="text-white">{goalInfo.title}</div>
+                  {goalInfo.description && (
+                    <div className="text-gray-400 text-sm mt-1">{goalInfo.description}</div>
+                  )}
                 </CardContent>
               </Card>
             )}

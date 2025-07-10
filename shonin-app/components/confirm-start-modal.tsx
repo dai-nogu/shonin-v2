@@ -1,9 +1,10 @@
 "use client"
 
-import { Play, X } from "lucide-react"
+import { Play, X, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useGoalsDb } from "@/hooks/use-goals-db"
 
 interface Activity {
   id: string
@@ -14,6 +15,8 @@ interface Activity {
   category: string
   icon: string
   color: string
+  goalId?: string
+  goalTitle?: string
 }
 
 interface ConfirmStartModalProps {
@@ -25,6 +28,12 @@ interface ConfirmStartModalProps {
 }
 
 export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showTags = true }: ConfirmStartModalProps) {
+  // 目標管理フック
+  const { getGoal } = useGoalsDb()
+  
+  // 目標情報を取得
+  const goalInfo = activity?.goalId ? getGoal(activity.goalId) : null
+  
   if (!isOpen || !activity) return null
 
   return (
@@ -71,7 +80,20 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
                 <span>{activity.date}</span>
               </div>
             </div>
-
+            
+            {/* 目標情報 */}
+            {goalInfo && (
+              <div className="bg-blue-500 bg-opacity-10 rounded p-3 border border-blue-500 border-opacity-30">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Target className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-400 font-medium text-sm">関連する目標</span>
+                </div>
+                <div className="text-white text-sm font-medium">{goalInfo.title}</div>
+                {goalInfo.description && (
+                  <div className="text-gray-300 text-xs mt-1">{goalInfo.description}</div>
+                )}
+              </div>
+            )}
 
           </div>
 

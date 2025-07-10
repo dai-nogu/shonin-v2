@@ -156,7 +156,9 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
         startTime: new Date(),
         location: activity.location || "",
         notes: "",
-        targetTime: activity.session.targetTime
+        targetTime: activity.session.targetTime,
+        // 目標IDを保持
+        goalId: activity.session.goalId,
       }
       onStartActivity(sessionData)
     }

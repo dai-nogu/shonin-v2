@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal } from "lucide-react"
+import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -11,6 +11,7 @@ import { SessionDetailModal } from "./session-detail-modal"
 import { ActivityCountModal } from "./activity-count-modal"
 import { RecentSessionsModal } from "./recent-sessions-modal"
 import { useActivities } from "@/contexts/activities-context"
+import { useGoalsDb } from "@/hooks/use-goals-db"
 import type { SessionData, CompletedSession } from "./time-tracker"
 
 interface QuickStartActivity {
@@ -25,6 +26,8 @@ interface QuickStartActivity {
   location?: string
   totalTime?: number // 総時間（ソート用）
   sessionCount?: number // セッション数
+  goalId?: string // 目標ID
+  goalTitle?: string // 目標タイトル
 }
 
 interface QuickStartProps {
@@ -43,6 +46,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   
   // アクティビティ管理フック
   const { activities, addActivity } = useActivities()
+  
+  // 目標管理フック
+  const { getGoal } = useGoalsDb()
 
   // セッションから色・アイコン情報を取得、なければ従来のマッピングを使用
   const getActivityStyle = (session: CompletedSession) => {
@@ -154,6 +160,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       .slice(0, 3)
       .map(([activityName, stats]) => {
         const activityInfo = getActivityStyle(stats.latestSession)
+        const goalInfo = stats.latestSession.goalId ? getGoal(stats.latestSession.goalId) : null
 
         return {
           id: stats.latestSession.id,
@@ -166,7 +173,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           color: activityInfo.color,
           location: stats.latestSession.location,
           totalTime: stats.totalTime,
-          sessionCount: stats.sessionCount
+          sessionCount: stats.sessionCount,
+          goalId: stats.latestSession.goalId,
+          goalTitle: goalInfo?.title
         }
       })
   }
@@ -178,6 +187,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       .slice(0, 3)
       .map(session => {
         const activityInfo = getActivityStyle(session)
+        const goalInfo = session.goalId ? getGoal(session.goalId) : null
 
         return {
           id: session.id,
@@ -188,7 +198,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
-          location: session.location
+          location: session.location,
+          goalId: session.goalId,
+          goalTitle: goalInfo?.title
         }
       })
   }
@@ -208,6 +220,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       .slice(0, 3)
       .map(session => {
         const activityInfo = getActivityStyle(session)
+        const goalInfo = session.goalId ? getGoal(session.goalId) : null
 
         return {
           id: session.id,
@@ -221,7 +234,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
-          location: session.location
+          location: session.location,
+          goalId: session.goalId,
+          goalTitle: goalInfo?.title
         }
       })
   }
@@ -278,6 +293,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         // アクティビティの色とアイコン情報を保持
         activityColor: selectedActivity.color,
         activityIcon: selectedActivity.icon,
+        // 目標IDを保持
+        goalId: selectedActivity.goalId,
       }
       onStartActivity(sessionData)
     }
@@ -364,6 +381,12 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                         <Clock className="w-3 h-3" />
                         <span>合計 {activity.duration}</span>
                       </div>
+                      {activity.goalTitle && (
+                        <div className="flex items-center space-x-1">
+                          <Target className="w-3 h-3" />
+                          <span className="text-blue-400 truncate">{activity.goalTitle}</span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
@@ -375,6 +398,12 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                         <Calendar className="w-3 h-3" />
                         <span className="text-blue-400">{activity.date}</span>
                       </div>
+                      {activity.goalTitle && (
+                        <div className="flex items-center space-x-1">
+                          <Target className="w-3 h-3" />
+                          <span className="text-blue-400 truncate">{activity.goalTitle}</span>
+                        </div>
+                      )}
                       {activity.location && (
                         <div className="flex items-center space-x-1">
                           <MapPin className="w-3 h-3" />

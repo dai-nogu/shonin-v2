@@ -131,7 +131,9 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
         startTime: new Date(),
         location: sessionItem.location || "",
         notes: "",
-        targetTime: sessionItem.session.targetTime
+        targetTime: sessionItem.session.targetTime,
+        // 目標IDを保持
+        goalId: sessionItem.session.goalId,
       }
       onStartActivity(sessionData)
     }

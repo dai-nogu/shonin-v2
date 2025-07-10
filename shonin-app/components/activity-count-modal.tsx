@@ -132,7 +132,9 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
         startTime: new Date(),
         location: activity.latestSession.location || "",
         notes: "",
-        targetTime: activity.latestSession.targetTime
+        targetTime: activity.latestSession.targetTime,
+        // 目標IDを保持
+        goalId: activity.latestSession.goalId,
       }
       onStartActivity(sessionData)
     }

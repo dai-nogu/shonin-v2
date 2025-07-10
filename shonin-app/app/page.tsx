@@ -152,7 +152,6 @@ export default function Dashboard() {
       startTime: new Date(session.start_time),
       endTime: new Date(session.end_time!),
       duration: session.duration,
-
       location: session.location || '',
       notes: session.notes || '',
       mood: session.mood || undefined,
@@ -161,6 +160,8 @@ export default function Dashboard() {
       // アクティビティの色とアイコン情報を追加
       activityColor: session.activities?.color,
       activityIcon: session.activities?.icon || undefined,
+      // 目標IDを追加
+      goalId: session.goal_id || undefined,
     }))
 
   console.log('Completed sessions for QuickStart:', completedSessions)
