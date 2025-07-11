@@ -1,29 +1,33 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { SidebarInset } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
 import { Header } from "@/components/header"
 import { WelcomeCard } from "@/components/welcome-card"
+import { TimeTracker } from "@/components/time-tracker"
+import { ActiveActivitySidebar } from "@/components/active-activity-sidebar"
 import { AIFeedback } from "@/components/ai-feedback"
 import { WeeklyProgress } from "@/components/weekly-progress"
-import { Settings } from "@/components/settings"
-import { Goals } from "@/components/goals"
-import { TimeTracker } from "@/components/time-tracker"
-import { CalendarView } from "@/components/calendar-view"
 import { ActiveSession } from "@/components/active-session"
-import { ActiveActivitySidebar } from "@/components/active-activity-sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset } from "@/components/ui/sidebar"
+import { CalendarView } from "@/components/calendar-view"
+import { Goals } from "@/components/goals"
+import { Settings } from "@/components/settings"
 import { useSessions } from "@/contexts/sessions-context"
+import { checkMultipleSessionPhotos, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
 import type { SessionData, CompletedSession } from "@/components/time-tracker"
 
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState("dashboard")
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">("month")
   const [isInitialized, setIsInitialized] = useState(false)
-  
-  // セッション管理をコンテキストから取得
+  const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
+
+  // セッションコンテキストから状態を取得
   const {
     sessions,
+    loading,
+    error,
     currentSession,
     isSessionActive,
     sessionState,
@@ -32,33 +36,113 @@ export default function Dashboard() {
     pauseSession,
     resumeSession,
     saveSession,
+    refetch
   } = useSessions()
 
-  // localStorageからページ状態を復元
+  // 初期化処理
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedPage = localStorage.getItem('shonin-current-page')
-      const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
-      
-      if (savedPage) {
-        setCurrentPage(savedPage)
-      }
-      if (savedViewMode && (savedViewMode === 'month' || savedViewMode === 'week')) {
-        setCalendarViewMode(savedViewMode)
-      }
-      
-      setIsInitialized(true)
-    }
-  }, [])
+    const initializeApp = async () => {
+      try {
+        // ローカルストレージから設定を復元
+        const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
+        if (savedViewMode === 'month' || savedViewMode === 'week') {
+          setCalendarViewMode(savedViewMode)
+        }
 
-  // ページ状態をlocalStorageに保存
+        // セッションデータを取得・更新
+        await refetch()
+        
+        setIsInitialized(true)
+      } catch (error) {
+        console.error('初期化エラー:', error)
+        setIsInitialized(true) // エラーが発生しても初期化完了とする
+      }
+    }
+
+    initializeApp()
+  }, [refetch])
+
+  // セッションデータが更新されたときに写真の有無を確認
   useEffect(() => {
-    if (isInitialized && typeof window !== 'undefined') {
-      localStorage.setItem('shonin-current-page', currentPage)
-    }
-  }, [currentPage, isInitialized])
+    const updateSessionsWithPhotos = async () => {
+      if (!sessions || sessions.length === 0) {
+        setCompletedSessions([])
+        return
+      }
 
-  // カレンダービューモードをlocalStorageに保存
+      // 完了したセッションのみをフィルタリング
+      const completedSessionsData = sessions.filter(session => session.end_time)
+      
+      if (completedSessionsData.length === 0) {
+        setCompletedSessions([])
+        return
+      }
+
+      // セッションIDの配列を作成
+      const sessionIds = completedSessionsData.map(session => session.id)
+      
+      // 写真の有無を一括確認
+      const photoStatusMap = await checkMultipleSessionPhotos(sessionIds)
+
+      // CompletedSessionの型に合わせて変換（写真の有無を含む）
+      const sessionsWithPhotos: CompletedSession[] = completedSessionsData.map(session => ({
+        id: session.id,
+        activityId: session.activity_id,
+        activityName: session.activities?.name || '不明',
+        startTime: new Date(session.start_time),
+        endTime: new Date(session.end_time!),
+        duration: session.duration,
+        location: session.location || '',
+        notes: session.notes || '',
+        mood: session.mood || undefined,
+        achievements: session.achievements || undefined,
+        challenges: session.challenges || undefined,
+        // アクティビティの色とアイコン情報を追加
+        activityColor: session.activities?.color,
+        activityIcon: session.activities?.icon || undefined,
+        // 目標IDを追加
+        goalId: session.goal_id || undefined,
+        // 写真の有無を設定
+        hasPhotos: photoStatusMap[session.id] || false
+      }))
+
+      setCompletedSessions(sessionsWithPhotos)
+
+      // 写真付きセッションの画像を事前にプリロード（バックグラウンドで実行）
+      const sessionsWithPhotosIds = sessionsWithPhotos
+        .filter(session => session.hasPhotos)
+        .slice(0, 5) // 最新5件の写真付きセッションのみプリロード
+        .map(session => session.id)
+
+      if (sessionsWithPhotosIds.length > 0) {
+        preloadSessionPhotos(sessionsWithPhotosIds)
+      }
+    }
+
+    updateSessionsWithPhotos()
+  }, [sessions])
+
+  // 写真付きセッションの画像を事前にプリロードする関数
+  const preloadSessionPhotos = async (sessionIds: string[]) => {
+    try {
+      for (const sessionId of sessionIds) {
+        // 各セッションの写真を取得してプリロード
+        const photos = await getSessionPhotos(sessionId)
+        const imageUrls = photos.map(photo => photo.url)
+        
+        if (imageUrls.length > 0) {
+          // バックグラウンドでプリロード（エラーが発生しても無視）
+          preloadImages(imageUrls).catch(error => {
+            console.log(`Background preload failed for session ${sessionId}:`, error)
+          })
+        }
+      }
+    } catch (error) {
+      console.log('Background preload process failed:', error)
+    }
+  }
+
+  // カレンダー表示モードの保存
   useEffect(() => {
     if (isInitialized && typeof window !== 'undefined') {
       localStorage.setItem('shonin-calendar-view-mode', calendarViewMode)
@@ -141,28 +225,6 @@ export default function Dashboard() {
       </div>
     )
   }
-
-  // CompletedSessionの型に合わせて変換
-  const completedSessions: CompletedSession[] = sessions
-    .filter(session => session.end_time)
-    .map(session => ({
-      id: session.id,
-      activityId: session.activity_id,
-      activityName: session.activities?.name || '不明',
-      startTime: new Date(session.start_time),
-      endTime: new Date(session.end_time!),
-      duration: session.duration,
-      location: session.location || '',
-      notes: session.notes || '',
-      mood: session.mood || undefined,
-      achievements: session.achievements || undefined,
-      challenges: session.challenges || undefined,
-      // アクティビティの色とアイコン情報を追加
-      activityColor: session.activities?.color,
-      activityIcon: session.activities?.icon || undefined,
-      // 目標IDを追加
-      goalId: session.goal_id || undefined,
-    }))
 
   console.log('Completed sessions for QuickStart:', completedSessions)
 

@@ -37,6 +37,8 @@ export interface CompletedSession extends SessionData {
   activityIcon?: string
   // 目標ID（SessionDataから継承されるが明示的に記載）
   goalId?: string
+  // 写真の有無
+  hasPhotos?: boolean
 }
 
 interface TimeTrackerProps {
