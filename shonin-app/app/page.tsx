@@ -60,7 +60,7 @@ export default function Dashboard() {
     }
 
     initializeApp()
-  }, [refetch])
+  }, []) // refetchを依存配列から削除
 
   // セッションデータが更新されたときに写真の有無を確認
   useEffect(() => {
@@ -115,6 +115,7 @@ export default function Dashboard() {
         .map(session => session.id)
 
       if (sessionsWithPhotosIds.length > 0) {
+        // バックグラウンドでプリロード（非同期で実行、状態変更を避ける）
         preloadSessionPhotos(sessionsWithPhotosIds)
       }
     }
@@ -125,18 +126,23 @@ export default function Dashboard() {
   // 写真付きセッションの画像を事前にプリロードする関数
   const preloadSessionPhotos = async (sessionIds: string[]) => {
     try {
-      for (const sessionId of sessionIds) {
-        // 各セッションの写真を取得してプリロード
-        const photos = await getSessionPhotos(sessionId)
-        const imageUrls = photos.map(photo => photo.url)
-        
-        if (imageUrls.length > 0) {
-          // バックグラウンドでプリロード（エラーが発生しても無視）
-          preloadImages(imageUrls).catch(error => {
-            console.log(`Background preload failed for session ${sessionId}:`, error)
-          })
+      // 各セッションの写真を並列で取得してプリロード
+      const preloadPromises = sessionIds.map(async (sessionId) => {
+        try {
+          const photos = await getSessionPhotos(sessionId)
+          const imageUrls = photos.map(photo => photo.url)
+          
+          if (imageUrls.length > 0) {
+            // バックグラウンドでプリロード（エラーが発生しても無視）
+            return preloadImages(imageUrls)
+          }
+        } catch (error) {
+          console.log(`Background preload failed for session ${sessionId}:`, error)
         }
-      }
+      })
+
+      // 全てのプリロードを並列実行（エラーは無視）
+      await Promise.allSettled(preloadPromises)
     } catch (error) {
       console.log('Background preload process failed:', error)
     }

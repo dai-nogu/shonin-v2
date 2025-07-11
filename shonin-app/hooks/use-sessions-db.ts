@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Database } from '@/types/database'
 
@@ -25,7 +25,7 @@ export function useSessionsDb() {
   const [error, setError] = useState<string | null>(null)
 
   // セッションを取得（アクティビティ情報とタグも含む）
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       setLoading(true)
       console.log('Fetching sessions...')
@@ -58,10 +58,10 @@ export function useSessionsDb() {
     } finally {
       setLoading(false)
     }
-  }
+  }, []) // 依存配列を空にしてメモ化
 
   // セッションを追加
-  const addSession = async (session: Omit<SessionInsert, 'user_id'>): Promise<string | null> => {
+  const addSession = useCallback(async (session: Omit<SessionInsert, 'user_id'>): Promise<string | null> => {
     try {
       console.log('Adding session:', session)
 
@@ -81,7 +81,8 @@ export function useSessionsDb() {
         throw error
       }
 
-      await fetchSessions() // リストを更新
+      // リストを更新（非同期で実行、エラーは無視）
+      fetchSessions().catch(console.error)
       console.log('Session added successfully:', data.id)
       return data.id
     } catch (err) {
@@ -89,10 +90,10 @@ export function useSessionsDb() {
       setError(err instanceof Error ? err.message : 'セッションの追加に失敗しました')
       return null
     }
-  }
+  }, [fetchSessions])
 
   // セッションを更新
-  const updateSession = async (id: string, updates: SessionUpdate): Promise<boolean> => {
+  const updateSession = useCallback(async (id: string, updates: SessionUpdate): Promise<boolean> => {
     try {
       console.log('Updating session:', id, updates)
 
@@ -106,17 +107,18 @@ export function useSessionsDb() {
         throw error
       }
 
-      await fetchSessions() // リストを更新
+      // リストを更新（非同期で実行、エラーは無視）
+      fetchSessions().catch(console.error)
       return true
     } catch (err) {
       console.error('Error in updateSession:', err)
       setError(err instanceof Error ? err.message : 'セッションの更新に失敗しました')
       return false
     }
-  }
+  }, [fetchSessions])
 
   // セッションを削除
-  const deleteSession = async (id: string): Promise<boolean> => {
+  const deleteSession = useCallback(async (id: string): Promise<boolean> => {
     try {
       console.log('Deleting session:', id)
 
@@ -130,19 +132,20 @@ export function useSessionsDb() {
         throw error
       }
 
-      await fetchSessions() // リストを更新
+      // リストを更新（非同期で実行、エラーは無視）
+      fetchSessions().catch(console.error)
       return true
     } catch (err) {
       console.error('Error in deleteSession:', err)
       setError(err instanceof Error ? err.message : 'セッションの削除に失敗しました')
       return false
     }
-  }
+  }, [fetchSessions])
 
 
 
   // 期間指定でセッションを取得
-  const getSessionsByDateRange = async (startDate: string, endDate: string): Promise<SessionWithActivity[]> => {
+  const getSessionsByDateRange = useCallback(async (startDate: string, endDate: string): Promise<SessionWithActivity[]> => {
     try {
       console.log('Getting sessions by date range:', startDate, endDate)
 
@@ -169,10 +172,10 @@ export function useSessionsDb() {
       setError(err instanceof Error ? err.message : '期間指定セッションの取得に失敗しました')
       return []
     }
-  }
+  }, [])
 
   // アクティビティ別の統計を取得
-  const getActivityStats = async () => {
+  const getActivityStats = useCallback(async () => {
     try {
       console.log('Getting activity stats...')
 
@@ -195,13 +198,16 @@ export function useSessionsDb() {
       // アクティビティ別に集計
       const stats = data?.reduce((acc, session) => {
         const activityId = session.activity_id
+        // activitiesは単一のオブジェクトとしてアクセス
+        const activity = session.activities as unknown as { name: string; icon: string | null; color: string } | null
+        
         if (!acc[activityId]) {
           acc[activityId] = {
             totalDuration: 0,
             sessionCount: 0,
-            activityName: session.activities?.name || '不明',
-            activityIcon: session.activities?.icon,
-            activityColor: session.activities?.color || '#6366f1',
+            activityName: activity?.name || '不明',
+            activityIcon: activity?.icon,
+            activityColor: activity?.color || '#6366f1',
           }
         }
         acc[activityId].totalDuration += session.duration
@@ -215,12 +221,12 @@ export function useSessionsDb() {
       setError(err instanceof Error ? err.message : '統計の取得に失敗しました')
       return []
     }
-  }
+  }, [])
 
   // 初回読み込み
   useEffect(() => {
     fetchSessions()
-  }, [])
+  }, [fetchSessions])
 
   return {
     sessions,
@@ -229,7 +235,6 @@ export function useSessionsDb() {
     addSession,
     updateSession,
     deleteSession,
-
     getSessionsByDateRange,
     getActivityStats,
     refetch: fetchSessions,
