@@ -42,6 +42,61 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
   // セッションコンテキストから一元化された時間データを取得
   const { elapsedTime, formattedTime } = useSessions()
 
+  // ローカルストレージのキー生成
+  const getStorageKey = (field: string) => {
+    return `session_${session.activityId}_${session.startTime.getTime()}_${field}`
+  }
+
+  // ローカルストレージからデータを復元
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedNotes = localStorage.getItem(getStorageKey('notes'))
+      const savedMood = localStorage.getItem(getStorageKey('mood'))
+      const savedAchievements = localStorage.getItem(getStorageKey('achievements'))
+      const savedChallenges = localStorage.getItem(getStorageKey('challenges'))
+
+      if (savedNotes) setNotes(savedNotes)
+      if (savedMood) setMood(parseInt(savedMood))
+      if (savedAchievements) setAchievements(savedAchievements)
+      if (savedChallenges) setChallenges(savedChallenges)
+    }
+  }, [session.activityId, session.startTime])
+
+  // メモ内容をローカルストレージに自動保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('notes'), notes)
+    }
+  }, [notes, session.activityId, session.startTime])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('mood'), mood.toString())
+    }
+  }, [mood, session.activityId, session.startTime])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('achievements'), achievements)
+    }
+  }, [achievements, session.activityId, session.startTime])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('challenges'), challenges)
+    }
+  }, [challenges, session.activityId, session.startTime])
+
+  // ローカルストレージをクリアする関数
+  const clearLocalStorage = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(getStorageKey('notes'))
+      localStorage.removeItem(getStorageKey('mood'))
+      localStorage.removeItem(getStorageKey('achievements'))
+      localStorage.removeItem(getStorageKey('challenges'))
+    }
+  }
+
   // セッションが終了状態になった時にメモ欄を自動表示
   useEffect(() => {
     if (sessionState === "ended") {
@@ -149,6 +204,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           // 振り返り保存失敗の場合もセッション自体は保存されているので継続
         }
       }
+      
+      // 保存が成功したらローカルストレージをクリア
+      clearLocalStorage()
       
       onEnd()
     } catch (error) {
