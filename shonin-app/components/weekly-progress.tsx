@@ -32,7 +32,8 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
     
     // その日のセッションを取得
     const daySessions = completedSessions.filter(session => {
-      const sessionDate = new Date(session.endTime)
+      // セッションの開始時刻を基準に日付を判定（日付跨ぎ対応）
+      const sessionDate = new Date(session.startTime)
       return sessionDate.toDateString() === date.toDateString()
     })
 

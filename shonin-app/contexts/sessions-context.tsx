@@ -309,35 +309,30 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     }> = []
 
     let currentStart = new Date(startTime)
-    let remainingDuration = totalDuration
+    
+    while (currentStart < endTime) {
+      // 現在の日付の終了時刻（翌日の00:00:00）
+      const nextDayStart = new Date(currentStart)
+      nextDayStart.setDate(nextDayStart.getDate() + 1)
+      nextDayStart.setHours(0, 0, 0, 0)
 
-    while (currentStart < endTime && remainingDuration > 0) {
-      // 現在の日付の終了時刻（23:59:59）
-      const dayEnd = new Date(currentStart)
-      dayEnd.setHours(23, 59, 59, 999)
+      // この日のセッション終了時刻を決定
+      const sessionEnd = endTime < nextDayStart ? endTime : nextDayStart
 
-      // セッションの実際の終了時刻
-      const sessionEnd = endTime < dayEnd ? endTime : dayEnd
-
-      // この日のセッション時間を計算
+      // この日のセッション時間を計算（秒単位）
       const sessionDuration = Math.floor((sessionEnd.getTime() - currentStart.getTime()) / 1000)
-      const actualDuration = Math.min(sessionDuration, remainingDuration)
 
-      if (actualDuration > 0) {
+      if (sessionDuration > 0) {
         sessions.push({
           startTime: new Date(currentStart),
-          endTime: new Date(currentStart.getTime() + actualDuration * 1000),
-          duration: actualDuration,
+          endTime: new Date(sessionEnd),
+          duration: sessionDuration,
           date: currentStart.toISOString().split('T')[0]
         })
-
-        remainingDuration -= actualDuration
       }
 
       // 次の日の開始時刻（00:00:00）
-      currentStart = new Date(dayEnd)
-      currentStart.setDate(currentStart.getDate() + 1)
-      currentStart.setHours(0, 0, 0, 0)
+      currentStart = new Date(nextDayStart)
     }
 
     return sessions
@@ -395,6 +390,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           completedSession.endTime,
           completedSession.duration
         )
+
+
 
         // 既存の進行中セッションがあれば削除（分割されたセッションで置き換える）
         if (activeSession) {

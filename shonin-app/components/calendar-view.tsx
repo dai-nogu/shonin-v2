@@ -88,7 +88,8 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
       }
 
       const style = getActivityStyle(session)
-      const sessionDate = new Date(session.endTime)
+      // セッションの開始時刻を基準に日付を決定（日付跨ぎ対応）
+      const sessionDate = new Date(session.startTime)
       const dateStr = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, "0")}-${String(sessionDate.getDate()).padStart(2, "0")}`
 
       return {

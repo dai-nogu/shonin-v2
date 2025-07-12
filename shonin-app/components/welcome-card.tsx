@@ -11,7 +11,8 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
   // 今日のセッションを取得
   const today = new Date()
   const todaysSessions = completedSessions.filter(session => {
-    const sessionDate = new Date(session.endTime)
+    // セッションの開始時刻を基準に日付を判定（日付跨ぎ対応）
+    const sessionDate = new Date(session.startTime)
     return sessionDate.toDateString() === today.toDateString()
   })
 
@@ -27,7 +28,8 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
     // セッションを日付ごとにグループ化（YYYY-MM-DD形式で統一）
     const sessionsByDate = new Map<string, boolean>()
     completedSessions.forEach(session => {
-      const sessionDate = new Date(session.endTime)
+      // セッションの開始時刻を基準に日付を判定（日付跨ぎ対応）
+      const sessionDate = new Date(session.startTime)
       const dateKey = sessionDate.toISOString().split('T')[0] // YYYY-MM-DD形式
       sessionsByDate.set(dateKey, true)
     })
