@@ -286,18 +286,35 @@ export function splitSessionByDateInTimezone(
     date: string
   }> = []
 
+  // 開始日と終了日をタイムゾーンで取得
+  const startDateString = getDateStringInTimezone(startTime, timezone)
+  const endDateString = getDateStringInTimezone(endTime, timezone)
+  
+  // 同じ日の場合は分割不要
+  if (startDateString === endDateString) {
+    sessions.push({
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      duration: totalDuration,
+      date: startDateString
+    })
+    return sessions
+  }
+
+  // 日付跨ぎの場合は分割
   let currentStart = new Date(startTime)
   const sessionEndTime = new Date(endTime)
   
   while (currentStart < sessionEndTime) {
-    // 現在の日付の終了時刻（翌日の00:00:00）をタイムゾーンで計算
-    const currentStartInTimezone = new Date(currentStart.toLocaleString('en-US', { timeZone: timezone }))
-    const nextDayStart = new Date(currentStartInTimezone)
-    nextDayStart.setDate(nextDayStart.getDate() + 1)
-    nextDayStart.setHours(0, 0, 0, 0)
-
+    // 現在の日付をタイムゾーンで取得
+    const currentDateString = getDateStringInTimezone(currentStart, timezone)
+    
+    // 現在の日付の終了時刻（23:59:59.999）を計算
+    const currentDateEnd = new Date(currentStart)
+    currentDateEnd.setHours(23, 59, 59, 999)
+    
     // この日のセッション終了時刻を決定
-    const sessionEnd = sessionEndTime < nextDayStart ? sessionEndTime : nextDayStart
+    const sessionEnd = sessionEndTime < currentDateEnd ? sessionEndTime : currentDateEnd
 
     // この日のセッション時間を計算（秒単位）
     const sessionDuration = Math.floor((sessionEnd.getTime() - currentStart.getTime()) / 1000)
@@ -307,12 +324,14 @@ export function splitSessionByDateInTimezone(
         startTime: new Date(currentStart),
         endTime: new Date(sessionEnd),
         duration: sessionDuration,
-        date: getDateStringInTimezone(currentStart, timezone)
+        date: currentDateString
       })
     }
 
-    // 次の日の開始時刻（00:00:00）
-    currentStart = new Date(nextDayStart)
+    // 次の日の開始時刻（翌日の00:00:00）
+    const nextDay = new Date(currentDateEnd)
+    nextDay.setTime(nextDay.getTime() + 1) // 23:59:59.999の1ms後 = 翌日00:00:00
+    currentStart = nextDay
   }
 
   return sessions
