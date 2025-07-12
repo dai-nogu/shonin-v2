@@ -49,12 +49,15 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   }
 
   const formatDateTime = (date: Date) => {
-    return date.toLocaleDateString("ja-JP", {
+    const dateStr = date.toLocaleDateString("ja-JP", {
       year: "numeric",
-      month: "long",
-      day: "numeric",
+      month: "numeric",
+      day: "numeric"
+    })
+    const weekday = date.toLocaleDateString("ja-JP", {
       weekday: "long"
     })
+    return `${dateStr} (${weekday})`
   }
 
   const getMoodEmoji = (mood: number) => {
@@ -394,12 +397,15 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   }
 
   const formatDateTime = (date: Date) => {
-    return date.toLocaleDateString("ja-JP", {
+    const dateStr = date.toLocaleDateString("ja-JP", {
       year: "numeric",
-      month: "long",
-      day: "numeric",
+      month: "numeric",
+      day: "numeric"
+    })
+    const weekday = date.toLocaleDateString("ja-JP", {
       weekday: "long"
     })
+    return `${dateStr} (${weekday})`
   }
 
   const getMoodEmoji = (mood: number) => {

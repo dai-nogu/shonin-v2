@@ -497,21 +497,18 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 value="recent" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
-                <History className="w-4 h-4 mr-1" />
                 最新
               </TabsTrigger>
               <TabsTrigger 
                 value="most-recorded" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
-                <BarChart3 className="w-4 h-4 mr-1" />
                 回数順
               </TabsTrigger>
               <TabsTrigger 
                 value="yesterday" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
-                <CalendarDays className="w-4 h-4 mr-1" />
                 昨日
               </TabsTrigger>
             </TabsList>

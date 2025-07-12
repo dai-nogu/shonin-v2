@@ -1,5 +1,4 @@
-import { User, Settings } from "lucide-react"
-import { Button } from "@/components/ui/button"
+
 
 export function Header() {
   return (
@@ -12,14 +11,7 @@ export function Header() {
           <h1 className="text-xl font-bold text-white">SHONIN</h1>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-            <Settings className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-            <User className="w-4 h-4" />
-          </Button>
-        </div>
+
       </div>
     </header>
   )

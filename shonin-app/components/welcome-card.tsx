@@ -1,4 +1,3 @@
-import { Clock, Target, TrendingUp } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatTime } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
@@ -24,32 +23,56 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
   // 連続記録日数を計算（タイムゾーン考慮）
   const streakDays = calculateStreakDays(completedSessions, timezone)
 
-  // 先週比の計算（タイムゾーン考慮）
-  const calculateWeeklyGrowth = () => {
-    // 今週のセッションを取得
-    const thisWeekSessions = getWeekSessionsInTimezone(completedSessions, timezone)
+  // 前日比の計算（タイムゾーン考慮）
+  const calculateDailyGrowth = () => {
+    // 今日のセッションを取得
+    const todaysSessions = getTodaySessionsInTimezone(completedSessions, timezone)
     
-    // 先週のセッションを取得（簡易版）
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-    const lastWeekSessions = completedSessions.filter(session => {
-      const sessionDate = new Date(session.startTime)
-      const oneWeekAgoDate = new Date(oneWeekAgo)
-      const twoWeeksAgo = new Date(oneWeekAgo)
-      twoWeeksAgo.setDate(oneWeekAgo.getDate() - 7)
-      return sessionDate >= twoWeeksAgo && sessionDate < oneWeekAgoDate
+    // 昨日のセッションを取得
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayDateString = yesterday.toLocaleDateString('ja-JP', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '-')
+    
+    const yesterdaySessions = completedSessions.filter(session => {
+      const sessionDateString = new Date(session.startTime).toLocaleDateString('ja-JP', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '-')
+      return sessionDateString === yesterdayDateString
     })
 
     // 合計時間を計算（秒単位）
-    const thisWeekTotal = thisWeekSessions.reduce((sum, session) => sum + session.duration, 0)
-    const lastWeekTotal = lastWeekSessions.reduce((sum, session) => sum + session.duration, 0)
+    const todayTotal = todaysSessions.reduce((sum, session) => sum + session.duration, 0)
+    const yesterdayTotal = yesterdaySessions.reduce((sum, session) => sum + session.duration, 0)
 
-    // 増減率を計算
-    if (lastWeekTotal === 0) {
-      return thisWeekTotal > 0 ? "+100%" : "±0%"
+    // 両方とも0の場合
+    if (todayTotal === 0 && yesterdayTotal === 0) {
+      return "±0%"
     }
 
-    const growthRate = ((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100
+    // 今日が0で昨日にデータがあった場合
+    if (todayTotal === 0 && yesterdayTotal > 0) {
+      return "-100%"
+    }
+
+    // 昨日が0の場合の汎用的な計算
+    // 1時間（3600秒）を基準値として使用
+    if (yesterdayTotal === 0) {
+      const baseValue = 3600 // 1時間を基準値とする
+      const growthRate = (todayTotal / baseValue) * 100
+      const roundedRate = Math.round(growthRate)
+      return `+${roundedRate}%`
+    }
+
+    // 通常の増減率計算
+    const growthRate = ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
     const roundedRate = Math.round(growthRate)
 
     if (roundedRate > 0) {
@@ -61,7 +84,7 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
     }
   }
 
-  const weeklyGrowth = calculateWeeklyGrowth()
+  const dailyGrowth = calculateDailyGrowth()
 
   // 現在時刻（タイムゾーン考慮）
   const currentTime = new Date().toLocaleTimeString('ja-JP', { 
@@ -79,24 +102,21 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
         </div>
 
         <div className="grid grid-cols-3 gap-6">
-          <div className="text-center flex flex-col items-center justify-between h-20">
-            <Clock className="w-6 h-6" />
+          <div className="text-center flex flex-col items-center justify-center h-20 gap-2">
             <div className={`font-bold ${totalSeconds > 0 ? 'text-2xl' : 'text-base'} leading-tight`}>
               {formatTime(totalHours, totalMinutes)}
             </div>
             <div className="text-sm text-green-100">今日の記録</div>
           </div>
 
-          <div className="text-center flex flex-col items-center justify-between h-20">
-            <Target className="w-6 h-6" />
+          <div className="text-center flex flex-col items-center justify-center h-20 gap-2">
             <div className="text-2xl font-bold leading-tight">{streakDays}</div>
             <div className="text-sm text-green-100">連続記録日</div>
           </div>
 
-          <div className="text-center flex flex-col items-center justify-between h-20">
-            <TrendingUp className="w-6 h-6" />
-            <div className="text-2xl font-bold leading-tight">{weeklyGrowth}</div>
-            <div className="text-sm text-green-100">先週比</div>
+          <div className="text-center flex flex-col items-center justify-center h-20 gap-2">
+            <div className="text-2xl font-bold leading-tight">{dailyGrowth}</div>
+            <div className="text-sm text-green-100">前日比</div>
           </div>
         </div>
       </CardContent>
