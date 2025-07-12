@@ -24,11 +24,11 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
   const calculateStreakDays = () => {
     if (completedSessions.length === 0) return 0
 
-    // セッションを日付ごとにグループ化
+    // セッションを日付ごとにグループ化（YYYY-MM-DD形式で統一）
     const sessionsByDate = new Map<string, boolean>()
     completedSessions.forEach(session => {
       const sessionDate = new Date(session.endTime)
-      const dateKey = sessionDate.toDateString()
+      const dateKey = sessionDate.toISOString().split('T')[0] // YYYY-MM-DD形式
       sessionsByDate.set(dateKey, true)
     })
 
@@ -36,16 +36,27 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
     let streakCount = 0
     const today = new Date()
     
+    // 今日の日付をYYYY-MM-DD形式で取得
+    const todayKey = today.toISOString().split('T')[0]
+    
+    // 今日にセッションがあるかチェック
+    const hasTodaySession = sessionsByDate.has(todayKey)
+    
     for (let i = 0; i < 365; i++) { // 最大365日まで遡る
       const checkDate = new Date(today)
       checkDate.setDate(today.getDate() - i)
-      const dateKey = checkDate.toDateString()
+      const dateKey = checkDate.toISOString().split('T')[0]
       
       if (sessionsByDate.has(dateKey)) {
         streakCount++
       } else {
-        // 連続が途切れた場合
-        break
+        // 今日（i=0）でセッションがない場合は、昨日から連続記録を確認
+        if (i === 0 && !hasTodaySession) {
+          continue // 今日をスキップして昨日から計算
+        } else {
+          // 連続が途切れた
+          break
+        }
       }
     }
     
