@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { formatDuration } from "@/lib/format-duration"
+import { useTimezone } from "@/contexts/timezone-context"
+import { getWeekStartInTimezone, getCurrentTimeInTimezone, getDateStringInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {
@@ -13,28 +15,26 @@ interface WeeklyProgressProps {
 }
 
 export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
-  // 今週の開始日（月曜日）を取得
-  const getWeekStart = () => {
-    const today = new Date()
-    const day = today.getDay()
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1) // 月曜日を週の開始とする
-    return new Date(today.setDate(diff))
-  }
-
+  // タイムゾーンを取得
+  const { timezone } = useTimezone()
+  
+  // 今週の開始日（月曜日）を取得（タイムゾーン考慮）
+  const today = getCurrentTimeInTimezone(timezone)
+  const weekStart = getWeekStartInTimezone(today, timezone)
+  
   // 今週の各日のデータを計算
-  const weekStart = getWeekStart()
   const weekData = []
   const dayNames = ["月", "火", "水", "木", "金", "土", "日"]
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart)
     date.setDate(weekStart.getDate() + i)
+    const dateString = getDateStringInTimezone(date, timezone)
     
-    // その日のセッションを取得
+    // その日のセッションを取得（タイムゾーン考慮）
     const daySessions = completedSessions.filter(session => {
-      // セッションの開始時刻を基準に日付を判定（日付跨ぎ対応）
-      const sessionDate = new Date(session.startTime)
-      return sessionDate.toDateString() === date.toDateString()
+      const sessionDateString = getDateStringInTimezone(session.startTime, timezone)
+      return sessionDateString === dateString
     })
 
     // その日の合計時間を計算（秒単位で保持）

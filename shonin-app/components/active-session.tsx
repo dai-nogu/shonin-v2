@@ -11,7 +11,9 @@ import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useSessions } from "@/contexts/sessions-context"
+import { useTimezone } from "@/contexts/timezone-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
+import { getTimeStringInTimezone } from "@/lib/timezone-utils"
 
 interface ActiveSessionProps {
   session: SessionData
@@ -28,6 +30,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
   // セッションコンテキストから一元化された時間データを取得
   const { formattedTime, elapsedTime } = useSessions()
+  
+  // タイムゾーンコンテキスト
+  const { timezone } = useTimezone()
 
   // 振り返り関連の状態
   const [mood, setMood] = useState(3)
@@ -266,10 +271,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             </div>
             <div className="text-gray-400 text-sm">
               開始時刻:{" "}
-              {session.startTime.toLocaleTimeString("ja-JP", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {getTimeStringInTimezone(session.startTime, timezone, '24h').substring(0, 5)}
             </div>
             
             {/* 目標時間と進捗表示 */}

@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Save, User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus } from "lucide-react"
+import { Save, User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
+import { useTimezone } from "@/contexts/timezone-context"
+import { TIMEZONES } from "@/lib/timezone-utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,8 +33,12 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // 地域・時間設定
-  const [timezone, setTimezone] = useState("Asia/Tokyo")
+  // タイムゾーン設定
+  const { 
+    timezone, 
+    setTimezone, 
+    getTimezoneDisplayName 
+  } = useTimezone()
 
   // 通知設定
   const [goalReminders, setGoalReminders] = useState(true)
@@ -88,7 +94,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
 
       <div className="p-6 container mx-auto max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-900 border-gray-800">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-900 border-gray-800">
             <TabsTrigger value="profile" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <User className="w-4 h-4" />
               <span>プロフィール</span>
@@ -96,6 +102,10 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
             <TabsTrigger value="security" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Lock className="w-4 h-4" />
               <span>セキュリティ</span>
+            </TabsTrigger>
+            <TabsTrigger value="timezone" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
+              <Globe className="w-4 h-4" />
+              <span>タイムゾーン</span>
             </TabsTrigger>
             <TabsTrigger value="activities" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Activity className="w-4 h-4" />
@@ -219,6 +229,94 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
             </Card>
           </TabsContent>
 
+          {/* タイムゾーンタブ */}
+          <TabsContent value="timezone" className="space-y-6">
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Globe className="w-5 h-5 mr-2" />
+                  タイムゾーン設定
+                </CardTitle>
+                <p className="text-gray-400 text-sm">
+                  時間表示や統計の計算に使用されるタイムゾーンを設定します
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+
+
+                {/* 現在のタイムゾーン表示 */}
+                <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Clock className="w-5 h-5 text-green-400" />
+                      <div>
+                        <Label className="text-gray-300">現在のタイムゾーン</Label>
+                        <p className="text-sm text-gray-400">{getTimezoneDisplayName(timezone)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-mono">
+                        {new Date().toLocaleTimeString('ja-JP', { 
+                          timeZone: timezone,
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {new Date().toLocaleDateString('ja-JP', { 
+                          timeZone: timezone,
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* タイムゾーン選択 */}
+                <div className="space-y-4">
+                  <Label className="text-gray-300">タイムゾーンを選択</Label>
+                  <Select value={timezone} onValueChange={setTimezone}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                      <SelectValue placeholder="タイムゾーンを選択" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700">
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem 
+                          key={tz.value} 
+                          value={tz.value}
+                          className="text-white hover:bg-gray-700"
+                        >
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+
+
+                {/* 注意事項 */}
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-2 h-2 rounded-full bg-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-blue-300 font-medium text-sm">タイムゾーン設定について</p>
+                      <ul className="text-blue-200 text-sm mt-1 space-y-1">
+                        <li>• 時間記録、統計、連続日数の計算に影響します</li>
+                        <li>• 変更は即座に反映されます</li>
+                        <li>• 過去のデータも新しいタイムゾーンで表示されます</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* アクティビティタブ */}
           <TabsContent value="activities" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
@@ -317,31 +415,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Globe className="w-5 h-5 mr-2" />
-                  地域・時間設定
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300">タイムゾーン</Label>
-                  <Select value={timezone} onValueChange={setTimezone}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="Asia/Tokyo">日本 (JST)</SelectItem>
-                      <SelectItem value="America/New_York">ニューヨーク (EST)</SelectItem>
-                      <SelectItem value="Europe/London">ロンドン (GMT)</SelectItem>
-                      <SelectItem value="Asia/Shanghai">上海 (CST)</SelectItem>
-                      <SelectItem value="Australia/Sydney">シドニー (AEDT)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+
           </TabsContent>
 
           {/* 保存ボタン - すべてのタブで共通 */}

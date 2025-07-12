@@ -1,6 +1,8 @@
 import { Clock, CheckCircle, Flame } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useTimezone } from "@/contexts/timezone-context"
+import { getTodaySessionsInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface TodaysStatsProps {
@@ -8,12 +10,11 @@ interface TodaysStatsProps {
 }
 
 export function TodaysStats({ completedSessions }: TodaysStatsProps) {
-  // 今日のセッションを取得
-  const today = new Date()
-  const todaysSessions = completedSessions.filter(session => {
-    const sessionDate = new Date(session.endTime)
-    return sessionDate.toDateString() === today.toDateString()
-  })
+  // タイムゾーンを取得
+  const { timezone } = useTimezone()
+  
+  // 今日のセッションを取得（タイムゾーン考慮）
+  const todaysSessions = getTodaySessionsInTimezone(completedSessions, timezone)
 
   // 今日の合計時間を計算（秒を時間に変換）
   const totalSeconds = todaysSessions.reduce((sum, session) => sum + session.duration, 0)

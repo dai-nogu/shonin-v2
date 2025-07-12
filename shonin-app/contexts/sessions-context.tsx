@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react"
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useTimezone } from "@/contexts/timezone-context"
+import { splitSessionByDateInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
 
 export interface SessionData {
   activityId: string
@@ -74,6 +76,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   
   // 目標管理フック
   const { updateGoal } = useGoalsDb()
+  
+  // タイムゾーンフック
+  const { timezone } = useTimezone()
 
   // セッション状態管理
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
@@ -258,9 +263,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const startSession = async (sessionData: SessionData) => {
     // データベースに進行中セッションを保存
     try {
+      // タイムゾーンを考慮した開始時刻を使用
+      const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
+      
       await addSession({
         activity_id: sessionData.activityId,
-        start_time: sessionData.startTime.toISOString(),
+        start_time: startTimeInTimezone.toISOString(),
         end_time: null, // 進行中なのでend_timeはnull
         duration: 0,
         location: sessionData.location || null,
@@ -271,17 +279,28 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         goal_id: sessionData.goalId || null, // 目標IDを保存
       })
       
+      // セッションデータの開始時刻もタイムゾーンを考慮
+      const updatedSessionData = {
+        ...sessionData,
+        startTime: startTimeInTimezone
+      }
+      
       // 復元フラグをリセット（新規セッション）
       setIsRestoredSession(false)
-      setCurrentSession(sessionData)
+      setCurrentSession(updatedSessionData)
       setIsSessionActive(true)
       setSessionState("active")
       
     } catch (error) {
       console.error('セッション開始時のDB保存エラー:', error)
       // エラーが発生してもセッションは開始する
+      const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
+      const updatedSessionData = {
+        ...sessionData,
+        startTime: startTimeInTimezone
+      }
       setIsRestoredSession(false)
-      setCurrentSession(sessionData)
+      setCurrentSession(updatedSessionData)
       setIsSessionActive(true)
       setSessionState("active")
     }
@@ -299,43 +318,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     setSessionState("active")
   }
 
-  // 日付跨ぎを考慮したセッション分割関数
+  // 日付跨ぎを考慮したセッション分割関数（タイムゾーン対応）
   const splitSessionByDate = (startTime: Date, endTime: Date, totalDuration: number) => {
-    const sessions: Array<{
-      startTime: Date
-      endTime: Date
-      duration: number
-      date: string
-    }> = []
-
-    let currentStart = new Date(startTime)
-    
-    while (currentStart < endTime) {
-      // 現在の日付の終了時刻（翌日の00:00:00）
-      const nextDayStart = new Date(currentStart)
-      nextDayStart.setDate(nextDayStart.getDate() + 1)
-      nextDayStart.setHours(0, 0, 0, 0)
-
-      // この日のセッション終了時刻を決定
-      const sessionEnd = endTime < nextDayStart ? endTime : nextDayStart
-
-      // この日のセッション時間を計算（秒単位）
-      const sessionDuration = Math.floor((sessionEnd.getTime() - currentStart.getTime()) / 1000)
-
-      if (sessionDuration > 0) {
-        sessions.push({
-          startTime: new Date(currentStart),
-          endTime: new Date(sessionEnd),
-          duration: sessionDuration,
-          date: currentStart.toISOString().split('T')[0]
-        })
-      }
-
-      // 次の日の開始時刻（00:00:00）
-      currentStart = new Date(nextDayStart)
-    }
-
-    return sessions
+    return splitSessionByDateInTimezone(startTime, endTime, totalDuration, timezone)
   }
 
   const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
@@ -345,9 +330,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       // 進行中セッションがあるかチェック
       const activeSession = sessions.find(session => !session.end_time)
       
-      // セッションが日付を跨ぐかチェック
-      const startDate = completedSession.startTime.toISOString().split('T')[0]
-      const endDate = completedSession.endTime.toISOString().split('T')[0]
+      // セッションが日付を跨ぐかチェック（タイムゾーン考慮）
+      const startDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
+      const endDate = completedSession.endTime.toLocaleDateString('sv-SE', { timeZone: timezone })
       
       if (startDate === endDate) {
         // 同じ日のセッション（従来の処理）

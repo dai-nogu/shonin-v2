@@ -1,6 +1,8 @@
 import { Clock, Target, TrendingUp } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatTime } from "@/lib/format-duration"
+import { useTimezone } from "@/contexts/timezone-context"
+import { getTodaySessionsInTimezone, calculateStreakDays, getWeekSessionsInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface WelcomeCardProps {
@@ -8,109 +10,39 @@ interface WelcomeCardProps {
 }
 
 export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
-  // 今日のセッションを取得
-  const today = new Date()
-  const todaysSessions = completedSessions.filter(session => {
-    // セッションの開始時刻を基準に日付を判定（日付跨ぎ対応）
-    const sessionDate = new Date(session.startTime)
-    return sessionDate.toDateString() === today.toDateString()
-  })
+  // タイムゾーンを取得
+  const { timezone } = useTimezone()
+  
+  // 今日のセッションを取得（タイムゾーン考慮）
+  const todaysSessions = getTodaySessionsInTimezone(completedSessions, timezone)
 
   // 今日の合計時間を計算（秒を時間に変換）
   const totalSeconds = todaysSessions.reduce((sum, session) => sum + session.duration, 0)
   const totalHours = Math.floor(totalSeconds / 3600)
   const totalMinutes = Math.floor((totalSeconds % 3600) / 60)
 
-  // 連続記録日数を計算
-  const calculateStreakDays = () => {
-    if (completedSessions.length === 0) return 0
+  // 連続記録日数を計算（タイムゾーン考慮）
+  const streakDays = calculateStreakDays(completedSessions, timezone)
 
-    // セッションを日付ごとにグループ化（YYYY-MM-DD形式で統一）
-    const sessionsByDate = new Map<string, boolean>()
-    completedSessions.forEach(session => {
-      // セッションの開始時刻を基準に日付を判定（日付跨ぎ対応）
-      const sessionDate = new Date(session.startTime)
-      const dateKey = sessionDate.toISOString().split('T')[0] // YYYY-MM-DD形式
-      sessionsByDate.set(dateKey, true)
-    })
-
-    // 今日から遡って連続日数を計算
-    let streakCount = 0
-    const today = new Date()
-    
-    // 今日の日付をYYYY-MM-DD形式で取得
-    const todayKey = today.toISOString().split('T')[0]
-    
-    // 今日にセッションがあるかチェック
-    const hasTodaySession = sessionsByDate.has(todayKey)
-    
-    for (let i = 0; i < 365; i++) { // 最大365日まで遡る
-      const checkDate = new Date(today)
-      checkDate.setDate(today.getDate() - i)
-      const dateKey = checkDate.toISOString().split('T')[0]
-      
-      if (sessionsByDate.has(dateKey)) {
-        streakCount++
-      } else {
-        // 今日（i=0）でセッションがない場合は、昨日から連続記録を確認
-        if (i === 0 && !hasTodaySession) {
-          continue // 今日をスキップして昨日から計算
-        } else {
-          // 連続が途切れた
-          break
-        }
-      }
-    }
-    
-    return streakCount
-  }
-
-  const streakDays = calculateStreakDays()
-
-  // 先週比の計算
+  // 先週比の計算（タイムゾーン考慮）
   const calculateWeeklyGrowth = () => {
-    const now = new Date()
+    // 今週のセッションを取得
+    const thisWeekSessions = getWeekSessionsInTimezone(completedSessions, timezone)
     
-    // 今週の開始日（月曜日）
-    const currentWeekStart = new Date(now)
-    const currentDay = now.getDay() // 0=日曜日, 1=月曜日...
-    const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1 // 日曜日の場合は6日前が月曜日
-    currentWeekStart.setDate(now.getDate() - daysFromMonday)
-    currentWeekStart.setHours(0, 0, 0, 0)
-
-    // 先週の開始日と終了日
-    const lastWeekStart = new Date(currentWeekStart)
-    lastWeekStart.setDate(currentWeekStart.getDate() - 7)
-    const lastWeekEnd = new Date(currentWeekStart)
-    lastWeekEnd.setTime(lastWeekEnd.getTime() - 1) // 先週の最後の瞬間
-
-    // 今週のセッション（今週月曜日〜現在まで）
-    const thisWeekSessions = completedSessions.filter(session => {
-      const sessionDate = new Date(session.endTime)
-      return sessionDate >= currentWeekStart && sessionDate <= now
-    })
-
-    // 先週のセッション（先週月曜日〜先週日曜日）
+    // 先週のセッションを取得（簡易版）
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
     const lastWeekSessions = completedSessions.filter(session => {
-      const sessionDate = new Date(session.endTime)
-      return sessionDate >= lastWeekStart && sessionDate <= lastWeekEnd
-    })
-
-    // 今週の同じ曜日までの時間を公平に比較するため、
-    // 先週の同じ期間（月曜日から現在の曜日まで）と比較
-    const currentDayOfWeek = now.getDay()
-    const lastWeekSameDate = new Date(lastWeekStart)
-    lastWeekSameDate.setDate(lastWeekStart.getDate() + daysFromMonday)
-    lastWeekSameDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds())
-
-    const lastWeekSamePeriodSessions = completedSessions.filter(session => {
-      const sessionDate = new Date(session.endTime)
-      return sessionDate >= lastWeekStart && sessionDate <= lastWeekSameDate
+      const sessionDate = new Date(session.startTime)
+      const oneWeekAgoDate = new Date(oneWeekAgo)
+      const twoWeeksAgo = new Date(oneWeekAgo)
+      twoWeeksAgo.setDate(oneWeekAgo.getDate() - 7)
+      return sessionDate >= twoWeeksAgo && sessionDate < oneWeekAgoDate
     })
 
     // 合計時間を計算（秒単位）
     const thisWeekTotal = thisWeekSessions.reduce((sum, session) => sum + session.duration, 0)
-    const lastWeekTotal = lastWeekSamePeriodSessions.reduce((sum, session) => sum + session.duration, 0)
+    const lastWeekTotal = lastWeekSessions.reduce((sum, session) => sum + session.duration, 0)
 
     // 増減率を計算
     if (lastWeekTotal === 0) {
@@ -131,8 +63,9 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
 
   const weeklyGrowth = calculateWeeklyGrowth()
 
-  // 現在時刻
+  // 現在時刻（タイムゾーン考慮）
   const currentTime = new Date().toLocaleTimeString('ja-JP', { 
+    timeZone: timezone,
     hour: '2-digit', 
     minute: '2-digit' 
   })

@@ -4,6 +4,7 @@ import "./globals.css"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
+import { TimezoneProvider } from "@/contexts/timezone-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,13 +16,15 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning className="dark">
       <body className={`${inter.className} dark`} suppressHydrationWarning>
-        <ActivitiesProvider>
-          <SessionsProvider>
-            <SidebarProvider>
-              {children}
-            </SidebarProvider>
-          </SessionsProvider>
-        </ActivitiesProvider>
+        <TimezoneProvider>
+          <ActivitiesProvider>
+            <SessionsProvider>
+              <SidebarProvider>
+                {children}
+              </SidebarProvider>
+            </SessionsProvider>
+          </ActivitiesProvider>
+        </TimezoneProvider>
       </body>
     </html>
   )
