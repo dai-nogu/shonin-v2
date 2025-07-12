@@ -28,21 +28,17 @@ export function useGoalsDb() {
   const [error, setError] = useState<string | null>(null)
 
   // 目標を取得
-  const fetchGoals = async (forceLoading = false) => {
+  const fetchGoals = async (forceLoading: boolean = false) => {
     try {
-      // データが既に存在する場合はローディング状態をスキップ
-      if (forceLoading || goals.length === 0) {
+      if (forceLoading) {
         setLoading(true)
       }
-      console.log('Fetching goals...')
-      
+
       const { data, error } = await supabase
         .from('goals')
         .select('*')
         .eq('user_id', DUMMY_USER_ID)
         .order('created_at', { ascending: false })
-
-      console.log('Goals response:', { data, error })
 
       if (error) {
         console.error('Goals fetch error:', error)
@@ -50,32 +46,29 @@ export function useGoalsDb() {
       }
 
       setGoals(data || [])
-      console.log('Goals loaded:', data?.length || 0)
     } catch (err) {
       console.error('Error in fetchGoals:', err)
       setError(err instanceof Error ? err.message : '目標の取得に失敗しました')
     } finally {
-      setLoading(false)
+      if (forceLoading) {
+        setLoading(false)
+      }
     }
   }
 
   // 目標を追加
   const addGoal = async (goalData: GoalFormData): Promise<string | null> => {
     try {
-      console.log('Adding goal:', goalData)
-
-      // フォームデータをデータベース形式に変換
       const goalInsert: Omit<GoalInsert, 'user_id'> = {
         title: goalData.title,
-        description: goalData.motivation,
-        target_duration: goalData.calculatedHours * 3600, // 時間を秒に変換
-        deadline: goalData.deadline,
-        is_completed: false,
-        weekday_hours: goalData.weekdayHours,
-        weekend_hours: goalData.weekendHours,
-        current_value: 0,
-        unit: '時間',
-        status: 'active',
+        description: goalData.description || null,
+        target_duration: goalData.target_duration,
+        current_value: goalData.current_value || 0,
+        unit: goalData.unit || '時間',
+        deadline: goalData.deadline || null,
+        weekday_hours: goalData.weekday_hours || 0,
+        weekend_hours: goalData.weekend_hours || 0,
+        status: goalData.status || 'active',
       }
 
       const { data, error } = await supabase
@@ -87,15 +80,12 @@ export function useGoalsDb() {
         .select('id')
         .single()
 
-      console.log('Goal insert response:', { data, error })
-
       if (error) {
         console.error('Goal insert error:', error)
         throw error
       }
 
-      await fetchGoals(true) // リストを更新（強制ローディング）
-      console.log('Goal added successfully:', data.id)
+      await fetchGoals() // リストを更新
       return data.id
     } catch (err) {
       console.error('Error in addGoal:', err)
@@ -105,37 +95,41 @@ export function useGoalsDb() {
   }
 
   // 目標を更新
-  const updateGoal = async (id: string, goalData: GoalFormData): Promise<boolean> => {
+  const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<boolean> => {
     try {
-      console.log('Updating goal:', id, goalData)
-
-      // 進捗更新の場合は別処理
-      if (goalData.addDuration !== undefined) {
-        console.log('進捗更新モードで処理します:', { goalId: id, addDuration: goalData.addDuration })
+      // 進捗更新のためのaddDuration処理
+      if ('addDuration' in goalData && typeof goalData.addDuration === 'number') {
         return await updateGoalProgress(id, goalData.addDuration)
       }
 
-      const goalUpdate: GoalUpdate = {
-        title: goalData.title,
-        description: goalData.motivation,
-        target_duration: goalData.calculatedHours * 3600, // 時間を秒に変換
-        deadline: goalData.deadline,
-        weekday_hours: goalData.weekdayHours,
-        weekend_hours: goalData.weekendHours,
-        updated_at: new Date().toISOString(),
-      }
+      // 通常の目標更新処理
+      const updateData: Partial<GoalUpdate> = {}
+      
+      if (goalData.title !== undefined) updateData.title = goalData.title
+      if (goalData.description !== undefined) updateData.description = goalData.description
+      if (goalData.target_duration !== undefined) updateData.target_duration = goalData.target_duration
+      if (goalData.current_value !== undefined) updateData.current_value = goalData.current_value
+      if (goalData.unit !== undefined) updateData.unit = goalData.unit
+      if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline
+      if (goalData.weekday_hours !== undefined) updateData.weekday_hours = goalData.weekday_hours
+      if (goalData.weekend_hours !== undefined) updateData.weekend_hours = goalData.weekend_hours
+      if (goalData.status !== undefined) updateData.status = goalData.status
+
+      // 更新日時を追加
+      updateData.updated_at = new Date().toISOString()
 
       const { error } = await supabase
         .from('goals')
-        .update(goalUpdate)
+        .update(updateData)
         .eq('id', id)
+        .eq('user_id', DUMMY_USER_ID)
 
       if (error) {
         console.error('Goal update error:', error)
         throw error
       }
 
-      await fetchGoals(true) // リストを更新（強制ローディング）
+      await fetchGoals() // リストを更新
       return true
     } catch (err) {
       console.error('Error in updateGoal:', err)
@@ -147,8 +141,6 @@ export function useGoalsDb() {
   // 目標の進捗を更新（時間を加算）
   const updateGoalProgress = async (id: string, additionalSeconds: number): Promise<boolean> => {
     try {
-      console.log('Updating goal progress:', id, `+${additionalSeconds}秒`)
-
       // データベースから最新の目標を取得
       const { data: currentGoal, error: fetchError } = await supabase
         .from('goals')
@@ -180,7 +172,6 @@ export function useGoalsDb() {
       }
 
       await fetchGoals(true) // リストを更新（強制ローディング）
-      console.log(`目標進捗を更新: ${currentGoal.current_value || 0}秒 → ${newCurrentValue}秒`)
       return true
     } catch (err) {
       console.error('Error in updateGoalProgress:', err)
@@ -192,19 +183,18 @@ export function useGoalsDb() {
   // 目標を削除
   const deleteGoal = async (id: string): Promise<boolean> => {
     try {
-      console.log('Deleting goal:', id)
-
       const { error } = await supabase
         .from('goals')
         .delete()
         .eq('id', id)
+        .eq('user_id', DUMMY_USER_ID)
 
       if (error) {
         console.error('Goal delete error:', error)
         throw error
       }
 
-      await fetchGoals(true) // リストを更新（強制ローディング）
+      await fetchGoals() // リストを更新
       return true
     } catch (err) {
       console.error('Error in deleteGoal:', err)
@@ -213,26 +203,24 @@ export function useGoalsDb() {
     }
   }
 
-  // 目標を完了にする
+  // 目標を完了に設定
   const completeGoal = async (id: string): Promise<boolean> => {
     try {
-      console.log('Completing goal:', id)
-
       const { error } = await supabase
         .from('goals')
-        .update({ 
-          is_completed: true,
+        .update({
           status: 'completed',
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
+        .eq('user_id', DUMMY_USER_ID)
 
       if (error) {
-        console.error('Goal complete error:', error)
+        console.error('Goal completion error:', error)
         throw error
       }
 
-      await fetchGoals(true) // リストを更新（強制ローディング）
+      await fetchGoals() // リストを更新
       return true
     } catch (err) {
       console.error('Error in completeGoal:', err)

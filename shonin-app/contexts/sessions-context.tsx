@@ -92,17 +92,10 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   // セッション保存時に目標の進捗を更新する関数
   const updateSessionGoalProgress = async (sessionData: CompletedSession) => {
     if (!sessionData.goalId) {
-      console.log('目標IDが設定されていないため、進捗更新をスキップします')
       return
     }
 
     try {
-      console.log('目標進捗更新を開始:', { 
-        goalId: sessionData.goalId, 
-        duration: sessionData.duration,
-        activityName: sessionData.activityName 
-      })
-
       // セッションの時間を秒単位で取得
       const sessionDurationSeconds = sessionData.duration
 
@@ -114,7 +107,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       } as any)
 
       if (success) {
-        console.log(`目標進捗を更新しました: goalId=${sessionData.goalId}, +${sessionDurationSeconds}秒`)
+        // 目標進捗更新成功
       } else {
         console.error('目標進捗の更新が失敗しました')
       }
@@ -141,7 +134,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       const activeSession = sessions.find(session => !session.end_time)
       
       if (activeSession && activeSession.activities) {
-        console.log('進行中セッションを復元中:', activeSession)
         
         // SessionDataに変換
         const sessionData: SessionData = {
@@ -177,11 +169,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         setIsSessionActive(true)
         setSessionState("active")
         
-        console.log('進行中セッションを復元しました:', {
-          sessionData,
-          elapsedTime: elapsed,
-          formattedTime: formatTime(elapsed)
-        })
       }
       
       setIsRestoring(false)
@@ -238,7 +225,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
       pausedTimeRef.current = pausedTimeRef.current + activeElapsed
       setElapsedTime(pausedTimeRef.current) // 表示時間も更新
-      console.log(`一時停止: 現在のアクティブ時間=${activeElapsed}秒, 累積実働時間=${pausedTimeRef.current}秒`)
     } else if (sessionState === "ended") {
       // 終了時：一時停止中からの終了の場合は追加計算しない
       if (previousState === "active") {
@@ -246,15 +232,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
         pausedTimeRef.current = pausedTimeRef.current + activeElapsed
         setElapsedTime(pausedTimeRef.current) // 表示時間も更新
-        console.log(`終了(アクティブから): 現在のアクティブ時間=${activeElapsed}秒, 最終実働時間=${pausedTimeRef.current}秒`)
       } else {
         // 一時停止中からの終了の場合は現在の表示時間をそのまま使用
-        console.log(`終了(一時停止から): 最終実働時間=${pausedTimeRef.current}秒（追加計算なし）`)
       }
     } else if (sessionState === "active") {
       // 再開時：新しい開始時刻を記録
       lastActiveTimeRef.current = now
-      console.log(`再開: 累積実働時間=${pausedTimeRef.current}秒から再開`)
     }
     
     // 前回の状態を記録
@@ -294,7 +277,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setIsSessionActive(true)
       setSessionState("active")
       
-      console.log('セッションを開始し、データベースに保存しました')
     } catch (error) {
       console.error('セッション開始時のDB保存エラー:', error)
       // エラーが発生してもセッションは開始する
@@ -387,7 +369,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           
           if (success) {
             mainSessionId = activeSession.id
-            console.log('進行中セッションを更新しました:', activeSession.id)
           } else {
             throw new Error('セッション更新に失敗しました')
           }
@@ -408,15 +389,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         }
       } else {
         // 日付を跨ぐセッション - 分割して保存
-        console.log('日付跨ぎセッションを分割して保存します')
         
         const splitSessions = splitSessionByDate(
           completedSession.startTime,
           completedSession.endTime,
           completedSession.duration
         )
-
-        console.log('分割されたセッション:', splitSessions)
 
         // 既存の進行中セッションがあれば削除（分割されたセッションで置き換える）
         if (activeSession) {
@@ -448,17 +426,11 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             mainSessionId = sessionId
           }
 
-          console.log(`分割セッション${i + 1}を保存: ${splitSession.date}, ${splitSession.duration}秒`)
         }
       }
 
       // 目標の進捗を更新（分割された全セッションの合計時間で更新）
       if (mainSessionId) {
-        console.log('セッション保存成功、目標進捗更新を実行:', {
-          sessionId: mainSessionId,
-          goalId: completedSession.goalId,
-          hasGoalId: !!completedSession.goalId
-        })
         await updateSessionGoalProgress(completedSession)
       }
 

@@ -209,16 +209,9 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   const handleUpdateGoal = async () => {
-    console.log("保存開始:", { editGoal, editingGoal })
-    
-    if (!editGoal.title || !editGoal.deadline || !editingGoal) {
-      console.log("保存条件未満足:", { title: editGoal.title, deadline: editGoal.deadline, editingGoal })
-      return
-    }
+    if (!editGoal.title || !editGoal.deadline || !editingGoal) return
 
-    // 自動計算を実行
     const calculatedTargetValue = calculateTotalHours(editGoal.deadline, editGoal.weekdayHours, editGoal.weekendHours)
-    console.log("計算された目標値:", calculatedTargetValue)
 
     const goalData: GoalFormData = {
       title: editGoal.title,

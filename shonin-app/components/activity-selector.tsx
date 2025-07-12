@@ -37,29 +37,35 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
     if (goalId) {
       const selectedGoalData = availableGoals.find(goal => goal.id === goalId)
       if (selectedGoalData) {
-        const targetHours = isWeekday() ? selectedGoalData.weekdayHours : selectedGoalData.weekendHours
+        const targetHours = isWeekday() ? selectedGoalData.weekday_hours : selectedGoalData.weekend_hours
         setTargetHours((targetHours || 0).toString())
         setTargetMinutes("0") // 分はデフォルトで0
       }
     }
   }
 
-  // 目標データベースフック
-  const { getActiveGoals } = useGoalsDb()
+  // 目標データを取得
+  const { goals } = useGoalsDb()
   
-  // アクティブな目標を取得
-  const availableGoals = getActiveGoals().map(goal => {
-    console.log('Raw goal data:', goal) // デバッグ用
-    return {
-      id: goal.id,
-      title: goal.title,
-      targetValue: goal.target_duration ? Math.round(goal.target_duration / 3600) : 0,
-      weekdayHours: goal.weekday_hours || 0,
-      weekendHours: goal.weekend_hours || 0
-    }
-  })
-  
-  console.log('Available goals:', availableGoals) // デバッグ用
+  // 目標を選択肢として利用可能な形式に変換
+  const availableGoals = goals.map(goal => ({
+    id: goal.id,
+    title: goal.title,
+    deadline: goal.deadline,
+    description: goal.description,
+    status: goal.status,
+    target_duration: goal.target_duration,
+    current_value: goal.current_value,
+    weekday_hours: goal.weekday_hours,
+    weekend_hours: goal.weekend_hours,
+    unit: goal.unit,
+    created_at: goal.created_at,
+    updated_at: goal.updated_at,
+    user_id: goal.user_id
+  }))
+
+  // アクティブな目標のみをフィルタリング
+  const activeGoals = availableGoals.filter(goal => goal.status === 'active')
   
   const { activities: customActivities, loading: activitiesLoading, addActivity } = useActivities()
   const [showAddForm, setShowAddForm] = useState(false)
@@ -142,12 +148,26 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       activityId: selectedActivity,
       activityName: activity.name,
       startTime: new Date(),
-      location,
-      targetTime: targetTimeInMinutes > 0 ? targetTimeInMinutes : undefined,
-      notes: "",
+      location: location || '',
+      notes: '',
       activityColor: activity.color,
       activityIcon: activity.icon || undefined,
       goalId: selectedGoal || undefined,
+    }
+
+    // 目標が選択されている場合、目標情報を取得
+    if (selectedGoal) {
+      const selectedGoalData = activeGoals.find(goal => goal.id === selectedGoal)
+      if (selectedGoalData) {
+        // 平日・土日の目標時間を計算（分単位）
+        const weekdayMinutes = selectedGoalData.weekday_hours * 60
+        const weekendMinutes = selectedGoalData.weekend_hours * 60
+        
+        // 今日が平日か土日かで目標時間を決定
+        const today = new Date()
+        const isWeekend = today.getDay() === 0 || today.getDay() === 6
+        sessionData.targetTime = isWeekend ? weekendMinutes : weekdayMinutes
+      }
     }
 
     onStart(sessionData)
@@ -325,18 +345,18 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
             {/* 目標との紐付け */}
             <div className="space-y-2">
               <Label className="text-gray-300">目標と紐付け</Label>
-              {availableGoals.length > 0 ? (
+              {activeGoals.length > 0 ? (
                 <>
                   <Select value={selectedGoal} onValueChange={handleGoalSelection}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                       <SelectValue placeholder="目標を選択" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      {availableGoals.map((goal) => (
+                      {activeGoals.map((goal) => (
                         <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-3">
                           <div className="flex items-center justify-between w-full">
                             <span className="text-base">{goal.title}</span>
-                            <span className="text-xs text-gray-400 ml-2">目標: {goal.targetValue}時間</span>
+                            <span className="text-xs text-gray-400 ml-2">目標: {goal.target_duration ? Math.round(goal.target_duration / 3600) : 0}時間</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -418,7 +438,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 const selectedGoalData = availableGoals.find(goal => goal.id === selectedGoal)
                 if (selectedGoalData) {
                   const isWeekdayToday = isWeekday()
-                  const goalHours = isWeekdayToday ? selectedGoalData.weekdayHours : selectedGoalData.weekendHours
+                  const goalHours = isWeekdayToday ? selectedGoalData.weekday_hours : selectedGoalData.weekend_hours
                   return (
                     <div className="text-sm text-green-400 mt-1">
                       目標: {goalHours}時間0分 ({isWeekdayToday ? "平日" : "土日"}の目標時間から自動設定)

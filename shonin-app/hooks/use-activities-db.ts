@@ -20,24 +20,19 @@ export function useActivitiesDb() {
   const fetchActivities = async () => {
     try {
       setLoading(true)
-      console.log('Fetching activities...')
-      
-      // まずは認証チェックをスキップして、ダミーユーザーIDで取得
+
       const { data, error } = await supabase
         .from('activities')
         .select('*')
         .eq('user_id', DUMMY_USER_ID)
         .order('created_at', { ascending: false })
 
-      console.log('Supabase response:', { data, error })
-
       if (error) {
-        console.error('Supabase error:', error)
+        console.error('Activities fetch error:', error)
         throw error
       }
 
       setActivities(data || [])
-      console.log('Activities loaded:', data?.length || 0)
     } catch (err) {
       console.error('Error in fetchActivities:', err)
       setError(err instanceof Error ? err.message : 'アクティビティの取得に失敗しました')
@@ -49,26 +44,21 @@ export function useActivitiesDb() {
   // アクティビティを追加
   const addActivity = async (activity: Omit<ActivityInsert, 'user_id'>): Promise<string | null> => {
     try {
-      console.log('Adding activity:', activity)
-      
       const { data, error } = await supabase
         .from('activities')
         .insert({
           ...activity,
-          user_id: DUMMY_USER_ID, // ダミーユーザーIDを使用
+          user_id: DUMMY_USER_ID,
         })
         .select('id')
         .single()
 
-      console.log('Insert response:', { data, error })
-
       if (error) {
-        console.error('Insert error:', error)
+        console.error('Activity insert error:', error)
         throw error
       }
 
       await fetchActivities() // リストを更新
-      console.log('Activity added successfully:', data.id)
       return data.id
     } catch (err) {
       console.error('Error in addActivity:', err)
@@ -80,15 +70,13 @@ export function useActivitiesDb() {
   // アクティビティを更新
   const updateActivity = async (id: string, updates: ActivityUpdate): Promise<boolean> => {
     try {
-      console.log('Updating activity:', id, updates)
-      
       const { error } = await supabase
         .from('activities')
         .update(updates)
         .eq('id', id)
 
       if (error) {
-        console.error('Update error:', error)
+        console.error('Activity update error:', error)
         throw error
       }
 
@@ -104,15 +92,13 @@ export function useActivitiesDb() {
   // アクティビティを削除
   const deleteActivity = async (id: string): Promise<boolean> => {
     try {
-      console.log('Deleting activity:', id)
-      
       const { error } = await supabase
         .from('activities')
         .delete()
         .eq('id', id)
 
       if (error) {
-        console.error('Delete error:', error)
+        console.error('Activity delete error:', error)
         throw error
       }
 

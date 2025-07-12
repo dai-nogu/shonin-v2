@@ -23,25 +23,26 @@ interface ActiveSessionProps {
 }
 
 export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
+  // 振り返りデータベースフック
+  const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
+
+  // セッションコンテキストから一元化された時間データを取得
+  const { formattedTime, elapsedTime } = useSessions()
+
+  // 振り返り関連の状態
+  const [mood, setMood] = useState(3)
+  const [achievements, setAchievements] = useState("")
+  const [challenges, setChallenges] = useState("")
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
   const [showPhotos, setShowPhotos] = useState(false)
-  const [mood, setMood] = useState<number>(3)
-  const [achievements, setAchievements] = useState("")
-  const [challenges, setChallenges] = useState("")
+  const [photos, setPhotos] = useState<File[]>([])
   const [isSaving, setIsSaving] = useState(false)
-  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([])
-  const [savedPhotos, setSavedPhotos] = useState<UploadedPhoto[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
   const achievementsRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
-  // 振り返りデータベースフック
-  const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
-  
-  // セッションコンテキストから一元化された時間データを取得
-  const { elapsedTime, formattedTime } = useSessions()
-
   // ローカルストレージのキー生成
   const getStorageKey = (field: string) => {
     return `session_${session.activityId}_${session.startTime.getTime()}_${field}`
@@ -135,13 +136,13 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
     const files = event.target.files
     if (files && files.length > 0) {
       const newPhotos = Array.from(files)
-      setUploadedPhotos(prev => [...prev, ...newPhotos])
+      setPhotos(prev => [...prev, ...newPhotos])
     }
   }
 
   // 写真削除処理
   const handlePhotoRemove = (index: number) => {
-    setUploadedPhotos(prev => prev.filter((_, i) => i !== index))
+    setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 
   // 写真選択ボタンクリック
@@ -171,12 +172,12 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       const savedSessionId = result instanceof Promise ? await result : result
       
       // 写真をアップロード
-      if (uploadedPhotos.length > 0 && savedSessionId) {
+      if (photos.length > 0 && savedSessionId) {
         try {
           setIsUploading(true)
-          const uploadedPhotoResults = await uploadPhotos(uploadedPhotos, savedSessionId)
-          setSavedPhotos(uploadedPhotoResults)
-          setUploadedPhotos([]) // アップロード完了後にクリア
+          const uploadedPhotoResults = await uploadPhotos(photos, savedSessionId)
+          // setSavedPhotos(uploadedPhotoResults) // この行は削除
+          setPhotos([]) // アップロード完了後にクリア
         } catch (photoError) {
           console.error('写真アップロードエラー:', photoError)
           // 写真アップロードに失敗してもセッション保存は継続
@@ -186,7 +187,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       }
        
        // セッションが正常に保存された場合のみ振り返りデータを保存
-       if (savedSessionId && (achievements.trim() || challenges.trim() || mood !== 3)) {
+       if (savedSessionId) {
         const reflectionData: SessionReflection = {
           moodScore: mood,
           achievements: achievements.trim() || '特になし',
@@ -198,21 +199,30 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
         const reflectionId = await saveReflection(savedSessionId, reflectionData)
         
         if (reflectionId) {
-          console.log('振り返りデータも保存されました:', reflectionId)
-        } else if (reflectionError) {
-          console.error('振り返りデータの保存に失敗:', reflectionError)
-          // 振り返り保存失敗の場合もセッション自体は保存されているので継続
+          // 振り返りが保存されたことを通知
+          setTimeout(() => {
+            onSave(sessionData)
+          }, 1000)
+        } else {
+          // 振り返り保存に失敗した場合でもセッション保存は継続
+          setLocalReflectionError('振り返りの保存に失敗しました。')
+          setTimeout(() => {
+            onSave(sessionData)
+          }, 1000)
         }
+      } else {
+        // 振り返りデータがない場合は直接保存
+        setTimeout(() => {
+          onSave(sessionData)
+        }, 1000)
       }
       
       // 保存が成功したらローカルストレージをクリア
       clearLocalStorage()
       
-      onEnd()
     } catch (error) {
       console.error('保存処理でエラーが発生:', error)
-      // エラーが発生してもセッション終了は継続
-      onEnd()
+      setLocalReflectionError('保存処理でエラーが発生しました。')
     } finally {
       setIsSaving(false)
     }
@@ -360,9 +370,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           )}
 
           {/* エラー表示 */}
-          {reflectionError && (
+          {localReflectionError && (
             <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-3">
-              <p className="text-red-400 text-sm">⚠️ {reflectionError}</p>
+              <p className="text-red-400 text-sm">⚠️ {localReflectionError}</p>
             </div>
           )}
         </CardContent>
@@ -403,9 +413,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
               >
                 <Camera className="w-4 h-4 mr-2" />
                 写真
-                {(uploadedPhotos.length + savedPhotos.length) > 0 && (
+                {(photos.length) > 0 && (
                   <span className="ml-1 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                    {uploadedPhotos.length + savedPhotos.length}
+                    {photos.length}
                   </span>
                 )}
               </Button>
@@ -438,26 +448,26 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 </div>
 
                 {/* アップロードされた写真のプレビュー */}
-                {(uploadedPhotos.length > 0 || savedPhotos.length > 0) && (
+                {(photos.length > 0) && (
                   <div className="grid grid-cols-2 gap-3">
                     {/* 保存済みの写真 */}
-                    {savedPhotos.map((photo, index) => (
-                      <div key={`saved-${photo.id}`} className="relative group">
-                        <img
-                          src={photo.url}
-                          alt={`保存済み写真 ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg border border-green-500"
-                        />
-                        <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                          ✓ 保存済み
-                        </div>
-                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                          {photo.fileName}
-                        </div>
-                      </div>
-                    ))}
+                    {/* {savedPhotos.map((photo, index) => ( */}
+                    {/*   <div key={`saved-${photo.id}`} className="relative group"> */}
+                    {/*     <img */}
+                    {/*       src={photo.url} */}
+                    {/*       alt={`保存済み写真 ${index + 1}`} */}
+                    {/*       className="w-full h-32 object-cover rounded-lg border border-green-500" */}
+                    {/*     /> */}
+                    {/*     <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded"> */}
+                    {/*       ✓ 保存済み */}
+                    {/*     </div> */}
+                    {/*     <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded"> */}
+                    {/*       {photo.fileName} */}
+                    {/*     </div> */}
+                    {/*   </div> */}
+                    {/* ))} */}
                     {/* アップロード待ちの写真 */}
-                    {uploadedPhotos.map((photo, index) => (
+                    {photos.map((photo, index) => (
                       <div key={`pending-${index}`} className="relative group">
                         <img
                           src={URL.createObjectURL(photo)}
@@ -483,7 +493,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   </div>
                 )}
 
-                {uploadedPhotos.length === 0 && savedPhotos.length === 0 && (
+                {photos.length === 0 && (
                   <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
                     <Camera className="w-12 h-12 text-gray-500 mx-auto mb-3" />
                     <p className="text-gray-400 text-sm mb-2">写真をアップロードして記録を残しましょう</p>

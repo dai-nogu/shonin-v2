@@ -28,7 +28,6 @@ export function useSessionsDb() {
   const fetchSessions = useCallback(async () => {
     try {
       setLoading(true)
-      console.log('Fetching sessions...')
 
       const { data, error } = await supabase
         .from('sessions')
@@ -43,15 +42,12 @@ export function useSessionsDb() {
         .eq('user_id', DUMMY_USER_ID)
         .order('start_time', { ascending: false })
 
-      console.log('Sessions response:', { data, error })
-
       if (error) {
         console.error('Sessions fetch error:', error)
         throw error
       }
 
       setSessions(data || [])
-      console.log('Sessions loaded:', data?.length || 0)
     } catch (err) {
       console.error('Error in fetchSessions:', err)
       setError(err instanceof Error ? err.message : 'セッションの取得に失敗しました')
@@ -63,8 +59,6 @@ export function useSessionsDb() {
   // セッションを追加
   const addSession = useCallback(async (session: Omit<SessionInsert, 'user_id'>): Promise<string | null> => {
     try {
-      console.log('Adding session:', session)
-
       const { data, error } = await supabase
         .from('sessions')
         .insert({
@@ -74,8 +68,6 @@ export function useSessionsDb() {
         .select('id')
         .single()
 
-      console.log('Session insert response:', { data, error })
-
       if (error) {
         console.error('Session insert error:', error)
         throw error
@@ -83,7 +75,6 @@ export function useSessionsDb() {
 
       // リストを更新（非同期で実行、エラーは無視）
       fetchSessions().catch(console.error)
-      console.log('Session added successfully:', data.id)
       return data.id
     } catch (err) {
       console.error('Error in addSession:', err)
@@ -95,8 +86,6 @@ export function useSessionsDb() {
   // セッションを更新
   const updateSession = useCallback(async (id: string, updates: SessionUpdate): Promise<boolean> => {
     try {
-      console.log('Updating session:', id, updates)
-
       const { error } = await supabase
         .from('sessions')
         .update(updates)
@@ -120,8 +109,6 @@ export function useSessionsDb() {
   // セッションを削除
   const deleteSession = useCallback(async (id: string): Promise<boolean> => {
     try {
-      console.log('Deleting session:', id)
-
       const { error } = await supabase
         .from('sessions')
         .delete()
@@ -142,13 +129,9 @@ export function useSessionsDb() {
     }
   }, [fetchSessions])
 
-
-
   // 期間指定でセッションを取得
   const getSessionsByDateRange = useCallback(async (startDate: string, endDate: string): Promise<SessionWithActivity[]> => {
     try {
-      console.log('Getting sessions by date range:', startDate, endDate)
-
       const { data, error } = await supabase
         .from('sessions')
         .select(`
@@ -177,8 +160,6 @@ export function useSessionsDb() {
   // アクティビティ別の統計を取得
   const getActivityStats = useCallback(async () => {
     try {
-      console.log('Getting activity stats...')
-
       const { data, error } = await supabase
         .from('sessions')
         .select(`

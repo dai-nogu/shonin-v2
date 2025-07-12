@@ -268,7 +268,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           activityId = existingActivity.id
         } else {
           // アクティビティが存在しない場合は新規作成
-          console.log('Creating new activity for QuickStart:', selectedActivity.name)
           const newActivityId = await addActivity({
             name: selectedActivity.name,
             icon: selectedActivity.icon || null,

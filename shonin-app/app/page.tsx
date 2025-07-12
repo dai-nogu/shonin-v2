@@ -137,14 +137,14 @@ export default function Dashboard() {
             return preloadImages(imageUrls)
           }
         } catch (error) {
-          console.log(`Background preload failed for session ${sessionId}:`, error)
+          // エラーは無視してバックグラウンドプリロードを継続
         }
       })
 
       // 全てのプリロードを並列実行（エラーは無視）
       await Promise.allSettled(preloadPromises)
     } catch (error) {
-      console.log('Background preload process failed:', error)
+      // バックグラウンドプリロードのエラーは無視
     }
   }
 
@@ -231,8 +231,6 @@ export default function Dashboard() {
       </div>
     )
   }
-
-  console.log('Completed sessions for QuickStart:', completedSessions)
 
   const renderContent = () => {
     switch (currentPage) {

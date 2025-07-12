@@ -25,13 +25,13 @@ export function useReflectionsDb() {
       const reflectionData: Omit<SessionReflectionDatabase, 'id' | 'created_at' | 'updated_at'> = {
         session_id: sessionId,
         mood_score: reflection.moodScore,
-        mood_notes: reflection.moodNotes || null,
+        mood_notes: reflection.moodNotes || undefined,
         achievements: reflection.achievements,
-        achievements_rating: reflection.achievementsRating || null,
+        achievements_rating: reflection.achievementsRating || undefined,
         challenges: reflection.challenges,
-        challenges_severity: reflection.challengesSeverity || null,
-        additional_notes: reflection.additionalNotes || null,
-        reflection_duration: reflection.reflectionDuration || null,
+        challenges_severity: reflection.challengesSeverity || undefined,
+        additional_notes: reflection.additionalNotes || undefined,
+        reflection_duration: reflection.reflectionDuration || undefined,
       };
 
       const { data, error } = await supabase
@@ -46,7 +46,6 @@ export function useReflectionsDb() {
         return null;
       }
 
-      console.log('振り返り保存成功:', data);
       return data.id;
     } catch (err) {
       console.error('振り返り保存エラー:', err);
@@ -129,7 +128,6 @@ export function useReflectionsDb() {
         return false;
       }
 
-      console.log('振り返り更新成功');
       return true;
     } catch (err) {
       console.error('振り返り更新エラー:', err);
@@ -151,9 +149,9 @@ export function useReflectionsDb() {
         media_type: media.mediaType,
         file_path: media.filePath,
         file_name: media.fileName,
-        file_size: media.fileSize || null,
-        mime_type: media.mimeType || null,
-        caption: media.caption || null,
+        file_size: media.fileSize || undefined,
+        mime_type: media.mimeType || undefined,
+        caption: media.caption || undefined,
         is_main_image: media.isMainImage,
       };
 
@@ -169,7 +167,6 @@ export function useReflectionsDb() {
         return null;
       }
 
-      console.log('メディア保存成功:', data);
       return data.id;
     } catch (err) {
       console.error('メディア保存エラー:', err);
@@ -245,7 +242,6 @@ export function useReflectionsDb() {
         return null;
       }
 
-      console.log('感情分析保存成功:', data);
       return data.id;
     } catch (err) {
       console.error('感情分析保存エラー:', err);
