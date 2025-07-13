@@ -161,7 +161,21 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
       dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`
     }
 
-    return sessions.filter((session) => session.date === dateStr)
+    const dateSessions = sessions.filter((session) => session.date === dateStr)
+    
+    // 同じアクティビティをまとめる
+    const groupedSessions = new Map<string, CalendarSession>()
+    dateSessions.forEach(session => {
+      const key = session.activity
+      if (groupedSessions.has(key)) {
+        const existing = groupedSessions.get(key)!
+        existing.duration += session.duration
+      } else {
+        groupedSessions.set(key, { ...session })
+      }
+    })
+    
+    return Array.from(groupedSessions.values())
   }
 
   const getTotalTimeForDate = (date: Date | number | null) => {
@@ -171,10 +185,12 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
   // 現在の期間（月または週）のセッションを取得
   const getCurrentPeriodSessions = () => {
+    let periodSessions: CalendarSession[]
+    
     if (internalViewMode === "month") {
       const year = currentDate.getFullYear()
       const month = currentDate.getMonth()
-      return sessions.filter(session => {
+      periodSessions = sessions.filter(session => {
         const sessionDate = new Date(session.date)
         return sessionDate.getFullYear() === year && sessionDate.getMonth() === month
       })
@@ -182,11 +198,25 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
       const weekDays = getWeekDays(currentDate)
       const weekStart = weekDays[0]
       const weekEnd = weekDays[6]
-      return sessions.filter(session => {
+      periodSessions = sessions.filter(session => {
         const sessionDate = new Date(session.date)
         return sessionDate >= weekStart && sessionDate <= weekEnd
       })
     }
+    
+    // 同じアクティビティをまとめる（統計用）
+    const groupedSessions = new Map<string, CalendarSession>()
+    periodSessions.forEach(session => {
+      const key = `${session.activity}-${session.date}`
+      if (groupedSessions.has(key)) {
+        const existing = groupedSessions.get(key)!
+        existing.duration += session.duration
+      } else {
+        groupedSessions.set(key, { ...session })
+      }
+    })
+    
+    return Array.from(groupedSessions.values())
   }
 
   const navigateMonth = (direction: "prev" | "next") => {
