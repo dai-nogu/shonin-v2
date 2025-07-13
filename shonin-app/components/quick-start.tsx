@@ -100,13 +100,13 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return ""
   }
 
-  const formatDuration = (seconds: number) => {
+  const formatDuration = (seconds: number, forMobile: boolean = false) => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return `${hours}h ${minutes}m`
+      return forMobile ? `${hours}h ${minutes}m` : `${hours}h ${minutes}m`
     }
-    return `${minutes}m`
+    return forMobile ? `${minutes}m` : `${minutes}m`
   }
 
   const formatDate = (date: Date) => {
@@ -357,31 +357,31 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           <div
             key={`${activity.id}-${activeTab}`}
             onClick={() => handleActivityClick(activity)}
-            className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors group"
+            className="flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors group"
           >
-            <div className="flex items-center space-x-3 flex-1">
-              <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center text-lg`}>
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <div className={`w-8 h-8 lg:w-10 lg:h-10 ${activity.color} rounded-full flex items-center justify-center text-sm lg:text-lg`}>
                 {activity.icon || ""}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="text-white font-medium truncate">{activity.name}</h3>
+                  <h3 className="text-white font-medium truncate text-sm lg:text-base">{activity.name}</h3>
                 </div>
 
-                <div className="flex items-center space-x-4 text-sm text-gray-400">
+                <div className="flex items-center space-x-2 lg:space-x-4 text-xs lg:text-sm text-gray-400">
                   {activeTab === "most-recorded" ? (
                     <>
                       <div className="flex items-center space-x-1">
-                        <BarChart3 className="w-3 h-3" />
                         <span className="font-medium text-green-400">{activity.sessionCount}回</span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                      <div className="hidden sm:flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
-                        <span>合計 {activity.duration}</span>
+                        <span className="hidden sm:inline">合計 </span>
+                        <span>{activity.duration}</span>
                       </div>
                       {activity.goalTitle && (
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-1 hidden lg:flex">
                           <Target className="w-3 h-3" />
                           <span className="text-blue-400 truncate">{activity.goalTitle}</span>
                         </div>
@@ -389,22 +389,21 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center">
+                        <span className="text-blue-400">{activity.date}</span>
+                      </div>
+                      <div className="hidden sm:flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
                         <span>{activity.duration}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="w-3 h-3" />
-                        <span className="text-blue-400">{activity.date}</span>
-                      </div>
                       {activity.goalTitle && (
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-1 hidden lg:flex">
                           <Target className="w-3 h-3" />
                           <span className="text-blue-400 truncate">{activity.goalTitle}</span>
                         </div>
                       )}
                       {activity.location && (
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-1 hidden sm:flex">
                           <MapPin className="w-3 h-3" />
                           <span className="truncate">{activity.location}</span>
                         </div>
@@ -415,8 +414,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center">
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              <div className="hidden sm:flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
@@ -427,11 +426,11 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 ))}
               </div>
 
-              <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center space-x-1 lg:space-x-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hidden lg:flex"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetail(activity)
@@ -442,7 +441,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-green-500 hover:bg-green-600"
+                  className="bg-green-500 hover:bg-green-600 text-xs lg:text-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleActivityClick(activity)

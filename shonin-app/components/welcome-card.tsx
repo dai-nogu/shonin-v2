@@ -95,28 +95,28 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
 
   return (
     <Card className="bg-green-500 border-0 text-white">
-      <CardContent className="p-6">
+      <CardContent className="p-4 lg:p-6">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-1">おかえりなさい</h2>
-          <p className="text-green-100 opacity-90">今日も努力を積み重ねましょう - {currentTime}</p>
+          <h2 className="text-xl lg:text-2xl font-bold mb-1">おかえりなさい</h2>
+          <p className="text-green-100 opacity-90 text-sm lg:text-base">今日も努力を積み重ねましょう - {currentTime}</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="text-center flex flex-col items-center justify-center h-20 gap-2">
-            <div className={`font-bold ${totalSeconds > 0 ? 'text-2xl' : 'text-base'} leading-tight`}>
+        <div className="grid grid-cols-3 gap-3 lg:gap-6">
+          <div className="text-center flex flex-col items-center justify-center h-16 lg:h-20 gap-1 lg:gap-2">
+            <div className={`font-bold ${totalSeconds > 0 ? 'text-lg lg:text-2xl' : 'text-sm lg:text-base'} leading-tight`}>
               {formatTime(totalHours, totalMinutes)}
             </div>
-            <div className="text-sm text-green-100">今日の記録</div>
+            <div className="text-xs lg:text-sm text-green-100">今日の記録</div>
           </div>
 
-          <div className="text-center flex flex-col items-center justify-center h-20 gap-2">
-            <div className="text-2xl font-bold leading-tight">{streakDays}</div>
-            <div className="text-sm text-green-100">連続記録日</div>
+          <div className="text-center flex flex-col items-center justify-center h-16 lg:h-20 gap-1 lg:gap-2">
+            <div className="text-lg lg:text-2xl font-bold leading-tight">{streakDays}</div>
+            <div className="text-xs lg:text-sm text-green-100">連続記録日</div>
           </div>
 
-          <div className="text-center flex flex-col items-center justify-center h-20 gap-2">
-            <div className="text-2xl font-bold leading-tight">{dailyGrowth}</div>
-            <div className="text-sm text-green-100">前日比</div>
+          <div className="text-center flex flex-col items-center justify-center h-16 lg:h-20 gap-1 lg:gap-2">
+            <div className="text-lg lg:text-2xl font-bold leading-tight">{dailyGrowth}</div>
+            <div className="text-xs lg:text-sm text-green-100">前日比</div>
           </div>
         </div>
       </CardContent>

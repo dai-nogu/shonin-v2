@@ -55,40 +55,40 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
 
   return (
     <Card className="bg-gray-900 border-gray-800">
-      <CardHeader>
+      <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2" />
+          <CardTitle className="text-white flex items-center text-base lg:text-lg">
+            <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
             今週の進捗
           </CardTitle>
           <Button
             onClick={onWeekViewClick}
             variant="ghost"
             size="sm"
-            className="text-green-400 hover:text-green-300 hover:bg-gray-800"
+            className="text-green-400 hover:text-green-300 hover:bg-gray-800 text-xs lg:text-sm"
           >
-            <Calendar className="w-4 h-4 mr-1" />
+            <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
             週表示
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 lg:space-y-3">
         {weekData.map((day) => (
-          <div key={day.day} className="flex items-center space-x-3">
-            <span className="text-gray-300 w-4">{day.day}</span>
-            <Progress value={day.progress} className="flex-1 h-2" />
-            <span className="text-gray-400 text-sm w-12 text-right">
+          <div key={day.day} className="flex items-center space-x-2 lg:space-x-3">
+            <span className="text-gray-300 w-3 lg:w-4 text-xs lg:text-sm">{day.day}</span>
+            <Progress value={day.progress} className="flex-1 h-1.5 lg:h-2" />
+            <span className="text-gray-400 text-xs lg:text-sm w-10 lg:w-12 text-right">
               {formatDuration(day.totalSeconds)}
             </span>
           </div>
         ))}
 
-        <div className="pt-4 border-t border-gray-800">
+        <div className="pt-3 lg:pt-4 border-t border-gray-800">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-400">
+            <div className="text-xl lg:text-2xl font-bold text-green-400">
               {formatDuration(totalWeekSeconds)}
             </div>
-            <div className="text-sm text-gray-400">今週の合計</div>
+            <div className="text-xs lg:text-sm text-gray-400">今週の合計</div>
           </div>
         </div>
       </CardContent>

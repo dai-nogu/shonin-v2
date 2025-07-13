@@ -86,18 +86,18 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
   return (
     <Card className="bg-gray-900 border-gray-800">
-      <CardHeader>
-        <CardTitle className="text-white flex items-center">
-          <Sparkles className="w-5 h-5 mr-2 text-yellow-400" />
+      <CardHeader className="pb-3 lg:pb-4">
+        <CardTitle className="text-white flex items-center text-base lg:text-lg">
+          <Sparkles className="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-yellow-400" />
           AIフィードバック
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 lg:space-y-6">
         {feedbacks.map((feedback, index) => (
-          <div key={feedback.type} className={index > 0 ? "pt-4 border-t border-gray-800" : ""}>
+          <div key={feedback.type} className={index > 0 ? "pt-3 lg:pt-4 border-t border-gray-800" : ""}>
             {/* フィードバック種別 */}
-            <div className="flex items-center justify-between mb-3">
-              <Badge variant="secondary" className="bg-blue-600 text-white">
+            <div className="flex items-center justify-between mb-2 lg:mb-3">
+              <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
                 <Calendar className="w-3 h-3 mr-1" />
                 {feedback.type}フィードバック
               </Badge>
@@ -109,7 +109,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
               <div className="flex items-start space-x-2">
                 <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
                 <p className="text-gray-300 text-sm leading-relaxed">
-                  {feedback.message}
+                  {feedback.message || "フィードバックを準備中です..."}
                 </p>
               </div>
             </div>
@@ -125,8 +125,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
             </div>
           </div>
         ))}
-
-
       </CardContent>
     </Card>
   )

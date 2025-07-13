@@ -169,7 +169,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
         onClick={onClose}
       >
         <Card 
-          className="bg-gray-900 border-gray-800 max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden"
+          className="bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto max-h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <CardHeader className="relative">
@@ -194,29 +194,29 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
               {currentActivities.map((activity, index) => (
                 <div
                   key={`${activity.id}-${currentPage}`}
-                  className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group"
+                  className="flex items-center justify-between p-3 sm:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group"
                 >
-                  <div className="flex items-center space-x-3 flex-1">
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-400 font-mono text-sm w-6 text-right">
+                      <span className="text-gray-400 font-mono text-sm w-4 sm:w-6 text-right">
                         {startIndex + index + 1}
                       </span>
-                      <div className={`w-12 h-12 ${activity.color} rounded-full flex items-center justify-center text-xl`}>
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${activity.color} rounded-full flex items-center justify-center text-lg sm:text-xl`}>
                         {activity.icon}
                       </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-white font-medium truncate">{activity.name}</h3>
+                        <h3 className="text-white font-medium truncate text-sm sm:text-base">{activity.name}</h3>
                       </div>
 
-                      <div className="flex items-center space-x-4 text-sm text-gray-400">
+                      <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-400">
                         <div className="flex items-center space-x-1">
                           <BarChart3 className="w-3 h-3" />
                           <span className="font-medium text-green-400">{activity.sessionCount}回</span>
                         </div>
-                        <div className="flex items-center space-x-1">
+                        <div className="hidden sm:flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span>合計 {formatDuration(activity.totalTime)}</span>
                         </div>
@@ -224,19 +224,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-3 h-3 ${
-                            star <= (activity.latestSession.mood || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                    <div className="hidden sm:flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="sm"
                         variant="outline"
@@ -254,6 +243,17 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         <Play className="w-3 h-3 mr-1" />
                         開始
                       </Button>
+                    </div>
+
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-3 h-3 ${
+                            star <= (activity.latestSession.mood || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>

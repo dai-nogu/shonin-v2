@@ -178,63 +178,60 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
   return (
     <Card className="bg-gray-900 border-gray-800">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-white mb-2">努力を記録する</CardTitle>
-        <p className="text-gray-400">見えない努力に、確かな証人を</p>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-white flex items-center text-lg lg:text-xl">
+          努力を記録する
+        </CardTitle>
+        <p className="text-gray-400 text-sm">見えない努力を、確かな記録へ</p>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* アクティビティ選択 - フォーム表示時は隠す */}
-        {!showAddForm && (
-          <div className="space-y-2">
-            <Label className="text-gray-300">アクティビティを選択</Label>
-            <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="何に取り組みますか？" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                {allActivities.map((activity) => (
-                  <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
-                    <div className="flex items-center space-x-3">
-                      {activity.icon ? (
-                        <span className="text-lg">{activity.icon}</span>
-                      ) : (
-                        <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
-                      )}
-                      <span className="text-base">{activity.name}</span>
+      <CardContent className="space-y-4 lg:space-y-6">
+        {/* アクティビティ選択 */}
+        <div className="space-y-2">
+          <Label className="text-gray-300">アクティビティを選択</Label>
+          <Select value={selectedActivity} onValueChange={setSelectedActivity}>
+            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+              <SelectValue placeholder="何に取り組みますか？" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-700">
+              {allActivities.map((activity) => (
+                <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-6 h-6 ${activity.color} rounded-full flex items-center justify-center text-sm`}>
+                      {activity.icon}
                     </div>
-                  </SelectItem>
-                ))}
-                
-                {/* アクティビティ追加ボタン */}
-                <div className="p-2 border-t border-gray-600">
-                  <Button
-                    onClick={() => setShowAddForm(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    新しいアクティビティを追加
-                  </Button>
-                </div>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+                    <span className="text-base">{activity.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+              
+              {/* 新しいアクティビティを追加ボタン */}
+              <div className="p-2 border-t border-gray-600">
+                <Button
+                  onClick={() => setShowAddForm(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  新しいアクティビティを追加
+                </Button>
+              </div>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* アクティビティ追加フォーム */}
+        {/* 新しいアクティビティ追加フォーム */}
         {showAddForm && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white text-lg">新しいアクティビティを追加</CardTitle>
+              <CardTitle className="text-white text-base">新しいアクティビティを追加</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-gray-300">アクティビティ名 *</Label>
+                <Label className="text-gray-300">名前</Label>
                 <Input
-                  ref={activityNameInputRef}
-                  placeholder="例: 日記を書く"
+                  placeholder="アクティビティ名"
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -242,9 +239,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300">アイコン（絵文字）</Label>
+                <Label className="text-gray-300">アイコン</Label>
                 <Input
-                  placeholder="例: ✍️"
+                  placeholder="📚"
                   value={newActivityIcon}
                   onChange={(e) => setNewActivityIcon(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -262,7 +259,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                         onClick={() => setNewActivityColor(color.value)}
                         onMouseEnter={() => setHoveredColor(color.value)}
                         onMouseLeave={() => setHoveredColor(null)}
-                        className={`w-10 h-10 rounded-full border-2 transition-all ${
+                        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 transition-all ${
                           newActivityColor === color.value 
                             ? "border-white ring-2 ring-green-400" 
                             : "border-gray-600 hover:border-gray-400"
@@ -270,7 +267,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                         style={{ backgroundColor: color.color }}
                       />
                       {hoveredColor === color.value && (
-                        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-10">
+                        <div className="absolute bottom-10 lg:bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-10">
                           {color.label}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                         </div>
@@ -287,7 +284,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 <Button
                   onClick={handleAddActivity}
                   disabled={!newActivityName.trim()}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
                 >
                   追加
                 </Button>
@@ -300,7 +297,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                     setHoveredColor(null)
                   }}
                   variant="outline"
-                  className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                  className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-sm"
                 >
                   キャンセル
                 </Button>
@@ -314,15 +311,15 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
           <>
             {/* 選択されたアクティビティのプレビュー */}
             {selectedActivityData && (
-              <div className={`p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
+              <div className={`p-3 lg:p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
                 <div className="flex items-center space-x-3">
                   <div
-                    className={`w-12 h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-2xl`}
+                    className={`w-10 h-10 lg:w-12 lg:h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-lg lg:text-2xl`}
                   >
                     {selectedActivityData.icon}
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">{selectedActivityData.name}</h3>
+                    <h3 className="text-white font-semibold text-sm lg:text-base">{selectedActivityData.name}</h3>
                   </div>
                 </div>
               </div>
@@ -330,7 +327,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 場所設定 */}
             <div className="space-y-2">
-              <Label className="text-gray-300 flex items-center">
+              <Label className="text-gray-300 flex items-center text-sm">
                 <MapPin className="w-4 h-4 mr-2" />
                 場所
               </Label>
@@ -342,68 +339,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               />
             </div>
 
-            {/* 目標との紐付け */}
-            <div className="space-y-2">
-              <Label className="text-gray-300">目標と紐付け</Label>
-              {activeGoals.length > 0 ? (
-                <>
-                  <Select value={selectedGoal} onValueChange={handleGoalSelection}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="目標を選択" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      {activeGoals.map((goal) => (
-                        <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-3">
-                          <div className="flex items-center justify-between w-full">
-                            <span className="text-base">{goal.title}</span>
-                            <span className="text-xs text-gray-400 ml-2">目標: {goal.target_duration ? Math.round(goal.target_duration / 3600) : 0}時間</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                      
-                      {/* 新しい目標を追加ボタン */}
-                      <div className="p-2 border-t border-gray-600">
-                        <Button
-                          onClick={onGoalSettingClick}
-                          variant="ghost"
-                          size="sm"
-                          className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          新しい目標を追加
-                        </Button>
-                      </div>
-                    </SelectContent>
-                  </Select>
-                  {selectedGoal && (
-                    <div className="text-sm text-green-400">
-                      この活動が選択した目標の進捗に反映されます
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-300 text-sm">まだ目標が設定されていません</p>
-                      <p className="text-gray-400 text-xs mt-1">目標を設定すると進捗を自動で追跡できます</p>
-                    </div>
-                    <Button
-                      onClick={onGoalSettingClick}
-                      variant="outline"
-                      size="sm"
-                      className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
-                    >
-                      目標を設定
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* 目標時間設定 */}
             <div className="space-y-2">
-              <Label className="text-gray-300 flex items-center">
+              <Label className="text-gray-300 flex items-center text-sm">
                 <Clock className="w-4 h-4 mr-2" />
                 目標時間
               </Label>
@@ -416,7 +354,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                     onChange={(e) => setTargetHours(e.target.value)}
                     min="0"
                     max="23"
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-16 lg:w-20 text-center"
                   />
                   <span className="text-gray-300 text-sm">時間</span>
                 </div>
@@ -428,56 +366,35 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                     onChange={(e) => setTargetMinutes(e.target.value)}
                     min="0"
                     max="59"
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-20 text-center"
+                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-16 lg:w-20 text-center"
                   />
                   <span className="text-gray-300 text-sm">分</span>
                 </div>
               </div>
-              {/* 目標時間の表示 */}
-              {selectedGoal && (() => {
-                const selectedGoalData = availableGoals.find(goal => goal.id === selectedGoal)
-                if (selectedGoalData) {
-                  const isWeekdayToday = isWeekday()
-                  const goalHours = isWeekdayToday ? selectedGoalData.weekday_hours : selectedGoalData.weekend_hours
-                  return (
-                    <div className="text-sm text-green-400 mt-1">
-                      目標: {goalHours}時間0分 ({isWeekdayToday ? "平日" : "土日"}の目標時間から自動設定)
-                    </div>
-                  )
-                }
-                return null
-              })()}
-              
-              {/* 手動設定時の表示 */}
-              {!selectedGoal && (targetHours || targetMinutes) && (
-                <div className="text-sm text-green-400 mt-1">
-                  目標: {targetHours || "0"}時間{targetMinutes || "0"}分
-                </div>
-              )}
             </div>
 
             {/* 開始ボタン */}
             <Button
               onClick={handleStart}
               disabled={!selectedActivity || isStarting}
-              size="lg"
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-4 text-lg disabled:opacity-50"
+              className="w-full bg-green-600 hover:bg-green-700 py-3 text-base font-medium"
             >
               {isStarting ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>開始中...</span>
-                </div>
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  記録開始中...
+                </>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <Play className="w-5 h-5" />
-                  <span>記録開始</span>
-                </div>
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  記録開始
+                </>
               )}
             </Button>
 
-            {/* 励ましメッセージ */}
-            <div className="text-center text-gray-400 text-sm italic">"誰も見ていなくても、私たちは見ています"</div>
+            <p className="text-gray-400 text-xs text-center">
+              *停止するまでは、ずっと記録されています。
+            </p>
           </>
         )}
       </CardContent>
