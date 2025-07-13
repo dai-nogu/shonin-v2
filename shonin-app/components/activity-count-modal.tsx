@@ -212,8 +212,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       </div>
 
                       <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-400">
-                        <div className="flex items-center space-x-1">
-                          <BarChart3 className="w-3 h-3" />
+                        <div className="flex items-center sm:space-x-1">
+                          <BarChart3 className="w-3 h-3 hidden sm:block" />
                           <span className="font-medium text-green-400">{activity.sessionCount}回</span>
                         </div>
                         <div className="hidden sm:flex items-center space-x-1">

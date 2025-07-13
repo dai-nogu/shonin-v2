@@ -80,7 +80,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
                 <span>{activity.date}</span>
               </div>
             </div>
-            
+
             {/* 目標情報 */}
             {goalInfo && (
               <div className="bg-blue-500 bg-opacity-10 rounded p-3 border border-blue-500 border-opacity-30">
@@ -94,15 +94,6 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
                 )}
               </div>
             )}
-
-          </div>
-
-          {/* 確認メッセージ */}
-          <div className="text-center">
-            <p className="text-gray-300 mb-2">このアクティビティで時間記録を開始しますか？</p>
-            <p className="text-gray-400 text-sm">
-              準備ができたら開始ボタンを押してください
-            </p>
           </div>
 
           {/* ボタン */}

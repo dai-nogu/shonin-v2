@@ -211,13 +211,13 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                       </div>
 
                       <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-400">
+                        <div className="flex items-center sm:space-x-1">
+                          <Calendar className="w-3 h-3 hidden sm:block" />
+                          <span className="text-blue-400">{sessionItem.date}</span>
+                        </div>
                         <div className="hidden sm:flex items-center space-x-1">
                           <Clock className="w-3 h-3" />
                           <span>{sessionItem.duration}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-3 h-3" />
-                          <span className="text-blue-400">{sessionItem.date}</span>
                         </div>
                         {sessionItem.location && (
                           <div className="hidden sm:flex items-center space-x-1">
