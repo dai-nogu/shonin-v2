@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, BarChart3, Star, MapPin } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,22 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   const [currentPage, setCurrentPage] = useState(1)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // スクロール位置をリセットするためのref
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // モバイル判定
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする
   useEffect(() => {
@@ -141,6 +157,12 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     onClose()
   }
 
+  // SPでの詳細表示用のハンドラー
+  const handleActivityDetailClick = (activity: ActivityItem) => {
+    setSelectedSession(activity.latestSession)
+    setShowDetailModal(true)
+  }
+
   const handleViewDetail = (activity: ActivityItem) => {
     setSelectedSession(activity.latestSession)
     setShowDetailModal(true)
@@ -160,6 +182,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+    // スクロール位置をリセット
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0
+    }
   }
 
   return (
@@ -169,10 +195,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
         onClick={onClose}
       >
         <Card 
-          className="bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto max-h-[90vh] overflow-hidden"
+          className="bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          <CardHeader className="relative">
+          <CardHeader className="relative pb-3 sm:pb-6">
             <Button
               onClick={onClose}
               variant="ghost"
@@ -182,26 +208,29 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
               <X className="w-4 h-4" />
             </Button>
             
-            <CardTitle className="text-white flex items-center">
-              <BarChart3 className="w-5 h-5 mr-2" />
-              アクティビティ別実行回数
+            <CardTitle className="text-white flex items-center text-lg sm:text-xl">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              回数順
             </CardTitle>
-            <p className="text-gray-400 text-sm">実行回数が多い順に表示</p>
           </CardHeader>
 
-          <CardContent className="overflow-y-auto max-h-[calc(90vh-200px)]">
-            <div className="space-y-3">
+          <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6">
+            <div className="space-y-2 sm:space-y-3">
               {currentActivities.map((activity, index) => (
                 <div
                   key={`${activity.id}-${currentPage}`}
-                  className="flex items-center justify-between p-3 sm:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group"
+                  onClick={() => {
+                    // SPのモーダルでは常に詳細表示
+                    handleActivityDetailClick(activity)
+                  }}
+                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-400 font-mono text-sm w-4 sm:w-6 text-right">
+                      <span className="text-gray-400 font-mono text-xs sm:text-sm w-3 sm:w-4 md:w-6 text-right">
                         {startIndex + index + 1}
                       </span>
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${activity.color} rounded-full flex items-center justify-center text-lg sm:text-xl`}>
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${activity.color} rounded-full flex items-center justify-center text-base sm:text-lg md:text-xl`}>
                         {activity.icon}
                       </div>
                     </div>
@@ -230,7 +259,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         size="sm"
                         variant="outline"
                         className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
-                        onClick={() => handleViewDetail(activity)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleViewDetail(activity)
+                        }}
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         詳細
@@ -238,7 +270,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <Button
                         size="sm"
                         className="bg-green-500 hover:bg-green-600"
-                        onClick={() => handleActivityClick(activity)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivityClick(activity)
+                        }}
                       >
                         <Play className="w-3 h-3 mr-1" />
                         開始
@@ -268,18 +303,18 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
             {/* ページネーション */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2 mt-6 pt-4 border-t border-gray-800">
+              <div className="flex items-center justify-center space-x-2 sm:space-x-2 mt-3 sm:mt-6 pt-2 sm:pt-4 border-t border-gray-800">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50 px-3 sm:px-3"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
 
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-2">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum: number
                     if (totalPages <= 5) {
@@ -300,8 +335,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         onClick={() => handlePageChange(pageNum)}
                         className={
                           currentPage === pageNum
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                            ? "bg-green-600 hover:bg-green-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
+                            : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
                         }
                       >
                         {pageNum}
@@ -315,12 +350,12 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50 px-3 sm:px-3"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
 
-                <span className="text-sm text-gray-400 ml-4">
+                <span className="text-xs sm:text-sm text-gray-400 ml-2 sm:ml-4 hidden sm:inline">
                   {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, activities.length)} / {activities.length}
                 </span>
               </div>

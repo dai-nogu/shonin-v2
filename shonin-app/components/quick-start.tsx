@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -43,12 +43,25 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
   const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   
   // アクティビティ管理フック
   const { activities, addActivity } = useActivities()
   
   // 目標管理フック
   const { getGoal } = useGoalsDb()
+
+  // モバイル判定
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // セッションから色・アイコン情報を取得、なければ従来のマッピングを使用
   const getActivityStyle = (session: CompletedSession) => {
@@ -246,6 +259,16 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     setShowModal(true)
   }
 
+  // SPでの詳細表示用のハンドラー
+  const handleActivityDetailClick = (activity: QuickStartActivity) => {
+    // 対応するセッションを見つける
+    const session = completedSessions.find(s => s.id === activity.id)
+    if (session) {
+      setSelectedSession(session)
+      setShowDetailModal(true)
+    }
+  }
+
   const handleConfirmStart = async () => {
     if (selectedActivity && onStartActivity) {
       let activityId = selectedActivity.id
@@ -356,7 +379,14 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         {activities.map((activity) => (
           <div
             key={`${activity.id}-${activeTab}`}
-            onClick={() => handleActivityClick(activity)}
+            onClick={() => {
+              // SPでは詳細表示、PCでは開始確認
+              if (isMobile) {
+                handleActivityDetailClick(activity)
+              } else {
+                handleActivityClick(activity)
+              }
+            }}
             className="flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors group"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">

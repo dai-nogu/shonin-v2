@@ -54,7 +54,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
           >
             <X className="w-4 h-4" />
           </Button>
-          <CardTitle className="text-white text-center">アクティビティを開始しますか？</CardTitle>
+          <CardTitle className="text-white text-center">開始しますか？</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-6">
