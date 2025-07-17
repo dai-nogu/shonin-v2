@@ -20,7 +20,10 @@ interface SessionDetailModalProps {
 function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimilar }: SessionDetailModalProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = 2 // 写真なしの場合は2ページ
+  
+  // メモがあるかどうかをチェック
+  const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
+  const totalPages = hasContent ? 2 : 1 // メモがある場合は2ページ、ない場合は1ページ
   
   // 目標管理フック
   const { getGoal } = useGoalsDb()
@@ -119,9 +122,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
 
   // 1ページ目のコンテンツ
   const renderPage1 = () => (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* 基本情報 */}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-5">
         {/* 実施日時と場所を横並び */}
         <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
           <Card className="bg-gray-800 border-gray-700">
@@ -198,8 +201,8 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         </div>
 
         {/* SPでのページインジケーター（関連する目標と気分の下に配置） */}
-        {isMobile && (
-          <div className="flex justify-center space-x-2 mt-4">
+        {isMobile && totalPages > 1 && (
+          <div className="flex justify-center space-x-2 mt-6">
             {Array.from({ length: totalPages }, (_, i) => (
               <div
                 key={i}
@@ -215,7 +218,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         {isMobile && (
           <Button
             onClick={handleStartSimilar}
-            className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
           >
             同じ設定で開始
           </Button>
@@ -297,9 +300,16 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         </Card>
       )}
 
-      {/* SPでのページインジケーター */}
-      {isMobile && (
-        <div className="flex justify-center space-x-2 mt-4">
+      {/* メモがない場合の表示 */}
+      {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
+        <div className="text-center py-8">
+          <p className="text-gray-400 text-sm">記録されたメモはありません</p>
+        </div>
+      )}
+
+      {/* SPでのページインジケーター（スクロール領域の最後に配置） */}
+      {isMobile && totalPages > 1 && (
+        <div className="flex justify-center space-x-2 mt-6 pt-2">
           {Array.from({ length: totalPages }, (_, i) => (
             <div
               key={i}
@@ -311,21 +321,14 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         </div>
       )}
 
-      {/* SPでのスタートボタン */}
+      {/* SPでのスタートボタン（スクロール領域の最後に配置） */}
       {isMobile && (
         <Button
           onClick={handleStartSimilar}
-          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 mb-6"
         >
           同じ設定で開始
         </Button>
-      )}
-
-      {/* コンテンツがない場合の表示 */}
-      {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
-        <div className="text-center py-8">
-          <p className="text-gray-400 text-sm">記録されたメモはありません</p>
-        </div>
       )}
     </div>
   )
@@ -368,9 +371,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           </div>
         </CardHeader>
 
-        <CardContent className={`${isMobile ? 'h-[340px] overflow-hidden' : 'space-y-6'} relative`}>
+        <CardContent className={`${isMobile ? 'h-[420px] overflow-hidden' : 'space-y-6'} relative`}>
           {/* SPでの前のページボタン（モーダルの左側中央に配置） */}
-          {isMobile && currentPage > 1 && (
+          {isMobile && currentPage > 1 && totalPages > 1 && (
             <Button
               onClick={handlePrevPage}
               variant="outline"
@@ -384,7 +387,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           )}
 
           {/* SPでの次のページボタン（モーダルの右側中央に配置） */}
-          {isMobile && currentPage < totalPages && (
+          {isMobile && currentPage < totalPages && totalPages > 1 && (
             <Button
               onClick={handleNextPage}
               variant="outline"
@@ -401,13 +404,17 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             // SPでのスライダー表示
             <div className="h-full">
               {currentPage === 1 && renderPage1()}
-              {currentPage === 2 && renderPage2()}
+              {currentPage === 2 && hasContent && (
+                <div className="h-full overflow-y-auto pb-12">
+                  {renderPage2()}
+                </div>
+              )}
             </div>
           ) : (
             // PCでの通常表示
             <div className="space-y-6">
               {renderPage1()}
-              {renderPage2()}
+              {hasContent && renderPage2()}
             </div>
           )}
 
@@ -446,8 +453,10 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   
-  // 写真がある場合は3ページ、ない場合は2ページ
-  const totalPages = sessionPhotos.length > 0 ? 3 : 2
+  // メモがあるかどうかをチェック
+  const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
+  // 写真がある場合は3ページ（基本情報、メモ、写真）、メモがない場合は2ページ（基本情報、写真）、写真もメモもない場合は1ページ
+  const totalPages = sessionPhotos.length > 0 ? (hasContent ? 3 : 2) : (hasContent ? 2 : 1)
   
   // 目標管理フック
   const { getGoal } = useGoalsDb()
@@ -473,27 +482,29 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       if (isOpen && session?.id) {
         setLoadingPhotos(true)
         try {
-          const photos = await getSessionPhotosWithPreload(session.id)
+          const result = await getSessionPhotosWithPreload(session.id)
+          const photos = result.photos
           setSessionPhotos(photos)
           
-          // 画像の読み込み状態を初期化
+          // 画像の読み込み状態を初期化（プリロード済みの画像は既に読み込み完了とマーク）
           const initialStates: Record<string, boolean> = {}
           photos.forEach(photo => {
-            initialStates[photo.url] = false
+            // プリロード済みの画像かチェック
+            initialStates[photo.url] = result.preloadedStates[photo.url] || false
           })
           setImageLoadStates(initialStates)
           
-          // プリロード完了を確認
-          const checkPreload = () => {
-            const allLoaded = photos.every(photo => initialStates[photo.url])
-            if (allLoaded) {
-              setPreloadCompleted(true)
-            }
+          // プリロードを実行
+          try {
+            await result.preloadPromise
+            setPreloadCompleted(true)
+          } catch (preloadError) {
+            console.warn('一部の画像のプリロードに失敗しました:', preloadError)
           }
-          
-          checkPreload()
         } catch (error) {
           console.error('写真の読み込みに失敗しました:', error)
+          // エラー時は空配列を設定
+          setSessionPhotos([])
         } finally {
           setLoadingPhotos(false)
         }
@@ -589,9 +600,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
 
   // 1ページ目のコンテンツ
   const renderPage1 = () => (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* 基本情報 */}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-5">
         {/* 実施日時と場所を横並び */}
         <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
           <Card className="bg-gray-800 border-gray-700">
@@ -668,8 +679,8 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         </div>
 
         {/* SPでのページインジケーター（関連する目標と気分の下に配置） */}
-        {isMobile && (
-          <div className="flex justify-center space-x-2 mt-4">
+        {isMobile && totalPages > 1 && (
+          <div className="flex justify-center space-x-2 mt-6">
             {Array.from({ length: totalPages }, (_, i) => (
               <div
                 key={i}
@@ -685,7 +696,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         {isMobile && (
           <Button
             onClick={handleStartSimilar}
-            className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
           >
             同じ設定で開始
           </Button>
@@ -767,9 +778,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         </Card>
       )}
 
-      {/* SPでのページインジケーター */}
-      {isMobile && (
-        <div className="flex justify-center space-x-2 mt-4">
+      {/* SPでのページインジケーター（スクロール領域の最後に配置） */}
+      {isMobile && totalPages > 1 && (
+        <div className="flex justify-center space-x-2 mt-6 pt-2">
           {Array.from({ length: totalPages }, (_, i) => (
             <div
               key={i}
@@ -781,21 +792,14 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         </div>
       )}
 
-      {/* SPでのスタートボタン */}
+      {/* SPでのスタートボタン（スクロール領域の最後に配置） */}
       {isMobile && (
         <Button
           onClick={handleStartSimilar}
-          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
+          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 mb-6"
         >
           同じ設定で開始
         </Button>
-      )}
-
-      {/* コンテンツがない場合の表示 */}
-      {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
-        <div className="text-center py-8">
-          <p className="text-gray-400 text-sm">記録されたメモはありません</p>
-        </div>
       )}
     </div>
   )
@@ -809,22 +813,46 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         </div>
       ) : sessionPhotos.length > 0 ? (
         <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
+          <CardContent className={`${isMobile ? 'p-2' : 'p-3'}`}>
+            <div className="flex items-center space-x-2 mb-3">
               <Camera className="w-4 h-4 text-blue-400" />
               <span className="text-gray-300 font-medium text-sm">写真</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid gap-3 ${
+              isMobile 
+                ? 'grid-cols-1' // SPでは1列で大きく表示
+                : sessionPhotos.length === 1 
+                  ? 'grid-cols-1' // PCで1枚の場合は1列
+                  : sessionPhotos.length === 2
+                    ? 'grid-cols-2' // PCで2枚の場合は2列
+                    : 'grid-cols-2' // PCで3枚以上の場合は2列
+            }`}>
               {sessionPhotos.map((photo, index) => (
-                <div key={index} className="relative">
+                <div key={photo.id || index} className="relative group">
                   <img
                     src={photo.url}
                     alt={`Photo ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg"
+                    className={`w-full object-cover rounded-lg transition-opacity duration-200 ${
+                      isMobile 
+                        ? 'h-48' // SPでは高さを大きく
+                        : sessionPhotos.length === 1
+                          ? 'h-64' // PCで1枚の場合は大きく
+                          : 'h-32' // PCで複数枚の場合
+                    } ${imageLoadStates[photo.url] ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => handleImageLoad(photo.url)}
+                    loading="lazy"
                   />
+                  {/* ローディング表示（初期状態または読み込み中のみ表示） */}
                   {!imageLoadStates[photo.url] && (
-                    <div className="absolute inset-0 bg-gray-700 animate-pulse rounded-lg" />
+                    <div className={`absolute inset-0 bg-gray-700 animate-pulse rounded-lg flex items-center justify-center ${
+                      isMobile ? 'h-48' : sessionPhotos.length === 1 ? 'h-64' : 'h-32'
+                    }`}>
+                      <div className="text-gray-500 text-sm">読み込み中...</div>
+                    </div>
+                  )}
+                  {/* ホバー効果（PCのみ） */}
+                  {!isMobile && (
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg" />
                   )}
                 </div>
               ))}
@@ -838,7 +866,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       )}
 
       {/* SPでのページインジケーター */}
-      {isMobile && (
+      {isMobile && totalPages > 1 && (
         <div className="flex justify-center space-x-2 mt-4">
           {Array.from({ length: totalPages }, (_, i) => (
             <div
@@ -901,9 +929,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           </div>
         </CardHeader>
 
-        <CardContent className={`${isMobile ? 'h-[340px] overflow-hidden' : 'space-y-6'} relative`}>
+        <CardContent className={`${isMobile ? 'h-[420px] overflow-hidden' : 'space-y-6'} relative`}>
           {/* SPでの前のページボタン（モーダルの左側中央に配置） */}
-          {isMobile && currentPage > 1 && (
+          {isMobile && currentPage > 1 && totalPages > 1 && (
             <Button
               onClick={handlePrevPage}
               variant="outline"
@@ -917,7 +945,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           )}
 
           {/* SPでの次のページボタン（モーダルの右側中央に配置） */}
-          {isMobile && currentPage < totalPages && (
+          {isMobile && currentPage < totalPages && totalPages > 1 && (
             <Button
               onClick={handleNextPage}
               variant="outline"
@@ -934,14 +962,19 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             // SPでのスライダー表示
             <div className="h-full">
               {currentPage === 1 && renderPage1()}
-              {currentPage === 2 && renderPage2()}
-              {currentPage === 3 && renderPage3()}
+              {currentPage === 2 && hasContent && (
+                <div className="h-full overflow-y-auto pb-12">
+                  {renderPage2()}
+                </div>
+              )}
+              {currentPage === 2 && !hasContent && sessionPhotos.length > 0 && renderPage3()}
+              {currentPage === 3 && hasContent && sessionPhotos.length > 0 && renderPage3()}
             </div>
           ) : (
             // PCでの通常表示
             <div className="space-y-6">
               {renderPage1()}
-              {renderPage2()}
+              {hasContent && renderPage2()}
               {sessionPhotos.length > 0 && renderPage3()}
             </div>
           )}
