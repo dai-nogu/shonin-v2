@@ -15,7 +15,7 @@ export function QuickStartCard() {
       <CardHeader>
         <CardTitle className="text-white flex items-center">
           <span className="mr-2">▷</span>
-          クイックスタート
+          開始する
         </CardTitle>
         <p className="text-gray-400 text-sm">よく使うアクティビティから選択</p>
       </CardHeader>

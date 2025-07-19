@@ -51,13 +51,18 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   // 目標管理フック
   const { getGoal } = useGoalsDb()
 
-  // モバイル判定
+  // モバイル判定（タブレットは除外、スマートフォンのみ）
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
+      const width = window.innerWidth
+      const newIsMobile = width < 768
+      setIsMobile(newIsMobile)
     }
     
+    // 初回実行
     checkMobile()
+    
+    // リサイズイベント
     window.addEventListener('resize', checkMobile)
     
     return () => window.removeEventListener('resize', checkMobile)
@@ -180,7 +185,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           name: activityName,
           duration: formatDuration(stats.totalTime),
           date: formatDate(new Date(stats.latestSession.endTime)),
-          rating: stats.latestSession.mood,
+          rating: stats.latestSession.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
@@ -207,7 +212,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatRelativeTime(new Date(session.endTime)),
-          rating: session.mood,
+          rating: session.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
@@ -243,7 +248,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             hour: "2-digit",
             minute: "2-digit"
           }),
-          rating: session.mood,
+          rating: session.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
@@ -380,14 +385,13 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           <div
             key={`${activity.id}-${activeTab}`}
             onClick={() => {
-              // SPでは詳細表示、PCでは開始確認
+              // SPでは詳細表示（開始ボタンは別途stopPropagationで制御）
               if (isMobile) {
                 handleActivityDetailClick(activity)
-              } else {
-                handleActivityClick(activity)
               }
+              // PCでは何もしない（開始・詳細ボタンが個別に制御）
             }}
-            className="flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors group"
+            className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-colors group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : ''}`}
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className={`w-8 h-8 lg:w-10 lg:h-10 ${activity.color} rounded-full flex items-center justify-center text-sm lg:text-lg`}>
@@ -410,8 +414,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                         <span className="hidden sm:inline">合計 </span>
                         <span>{activity.duration}</span>
                       </div>
-                      {activity.goalTitle && (
-                        <div className="flex items-center space-x-1 hidden lg:flex">
+                      {activity.goalTitle && isMobile && (
+                        <div className="flex items-center space-x-1">
                           <Target className="w-3 h-3" />
                           <span className="text-blue-400 truncate">{activity.goalTitle}</span>
                         </div>
@@ -426,41 +430,40 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                         <Clock className="w-3 h-3" />
                         <span>{activity.duration}</span>
                       </div>
-                      {activity.goalTitle && (
-                        <div className="flex items-center space-x-1 hidden lg:flex">
+                      {activity.goalTitle && isMobile && (
+                        <div className="flex items-center space-x-1">
                           <Target className="w-3 h-3" />
                           <span className="text-blue-400 truncate">{activity.goalTitle}</span>
                         </div>
                       )}
-                      {activity.location && (
-                        <div className="flex items-center space-x-1 hidden sm:flex">
-                          <MapPin className="w-3 h-3" />
-                          <span className="truncate">{activity.location}</span>
-                        </div>
-                      )}
+
                     </>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 lg:space-x-3">
-              <div className="hidden sm:flex items-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-3 h-3 ${
-                      star <= activity.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center space-x-1 lg:space-x-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+            {/* SP版とPC版で構造を分ける */}
+            {isMobile ? (
+              // SP版: 開始ボタンのみ
+              <Button
+                size="sm"
+                className="bg-green-500 hover:bg-green-600 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleActivityClick(activity)
+                }}
+              >
+                <Play className="w-3 h-3 mr-1" />
+                開始
+              </Button>
+            ) : (
+              // PC版: 詳細ボタン + 開始ボタン
+              <div className="flex items-center space-x-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hidden lg:flex"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetail(activity)
@@ -471,7 +474,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-green-500 hover:bg-green-600 text-xs lg:text-sm"
+                  className="bg-green-500 hover:bg-green-600"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleActivityClick(activity)
@@ -481,7 +484,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   開始
                 </Button>
               </div>
-            </div>
+            )}
           </div>
         ))}
       </div>
@@ -494,7 +497,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         <CardHeader>
           <CardTitle className="text-white flex items-center">
             <Play className="w-5 h-5 mr-2" />
-            クイックスタート
+            開始する
           </CardTitle>
           <p className="text-gray-400 text-sm">最近のアクティビティから素早く開始</p>
         </CardHeader>
@@ -514,7 +517,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         <CardHeader>
           <CardTitle className="text-white flex items-center">
             <Play className="w-5 h-5 mr-2" />
-            クイックスタート
+            開始する
           </CardTitle>
           <p className="text-gray-400 text-sm">最近のアクティビティから素早く開始</p>
         </CardHeader>

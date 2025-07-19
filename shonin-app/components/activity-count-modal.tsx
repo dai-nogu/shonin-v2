@@ -220,7 +220,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                 <div
                   key={`${activity.id}-${currentPage}`}
                   onClick={() => {
-                    // SPのモーダルでは常に詳細表示
+                    // モーダル内では常に詳細表示（開始ボタンは別途stopPropagationで制御）
                     handleActivityDetailClick(activity)
                   }}
                   className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group cursor-pointer"

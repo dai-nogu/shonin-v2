@@ -573,7 +573,7 @@ export function Goals({ onBack }: GoalsProps) {
                       
                       {/* 動機編集 */}
                       <div className="bg-gray-800 p-3 rounded-lg mb-4">
-                        <h4 className="text-sm font-medium text-gray-300 mb-1">💡 なぜこの目標を？</h4>
+                        <h4 className="text-sm font-medium text-gray-300 mb-1">モチベーション</h4>
                         {isEditing ? (
                           <Textarea
                             value={editGoal.motivation}
