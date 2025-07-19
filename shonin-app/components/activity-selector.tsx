@@ -34,7 +34,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const handleGoalSelection = (goalId: string) => {
     setSelectedGoal(goalId)
     
-    if (goalId) {
+    if (goalId && goalId !== "none") {
       const selectedGoalData = availableGoals.find(goal => goal.id === goalId)
       if (selectedGoalData) {
         const targetHours = isWeekday() ? selectedGoalData.weekday_hours : selectedGoalData.weekend_hours
@@ -152,11 +152,11 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       notes: '',
       activityColor: activity.color,
       activityIcon: activity.icon || undefined,
-      goalId: selectedGoal || undefined,
+      goalId: selectedGoal === "none" ? undefined : selectedGoal,
     }
 
     // 目標が選択されている場合、目標情報を取得
-    if (selectedGoal) {
+    if (selectedGoal && selectedGoal !== "none") {
       const selectedGoalData = activeGoals.find(goal => goal.id === selectedGoal)
       if (selectedGoalData) {
         // 平日・土日の目標時間を計算（分単位）
@@ -186,41 +186,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       </CardHeader>
 
       <CardContent className="space-y-4 lg:space-y-6">
-        {/* アクティビティ選択 */}
-        <div className="space-y-2">
-          <Label className="text-gray-300">アクティビティを選択</Label>
-          <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-              <SelectValue placeholder="何に取り組みますか？" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700">
-              {allActivities.map((activity) => (
-                <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-6 h-6 ${activity.color} rounded-full flex items-center justify-center text-sm`}>
-                      {activity.icon}
-                    </div>
-                    <span className="text-base">{activity.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-              
-              {/* 新しいアクティビティを追加ボタン */}
-              <div className="p-2 border-t border-gray-600">
-                <Button
-                  onClick={() => setShowAddForm(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  新しいアクティビティを追加
-                </Button>
-              </div>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* 新しいアクティビティ追加フォーム */}
         {showAddForm && (
           <Card className="bg-gray-800 border-gray-700">
@@ -231,6 +196,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               <div className="space-y-2">
                 <Label className="text-gray-300">名前</Label>
                 <Input
+                  ref={activityNameInputRef}
                   placeholder="アクティビティ名"
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value)}
@@ -309,6 +275,41 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
         {/* フォーム表示時以外の通常の内容 */}
         {!showAddForm && (
           <>
+            {/* アクティビティ選択 */}
+            <div className="space-y-2">
+              <Label className="text-gray-300">アクティビティを選択</Label>
+              <Select value={selectedActivity} onValueChange={setSelectedActivity}>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="何に取り組みますか？" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  {allActivities.map((activity) => (
+                    <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-6 h-6 ${activity.color} rounded-full flex items-center justify-center text-sm`}>
+                          {activity.icon}
+                        </div>
+                        <span className="text-base">{activity.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                  
+                  {/* 新しいアクティビティを追加ボタン */}
+                  <div className="p-2 border-t border-gray-600">
+                    <Button
+                      onClick={() => setShowAddForm(true)}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      新しいアクティビティを追加
+                    </Button>
+                  </div>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* 選択されたアクティビティのプレビュー */}
             {selectedActivityData && (
               <div className={`p-3 lg:p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
@@ -337,6 +338,49 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 onChange={(e) => setLocation(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
               />
+            </div>
+
+            {/* 目標選択 */}
+            <div className="space-y-2">
+              <Label className="text-gray-300 flex items-center text-sm">
+                <Target className="w-4 h-4 mr-2" />
+                目標を選択
+              </Label>
+              <Select value={selectedGoal} onValueChange={handleGoalSelection}>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="目標を選択してください（任意）" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2">
+                    目標を選択しない
+                  </SelectItem>
+                  {activeGoals.map((goal) => (
+                    <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{goal.title}</span>
+                        <span className="text-xs text-gray-400">
+                          平日: {goal.weekday_hours}時間 / 土日: {goal.weekend_hours}時間
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                  
+                  {/* 目標設定へのリンク */}
+                  {activeGoals.length === 0 && (
+                    <div className="p-2">
+                      <Button
+                        onClick={onGoalSettingClick}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        目標を設定する
+                      </Button>
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* 目標時間設定 */}

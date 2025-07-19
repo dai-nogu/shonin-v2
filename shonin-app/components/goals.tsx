@@ -51,8 +51,8 @@ export function Goals({ onBack }: GoalsProps) {
     motivation: "",
     unit: "時間",
     deadline: "",
-    weekdayHours: 0,
-    weekendHours: 0,
+    weekdayHours: "" as any,
+    weekendHours: "" as any,
     calculatedHours: 0
   })
   const [editGoal, setEditGoal] = useState({
@@ -64,6 +64,45 @@ export function Goals({ onBack }: GoalsProps) {
     weekendHours: 0,
     calculatedHours: 0
   })
+  
+  // 入力中の値を管理する状態
+  const [editInputValues, setEditInputValues] = useState({
+    weekdayHours: "",
+    weekendHours: ""
+  })
+  
+  // バリデーションエラー状態
+  const [validationErrors, setValidationErrors] = useState({
+    weekdayHours: "",
+    weekendHours: ""
+  })
+  const [newGoalValidationErrors, setNewGoalValidationErrors] = useState({
+    weekdayHours: "",
+    weekendHours: ""
+  })
+
+  // バリデーション関数
+  const validateHours = (value: string): { isValid: boolean; numValue: number; error: string } => {
+    if (value.trim() === '') {
+      return { isValid: true, numValue: 0, error: '' }
+    }
+    
+    const num = parseInt(value, 10)
+    
+    if (isNaN(num)) {
+      return { isValid: false, numValue: 0, error: '無効な値です。数字を入力してください。' }
+    }
+    
+    if (num < 0) {
+      return { isValid: false, numValue: 0, error: '0以上の数字を入力してください。' }
+    }
+    
+    if (num > 24) {
+      return { isValid: false, numValue: 0, error: '24以下の数字を入力してください。' }
+    }
+    
+    return { isValid: true, numValue: num, error: '' }
+  }
 
   // 自動計算関数
   const calculateTotalHours = (deadline: string, weekdayHours: number, weekendHours: number) => {
@@ -163,28 +202,58 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   const handleAddGoal = async () => {
-    if (!newGoal.title || !newGoal.deadline || newGoal.calculatedHours === 0) return
+    // バリデーションチェック
+    const weekdayValidation = validateHours(newGoal.weekdayHours)
+    const weekendValidation = validateHours(newGoal.weekendHours)
+    
+    // エラーメッセージを設定
+    setNewGoalValidationErrors({
+      weekdayHours: weekdayValidation.error,
+      weekendHours: weekendValidation.error
+    })
+    
+    // バリデーションに失敗した場合は保存を中止
+    if (!weekdayValidation.isValid || !weekendValidation.isValid) {
+      console.log('Validation failed:', { weekdayValidation, weekendValidation })
+      return
+    }
+    
+    const weekdayHours = weekdayValidation.numValue
+    const weekendHours = weekendValidation.numValue
+    const calculatedHours = calculateTotalHours(newGoal.deadline, weekdayHours, weekendHours)
+    
+    if (!newGoal.title || !newGoal.deadline || calculatedHours === 0) return
+
+    console.log('handleAddGoal called with newGoal:', newGoal)
+    console.log('Validated values:', { weekdayHours, weekendHours, calculatedHours })
 
     const goalData: GoalFormData = {
       title: newGoal.title,
       motivation: newGoal.motivation,
       deadline: newGoal.deadline,
-      weekdayHours: newGoal.weekdayHours,
-      weekendHours: newGoal.weekendHours,
-      calculatedHours: newGoal.calculatedHours
+      weekdayHours: weekdayHours,
+      weekendHours: weekendHours,
+      calculatedHours: calculatedHours
     }
+
+    console.log('Sending goalData to addGoal:', goalData)
 
     const goalId = await addGoal(goalData)
     
     if (goalId) {
+      console.log('Goal added successfully with ID:', goalId)
       setNewGoal({
         title: "",
         motivation: "",
         unit: "時間",
         deadline: "",
-        weekdayHours: 0,
-        weekendHours: 0,
+        weekdayHours: "" as any,
+        weekendHours: "" as any,
         calculatedHours: 0
+      })
+      setNewGoalValidationErrors({
+        weekdayHours: "",
+        weekendHours: ""
       })
       setIsAddingGoal(false)
     } else {
@@ -195,14 +264,24 @@ export function Goals({ onBack }: GoalsProps) {
   const handleEditGoal = (goalId: string) => {
     const goal = goals.find(g => g.id === goalId)
     if (goal) {
-      setEditGoal({
+      console.log('Editing goal:', goal)
+      console.log('Goal weekdayHours:', goal.weekdayHours, 'weekendHours:', goal.weekendHours)
+      
+      const editData = {
         title: goal.title,
         motivation: goal.motivation,
         unit: goal.unit,
         deadline: goal.deadline,
-        weekdayHours: goal.weekdayHours,
-        weekendHours: goal.weekendHours,
-        calculatedHours: goal.targetValue
+        weekdayHours: goal.weekdayHours || 0,
+        weekendHours: goal.weekendHours || 0,
+        calculatedHours: goal.targetValue || 0
+      }
+      
+      console.log('Setting editGoal to:', editData)
+      setEditGoal(editData)
+      setEditInputValues({
+        weekdayHours: (goal.weekdayHours || 0).toString(),
+        weekendHours: (goal.weekendHours || 0).toString()
       })
       setEditingGoal(goalId)
     }
@@ -211,20 +290,47 @@ export function Goals({ onBack }: GoalsProps) {
   const handleUpdateGoal = async () => {
     if (!editGoal.title || !editGoal.deadline || !editingGoal) return
 
-    const calculatedTargetValue = calculateTotalHours(editGoal.deadline, editGoal.weekdayHours, editGoal.weekendHours)
+    console.log('handleUpdateGoal called with editGoal:', editGoal)
+    console.log('editInputValues:', editInputValues)
+
+    // バリデーションチェック
+    const weekdayValidation = validateHours(editInputValues.weekdayHours)
+    const weekendValidation = validateHours(editInputValues.weekendHours)
+    
+    // エラーメッセージを設定
+    setValidationErrors({
+      weekdayHours: weekdayValidation.error,
+      weekendHours: weekendValidation.error
+    })
+    
+    // バリデーションに失敗した場合は保存を中止
+    if (!weekdayValidation.isValid || !weekendValidation.isValid) {
+      console.log('Validation failed:', { weekdayValidation, weekendValidation })
+      return
+    }
+    
+    const weekdayHours = weekdayValidation.numValue
+    const weekendHours = weekendValidation.numValue
+    
+    console.log('Validated values:', { weekdayHours, weekendHours })
+
+    const calculatedTargetValue = calculateTotalHours(editGoal.deadline, weekdayHours, weekendHours)
 
     const goalData: GoalFormData = {
       title: editGoal.title,
       motivation: editGoal.motivation,
       deadline: editGoal.deadline,
-      weekdayHours: editGoal.weekdayHours,
-      weekendHours: editGoal.weekendHours,
+      weekdayHours: weekdayHours,
+      weekendHours: weekendHours,
       calculatedHours: calculatedTargetValue
     }
+
+    console.log('Sending goalData to updateGoal:', goalData)
 
     const success = await updateGoal(editingGoal, goalData)
     
     if (success) {
+      console.log('Goal updated successfully')
       setEditGoal({
         title: "",
         motivation: "",
@@ -233,6 +339,14 @@ export function Goals({ onBack }: GoalsProps) {
         weekdayHours: 0,
         weekendHours: 0,
         calculatedHours: 0
+      })
+      setEditInputValues({
+        weekdayHours: "",
+        weekendHours: ""
+      })
+      setValidationErrors({
+        weekdayHours: "",
+        weekendHours: ""
       })
       setEditingGoal(null)
     } else {
@@ -250,6 +364,14 @@ export function Goals({ onBack }: GoalsProps) {
       weekdayHours: 0,
       weekendHours: 0,
       calculatedHours: 0
+    })
+    setEditInputValues({
+      weekdayHours: "",
+      weekendHours: ""
+    })
+    setValidationErrors({
+      weekdayHours: "",
+      weekendHours: ""
     })
   }
 
@@ -352,22 +474,34 @@ export function Goals({ onBack }: GoalsProps) {
                 <div className="space-y-2">
                   <Label className="text-gray-300">平日（月〜金）の時間</Label>
                   <Input
-                    type="number"
-                    value={newGoal.weekdayHours || ""}
-                    onChange={(e) => setNewGoal({...newGoal, weekdayHours: Number(e.target.value)})}
+                    type="text"
+                    value={newGoal.weekdayHours}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setNewGoal({...newGoal, weekdayHours: value})
+                    }}
                     placeholder="2"
                     className="bg-gray-800 border-gray-700 text-white"
                   />
+                  {newGoalValidationErrors.weekdayHours && (
+                    <div className="text-xs text-red-400">{newGoalValidationErrors.weekdayHours}</div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-300">土日の時間</Label>
                   <Input
-                    type="number"
-                    value={newGoal.weekendHours || ""}
-                    onChange={(e) => setNewGoal({...newGoal, weekendHours: Number(e.target.value)})}
+                    type="text"
+                    value={newGoal.weekendHours}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setNewGoal({...newGoal, weekendHours: value})
+                    }}
                     placeholder="5"
                     className="bg-gray-800 border-gray-700 text-white"
                   />
+                  {newGoalValidationErrors.weekendHours && (
+                    <div className="text-xs text-red-400">{newGoalValidationErrors.weekendHours}</div>
+                  )}
                 </div>
               </div>
 
@@ -548,32 +682,42 @@ export function Goals({ onBack }: GoalsProps) {
                           <div className="space-y-2">
                             <Label className="text-gray-300 text-sm">平日（月〜金）の時間</Label>
                             <Input
-                              type="number"
-                              value={editGoal.weekdayHours || ""}
-                              onChange={(e) => setEditGoal({...editGoal, weekdayHours: Number(e.target.value)})}
+                              type="text"
+                              value={editInputValues.weekdayHours}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                console.log('Input:', value)
+                                setEditInputValues({...editInputValues, weekdayHours: value})
+                              }}
                               className="bg-gray-700 border-gray-600 text-white h-8"
                               placeholder="2"
                             />
+                            {validationErrors.weekdayHours && (
+                              <div className="text-xs text-red-400">{validationErrors.weekdayHours}</div>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <Label className="text-gray-300 text-sm">土日の時間</Label>
                             <Input
-                              type="number"
-                              value={editGoal.weekendHours || ""}
-                              onChange={(e) => setEditGoal({...editGoal, weekendHours: Number(e.target.value)})}
+                              type="text"
+                              value={editInputValues.weekendHours}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                console.log('Weekend Input:', value)
+                                setEditInputValues({...editInputValues, weekendHours: value})
+                              }}
                               className="bg-gray-700 border-gray-600 text-white h-8"
                               placeholder="5"
                             />
+                            {validationErrors.weekendHours && (
+                              <div className="text-xs text-red-400">{validationErrors.weekendHours}</div>
+                            )}
                           </div>
                         </div>
                         
                         {/* 自動計算結果 */}
                         {editGoal.calculatedHours > 0 && (
                           <div className="bg-gray-700 p-3 rounded-lg">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Calculator className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm font-medium text-blue-400">自動計算結果</span>
-                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                               <div>
                                 <span className="text-gray-400">週間: </span>

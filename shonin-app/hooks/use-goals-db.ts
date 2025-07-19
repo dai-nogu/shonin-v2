@@ -45,6 +45,7 @@ export function useGoalsDb() {
         throw error
       }
 
+      console.log('Raw goals data from database:', data)
       setGoals(data || [])
     } catch (err) {
       console.error('Error in fetchGoals:', err)
@@ -59,17 +60,25 @@ export function useGoalsDb() {
   // 目標を追加
   const addGoal = async (goalData: GoalFormData): Promise<string | null> => {
     try {
+      console.log('addGoal called with data:', goalData)
+      
+      // calculatedHoursを秒に変換（時間 * 3600）
+      const targetDurationSeconds = goalData.calculatedHours * 3600
+      console.log('Calculated target duration (seconds):', targetDurationSeconds)
+
       const goalInsert: Omit<GoalInsert, 'user_id'> = {
         title: goalData.title,
-        description: goalData.description || null,
-        target_duration: goalData.target_duration,
-        current_value: goalData.current_value || 0,
-        unit: goalData.unit || '時間',
+        description: goalData.motivation || null, // motivationをdescriptionにマッピング
+        target_duration: targetDurationSeconds, // 秒単位で保存
+        current_value: 0, // 初期値は0
+        unit: '時間', // 固定値
         deadline: goalData.deadline || null,
-        weekday_hours: goalData.weekday_hours || 0,
-        weekend_hours: goalData.weekend_hours || 0,
-        status: goalData.status || 'active',
+        weekday_hours: goalData.weekdayHours || 0,
+        weekend_hours: goalData.weekendHours || 0,
+        status: 'active' as const, // 新規作成時は常にactive
       }
+
+      console.log('goalInsert data:', goalInsert)
 
       const { data, error } = await supabase
         .from('goals')
@@ -85,6 +94,7 @@ export function useGoalsDb() {
         throw error
       }
 
+      console.log('Goal inserted successfully with id:', data.id)
       await fetchGoals() // リストを更新
       return data.id
     } catch (err) {
@@ -97,6 +107,8 @@ export function useGoalsDb() {
   // 目標を更新
   const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<boolean> => {
     try {
+      console.log('updateGoal called with id:', id, 'data:', goalData)
+      
       // 進捗更新のためのaddDuration処理
       if ('addDuration' in goalData && typeof goalData.addDuration === 'number') {
         return await updateGoalProgress(id, goalData.addDuration)
@@ -106,17 +118,16 @@ export function useGoalsDb() {
       const updateData: Partial<GoalUpdate> = {}
       
       if (goalData.title !== undefined) updateData.title = goalData.title
-      if (goalData.description !== undefined) updateData.description = goalData.description
-      if (goalData.target_duration !== undefined) updateData.target_duration = goalData.target_duration
-      if (goalData.current_value !== undefined) updateData.current_value = goalData.current_value
-      if (goalData.unit !== undefined) updateData.unit = goalData.unit
+      if (goalData.motivation !== undefined) updateData.description = goalData.motivation // motivationをdescriptionにマッピング
+      if (goalData.calculatedHours !== undefined) updateData.target_duration = goalData.calculatedHours * 3600 // 時間を秒に変換
       if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline
-      if (goalData.weekday_hours !== undefined) updateData.weekday_hours = goalData.weekday_hours
-      if (goalData.weekend_hours !== undefined) updateData.weekend_hours = goalData.weekend_hours
-      if (goalData.status !== undefined) updateData.status = goalData.status
+      if (goalData.weekdayHours !== undefined) updateData.weekday_hours = goalData.weekdayHours
+      if (goalData.weekendHours !== undefined) updateData.weekend_hours = goalData.weekendHours
 
       // 更新日時を追加
       updateData.updated_at = new Date().toISOString()
+
+      console.log('updateData:', updateData)
 
       const { error } = await supabase
         .from('goals')
@@ -129,6 +140,7 @@ export function useGoalsDb() {
         throw error
       }
 
+      console.log('Goal updated successfully')
       await fetchGoals() // リストを更新
       return true
     } catch (err) {

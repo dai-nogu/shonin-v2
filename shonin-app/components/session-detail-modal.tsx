@@ -21,6 +21,12 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   
+  // スワイプ機能用の状態
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [slideOffset, setSlideOffset] = useState(0)
+  
   // メモがあるかどうかをチェック
   const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
   const totalPages = hasContent ? 2 : 1 // メモがある場合は2ページ、ない場合は1ページ
@@ -103,14 +109,60 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   }
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < totalPages && !isTransitioning) {
+      setIsTransitioning(true)
       setCurrentPage(currentPage + 1)
+      setTimeout(() => setIsTransitioning(false), 300)
     }
   }
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
+    if (currentPage > 1 && !isTransitioning) {
+      setIsTransitioning(true)
       setCurrentPage(currentPage - 1)
+      setTimeout(() => setIsTransitioning(false), 300)
+    }
+  }
+
+  // スワイプ機能
+  const minSwipeDistance = 50 // 最小スワイプ距離
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+    setSlideOffset(0)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart || isTransitioning) return
+    
+    const currentTouch = e.targetTouches[0].clientX
+    const diff = touchStart - currentTouch
+    
+    // スワイプの制限（端のページでは逆方向にスワイプできない）
+    if ((currentPage === 1 && diff < 0) || (currentPage === totalPages && diff > 0)) {
+      setSlideOffset(diff * 0.3) // 抵抗感を演出
+    } else {
+      setSlideOffset(diff)
+    }
+    
+    setTouchEnd(currentTouch)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd || isTransitioning) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    // スライドオフセットをリセット
+    setSlideOffset(0)
+
+    if (isLeftSwipe && currentPage < totalPages) {
+      handleNextPage()
+    } else if (isRightSwipe && currentPage > 1) {
+      handlePrevPage()
     }
   }
 
@@ -199,30 +251,6 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             </CardContent>
           </Card>
         </div>
-
-        {/* SPでのページインジケーター（関連する目標と気分の下に配置） */}
-        {isMobile && totalPages > 1 && (
-          <div className="flex justify-center space-x-2 mt-6">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full ${
-                  i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* SPでのスタートボタン（アクティビティ名と同じ幅で配置） */}
-        {isMobile && (
-          <Button
-            onClick={handleStartSimilar}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            同じ設定で開始
-          </Button>
-        )}
       </div>
     </div>
   )
@@ -306,30 +334,6 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           <p className="text-gray-400 text-sm">記録されたメモはありません</p>
         </div>
       )}
-
-      {/* SPでのページインジケーター（スクロール領域の最後に配置） */}
-      {isMobile && totalPages > 1 && (
-        <div className="flex justify-center space-x-2 mt-6 pt-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* SPでのスタートボタン（スクロール領域の最後に配置） */}
-      {isMobile && (
-        <Button
-          onClick={handleStartSimilar}
-          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 mb-6"
-        >
-          同じ設定で開始
-        </Button>
-      )}
     </div>
   )
 
@@ -360,25 +364,30 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full flex items-center justify-center ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
                 {activityInfo.icon}
               </div>
-              <div className="flex-1">
-                <h2 className={`font-bold text-white ${isMobile ? 'text-lg' : 'text-2xl'}`}>{session.activityName}</h2>
-                <div className="flex items-center text-green-400 mt-1">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <span className={`font-mono ${isMobile ? 'text-base' : 'text-lg'}`}>{formatDuration(session.duration)}</span>
+              <div className="flex-1 min-w-0">
+                <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
+                  {session.activityName}
+                </h2>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Clock className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
+                  <span className={`text-green-400 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
+                    {formatDuration(session.duration)}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className={`${isMobile ? 'h-[420px] overflow-hidden' : 'space-y-6'} relative`}>
-          {/* SPでの前のページボタン（モーダルの左側中央に配置） */}
+        {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
+        <CardContent className={`flex flex-col ${isMobile ? 'h-[340px]' : 'min-h-0'} relative`}>
+          {/* ナビゲーションボタン（SP用） */}
           {isMobile && currentPage > 1 && totalPages > 1 && (
             <Button
               onClick={handlePrevPage}
               variant="outline"
               size="sm"
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 p-2"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -386,13 +395,12 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             </Button>
           )}
 
-          {/* SPでの次のページボタン（モーダルの右側中央に配置） */}
           {isMobile && currentPage < totalPages && totalPages > 1 && (
             <Button
               onClick={handleNextPage}
               variant="outline"
               size="sm"
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 p-2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -400,21 +408,74 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             </Button>
           )}
 
-          {isMobile ? (
-            // SPでのスライダー表示
-            <div className="h-full">
-              {currentPage === 1 && renderPage1()}
-              {currentPage === 2 && hasContent && (
-                <div className="h-full overflow-y-auto pb-12">
-                  {renderPage2()}
+          {/* コンテンツエリア - スクロール可能 */}
+          <div className="flex-1 overflow-y-auto">
+            {isMobile ? (
+              // SPでのページ表示（スワイプ対応・アニメーション付き）
+              <div 
+                className="h-full relative overflow-hidden"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
+                <div 
+                  className="h-full transition-transform duration-300 ease-out"
+                  style={{
+                    transform: `translateX(calc(-${(currentPage - 1) * 100}% + ${-slideOffset}px))`
+                  }}
+                >
+                  <div className="flex h-full">
+                    {/* 1ページ目 */}
+                    <div className="w-full flex-shrink-0">
+                      <div className="pb-4 h-full overflow-y-auto">
+                        {renderPage1()}
+                      </div>
+                    </div>
+                    
+                    {/* 2ページ目（メモがある場合のみ） */}
+                    {hasContent && (
+                      <div className="w-full flex-shrink-0">
+                        <div className="pb-4 h-full overflow-y-auto">
+                          {renderPage2()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // PCでの通常表示
+              <div className="space-y-6">
+                {renderPage1()}
+                {hasContent && renderPage2()}
+              </div>
+            )}
+          </div>
+
+          {/* フッターエリア - 固定（ページインジケーター + スタートボタン） */}
+          {isMobile && (
+            <div className="flex-shrink-0 pt-4 space-y-3">
+              {/* ページインジケーター */}
+              {totalPages > 1 && (
+                <div className="flex justify-center space-x-2">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full ${
+                        i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
+                      }`}
+                    />
+                  ))}
                 </div>
               )}
-            </div>
-          ) : (
-            // PCでの通常表示
-            <div className="space-y-6">
-              {renderPage1()}
-              {hasContent && renderPage2()}
+              
+              {/* スタートボタン */}
+              <Button
+                onClick={handleStartSimilar}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                クイックスタート
+              </Button>
             </div>
           )}
 
@@ -433,7 +494,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  同じ設定で開始
+                  クイックスタート
                 </Button>
               )}
             </div>
@@ -452,6 +513,12 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [preloadCompleted, setPreloadCompleted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  
+  // スワイプ機能用の状態
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [slideOffset, setSlideOffset] = useState(0)
   
   // メモがあるかどうかをチェック
   const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
@@ -574,14 +641,18 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   }
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < totalPages && !isTransitioning) {
+      setIsTransitioning(true)
       setCurrentPage(currentPage + 1)
+      setTimeout(() => setIsTransitioning(false), 300)
     }
   }
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
+    if (currentPage > 1 && !isTransitioning) {
+      setIsTransitioning(true)
       setCurrentPage(currentPage - 1)
+      setTimeout(() => setIsTransitioning(false), 300)
     }
   }
 
@@ -590,6 +661,48 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       ...prev,
       [url]: true
     }))
+  }
+
+  // スワイプ機能
+  const minSwipeDistance = 50 // 最小スワイプ距離
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+    setSlideOffset(0)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart || isTransitioning) return
+    
+    const currentTouch = e.targetTouches[0].clientX
+    const diff = touchStart - currentTouch
+    
+    // スワイプの制限（端のページでは逆方向にスワイプできない）
+    if ((currentPage === 1 && diff < 0) || (currentPage === totalPages && diff > 0)) {
+      setSlideOffset(diff * 0.3) // 抵抗感を演出
+    } else {
+      setSlideOffset(diff)
+    }
+    
+    setTouchEnd(currentTouch)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd || isTransitioning) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    // スライドオフセットをリセット
+    setSlideOffset(0)
+
+    if (isLeftSwipe && currentPage < totalPages) {
+      handleNextPage()
+    } else if (isRightSwipe && currentPage > 1) {
+      handlePrevPage()
+    }
   }
 
   // アクティビティ情報を取得
@@ -677,30 +790,6 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             </CardContent>
           </Card>
         </div>
-
-        {/* SPでのページインジケーター（関連する目標と気分の下に配置） */}
-        {isMobile && totalPages > 1 && (
-          <div className="flex justify-center space-x-2 mt-6">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full ${
-                  i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* SPでのスタートボタン（アクティビティ名と同じ幅で配置） */}
-        {isMobile && (
-          <Button
-            onClick={handleStartSimilar}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            同じ設定で開始
-          </Button>
-        )}
       </div>
     </div>
   )
@@ -778,28 +867,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         </Card>
       )}
 
-      {/* SPでのページインジケーター（スクロール領域の最後に配置） */}
-      {isMobile && totalPages > 1 && (
-        <div className="flex justify-center space-x-2 mt-6 pt-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
-              }`}
-            />
-          ))}
+      {/* メモがない場合の表示 */}
+      {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
+        <div className="text-center py-8">
+          <p className="text-gray-400 text-sm">記録されたメモはありません</p>
         </div>
-      )}
-
-      {/* SPでのスタートボタン（スクロール領域の最後に配置） */}
-      {isMobile && (
-        <Button
-          onClick={handleStartSimilar}
-          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 mb-6"
-        >
-          同じ設定で開始
-        </Button>
       )}
     </div>
   )
@@ -864,30 +936,6 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           <p className="text-gray-400 text-sm">写真はありません</p>
         </div>
       )}
-
-      {/* SPでのページインジケーター */}
-      {isMobile && totalPages > 1 && (
-        <div className="flex justify-center space-x-2 mt-4">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* SPでのスタートボタン */}
-      {isMobile && (
-        <Button
-          onClick={handleStartSimilar}
-          className="w-full bg-green-600 hover:bg-green-700 text-white mt-4"
-        >
-          同じ設定で開始
-        </Button>
-      )}
     </div>
   )
 
@@ -918,25 +966,30 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full flex items-center justify-center ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
                 {activityInfo.icon}
               </div>
-              <div className="flex-1">
-                <h2 className={`font-bold text-white ${isMobile ? 'text-lg' : 'text-2xl'}`}>{session.activityName}</h2>
-                <div className="flex items-center text-green-400 mt-1">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <span className={`font-mono ${isMobile ? 'text-base' : 'text-lg'}`}>{formatDuration(session.duration)}</span>
+              <div className="flex-1 min-w-0">
+                <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
+                  {session.activityName}
+                </h2>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Clock className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
+                  <span className={`text-green-400 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
+                    {formatDuration(session.duration)}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className={`${isMobile ? 'h-[420px] overflow-hidden' : 'space-y-6'} relative`}>
-          {/* SPでの前のページボタン（モーダルの左側中央に配置） */}
+        {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
+        <CardContent className={`flex flex-col ${isMobile ? 'h-[340px]' : 'min-h-0'} relative`}>
+          {/* ナビゲーションボタン（SP用） */}
           {isMobile && currentPage > 1 && totalPages > 1 && (
             <Button
               onClick={handlePrevPage}
               variant="outline"
               size="sm"
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 p-2"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -944,13 +997,12 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             </Button>
           )}
 
-          {/* SPでの次のページボタン（モーダルの右側中央に配置） */}
           {isMobile && currentPage < totalPages && totalPages > 1 && (
             <Button
               onClick={handleNextPage}
               variant="outline"
               size="sm"
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 p-2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -958,24 +1010,84 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             </Button>
           )}
 
-          {isMobile ? (
-            // SPでのスライダー表示
-            <div className="h-full">
-              {currentPage === 1 && renderPage1()}
-              {currentPage === 2 && hasContent && (
-                <div className="h-full overflow-y-auto pb-12">
-                  {renderPage2()}
+          {/* コンテンツエリア - スクロール可能 */}
+          <div className="flex-1 overflow-y-auto">
+            {isMobile ? (
+              // SPでのページ表示（スワイプ対応・アニメーション付き）
+              <div 
+                className="h-full relative overflow-hidden"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
+                <div 
+                  className="h-full transition-transform duration-300 ease-out"
+                  style={{
+                    transform: `translateX(calc(-${(currentPage - 1) * 100}% + ${-slideOffset}px))`
+                  }}
+                >
+                  <div className="flex h-full">
+                    {/* 1ページ目 */}
+                    <div className="w-full flex-shrink-0">
+                      <div className="pb-4 h-full overflow-y-auto">
+                        {renderPage1()}
+                      </div>
+                    </div>
+                    
+                    {/* 2ページ目（メモがある場合） */}
+                    {hasContent && (
+                      <div className="w-full flex-shrink-0">
+                        <div className="pb-4 h-full overflow-y-auto">
+                          {renderPage2()}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* 2ページ目または3ページ目（写真がある場合） */}
+                    {sessionPhotos.length > 0 && (
+                      <div className="w-full flex-shrink-0">
+                        <div className="pb-4 h-full overflow-y-auto">
+                          {renderPage3()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // PCでの通常表示
+              <div className="space-y-6">
+                {renderPage1()}
+                {hasContent && renderPage2()}
+                {sessionPhotos.length > 0 && renderPage3()}
+              </div>
+            )}
+          </div>
+
+          {/* フッターエリア - 固定（ページインジケーター + スタートボタン） */}
+          {isMobile && (
+            <div className="flex-shrink-0 pt-4 space-y-3">
+              {/* ページインジケーター */}
+              {totalPages > 1 && (
+                <div className="flex justify-center space-x-2">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full ${
+                        i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
+                      }`}
+                    />
+                  ))}
                 </div>
               )}
-              {currentPage === 2 && !hasContent && sessionPhotos.length > 0 && renderPage3()}
-              {currentPage === 3 && hasContent && sessionPhotos.length > 0 && renderPage3()}
-            </div>
-          ) : (
-            // PCでの通常表示
-            <div className="space-y-6">
-              {renderPage1()}
-              {hasContent && renderPage2()}
-              {sessionPhotos.length > 0 && renderPage3()}
+              
+              {/* スタートボタン */}
+              <Button
+                onClick={handleStartSimilar}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                クイックスタート
+              </Button>
             </div>
           )}
 
@@ -994,7 +1106,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  同じ設定で開始
+                  クイックスタート
                 </Button>
               )}
             </div>
