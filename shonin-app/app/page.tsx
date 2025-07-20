@@ -289,13 +289,20 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                 {/* メインエリア - 2列分 */}
                 <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+                  {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
+                  <div className="lg:hidden">
+                    <WelcomeCard completedSessions={completedSessions} />
+                  </div>
                   <AIFeedback completedSessions={completedSessions} />
                   <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
                 </div>
 
                 {/* サイドバー - 1列分 */}
                 <div className="space-y-4 lg:space-y-6">
-                  <WelcomeCard completedSessions={completedSessions} />
+                  {/* PC用：WelcomeCardを表示、SP用：非表示 */}
+                  <div className="hidden lg:block">
+                    <WelcomeCard completedSessions={completedSessions} />
+                  </div>
                   
                   {/* 進行中の行動 */}
                   <ActiveActivitySidebar
