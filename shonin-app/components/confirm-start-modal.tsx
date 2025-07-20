@@ -49,6 +49,19 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
     
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // モーダルが開いている間は背景スクロールを無効にする
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
   
   if (!isOpen || !activity) return null
 

@@ -13,6 +13,7 @@ interface RecentSessionsModalProps {
   completedSessions: CompletedSession[]
   onClose: () => void
   onStartActivity?: (sessionData: SessionData) => void
+  onViewDetail?: (session: CompletedSession) => void
 }
 
 interface SessionItem {
@@ -30,7 +31,7 @@ interface SessionItem {
 
 const ITEMS_PER_PAGE = 10
 
-export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStartActivity }: RecentSessionsModalProps) {
+export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStartActivity, onViewDetail }: RecentSessionsModalProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
@@ -158,13 +159,23 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
 
   // SPでの詳細表示用のハンドラー
   const handleSessionDetailClick = (sessionItem: SessionItem) => {
-    setSelectedSession(sessionItem.session)
-    setShowDetailModal(true)
+    if (onViewDetail) {
+      onViewDetail(sessionItem.session)
+    } else {
+      // フォールバック: 内部モーダル表示
+      setSelectedSession(sessionItem.session)
+      setShowDetailModal(true)
+    }
   }
 
   const handleViewDetail = (sessionItem: SessionItem) => {
-    setSelectedSession(sessionItem.session)
-    setShowDetailModal(true)
+    if (onViewDetail) {
+      onViewDetail(sessionItem.session)
+    } else {
+      // フォールバック: 内部モーダル表示
+      setSelectedSession(sessionItem.session)
+      setShowDetailModal(true)
+    }
   }
 
   const handleCloseDetail = () => {

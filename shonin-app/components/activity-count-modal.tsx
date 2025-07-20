@@ -13,6 +13,7 @@ interface ActivityCountModalProps {
   completedSessions: CompletedSession[]
   onClose: () => void
   onStartActivity?: (sessionData: SessionData) => void
+  onViewDetail?: (session: CompletedSession) => void
 }
 
 interface ActivityItem {
@@ -28,7 +29,7 @@ interface ActivityItem {
 
 const ITEMS_PER_PAGE = 10
 
-export function ActivityCountModal({ isOpen, completedSessions, onClose, onStartActivity }: ActivityCountModalProps) {
+export function ActivityCountModal({ isOpen, completedSessions, onClose, onStartActivity, onViewDetail }: ActivityCountModalProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
@@ -49,22 +50,32 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // モーダルが開いている間は背景スクロールを無効にする
+  // モーダルが開いている間は背景スクロールを無効にする（SP対応強化）
   useEffect(() => {
     if (isOpen) {
+      // PCとSP両方に対応したスクロール無効化
       document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
     } else {
       document.body.style.overflow = 'unset'
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
     }
 
     return () => {
       document.body.style.overflow = 'unset'
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
     }
   }, [isOpen])
 
   if (!isOpen) return null
 
-  // アクティビティアイコンマッピング
+  // 行動アイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
     "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
     "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
@@ -92,7 +103,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     })
   }
 
-  // 回数順でアクティビティを取得
+  // 回数順で行動を取得
   const getActivityByCount = (): ActivityItem[] => {
     const activityStats = new Map<string, { totalTime: number; sessionCount: number; latestSession: CompletedSession }>()
     
@@ -159,13 +170,23 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
   // SPでの詳細表示用のハンドラー
   const handleActivityDetailClick = (activity: ActivityItem) => {
-    setSelectedSession(activity.latestSession)
-    setShowDetailModal(true)
+    if (onViewDetail) {
+      onViewDetail(activity.latestSession)
+    } else {
+      // フォールバック: 内部モーダル表示
+      setSelectedSession(activity.latestSession)
+      setShowDetailModal(true)
+    }
   }
 
   const handleViewDetail = (activity: ActivityItem) => {
-    setSelectedSession(activity.latestSession)
-    setShowDetailModal(true)
+    if (onViewDetail) {
+      onViewDetail(activity.latestSession)
+    } else {
+      // フォールバック: 内部モーダル表示
+      setSelectedSession(activity.latestSession)
+      setShowDetailModal(true)
+    }
   }
 
   const handleCloseDetail = () => {
@@ -219,13 +240,13 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
               {currentActivities.map((activity, index) => (
                 <div
                   key={`${activity.id}-${currentPage}`}
-                  onClick={() => {
-                    // モーダル内では常に詳細表示（開始ボタンは別途stopPropagationで制御）
+                  onClick={isMobile ? () => {
+                    // SPの場合のみカード全体をクリック可能にする
                     handleActivityDetailClick(activity)
-                  }}
-                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group cursor-pointer"
+                  } : undefined}
+                  className={`flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg transition-colors group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : ''}`}
                 >
-                  <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-400 font-mono text-xs sm:text-sm w-3 sm:w-4 md:w-6 text-right">
                         {startIndex + index + 1}
@@ -236,25 +257,19 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-white font-medium truncate text-sm sm:text-base">{activity.name}</h3>
-                      </div>
-
-                      <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-400">
-                        <div className="flex items-center sm:space-x-1">
-                          <BarChart3 className="w-3 h-3 hidden sm:block" />
+                      {/* SP: 縦並び, PC: 横並び */}
+                      <div className="flex flex-col">
+                        <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{activity.name}</h3>
+                        <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
+                          <BarChart3 className="w-3 h-3" />
                           <span className="font-medium text-green-400">{activity.sessionCount}回</span>
-                        </div>
-                        <div className="hidden sm:flex items-center space-x-1">
-                          <Clock className="w-3 h-3" />
-                          <span>合計 {formatDuration(activity.totalTime)}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                    <div className="hidden sm:flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className="hidden sm:flex items-center space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -279,16 +294,20 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         開始
                       </Button>
                     </div>
-
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-3 h-3 ${
-                            star <= (activity.latestSession.mood || 0) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                          }`}
-                        />
-                      ))}
+                    
+                    {/* SPでは開始ボタンを右側に表示 */}
+                    <div className="sm:hidden">
+                      <Button
+                        size="sm"
+                        className="bg-green-500 hover:bg-green-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivityClick(activity)
+                        }}
+                      >
+                        <Play className="w-3 h-3 mr-1" />
+                        開始
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -296,7 +315,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
               {currentActivities.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-400">アクティビティがありません</p>
+                  <p className="text-gray-400">行動がありません</p>
                 </div>
               )}
             </div>

@@ -44,8 +44,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
   const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [previousModal, setPreviousModal] = useState<'activity-count' | 'recent-sessions' | null>(null)
   
-  // アクティビティ管理フック
+  // 行動管理フック
   const { activities, addActivity } = useActivities()
   
   // 目標管理フック
@@ -105,7 +106,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
   }
 
-  // アクティビティ名からカテゴリを推測
+  // 行動名からカテゴリを推測
   const getCategoryByName = (activityName: string) => {
     const name = activityName.toLowerCase()
     if (name.includes('読書') || name.includes('プログラミング') || name.includes('英語') || name.includes('勉強') || name.includes('学習')) {
@@ -152,7 +153,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
   }
 
-  // アクティビティ別（実行回数が多い順）
+  // 行動別（実行回数が多い順）
   const getMostRecordedActivities = (): QuickStartActivity[] => {
     const activityStats = new Map<string, { totalTime: number; sessionCount: number; latestSession: CompletedSession }>()
     
@@ -223,7 +224,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       })
   }
 
-  // 昨日のアクティビティ
+  // 昨日の行動
   const getYesterdayActivities = (): QuickStartActivity[] => {
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
@@ -278,16 +279,16 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     if (selectedActivity && onStartActivity) {
       let activityId = selectedActivity.id
       
-      // データベースに対応するアクティビティが存在するかチェック
+      // データベースに対応する行動が存在するかチェック
       const correspondingSession = completedSessions.find(session => 
         session.activityName === selectedActivity.name
       )
       
       if (correspondingSession) {
-        // 既存のセッションがある場合はそのアクティビティIDを使用
+        // 既存のセッションがある場合はその行動IDを使用
         activityId = correspondingSession.activityId
       } else {
-        // データベースに直接アクティビティが存在するかチェック
+        // データベースに直接行動が存在するかチェック
         const existingActivity = activities.find(activity => 
           activity.name === selectedActivity.name
         )
@@ -295,7 +296,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         if (existingActivity) {
           activityId = existingActivity.id
         } else {
-          // アクティビティが存在しない場合は新規作成
+          // 行動が存在しない場合は新規作成
           const newActivityId = await addActivity({
             name: selectedActivity.name,
             icon: selectedActivity.icon || null,
@@ -317,7 +318,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         startTime: new Date(),
         location: selectedActivity.location || "",
         notes: "",
-        // アクティビティの色とアイコン情報を保持
+        // 行動の色とアイコン情報を保持
         activityColor: selectedActivity.color,
         activityIcon: selectedActivity.icon,
         // 目標IDを保持
@@ -335,7 +336,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   }
 
   const handleViewDetail = (activity: QuickStartActivity) => {
-    // アクティビティIDに対応するセッションを見つける
+    // 行動IDに対応するセッションを見つける
     const session = completedSessions.find(s => s.id === activity.id)
     if (session) {
       setSelectedSession(session)
@@ -346,6 +347,13 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const handleCloseDetail = () => {
     setShowDetailModal(false)
     setSelectedSession(null)
+    // 詳細モーダルを閉じた時に、前のモーダルを再表示
+    if (previousModal === 'activity-count') {
+      setShowActivityCountModal(true)
+    } else if (previousModal === 'recent-sessions') {
+      setShowRecentSessionsModal(true)
+    }
+    setPreviousModal(null)
   }
 
   const handleStartSimilar = (sessionData: any) => {
@@ -362,12 +370,28 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     setShowActivityCountModal(false)
   }
 
+  const handleActivityCountDetail = (session: CompletedSession) => {
+    // 回数順モーダルを閉じて、詳細モーダルを開く
+    setShowActivityCountModal(false)
+    setPreviousModal('activity-count')
+    setSelectedSession(session)
+    setShowDetailModal(true)
+  }
+
   const handleShowRecentSessions = () => {
     setShowRecentSessionsModal(true)
   }
 
   const handleCloseRecentSessions = () => {
     setShowRecentSessionsModal(false)
+  }
+
+  const handleRecentSessionsDetail = (session: CompletedSession) => {
+    // 最新モーダルを閉じて、詳細モーダルを開く
+    setShowRecentSessionsModal(false)
+    setPreviousModal('recent-sessions')
+    setSelectedSession(session)
+    setShowDetailModal(true)
   }
 
   const renderActivityList = (activities: QuickStartActivity[], emptyMessage: string) => {
@@ -414,12 +438,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                         <span className="hidden sm:inline">合計 </span>
                         <span>{activity.duration}</span>
                       </div>
-                      {activity.goalTitle && isMobile && (
-                        <div className="flex items-center space-x-1">
-                          <Target className="w-3 h-3" />
-                          <span className="text-blue-400 truncate">{activity.goalTitle}</span>
-                        </div>
-                      )}
                     </>
                   ) : (
                     <>
@@ -430,12 +448,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                         <Clock className="w-3 h-3" />
                         <span>{activity.duration}</span>
                       </div>
-                      {activity.goalTitle && isMobile && (
-                        <div className="flex items-center space-x-1">
-                          <Target className="w-3 h-3" />
-                          <span className="text-blue-400 truncate">{activity.goalTitle}</span>
-                        </div>
-                      )}
 
                     </>
                   )}
@@ -499,11 +511,11 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <Play className="w-5 h-5 mr-2" />
             開始する
           </CardTitle>
-          <p className="text-gray-400 text-sm">最近のアクティビティから素早く開始</p>
+          <p className="text-gray-400 text-sm">最近の行動から素早く開始</p>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-gray-400">まだアクティビティがありません</p>
+            <p className="text-gray-400">まだ行動がありません</p>
             <p className="text-gray-500 text-sm mt-2">最初のセッションを完了すると、ここに表示されます</p>
           </div>
         </CardContent>
@@ -519,7 +531,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <Play className="w-5 h-5 mr-2" />
             開始する
           </CardTitle>
-          <p className="text-gray-400 text-sm">最近のアクティビティから素早く開始</p>
+          <p className="text-gray-400 text-sm">最近の行動から素早く開始</p>
         </CardHeader>
 
         <CardContent>
@@ -550,7 +562,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 getMostRecordedActivities(),
                 "まだ十分なデータがありません"
               )}
-              {/* 回数順タブ：ユニークなアクティビティが3つを超える場合のみ表示 */}
+              {/* 回数順タブ：ユニークな行動が3つを超える場合のみ表示 */}
               {getMostRecordedActivities().length >= 3 && Array.from(new Set(completedSessions.map(s => s.activityName))).length > 3 && (
                 <div className="flex justify-end mt-4">
                   <Button
@@ -569,7 +581,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <TabsContent value="recent" className="mt-4">
               {renderActivityList(
                 getRecentActivities(),
-                "最近のアクティビティがありません"
+                "最近の行動がありません"
               )}
               {/* 最新タブ：全セッション数が3つを超える場合のみ表示 */}
               {completedSessions.length > 3 && (
@@ -590,9 +602,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <TabsContent value="yesterday" className="mt-4">
               {renderActivityList(
                 getYesterdayActivities(),
-                "昨日のアクティビティがありません"
+                "昨日の行動がありません"
               )}
-              {/* 昨日タブ：昨日のアクティビティが3つを超える場合のみ表示 */}
+              {/* 昨日タブ：昨日の行動が3つを超える場合のみ表示 */}
               {getYesterdayActivities().length > 3 && (
                 <div className="flex justify-end mt-4">
                   <Button
@@ -631,6 +643,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         completedSessions={completedSessions}
         onClose={handleCloseActivityCount}
         onStartActivity={onStartActivity}
+        onViewDetail={handleActivityCountDetail}
       />
 
       <RecentSessionsModal
@@ -638,6 +651,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         completedSessions={completedSessions}
         onClose={handleCloseRecentSessions}
         onStartActivity={onStartActivity}
+        onViewDetail={handleRecentSessionsDetail}
       />
     </>
   )

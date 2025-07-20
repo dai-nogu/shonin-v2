@@ -48,7 +48,7 @@ export function ActiveActivitySidebar({
       <CardHeader className="pb-3">
         <CardTitle className="text-white text-sm flex items-center">
           <Clock className="w-4 h-4 mr-2" />
-          進行中のアクティビティ
+          進行中の行動
         </CardTitle>
       </CardHeader>
       
@@ -61,7 +61,7 @@ export function ActiveActivitySidebar({
           <span className="text-green-400 text-sm font-medium">{statusInfo.text}</span>
         </div>
 
-        {/* アクティビティ名 */}
+        {/* 行動名 */}
         <div>
           <h3 className="text-white font-semibold text-lg">{activeSession.activityName}</h3>
           {activeSession.location && (

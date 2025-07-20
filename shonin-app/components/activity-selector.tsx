@@ -74,10 +74,10 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const [newActivityColor, setNewActivityColor] = useState("bg-red-500")
   const [hoveredColor, setHoveredColor] = useState<string | null>(null)
   
-  // アクティビティ名入力フィールドのref
+  // 行動名入力フィールドのref
   const activityNameInputRef = useRef<HTMLInputElement>(null)
 
-  // フォームが開いた時にアクティビティ名フィールドにフォーカス
+  // フォームが開いた時に行動名フィールドにフォーカス
   useEffect(() => {
     if (showAddForm && activityNameInputRef.current) {
       activityNameInputRef.current.focus()
@@ -99,10 +99,10 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
     { value: "bg-gray-500", label: "グレー", color: "#6b7280" },
   ]
 
-  // 全アクティビティ（カスタムのみ）
+  // 全行動（カスタムのみ）
   const allActivities = customActivities
 
-  // アクティビティ追加
+  // 行動追加
   const handleAddActivity = async () => {
     if (!newActivityName.trim()) return
 
@@ -113,7 +113,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
     })
 
     if (activityId) {
-      // 追加したアクティビティを自動選択
+      // 追加した行動を自動選択
       setSelectedActivity(activityId)
 
       // フォームをリセット
@@ -123,7 +123,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       setHoveredColor(null)
       setShowAddForm(false)
     } else {
-      alert("アクティビティの追加に失敗しました。")
+      alert("行動の追加に失敗しました。")
     }
   }
 
@@ -186,18 +186,18 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       </CardHeader>
 
       <CardContent className="space-y-4 lg:space-y-6">
-        {/* 新しいアクティビティ追加フォーム */}
+        {/* 新しい行動追加フォーム */}
         {showAddForm && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white text-base">新しいアクティビティを追加</CardTitle>
+              <CardTitle className="text-white text-base">新しい行動を追加</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-gray-300">名前</Label>
                 <Input
                   ref={activityNameInputRef}
-                  placeholder="アクティビティ名"
+                  placeholder="行動名"
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -275,9 +275,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
         {/* フォーム表示時以外の通常の内容 */}
         {!showAddForm && (
           <>
-            {/* アクティビティ選択 */}
+            {/* 行動選択 */}
             <div className="space-y-2">
-              <Label className="text-gray-300">アクティビティを選択</Label>
+              <Label className="text-gray-300">行動を選択</Label>
               <Select value={selectedActivity} onValueChange={setSelectedActivity}>
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="何に取り組みますか？" />
@@ -294,7 +294,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                     </SelectItem>
                   ))}
                   
-                  {/* 新しいアクティビティを追加ボタン */}
+                  {/* 新しい行動を追加ボタン */}
                   <div className="p-2 border-t border-gray-600">
                     <Button
                       onClick={() => setShowAddForm(true)}
@@ -303,14 +303,14 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                       className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      新しいアクティビティを追加
+                      新しい行動を追加
                     </Button>
                   </div>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* 選択されたアクティビティのプレビュー */}
+            {/* 選択された行動のプレビュー */}
             {selectedActivityData && (
               <div className={`p-3 lg:p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
                 <div className="flex items-center space-x-3">
@@ -356,12 +356,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   </SelectItem>
                   {activeGoals.map((goal) => (
                     <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{goal.title}</span>
-                        <span className="text-xs text-gray-400">
-                          平日: {goal.weekday_hours}時間 / 土日: {goal.weekend_hours}時間
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium">{goal.title}</span>
                     </SelectItem>
                   ))}
                   

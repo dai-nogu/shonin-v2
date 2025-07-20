@@ -97,7 +97,7 @@ export default function Dashboard() {
         mood: session.mood || undefined,
         achievements: session.achievements || undefined,
         challenges: session.challenges || undefined,
-        // アクティビティの色とアイコン情報を追加
+        // 行動の色とアイコン情報を追加
         activityColor: session.activities?.color,
         activityIcon: session.activities?.icon || undefined,
         // 目標IDを追加
@@ -295,7 +295,7 @@ export default function Dashboard() {
 
                 {/* サイドバー - 1列分 */}
                 <div className="space-y-4 lg:space-y-6">
-                  {/* 進行中のアクティビティ */}
+                  {/* 進行中の行動 */}
                   <ActiveActivitySidebar
                     activeSession={currentSession}
                     isActive={isSessionActive}
