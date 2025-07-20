@@ -28,7 +28,7 @@ export function formatDuration(totalSeconds: number): string {
  */
 export function formatTime(hours: number, minutes: number): string {
   if (hours === 0 && minutes === 0) {
-    return "何をしましょうか？"
+    return ""
   }
   if (hours > 0 && minutes > 0) {
     return `${hours}h${minutes}m`

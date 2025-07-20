@@ -1,6 +1,8 @@
-import { MessageCircle, Calendar, TrendingUp, Sparkles } from "lucide-react"
+import { MessageCircle, Calendar, TrendingUp, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 import type { CompletedSession } from "./time-tracker"
 
 interface AIFeedbackProps {
@@ -8,6 +10,8 @@ interface AIFeedbackProps {
 }
 
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   // 先週の日付を計算
   const getLastWeekString = () => {
     const today = new Date()
@@ -84,47 +88,113 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
   const feedbacks = [weeklyFeedback, monthlyFeedback]
 
+  // 自動ループ機能
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % feedbacks.length)
+        setIsTransitioning(false)
+      }, 1000) // フェードアウト時間
+    }, 20000) // 20秒ごとに切り替え
+
+    return () => clearInterval(interval)
+  }, [feedbacks.length])
+
+  const handleTransition = (newIndex: number) => {
+    if (newIndex === currentIndex) return
+    
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrentIndex(newIndex)
+      setIsTransitioning(false)
+    }, 1000) // フェードアウト時間
+  }
+
+  const handlePrev = () => {
+    const newIndex = (currentIndex - 1 + feedbacks.length) % feedbacks.length
+    handleTransition(newIndex)
+  }
+
+  const handleNext = () => {
+    const newIndex = (currentIndex + 1) % feedbacks.length
+    handleTransition(newIndex)
+  }
+
+  const currentFeedback = feedbacks[currentIndex]
+
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-3 lg:pb-4">
-        <CardTitle className="text-white flex items-center text-base lg:text-lg">
-          <Sparkles className="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-yellow-400" />
-          AIフィードバック
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white flex items-center text-base lg:text-lg">
+            <Sparkles className="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-yellow-400" />
+            {currentFeedback.type}フィードバック
+          </CardTitle>
+          
+          {/* スライダーコントロール */}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePrev}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            
+            {/* インジケーター */}
+            <div className="flex space-x-1">
+              {feedbacks.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleTransition(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentIndex ? 'bg-blue-500' : 'bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNext}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4 lg:space-y-6">
-        {feedbacks.map((feedback, index) => (
-          <div key={feedback.type} className={index > 0 ? "pt-3 lg:pt-4 border-t border-gray-800" : ""}>
-            {/* フィードバック種別 */}
-            <div className="flex items-center justify-between mb-2 lg:mb-3">
-              <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
-                <Calendar className="w-3 h-3 mr-1" />
-                {feedback.type}フィードバック
-              </Badge>
-              <span className="text-xs text-gray-400">{feedback.date}</span>
-            </div>
+      
+      <CardContent>
+        <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          {/* 日付表示 */}
+          <div className="flex justify-end mb-2 lg:mb-3">
+            <span className="text-xs text-gray-400">{currentFeedback.date}</span>
+          </div>
 
-            {/* フィードバックメッセージ */}
-            <div className="bg-gray-800 rounded-lg p-3">
-              <div className="flex items-start space-x-2">
-                <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {feedback.message || "フィードバックを準備中です..."}
-                </p>
-              </div>
-            </div>
-
-            {/* 次回フィードバック予告 */}
-            <div className="text-xs text-gray-500 pt-2">
-              {feedback.type === "週次" && (
-                <div>次回の週次フィードバック: {getNextWeekMonday()}予定</div>
-              )}
-              {feedback.type === "月次" && (
-                <div>次回の月次フィードバック: {getNextMonthFirstDay()}予定</div>
-              )}
+          {/* フィードバックメッセージ */}
+          <div className="bg-gray-800 rounded-lg p-3 mb-3">
+            <div className="flex items-start space-x-2">
+              <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {currentFeedback.message || "フィードバックを準備中です..."}
+              </p>
             </div>
           </div>
-        ))}
+
+          {/* 次回フィードバック予告 */}
+          <div className="text-xs text-gray-500">
+            {currentFeedback.type === "週次" && (
+              <div>次回の週次フィードバック: {getNextWeekMonday()}予定</div>
+            )}
+            {currentFeedback.type === "月次" && (
+              <div>次回の月次フィードバック: {getNextMonthFirstDay()}予定</div>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

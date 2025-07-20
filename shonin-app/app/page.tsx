@@ -289,12 +289,14 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                 {/* メインエリア - 2列分 */}
                 <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-                  <WelcomeCard completedSessions={completedSessions} />
+                  <AIFeedback completedSessions={completedSessions} />
                   <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
                 </div>
 
                 {/* サイドバー - 1列分 */}
                 <div className="space-y-4 lg:space-y-6">
+                  <WelcomeCard completedSessions={completedSessions} />
+                  
                   {/* 進行中の行動 */}
                   <ActiveActivitySidebar
                     activeSession={currentSession}
@@ -305,7 +307,6 @@ export default function Dashboard() {
                     sessionState={sessionState}
                   />
                   
-                  <AIFeedback completedSessions={completedSessions} />
                   <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
                 </div>
               </div>

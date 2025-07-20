@@ -581,7 +581,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       )}
 
       {/* 励ましメッセージ */}
-      <Card className="bg-gradient-to-r from-green-500 to-blue-500 bg-opacity-20 border-green-500 border-opacity-30">
+      <Card className="bg-gradient-to-r from-green-500 to-blue-500 bg-opacity-20 border-green-500 border-opacity-30 w-[90%] mx-auto">
         <CardContent className="p-4 text-center">
           {sessionState === "active" && (
             <>
