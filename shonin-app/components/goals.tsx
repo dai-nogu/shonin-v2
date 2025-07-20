@@ -392,13 +392,7 @@ export function Goals({ onBack }: GoalsProps) {
   // エラー状態
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <div className="border-b border-gray-800 p-6">
-          <h1 className="text-2xl font-bold flex items-center">
-            <Target className="w-6 h-6 mr-2" />
-            目標管理
-          </h1>
-        </div>
+      <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
         <div className="p-6 container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
@@ -412,13 +406,7 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="border-b border-gray-800 p-6">
-        <h1 className="text-2xl font-bold flex items-center">
-          <Target className="w-6 h-6 mr-2" />
-          目標管理
-        </h1>
-      </div>
+    <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
       <div className="p-6 container mx-auto max-w-4xl">
         {/* 目標追加ボタン */}

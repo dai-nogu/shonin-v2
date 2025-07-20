@@ -1,6 +1,11 @@
+import { MobileMenu } from "@/components/mobile-menu"
 
+interface HeaderProps {
+  currentPage?: string
+  onPageChange?: (pageId: string) => void
+}
 
-export function Header() {
+export function Header({ currentPage = "dashboard", onPageChange }: HeaderProps) {
   return (
     <header className="border-b border-gray-800 bg-gray-950">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -10,8 +15,13 @@ export function Header() {
           </div>
           <h1 className="text-xl font-bold text-white">SHONIN</h1>
         </div>
-
-
+        
+        {/* SP専用：ハンバーガーメニュー */}
+        {onPageChange && (
+          <div className="md:hidden">
+            <MobileMenu currentPage={currentPage} onPageChange={onPageChange} />
+          </div>
+        )}
       </div>
     </header>
   )

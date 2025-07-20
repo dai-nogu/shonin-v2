@@ -232,7 +232,7 @@ export default function Dashboard() {
     )
   }
 
-  const renderContent = () => {
+    const renderContent = () => {
     switch (currentPage) {
       case "session":
         if (isSessionActive && currentSession) {
@@ -251,74 +251,83 @@ export default function Dashboard() {
         return null
         
       case "calendar":
-        return <CalendarView 
-          viewMode={calendarViewMode} 
-          onViewModeChange={setCalendarViewMode} 
-          completedSessions={completedSessions}
-        />
+        return (
+          <main className="container mx-auto px-4 py-4 lg:py-8">
+            <CalendarView 
+              viewMode={calendarViewMode} 
+              onViewModeChange={setCalendarViewMode} 
+              completedSessions={completedSessions}
+            />
+          </main>
+        )
         
       case "analytics":
         return (
-          <div className="min-h-screen bg-gray-950 text-white">
+          <main className="container mx-auto px-4 py-4 lg:py-8">
             <div className="border-b border-gray-800 p-6">
               <h1 className="text-2xl font-bold">統計・分析</h1>
             </div>
             <div className="p-8 text-center text-gray-400">統計・分析ページ（開発中）</div>
-          </div>
+          </main>
         )
         
       case "goals":
-        return <Goals onBack={() => setCurrentPage("dashboard")} />
+        return (
+          <main className="container mx-auto px-4 py-4 lg:py-8">
+            <Goals onBack={() => setCurrentPage("dashboard")} />
+          </main>
+        )
         
       case "settings":
-        return <Settings 
-          onBack={() => setCurrentPage("dashboard")} 
-          currentSession={currentSession ? {
-            activityId: currentSession.activityId,
-            activityName: currentSession.activityName
-          } : null}
-          isSessionActive={isSessionActive}
-        />
+        return (
+          <main className="container mx-auto px-4 py-4 lg:py-8">
+            <Settings 
+              onBack={() => setCurrentPage("dashboard")} 
+              currentSession={currentSession ? {
+                activityId: currentSession.activityId,
+                activityName: currentSession.activityName
+              } : null}
+              isSessionActive={isSessionActive}
+            />
+          </main>
+        )
         
 
       default:
         return (
-          <>
-            <Header />
-            <main className="container mx-auto px-4 py-4 lg:py-8">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-                {/* メインエリア - 2列分 */}
-                <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-                  {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
-                  <div className="lg:hidden">
-                    <WelcomeCard completedSessions={completedSessions} />
-                  </div>
-                  <AIFeedback completedSessions={completedSessions} />
-                  <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+          <main className="container mx-auto px-4 py-4 lg:py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+              {/* メインエリア - 2列分 */}
+              <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+                {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
+                <div className="lg:hidden">
+                  <WelcomeCard completedSessions={completedSessions} />
                 </div>
-
-                {/* サイドバー - 1列分 */}
-                <div className="space-y-4 lg:space-y-6">
-                  {/* PC用：WelcomeCardを表示、SP用：非表示 */}
-                  <div className="hidden lg:block">
-                    <WelcomeCard completedSessions={completedSessions} />
-                  </div>
-                  
-                  {/* 進行中の行動 */}
-                  <ActiveActivitySidebar
-                    activeSession={currentSession}
-                    isActive={isSessionActive}
-                    onViewSession={handleViewSession}
-                    onTogglePause={handleTogglePause}
-                    onEnd={handleEndSession}
-                    sessionState={sessionState}
-                  />
-                  
-                  <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
-                </div>
+                <AIFeedback completedSessions={completedSessions} />
+                <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
               </div>
-            </main>
-          </>
+
+              {/* サイドバー - 1列分 */}
+              <div className="space-y-4 lg:space-y-6">
+                {/* PC用：WelcomeCardを表示、SP用：非表示 */}
+                <div className="hidden lg:block">
+                  <WelcomeCard completedSessions={completedSessions} />
+                </div>
+                
+                {/* 進行中の行動 */}
+                <ActiveActivitySidebar
+                  activeSession={currentSession}
+                  isActive={isSessionActive}
+                  onViewSession={handleViewSession}
+                  onTogglePause={handleTogglePause}
+                  onEnd={handleEndSession}
+                  sessionState={sessionState}
+                />
+     
+                <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
+              </div>
+            </div>
+          </main>
         )
     }
   }
@@ -328,6 +337,8 @@ export default function Dashboard() {
       <AppSidebar currentPage={currentPage} onPageChange={handlePageChange} />
       <SidebarInset>
         <div className="min-h-screen bg-gray-950 text-white">
+          {/* 全ページ共通：Header */}
+          <Header currentPage={currentPage} onPageChange={handlePageChange} />
           {renderContent()}
         </div>
       </SidebarInset>

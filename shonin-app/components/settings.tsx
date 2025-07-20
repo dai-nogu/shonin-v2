@@ -85,12 +85,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   const passwordError = validatePasswords()
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="border-b border-gray-800 p-6">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold">設定</h1>
-        </div>
-      </div>
+    <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
       <div className="p-6 container mx-auto max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-6">
