@@ -534,36 +534,36 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         </Card>
 
         {/* 統計サマリー */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-3 gap-2 md:gap-4 mt-6">
           <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-400">
+            <CardContent className="p-2 md:p-4 text-center">
+              <div className="text-lg md:text-2xl font-bold text-green-400">
                 {(() => {
                   const periodSessions = getCurrentPeriodSessions()
                   const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
                   return formatDuration(totalTime)
                 })()}
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-xs md:text-sm text-gray-400">
                 {internalViewMode === "month" ? "今月の総時間" : "今週の総時間"}
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-400">
+            <CardContent className="p-2 md:p-4 text-center">
+              <div className="text-lg md:text-2xl font-bold text-blue-400">
                 {getCurrentPeriodSessions().length}
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-xs md:text-sm text-gray-400">
                 {internalViewMode === "month" ? "今月のセッション数" : "今週のセッション数"}
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-400">
+            <CardContent className="p-2 md:p-4 text-center">
+              <div className="text-lg md:text-2xl font-bold text-purple-400">
                 {(() => {
                   const periodSessions = getCurrentPeriodSessions()
                   if (periodSessions.length === 0) return "0"
@@ -572,7 +572,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                   return formatDuration(averageTime)
                 })()}
               </div>
-              <div className="text-sm text-gray-400">平均セッション時間</div>
+              <div className="text-xs md:text-sm text-gray-400">平均セッション時間</div>
             </CardContent>
           </Card>
         </div>
