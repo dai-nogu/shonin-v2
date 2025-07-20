@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, BarChart3, Star, MapPin } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Play, Eye, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -242,7 +242,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <div className="flex flex-col">
                         <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{activity.name}</h3>
                         <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
-                          <BarChart3 className="w-3 h-3" />
                           <span className="font-medium text-green-400">{activity.sessionCount}回</span>
                         </div>
                       </div>

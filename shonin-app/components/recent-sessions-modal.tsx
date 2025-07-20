@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, Calendar, Star, MapPin, History } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, Calendar, History } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -237,31 +237,18 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-white font-medium truncate text-sm sm:text-base">{sessionItem.name}</h3>
-                      </div>
-
-                      <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-400">
-                        <div className="flex items-center sm:space-x-1">
-                          <Calendar className="w-3 h-3 hidden sm:block" />
+                      {/* 回数順モーダルと同じレイアウトに統一 */}
+                      <div className="flex flex-col">
+                        <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{sessionItem.name}</h3>
+                        <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
                           <span className="text-blue-400">{sessionItem.date}</span>
                         </div>
-                        <div className="hidden sm:flex items-center space-x-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{sessionItem.duration}</span>
-                        </div>
-                        {sessionItem.location && (
-                          <div className="hidden sm:flex items-center space-x-1">
-                            <MapPin className="w-3 h-3" />
-                            <span className="truncate max-w-20">{sessionItem.location}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                    <div className="hidden sm:flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <div className="hidden sm:flex items-center space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -286,16 +273,20 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                         開始
                       </Button>
                     </div>
-
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-3 h-3 ${
-                            star <= sessionItem.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                          }`}
-                        />
-                      ))}
+                    
+                    {/* SPでは開始ボタンを右側に表示 */}
+                    <div className="sm:hidden">
+                      <Button
+                        size="sm"
+                        className="bg-green-500 hover:bg-green-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivityClick(sessionItem)
+                        }}
+                      >
+                        <Play className="w-3 h-3 mr-1" />
+                        開始
+                      </Button>
                     </div>
                   </div>
                 </div>

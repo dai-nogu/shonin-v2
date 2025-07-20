@@ -433,22 +433,12 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                       <div className="flex items-center space-x-1">
                         <span className="font-medium text-green-400">{activity.sessionCount}回</span>
                       </div>
-                      <div className="hidden sm:flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span className="hidden sm:inline">合計 </span>
-                        <span>{activity.duration}</span>
-                      </div>
                     </>
-                  ) : (
+                                    ) : (
                     <>
                       <div className="flex items-center">
                         <span className="text-blue-400">{activity.date}</span>
                       </div>
-                      <div className="hidden sm:flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{activity.duration}</span>
-                      </div>
-
                     </>
                   )}
                 </div>
