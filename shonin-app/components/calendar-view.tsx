@@ -29,10 +29,23 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
   const [selectedDateSessions, setSelectedDateSessions] = useState<CalendarSession[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     setInternalViewMode(viewMode)
   }, [viewMode])
+
+  // モバイル判定
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // CompletedSessionをCalendarSessionに変換する関数
   const convertToCalendarSessions = (sessions: CompletedSession[]): CalendarSession[] => {
@@ -299,7 +312,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
           {/* 曜日ヘッダー */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {["月", "火", "水", "木", "金", "土", "日"].map((day) => (
@@ -319,47 +332,49 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
               return (
                 <div
                   key={index}
-                  className={`min-h-[120px] p-2 border border-gray-800 rounded-lg ${
+                  className={`min-h-[80px] md:min-h-[120px] p-1 md:p-2 border border-gray-800 rounded-lg ${
                     day ? "bg-gray-800 hover:bg-gray-700 cursor-pointer" : "bg-gray-900"
                   } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                 >
                   {day && (
                     <>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-sm font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
+                      <div className="flex items-center justify-between mb-1 md:mb-2">
+                        <span className={`text-xs md:text-sm font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
                           {day}
                         </span>
                         {totalTime > 0 && (
                           <div className="flex items-center text-xs text-green-400">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {formatDuration(totalTime)}
+                            <Clock className="w-2 md:w-3 h-2 md:h-3 mr-1" />
+                            <span className="hidden sm:inline">{formatDuration(totalTime)}</span>
+                            <span className="sm:hidden">{Math.floor(totalTime / 60)}m</span>
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-1">
-                        {daySessions.slice(0, 2).map((session) => (
+                        {/* SP: 1つまで、PC: 2つまで表示 */}
+                        {daySessions.slice(0, isMobile ? 1 : 2).map((session) => (
                           <div
                             key={session.id}
                             className={`text-xs p-1 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
                           >
                             <div className="flex items-center space-x-1">
                               {session.icon ? (
-                                <span>{session.icon}</span>
+                                <span className="text-xs">{session.icon}</span>
                               ) : (
-                                <div className={`w-3 h-3 rounded-full ${session.color}`}></div>
+                                <div className={`w-2 md:w-3 h-2 md:h-3 rounded-full ${session.color}`}></div>
                               )}
-                              <span className="text-white truncate">{session.activity}</span>
+                              <span className="text-white truncate text-xs">{session.activity}</span>
                             </div>
-                            <div className="text-gray-300 text-xs">{formatDuration(session.duration)}</div>
+                            <div className="text-gray-300 text-xs hidden md:block">{formatDuration(session.duration)}</div>
                           </div>
                         ))}
-                        {daySessions.length > 2 && (
+                        {daySessions.length > (isMobile ? 1 : 2) && (
                           <div 
                             className="text-xs text-gray-400 text-center cursor-pointer hover:text-gray-200 py-1 rounded bg-gray-700 bg-opacity-50"
                             onClick={() => openSessionModal(day, daySessions)}
                           >
-                            その他+{daySessions.length - 2}
+                            +{daySessions.length - (isMobile ? 1 : 2)}
                           </div>
                         )}
                       </div>
@@ -414,7 +429,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((day, index) => {
               const daySessions = getSessionsForDate(day)
@@ -493,48 +508,14 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <div className="border-b border-gray-800 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Calendar className="w-6 h-6 text-green-400" />
-            <h1 className="text-2xl font-bold">カレンダー</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={internalViewMode === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleViewModeChange("month")}
-              className={
-                internalViewMode === "month"
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-              }
-            >
-              月表示
-            </Button>
-            <Button
-              variant={internalViewMode === "week" ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleViewModeChange("week")}
-              className={
-                internalViewMode === "week"
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-              }
-            >
-              週表示
-            </Button>
-          </div>
-        </div>
-      </div>
 
-      <div className="p-6 container mx-auto">
-        <Card className="bg-gray-900 border-gray-800">
+      <div className="px-0">
+        <Card className="bg-gray-900 border-gray-800 border-l-0 border-r-0 rounded-none">
           {internalViewMode === "month" ? renderMonthView() : renderWeekView()}
         </Card>
 
         {/* 統計サマリー */}
-        <div className="grid grid-cols-3 gap-2 md:gap-4 mt-6">
+        <div className="grid grid-cols-3 gap-2 md:gap-4 mt-6 px-4">
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-2 md:p-4 text-center">
               <div className="text-lg md:text-2xl font-bold text-green-400">
