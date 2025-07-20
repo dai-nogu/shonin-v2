@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useScrollLock } from "@/lib/modal-scroll-lock"
 import { useEffect, useState } from "react"
 
 interface Activity {
@@ -51,17 +52,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
   }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
+  useScrollLock(isOpen)
   
   if (!isOpen || !activity) return null
 

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 import { SessionDetailModal } from "./session-detail-modal"
+import { useScrollLock } from "@/lib/modal-scroll-lock"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
 interface ActivityCountModalProps {
@@ -51,27 +52,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする（SP対応強化）
-  useEffect(() => {
-    if (isOpen) {
-      // PCとSP両方に対応したスクロール無効化
-      document.body.style.overflow = 'hidden'
-      document.body.style.position = 'fixed'
-      document.body.style.width = '100%'
-      document.body.style.height = '100%'
-    } else {
-      document.body.style.overflow = 'unset'
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-    }
-  }, [isOpen])
+  useScrollLock(isOpen)
 
   if (!isOpen) return null
 

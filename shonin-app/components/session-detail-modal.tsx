@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } from "@/lib/upload-photo"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useScrollLock } from "@/lib/modal-scroll-lock"
 import type { CompletedSession } from "./time-tracker"
 
 interface SessionDetailModalProps {
@@ -50,16 +51,11 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする
+  useScrollLock(isOpen)
+  
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
     }
   }, [isOpen])
 
@@ -582,16 +578,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   }, [isOpen, session?.id])
 
   // モーダルが開いている間は背景スクロールを無効にする
+  useScrollLock(isOpen)
+  
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
     }
   }, [isOpen])
 

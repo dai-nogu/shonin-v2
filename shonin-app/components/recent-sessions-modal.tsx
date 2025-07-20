@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 import { SessionDetailModal } from "./session-detail-modal"
+import { useScrollLock } from "@/lib/modal-scroll-lock"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
 interface RecentSessionsModalProps {
@@ -53,17 +54,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
+  useScrollLock(isOpen)
 
   if (!isOpen) return null
 

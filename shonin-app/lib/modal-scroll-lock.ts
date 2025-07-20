@@ -1,43 +1,53 @@
-import React from 'react'
+// モーダルのスクロールロック管理
+let lockCount = 0
+let originalBodyStyles: {
+  overflow: string
+  position: string
+  width: string
+  height: string
+} | null = null
 
-// モーダルのスクロールロック管理ユーティリティ
-class ModalScrollLockManager {
-  private lockCount = 0
-
-  lock() {
-    this.lockCount++
-    if (this.lockCount === 1) {
-      document.body.style.overflow = 'hidden'
+export function lockBodyScroll() {
+  if (lockCount === 0) {
+    // 最初のモーダルが開く時のみ、元のスタイルを保存してスクロールを無効化
+    originalBodyStyles = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      width: document.body.style.width,
+      height: document.body.style.height
     }
+    
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
   }
+  lockCount++
+}
 
-  unlock() {
-    this.lockCount = Math.max(0, this.lockCount - 1)
-    if (this.lockCount === 0) {
-      document.body.style.overflow = 'unset'
-    }
-  }
-
-  // 強制的にリセット（コンポーネントのアンマウント時など）
-  reset() {
-    this.lockCount = 0
-    document.body.style.overflow = 'unset'
+export function unlockBodyScroll() {
+  lockCount = Math.max(0, lockCount - 1)
+  
+  if (lockCount === 0 && originalBodyStyles) {
+    // 最後のモーダルが閉じる時のみ、元のスタイルを復元
+    document.body.style.overflow = originalBodyStyles.overflow
+    document.body.style.position = originalBodyStyles.position
+    document.body.style.width = originalBodyStyles.width
+    document.body.style.height = originalBodyStyles.height
+    originalBodyStyles = null
   }
 }
 
-export const modalScrollLock = new ModalScrollLockManager()
+// React hook
+import { useEffect } from 'react'
 
-// Reactフック版
-export function useModalScrollLock(isOpen: boolean) {
-  React.useEffect(() => {
-    if (isOpen) {
-      modalScrollLock.lock()
-    } else {
-      modalScrollLock.unlock()
+export function useScrollLock(isLocked: boolean) {
+  useEffect(() => {
+    if (isLocked) {
+      lockBodyScroll()
+      return () => {
+        unlockBodyScroll()
+      }
     }
-
-    return () => {
-      modalScrollLock.unlock()
-    }
-  }, [isOpen])
+  }, [isLocked])
 } 
