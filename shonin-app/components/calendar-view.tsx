@@ -338,17 +338,10 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                 >
                   {day && (
                     <>
-                      <div className="flex items-center justify-between mb-1 md:mb-2">
+                      <div className="mb-1 md:mb-2">
                         <span className={`text-xs md:text-sm font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
                           {day}
                         </span>
-                        {totalTime > 0 && (
-                          <div className="flex items-center text-xs text-green-400">
-                            <Clock className="w-2 md:w-3 h-2 md:h-3 mr-1" />
-                            <span className="hidden sm:inline">{formatDuration(totalTime)}</span>
-                            <span className="sm:hidden">{Math.floor(totalTime / 60)}m</span>
-                          </div>
-                        )}
                       </div>
 
                       <div className="space-y-1">
@@ -366,7 +359,6 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                               )}
                               <span className="text-white truncate text-xs">{session.activity}</span>
                             </div>
-                            <div className="text-gray-300 text-xs hidden md:block">{formatDuration(session.duration)}</div>
                           </div>
                         ))}
                         {daySessions.length > (isMobile ? 1 : 2) && (
@@ -398,8 +390,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
     return (
       <>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-white">週表示 ({weekRange})</CardTitle>
+          <div className="flex items-center justify-end">
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
@@ -449,12 +440,6 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                     <div className={`text-lg font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
                       {day.getDate()}
                     </div>
-                    {totalTime > 0 && (
-                      <div className="flex items-center justify-center text-xs text-green-400 mt-1">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {formatDuration(totalTime)}
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -463,7 +448,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                         key={session.id}
                         className={`text-xs p-2 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
                       >
-                        <div className="flex items-center space-x-1 mb-1">
+                        <div className="flex items-center space-x-1">
                           {session.icon ? (
                             <span>{session.icon}</span>
                           ) : (
@@ -471,7 +456,6 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                           )}
                           <span className="text-white truncate">{session.activity}</span>
                         </div>
-                        <div className="text-gray-300 text-xs">{formatDuration(session.duration)}</div>
                       </div>
                     ))}
                     {daySessions.length > 2 && (
@@ -498,9 +482,9 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
     
     let dateStr: string
     if (date instanceof Date) {
-      dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+      dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
     } else {
-      dateStr = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${date}日`
+      dateStr = `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${date}`
     }
     setModalDate(dateStr)
     setIsModalOpen(true)
@@ -510,12 +494,44 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
     <div className="min-h-screen bg-gray-950 text-white">
 
       <div className="px-0">
+        {/* 月/週切り替えボタン */}
+        <div className="bg-gray-900 border-b border-gray-800 px-4 py-3">
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => handleViewModeChange("month")}
+              variant={internalViewMode === "month" ? "default" : "outline"}
+              size="sm"
+              className={
+                internalViewMode === "month"
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              }
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              月表示
+            </Button>
+            <Button
+              onClick={() => handleViewModeChange("week")}
+              variant={internalViewMode === "week" ? "default" : "outline"}
+              size="sm"
+              className={
+                internalViewMode === "week"
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              }
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              週表示
+            </Button>
+          </div>
+        </div>
+
         <Card className="bg-gray-900 border-gray-800 border-l-0 border-r-0 rounded-none">
           {internalViewMode === "month" ? renderMonthView() : renderWeekView()}
         </Card>
 
         {/* 統計サマリー */}
-        <div className="grid grid-cols-3 gap-2 md:gap-4 mt-6 px-4">
+        <div className="grid grid-cols-2 gap-2 md:gap-4 mt-6">
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-2 md:p-4 text-center">
               <div className="text-lg md:text-2xl font-bold text-green-400">
@@ -533,17 +549,6 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-2 md:p-4 text-center">
-              <div className="text-lg md:text-2xl font-bold text-blue-400">
-                {getCurrentPeriodSessions().length}
-              </div>
-              <div className="text-xs md:text-sm text-gray-400">
-                {internalViewMode === "month" ? "今月のセッション数" : "今週のセッション数"}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-2 md:p-4 text-center">
               <div className="text-lg md:text-2xl font-bold text-purple-400">
                 {(() => {
                   const periodSessions = getCurrentPeriodSessions()
@@ -553,7 +558,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                   return formatDuration(averageTime)
                 })()}
               </div>
-              <div className="text-xs md:text-sm text-gray-400">平均セッション時間</div>
+              <div className="text-xs md:text-sm text-gray-400">今週の平均時間</div>
             </CardContent>
           </Card>
         </div>
@@ -563,7 +568,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[500px] bg-gray-900 border-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-white">{modalDate}のアクティビティ</DialogTitle>
+            <DialogTitle className="text-white">{modalDate}の行動</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto">
             {selectedDateSessions.map((session) => (
@@ -571,15 +576,9 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                 key={session.id} 
                 className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{session.icon}</span>
-                    <span className="text-white font-medium">{session.activity}</span>
-                  </div>
-                  <div className="flex items-center text-green-400 text-sm">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {formatDuration(session.duration)}
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg">{session.icon}</span>
+                  <span className="text-white font-medium">{session.activity}</span>
                 </div>
               </div>
             ))}
