@@ -127,10 +127,9 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center text-base lg:text-lg">
-            <Sparkles className="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-yellow-400" />
-            {currentFeedback.type}フィードバック
-          </CardTitle>
+                      <CardTitle className="text-white flex items-center">
+              {currentFeedback.type}フィードバック
+            </CardTitle>
           
           {/* スライダーコントロール */}
           <div className="flex items-center space-x-2">

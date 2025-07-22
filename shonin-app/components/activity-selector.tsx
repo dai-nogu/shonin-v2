@@ -179,7 +179,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center text-lg lg:text-xl">
+        <CardTitle className="text-white flex items-center">
           行動を記録する
         </CardTitle>
         <p className="text-gray-400 text-sm">見えない努力を、確かな記録へ</p>
