@@ -491,7 +491,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="bg-gray-950 text-white">
 
       <div className="px-0">
         {/* 月/週切り替えボタン */}

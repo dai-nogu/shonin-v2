@@ -252,7 +252,7 @@ export default function Dashboard() {
         
       case "calendar":
         return (
-          <main className="container mx-auto px-4 py-4 lg:py-8">
+          <main className="container mx-auto px-4 py-4 lg:py-4">
             <CalendarView 
               viewMode={calendarViewMode} 
               onViewModeChange={setCalendarViewMode} 
@@ -337,8 +337,10 @@ export default function Dashboard() {
       <AppSidebar currentPage={currentPage} onPageChange={handlePageChange} />
       <SidebarInset>
         <div className="min-h-screen bg-gray-950 text-white">
-          {/* 全ページ共通：Header */}
-          <Header currentPage={currentPage} onPageChange={handlePageChange} />
+          {/* 全ページ共通：Header - PCでは非表示 */}
+          <div className="md:hidden">
+            <Header currentPage={currentPage} onPageChange={handlePageChange} />
+          </div>
           {renderContent()}
         </div>
       </SidebarInset>
