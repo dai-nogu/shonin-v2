@@ -127,7 +127,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
-                      <CardTitle className="text-white flex items-center">
+                      <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
               {currentFeedback.type}フィードバック
             </CardTitle>
           
