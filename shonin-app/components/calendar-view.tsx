@@ -333,7 +333,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                 <div
                   key={index}
                   onClick={day && daySessions.length > (isMobile ? 1 : 2) ? () => openSessionModal(day, daySessions) : undefined}
-                  className={`min-h-[80px] md:min-h-[120px] p-1 md:p-2 border border-gray-800 rounded-lg ${
+                  className={`min-h-[80px] md:min-h-[120px] ${isMobile ? 'p-0' : 'md:p-2'} rounded-lg ${
                     day ? `bg-gray-800 ${daySessions.length > (isMobile ? 1 : 2) ? "hover:bg-gray-700 cursor-pointer" : ""}` : "bg-gray-900"
                   } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                 >
@@ -350,7 +350,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                         {daySessions.slice(0, isMobile ? 1 : 2).map((session) => (
                           <div
                             key={session.id}
-                            className={`text-xs p-1 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
+                            className={`text-xs ${isMobile ? 'p-[0.1rem]' : 'p-1'} rounded ${session.color} bg-opacity-20 border-opacity-30`}
                           >
                             <div className="flex items-center space-x-1">
                               {!isMobile && (session.icon ? (
@@ -363,7 +363,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                           </div>
                         ))}
                         {daySessions.length > (isMobile ? 1 : 2) && (
-                          <div className="text-xs text-gray-400 text-center py-1 rounded bg-gray-700 bg-opacity-50">
+                          <div className={`text-xs text-gray-400 text-center ${isMobile ? 'py-[0.1rem]' : 'py-1'} rounded bg-gray-700 bg-opacity-50`}>
                             +{daySessions.length - (isMobile ? 1 : 2)}
                           </div>
                         )}
@@ -430,7 +430,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                 <div
                   key={index}
                   onClick={daySessions.length > 2 ? () => openSessionModal(day, daySessions) : undefined}
-                  className={`min-h-[280px] p-3 border border-gray-800 rounded-lg bg-gray-800 ${
+                  className={`min-h-[280px] ${isMobile ? 'p-0' : 'p-3'} rounded-lg bg-gray-800 ${
                     daySessions.length > 2 ? "hover:bg-gray-700 cursor-pointer" : ""
                   } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                 >
@@ -445,7 +445,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                     {daySessions.slice(0, 2).map((session) => (
                       <div
                         key={session.id}
-                        className={`text-xs p-2 rounded ${session.color} bg-opacity-20 border border-opacity-30`}
+                        className={`text-xs ${isMobile ? 'p-[0.1rem]' : 'p-2'} rounded ${session.color} bg-opacity-20 border-opacity-30`}
                       >
                         <div className="flex items-center space-x-1">
                           {!isMobile && (session.icon ? (
@@ -458,7 +458,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                       </div>
                     ))}
                     {daySessions.length > 2 && (
-                      <div className="text-xs text-gray-400 text-center py-1 rounded bg-gray-700 bg-opacity-50">
+                      <div className={`text-xs text-gray-400 text-center ${isMobile ? 'py-[0.1rem]' : 'py-1'} rounded bg-gray-700 bg-opacity-50`}>
                         その他+{daySessions.length - 2}
                       </div>
                     )}
