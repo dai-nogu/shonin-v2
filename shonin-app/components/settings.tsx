@@ -87,7 +87,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   return (
     <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
-      <div className="p-6 container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 bg-gray-900 border-gray-800">
             <TabsTrigger value="profile" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">

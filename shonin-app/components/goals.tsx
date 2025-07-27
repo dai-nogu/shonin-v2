@@ -393,7 +393,7 @@ export function Goals({ onBack }: GoalsProps) {
   if (loading) {
     return (
       <div className="bg-gray-950 text-white">
-        <div className="p-6 container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-400">目標を読み込み中...</p>
@@ -407,7 +407,7 @@ export function Goals({ onBack }: GoalsProps) {
   if (error) {
     return (
       <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
-        <div className="p-6 container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
             <Button onClick={() => window.location.reload()} className="bg-blue-500 hover:bg-blue-600">
@@ -422,7 +422,7 @@ export function Goals({ onBack }: GoalsProps) {
   return (
     <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
-      <div className="p-6 container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-4xl">
         {/* 目標追加ボタン */}
         {!isAddingGoal && goals.length > 0 && (
           <div className="mb-6">
@@ -444,21 +444,21 @@ export function Goals({ onBack }: GoalsProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-gray-300">目標タイトル *</Label>
+                <Label className="text-gray-300">目標 *</Label>
                 <Input
                   value={newGoal.title}
                   onChange={(e) => setNewGoal({...newGoal, title: e.target.value})}
-                  placeholder="具体的な目標を入力"
+                  placeholder="〇〇までに転職を成功させる"
                   className="bg-gray-800 border-gray-700 text-white"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300">なぜこの目標を達成したいのか？ *</Label>
+                <Label className="text-gray-300">理由 *</Label>
                 <Textarea
                   value={newGoal.motivation}
                   onChange={(e) => setNewGoal({...newGoal, motivation: e.target.value})}
-                  placeholder="目標を達成したい理由や動機を具体的に書いてください"
+                  placeholder="転職を成功させて年収を100万円アップさせる"
                   className="bg-gray-800 border-gray-700 text-white"
                 />
               </div>
@@ -575,7 +575,6 @@ export function Goals({ onBack }: GoalsProps) {
                       
                       {/* 動機編集 */}
                       <div className="bg-gray-800 p-3 rounded-lg mb-4">
-                        <h4 className="text-sm font-medium text-gray-300 mb-1">モチベーション</h4>
                         {isEditing ? (
                           <Textarea
                             value={editGoal.motivation}
@@ -583,7 +582,7 @@ export function Goals({ onBack }: GoalsProps) {
                             className="bg-gray-700 border-gray-600 text-white text-sm min-h-[60px]"
                           />
                         ) : (
-                          <p className="text-sm text-gray-400">{goal.motivation}</p>
+                          <p className="text-sm text-white">{goal.motivation}</p>
                         )}
                       </div>
                     </div>

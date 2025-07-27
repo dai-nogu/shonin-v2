@@ -49,6 +49,12 @@ export default function Dashboard() {
           setCalendarViewMode(savedViewMode)
         }
 
+        // ページ状態を復元
+        const savedPage = localStorage.getItem('shonin-current-page')
+        if (savedPage && ['dashboard', 'calendar', 'analytics', 'goals', 'settings'].includes(savedPage)) {
+          setCurrentPage(savedPage)
+        }
+
         // セッションデータを取得・更新
         await refetch()
         
@@ -155,6 +161,16 @@ export default function Dashboard() {
     }
   }, [calendarViewMode, isInitialized])
 
+  // 現在のページ状態を保存
+  useEffect(() => {
+    if (isInitialized && typeof window !== 'undefined') {
+      // セッションページは保存しない（セッション状態に依存するため）
+      if (currentPage !== "session") {
+        localStorage.setItem('shonin-current-page', currentPage)
+      }
+    }
+  }, [currentPage, isInitialized])
+
   const handlePageChange = (pageId: string) => {
     setCurrentPage(pageId)
   }
@@ -219,6 +235,13 @@ export default function Dashboard() {
       setCurrentPage("dashboard")
     }
   }, [currentPage, isSessionActive])
+
+  // リロード時にアクティブなセッションがある場合はセッションページに遷移
+  useEffect(() => {
+    if (isInitialized && isSessionActive && currentSession && currentPage !== "session") {
+      setCurrentPage("session")
+    }
+  }, [isInitialized, isSessionActive, currentSession, currentPage])
 
   // 初期化が完了するまでローディング表示
   if (!isInitialized) {
