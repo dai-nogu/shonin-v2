@@ -440,7 +440,7 @@ export function Goals({ onBack }: GoalsProps) {
         {isAddingGoal && (
           <Card className="bg-gray-900 border-gray-800 mb-6">
             <CardHeader>
-              <CardTitle className="text-white">新しい目標を追加</CardTitle>
+              <CardTitle className="text-white">目標を追加</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
