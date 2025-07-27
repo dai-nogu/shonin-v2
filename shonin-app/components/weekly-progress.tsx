@@ -58,7 +58,6 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center">
-            <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
             今週の進捗
           </CardTitle>
           <Button
