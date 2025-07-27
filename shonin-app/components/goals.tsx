@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { useGoalsDb, type GoalFormData } from "@/hooks/use-goals-db"
+import { GoalForm } from "@/components/goal-form"
 
 interface Goal {
   id: string
@@ -46,96 +47,10 @@ export function Goals({ onBack }: GoalsProps) {
   const [goals, setGoals] = useState<Goal[]>([])
   const [isAddingGoal, setIsAddingGoal] = useState(false)
   const [editingGoal, setEditingGoal] = useState<string | null>(null)
-  const [newGoal, setNewGoal] = useState({
-    title: "",
-    motivation: "",
-    unit: "時間",
-    deadline: "",
-    weekdayHours: "" as any,
-    weekendHours: "" as any,
-    calculatedHours: 0
-  })
-  const [editGoal, setEditGoal] = useState({
-    title: "",
-    motivation: "",
-    unit: "時間",
-    deadline: "",
-    weekdayHours: 0,
-    weekendHours: 0,
-    calculatedHours: 0
-  })
-  
-  // 入力中の値を管理する状態
-  const [editInputValues, setEditInputValues] = useState({
-    weekdayHours: "",
-    weekendHours: ""
-  })
-  
-  // バリデーションエラー状態
-  const [validationErrors, setValidationErrors] = useState({
-    weekdayHours: "",
-    weekendHours: ""
-  })
-  const [newGoalValidationErrors, setNewGoalValidationErrors] = useState({
-    weekdayHours: "",
-    weekendHours: ""
-  })
-
-  // バリデーション関数
-  const validateHours = (value: string): { isValid: boolean; numValue: number; error: string } => {
-    if (value.trim() === '') {
-      return { isValid: true, numValue: 0, error: '' }
-    }
-    
-    const num = parseInt(value, 10)
-    
-    if (isNaN(num)) {
-      return { isValid: false, numValue: 0, error: '無効な値です。数字を入力してください。' }
-    }
-    
-    if (num < 0) {
-      return { isValid: false, numValue: 0, error: '0以上の数字を入力してください。' }
-    }
-    
-    if (num > 24) {
-      return { isValid: false, numValue: 0, error: '24以下の数字を入力してください。' }
-    }
-    
-    return { isValid: true, numValue: num, error: '' }
-  }
-
-  // 自動計算関数
-  const calculateTotalHours = (deadline: string, weekdayHours: number, weekendHours: number) => {
-    if (!deadline || weekdayHours === 0 && weekendHours === 0) return 0
-    
-    const today = new Date()
-    const deadlineDate = new Date(deadline)
-    const diffTime = deadlineDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (diffDays <= 0) return 0
-    
-    // 週数を計算
-    const weeks = Math.floor(diffDays / 7)
-    const remainingDays = diffDays % 7
-    
-    // 平日5日 * 週数 + 土日2日 * 週数
-    let totalHours = (weekdayHours * 5 * weeks) + (weekendHours * 2 * weeks)
-    
-    // 残りの日数分を計算（簡易版：平日として計算）
-    totalHours += weekdayHours * remainingDays
-    
-    return Math.round(totalHours)
-  }
 
   // 週間時間の計算
   const calculateWeeklyHours = (weekdayHours: number, weekendHours: number) => {
     return (weekdayHours * 5) + (weekendHours * 2)
-  }
-
-  // 月間時間の計算
-  const calculateMonthlyHours = (weekdayHours: number, weekendHours: number) => {
-    return calculateWeeklyHours(weekdayHours, weekendHours) * 4
   }
 
   // 秒を時間.分の小数形式に変換する関数
@@ -177,17 +92,7 @@ export function Goals({ onBack }: GoalsProps) {
     }
   }, [dbGoals])
 
-  // 新規目標の自動計算
-  useEffect(() => {
-    const calculated = calculateTotalHours(newGoal.deadline, newGoal.weekdayHours, newGoal.weekendHours)
-    setNewGoal(prev => ({ ...prev, calculatedHours: calculated }))
-  }, [newGoal.deadline, newGoal.weekdayHours, newGoal.weekendHours])
 
-  // 編集目標の自動計算
-  useEffect(() => {
-    const calculated = calculateTotalHours(editGoal.deadline, editGoal.weekdayHours, editGoal.weekendHours)
-    setEditGoal(prev => ({ ...prev, calculatedHours: calculated }))
-  }, [editGoal.deadline, editGoal.weekdayHours, editGoal.weekendHours])
 
   const getProgressPercentage = (current: number, target: number) => {
     return Math.min((current / target) * 100, 100)
@@ -201,60 +106,19 @@ export function Goals({ onBack }: GoalsProps) {
     return diffDays
   }
 
-  const handleAddGoal = async () => {
-    // バリデーションチェック
-    const weekdayValidation = validateHours(newGoal.weekdayHours)
-    const weekendValidation = validateHours(newGoal.weekendHours)
-    
-    // エラーメッセージを設定
-    setNewGoalValidationErrors({
-      weekdayHours: weekdayValidation.error,
-      weekendHours: weekendValidation.error
-    })
-    
-    // バリデーションに失敗した場合は保存を中止
-    if (!weekdayValidation.isValid || !weekendValidation.isValid) {
-      console.log('Validation failed:', { weekdayValidation, weekendValidation })
-      return
-    }
-    
-    const weekdayHours = weekdayValidation.numValue
-    const weekendHours = weekendValidation.numValue
-    const calculatedHours = calculateTotalHours(newGoal.deadline, weekdayHours, weekendHours)
-    
-    if (!newGoal.title || !newGoal.deadline || calculatedHours === 0) return
-
-    console.log('handleAddGoal called with newGoal:', newGoal)
-    console.log('Validated values:', { weekdayHours, weekendHours, calculatedHours })
-
+  const handleAddGoalFromForm = async (formData: any) => {
     const goalData: GoalFormData = {
-      title: newGoal.title,
-      motivation: newGoal.motivation,
-      deadline: newGoal.deadline,
-      weekdayHours: weekdayHours,
-      weekendHours: weekendHours,
-      calculatedHours: calculatedHours
+      title: formData.title,
+      motivation: formData.motivation,
+      deadline: formData.deadline,
+      weekdayHours: parseInt(formData.weekdayHours),
+      weekendHours: parseInt(formData.weekendHours),
+      calculatedHours: formData.calculatedHours
     }
-
-    console.log('Sending goalData to addGoal:', goalData)
 
     const goalId = await addGoal(goalData)
     
     if (goalId) {
-      console.log('Goal added successfully with ID:', goalId)
-      setNewGoal({
-        title: "",
-        motivation: "",
-        unit: "時間",
-        deadline: "",
-        weekdayHours: "" as any,
-        weekendHours: "" as any,
-        calculatedHours: 0
-      })
-      setNewGoalValidationErrors({
-        weekdayHours: "",
-        weekendHours: ""
-      })
       setIsAddingGoal(false)
     } else {
       alert('目標の追加に失敗しました')
@@ -262,92 +126,24 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   const handleEditGoal = (goalId: string) => {
-    const goal = goals.find(g => g.id === goalId)
-    if (goal) {
-      console.log('Editing goal:', goal)
-      console.log('Goal weekdayHours:', goal.weekdayHours, 'weekendHours:', goal.weekendHours)
-      
-      const editData = {
-        title: goal.title,
-        motivation: goal.motivation,
-        unit: goal.unit,
-        deadline: goal.deadline,
-        weekdayHours: goal.weekdayHours || 0,
-        weekendHours: goal.weekendHours || 0,
-        calculatedHours: goal.targetValue || 0
-      }
-      
-      console.log('Setting editGoal to:', editData)
-      setEditGoal(editData)
-      setEditInputValues({
-        weekdayHours: (goal.weekdayHours || 0).toString(),
-        weekendHours: (goal.weekendHours || 0).toString()
-      })
-      setEditingGoal(goalId)
-    }
+    setEditingGoal(goalId)
   }
 
-  const handleUpdateGoal = async () => {
-    if (!editGoal.title || !editGoal.deadline || !editingGoal) return
-
-    console.log('handleUpdateGoal called with editGoal:', editGoal)
-    console.log('editInputValues:', editInputValues)
-
-    // バリデーションチェック
-    const weekdayValidation = validateHours(editInputValues.weekdayHours)
-    const weekendValidation = validateHours(editInputValues.weekendHours)
-    
-    // エラーメッセージを設定
-    setValidationErrors({
-      weekdayHours: weekdayValidation.error,
-      weekendHours: weekendValidation.error
-    })
-    
-    // バリデーションに失敗した場合は保存を中止
-    if (!weekdayValidation.isValid || !weekendValidation.isValid) {
-      console.log('Validation failed:', { weekdayValidation, weekendValidation })
-      return
-    }
-    
-    const weekdayHours = weekdayValidation.numValue
-    const weekendHours = weekendValidation.numValue
-    
-    console.log('Validated values:', { weekdayHours, weekendHours })
-
-    const calculatedTargetValue = calculateTotalHours(editGoal.deadline, weekdayHours, weekendHours)
+  const handleUpdateGoalFromForm = async (formData: any) => {
+    if (!editingGoal) return
 
     const goalData: GoalFormData = {
-      title: editGoal.title,
-      motivation: editGoal.motivation,
-      deadline: editGoal.deadline,
-      weekdayHours: weekdayHours,
-      weekendHours: weekendHours,
-      calculatedHours: calculatedTargetValue
+      title: formData.title,
+      motivation: formData.motivation,
+      deadline: formData.deadline,
+      weekdayHours: parseInt(formData.weekdayHours),
+      weekendHours: parseInt(formData.weekendHours),
+      calculatedHours: formData.calculatedHours
     }
-
-    console.log('Sending goalData to updateGoal:', goalData)
 
     const success = await updateGoal(editingGoal, goalData)
     
     if (success) {
-      console.log('Goal updated successfully')
-      setEditGoal({
-        title: "",
-        motivation: "",
-        unit: "時間",
-        deadline: "",
-        weekdayHours: 0,
-        weekendHours: 0,
-        calculatedHours: 0
-      })
-      setEditInputValues({
-        weekdayHours: "",
-        weekendHours: ""
-      })
-      setValidationErrors({
-        weekdayHours: "",
-        weekendHours: ""
-      })
       setEditingGoal(null)
     } else {
       alert('目標の更新に失敗しました')
@@ -356,23 +152,6 @@ export function Goals({ onBack }: GoalsProps) {
 
   const handleCancelEdit = () => {
     setEditingGoal(null)
-    setEditGoal({
-      title: "",
-      motivation: "",
-      unit: "時間",
-      deadline: "",
-      weekdayHours: 0,
-      weekendHours: 0,
-      calculatedHours: 0
-    })
-    setEditInputValues({
-      weekdayHours: "",
-      weekendHours: ""
-    })
-    setValidationErrors({
-      weekdayHours: "",
-      weekendHours: ""
-    })
   }
 
   const handleDeleteGoal = async (goalId: string) => {
@@ -422,7 +201,7 @@ export function Goals({ onBack }: GoalsProps) {
       <div className="container mx-auto max-w-4xl">
         {/* 目標追加ボタン */}
         {!isAddingGoal && goals.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 text-right">
             <Button
               onClick={() => setIsAddingGoal(true)}
               className="bg-green-500 hover:bg-green-600"
@@ -439,103 +218,12 @@ export function Goals({ onBack }: GoalsProps) {
             <CardHeader>
               <CardTitle className="text-white">目標を追加</CardTitle>
             </CardHeader>
-            <CardContent className="">
-              <div className="space-y-2">
-                <Label className="text-gray-300">目標 *</Label>
-                <Input
-                  value={newGoal.title}
-                  onChange={(e) => setNewGoal({...newGoal, title: e.target.value})}
-                  placeholder="〇〇までに転職を成功させる"
-                  className="bg-gray-800 border-gray-700 text-white"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-gray-300">理由 *</Label>
-                <Textarea
-                  value={newGoal.motivation}
-                  onChange={(e) => setNewGoal({...newGoal, motivation: e.target.value})}
-                  placeholder="転職を成功させて年収を100万円アップさせる"
-                  className="bg-gray-800 border-gray-700 text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300">期限 *</Label>
-                  <Input
-                    type="date"
-                    value={newGoal.deadline}
-                    onChange={(e) => setNewGoal({...newGoal, deadline: e.target.value})}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-300">平日（月〜金）の時間</Label>
-                  <Input
-                    type="text"
-                    value={newGoal.weekdayHours}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      setNewGoal({...newGoal, weekdayHours: value})
-                    }}
-                    placeholder="2"
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                  {newGoalValidationErrors.weekdayHours && (
-                    <div className="text-xs text-red-400">{newGoalValidationErrors.weekdayHours}</div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-300">土日の時間</Label>
-                  <Input
-                    type="text"
-                    value={newGoal.weekendHours}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      setNewGoal({...newGoal, weekendHours: value})
-                    }}
-                    placeholder="5"
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                  {newGoalValidationErrors.weekendHours && (
-                    <div className="text-xs text-red-400">{newGoalValidationErrors.weekendHours}</div>
-                  )}
-                </div>
-              </div>
-
-              {/* 自動計算結果 */}
-              {newGoal.calculatedHours > 0 && (
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-400">週間: </span>
-                      <span className="text-white">{calculateWeeklyHours(newGoal.weekdayHours, newGoal.weekendHours)}時間</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">月間: </span>
-                      <span className="text-white">{calculateMonthlyHours(newGoal.weekdayHours, newGoal.weekendHours)}時間</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">総目標: </span>
-                      <span className="text-white font-medium">{newGoal.calculatedHours}時間</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex space-x-3">
-                <Button onClick={handleAddGoal} className="bg-green-500 hover:bg-green-600">
-                  目標を追加
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsAddingGoal(false)}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                >
-                  キャンセル
-                </Button>
-              </div>
+            <CardContent>
+              <GoalForm
+                mode="create"
+                onSubmit={handleAddGoalFromForm}
+                onCancel={() => setIsAddingGoal(false)}
+              />
             </CardContent>
           </Card>
         )}
@@ -552,47 +240,20 @@ export function Goals({ onBack }: GoalsProps) {
             const isEditing = editingGoal === goal.id
 
             return (
-              <Card key={goal.id} className="bg-gray-900 border-gray-800">
-                <CardHeader className="px-2">
+                              <Card key={goal.id} className="bg-gray-900 border-gray-800">
+                 <CardHeader className="px-2 md:px-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       {/* タイトル編集 */}
                       {isEditing ? (
-                        <div className="space-y-2 mb-3">
-                          <Label className="text-gray-300 text-sm">目標タイトル</Label>
-                          <Input
-                            value={editGoal.title}
-                            onChange={(e) => setEditGoal({...editGoal, title: e.target.value})}
-                            className="bg-gray-800 border-gray-700 text-white text-xl font-bold"
-                          />
-                        </div>
+                        <CardTitle className="text-white text-xl mb-3">目標を編集</CardTitle>
                       ) : (
                         <CardTitle className="text-white text-xl mb-3">{goal.title}</CardTitle>
                       )}
 
                     </div>
                     <div className="flex space-x-2">
-                      {isEditing ? (
-                        <>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={handleUpdateGoal}
-                            className="bg-green-500 hover:bg-green-600 text-white"
-                          >
-                            保存
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleCancelEdit}
-                            className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                          >
-                            キャンセル
-                          </Button>
-                        </>
-                      ) : (
+                      {!isEditing && (
                         <>
                           <Button
                             variant="outline"
@@ -615,144 +276,79 @@ export function Goals({ onBack }: GoalsProps) {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className=" px-2">
-                  {/* 動機編集 */}
-                  <div className="bg-gray-800 p-3 rounded-lg">
-                      {isEditing ? (
-                        <Textarea
-                          value={editGoal.motivation}
-                          onChange={(e) => setEditGoal({...editGoal, motivation: e.target.value})}
-                          className="bg-gray-700 border-gray-600 text-white text-sm min-h-[60px]"
-                        />
-                      ) : (
+                                 <CardContent className="px-2 md:px-6">
+                  {isEditing ? (
+                    <GoalForm
+                      mode="edit"
+                      initialData={{
+                        title: goal.title,
+                        motivation: goal.motivation,
+                        deadline: goal.deadline,
+                        weekdayHours: goal.weekdayHours.toString(),
+                        weekendHours: goal.weekendHours.toString()
+                      }}
+                      onSubmit={handleUpdateGoalFromForm}
+                      onCancel={handleCancelEdit}
+                    />
+                  ) : (
+                    <>
+                      {/* 動機表示 */}
+                      <div className="bg-gray-800 p-3 rounded-lg">
                         <p className="text-sm text-white">{goal.motivation}</p>
-                      )}
-                    </div>
-                  {/* 進捗表示 */}
-                  <div className="space-y-2 mt-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-300">進捗状況</span>
-                      <span className="text-sm font-medium text-white">
-                        {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
-                      </span>
-                    </div>
-                    <Progress value={progressPercentage} className="h-2" />
-                  </div>
+                      </div>
+                      
+                      {/* 進捗表示 */}
+                      <div className="space-y-2 mt-6">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">進捗状況</span>
+                          <span className="text-sm font-medium text-white">
+                            {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
+                          </span>
+                        </div>
+                        <Progress value={progressPercentage} className="h-2" />
+                      </div>
 
-                  {/* 期限と残り日数 */}
-                  <div className="flex items-center justify-between text-sm mt-6">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      {isEditing ? (
+                      {/* 期限と残り日数 */}
+                      <div className="flex items-center justify-between text-sm mt-6">
                         <div className="flex items-center space-x-2">
-                          <span className="text-gray-400 text-xs">期限:</span>
-                          <Input
-                            type="date"
-                            value={editGoal.deadline}
-                            onChange={(e) => setEditGoal({...editGoal, deadline: e.target.value})}
-                            className="bg-gray-800 border-gray-700 text-white h-7 text-xs w-32"
-                          />
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-400">期限: {goal.deadline}</span>
                         </div>
-                      ) : (
-                        <span className="text-gray-400">期限: {goal.deadline}</span>
-                      )}
-                    </div>
-                    {!isEditing && (
-                      <div className={`flex items-center space-x-1 ${
-                        isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
-                      }`}>
-                        <Clock className="w-4 h-4" />
-                        <span>
-                          {isOverdue 
-                            ? `${Math.abs(remainingDays)}日遅れ` 
-                            : `残り${remainingDays}日`
-                          }
-                        </span>
+                        <div className={`flex items-center space-x-1 ${
+                          isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
+                        }`}>
+                          <Clock className="w-4 h-4" />
+                          <span>
+                            {isOverdue 
+                              ? `${Math.abs(remainingDays)}日遅れ` 
+                              : `残り${remainingDays}日`
+                            }
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
 
-                  {/* 取り組み時間の詳細 */}
-                  <div className="bg-gray-800 py-3 px-2 rounded-lg mt-3">
-                    {isEditing ? (
-                      <div className="">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-gray-300 text-sm">平日（月〜金）の時間</Label>
-                            <Input
-                              type="text"
-                              value={editInputValues.weekdayHours}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                console.log('Input:', value)
-                                setEditInputValues({...editInputValues, weekdayHours: value})
-                              }}
-                              className="bg-gray-700 border-gray-600 text-white h-8"
-                              placeholder="2"
-                            />
-                            {validationErrors.weekdayHours && (
-                              <div className="text-xs text-red-400">{validationErrors.weekdayHours}</div>
-                            )}
+                      {/* 取り組み時間の詳細 */}
+                      <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
+                        <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
+                          <div className="flex items-center justify-center space-x-1">
+                            <Clock className="w-4 h-4 text-blue-400" />
+                            <span className="text-gray-400">平日: </span>
+                            <span className="text-white">{goal.weekdayHours}時間</span>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-gray-300 text-sm">土日の時間</Label>
-                            <Input
-                              type="text"
-                              value={editInputValues.weekendHours}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                console.log('Weekend Input:', value)
-                                setEditInputValues({...editInputValues, weekendHours: value})
-                              }}
-                              className="bg-gray-700 border-gray-600 text-white h-8"
-                              placeholder="5"
-                            />
-                            {validationErrors.weekendHours && (
-                              <div className="text-xs text-red-400">{validationErrors.weekendHours}</div>
-                            )}
+                          <div className="flex items-center justify-center space-x-1">
+                            <Clock className="w-4 h-4 text-green-400" />
+                            <span className="text-gray-400">土日: </span>
+                            <span className="text-white">{goal.weekendHours}時間</span>
                           </div>
-                        </div>
-                        
-                        {/* 自動計算結果 */}
-                        {editGoal.calculatedHours > 0 && (
-                          <div className="bg-gray-700 p-3 rounded-lg">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 text-sm">
-                              <div className="py-1">
-                                <span className="text-gray-400">週間: </span>
-                                <span className="text-white">{calculateWeeklyHours(editGoal.weekdayHours, editGoal.weekendHours)}時間</span>
-                              </div>
-                              <div className="py-1">
-                                <span className="text-gray-400">月間: </span>
-                                <span className="text-white">{calculateMonthlyHours(editGoal.weekdayHours, editGoal.weekendHours)}時間</span>
-                              </div>
-                              <div className="py-1">
-                                <span className="text-gray-400">総目標: </span>
-                                <span className="text-white font-medium">{editGoal.calculatedHours}時間</span>
-                              </div>
-                            </div>
+                          <div className="flex items-center justify-center space-x-1">
+                            <Clock className="w-4 h-4 text-purple-400" />
+                            <span className="text-gray-400">週間: </span>
+                            <span className="text-white">{weeklyHours}時間</span>
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 text-sm">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-blue-400" />
-                          <span className="text-gray-400">平日: </span>
-                          <span className="text-white">{goal.weekdayHours}時間/日</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-green-400" />
-                          <span className="text-gray-400">土日: </span>
-                          <span className="text-white">{goal.weekendHours}時間/日</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-purple-400" />
-                          <span className="text-gray-400">週間: </span>
-                          <span className="text-white">{weeklyHours}時間</span>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
 
 
                 </CardContent>
