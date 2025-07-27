@@ -335,35 +335,40 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                     {customActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700"
+                      className="p-3 bg-gray-800 rounded-lg border border-gray-700 space-y-2"
                     >
-                      <div className="flex items-center space-x-3">
-                        {activity.icon ? (
-                          <span className="text-lg">{activity.icon}</span>
-                        ) : (
-                          <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
-                        )}
-                        <span className="text-white font-medium">{activity.name}</span>
-                        {/* 現在進行中のアクティビティの場合は表示 */}
-                        {isSessionActive && currentSession && currentSession.activityId === activity.id && (
-                          <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">
-                            進行中
-                          </span>
-                        )}
+                      {/* タイトル行：アイコン・名前・ステータス・削除ボタンを横並び */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          {activity.icon ? (
+                            <span className="text-lg">{activity.icon}</span>
+                          ) : (
+                            <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
+                          )}
+                          <span className="text-white font-medium">{activity.name}</span>
+                          {/* 現在進行中のアクティビティの場合は表示 */}
+                          {isSessionActive && currentSession && currentSession.activityId === activity.id && (
+                            <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">
+                              進行中
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => handleDeleteActivity(activity.id)}
+                          variant="ghost"
+                          size="sm"
+                          disabled={!!(isSessionActive && currentSession && currentSession.activityId === activity.id)}
+                          className={`p-2 ${
+                            isSessionActive && currentSession && currentSession.activityId === activity.id
+                              ? "text-gray-500 cursor-not-allowed opacity-50"
+                              : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                          }`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button
-                        onClick={() => handleDeleteActivity(activity.id)}
-                        variant="ghost"
-                        size="sm"
-                        disabled={isSessionActive && currentSession && currentSession.activityId === activity.id}
-                        className={`p-2 ${
-                          isSessionActive && currentSession && currentSession.activityId === activity.id
-                            ? "text-gray-500 cursor-not-allowed opacity-50"
-                            : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                        }`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      
+
                     </div>
                   ))}
                     

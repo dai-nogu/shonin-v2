@@ -386,9 +386,6 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
 
-
-
-
   // ローディング状態
   if (loading) {
     return (
@@ -442,7 +439,7 @@ export function Goals({ onBack }: GoalsProps) {
             <CardHeader>
               <CardTitle className="text-white">目標を追加</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="">
               <div className="space-y-2">
                 <Label className="text-gray-300">目標 *</Label>
                 <Input
@@ -556,7 +553,7 @@ export function Goals({ onBack }: GoalsProps) {
 
             return (
               <Card key={goal.id} className="bg-gray-900 border-gray-800">
-                <CardHeader>
+                <CardHeader className="px-2">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       {/* タイトル編集 */}
@@ -572,19 +569,7 @@ export function Goals({ onBack }: GoalsProps) {
                       ) : (
                         <CardTitle className="text-white text-xl mb-3">{goal.title}</CardTitle>
                       )}
-                      
-                      {/* 動機編集 */}
-                      <div className="bg-gray-800 p-3 rounded-lg mb-4">
-                        {isEditing ? (
-                          <Textarea
-                            value={editGoal.motivation}
-                            onChange={(e) => setEditGoal({...editGoal, motivation: e.target.value})}
-                            className="bg-gray-700 border-gray-600 text-white text-sm min-h-[60px]"
-                          />
-                        ) : (
-                          <p className="text-sm text-white">{goal.motivation}</p>
-                        )}
-                      </div>
+
                     </div>
                     <div className="flex space-x-2">
                       {isEditing ? (
@@ -630,9 +615,21 @@ export function Goals({ onBack }: GoalsProps) {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className=" px-2">
+                  {/* 動機編集 */}
+                  <div className="bg-gray-800 p-3 rounded-lg">
+                      {isEditing ? (
+                        <Textarea
+                          value={editGoal.motivation}
+                          onChange={(e) => setEditGoal({...editGoal, motivation: e.target.value})}
+                          className="bg-gray-700 border-gray-600 text-white text-sm min-h-[60px]"
+                        />
+                      ) : (
+                        <p className="text-sm text-white">{goal.motivation}</p>
+                      )}
+                    </div>
                   {/* 進捗表示 */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-6">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-300">進捗状況</span>
                       <span className="text-sm font-medium text-white">
@@ -643,7 +640,7 @@ export function Goals({ onBack }: GoalsProps) {
                   </div>
 
                   {/* 期限と残り日数 */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm mt-6">
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4 text-gray-400" />
                       {isEditing ? (
@@ -676,9 +673,9 @@ export function Goals({ onBack }: GoalsProps) {
                   </div>
 
                   {/* 取り組み時間の詳細 */}
-                  <div className="bg-gray-800 p-3 rounded-lg">
+                  <div className="bg-gray-800 py-3 px-2 rounded-lg mt-3">
                     {isEditing ? (
-                      <div className="space-y-4">
+                      <div className="">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="text-gray-300 text-sm">平日（月〜金）の時間</Label>
@@ -719,16 +716,16 @@ export function Goals({ onBack }: GoalsProps) {
                         {/* 自動計算結果 */}
                         {editGoal.calculatedHours > 0 && (
                           <div className="bg-gray-700 p-3 rounded-lg">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                              <div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 text-sm">
+                              <div className="py-1">
                                 <span className="text-gray-400">週間: </span>
                                 <span className="text-white">{calculateWeeklyHours(editGoal.weekdayHours, editGoal.weekendHours)}時間</span>
                               </div>
-                              <div>
+                              <div className="py-1">
                                 <span className="text-gray-400">月間: </span>
                                 <span className="text-white">{calculateMonthlyHours(editGoal.weekdayHours, editGoal.weekendHours)}時間</span>
                               </div>
-                              <div>
+                              <div className="py-1">
                                 <span className="text-gray-400">総目標: </span>
                                 <span className="text-white font-medium">{editGoal.calculatedHours}時間</span>
                               </div>
@@ -737,7 +734,7 @@ export function Goals({ onBack }: GoalsProps) {
                         )}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 text-sm">
                         <div className="flex items-center space-x-2">
                           <Clock className="w-4 h-4 text-blue-400" />
                           <span className="text-gray-400">平日: </span>
