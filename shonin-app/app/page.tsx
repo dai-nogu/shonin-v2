@@ -336,7 +336,7 @@ export default function Dashboard() {
     <>
       <AppSidebar currentPage={currentPage} onPageChange={handlePageChange} />
       <SidebarInset>
-        <div className="min-h-screen bg-gray-950 text-white">
+        <div className="md:min-h-screen bg-gray-950 text-white">
           {/* 全ページ共通：Header - PCでは非表示 */}
           <div className="md:hidden">
             <Header currentPage={currentPage} onPageChange={handlePageChange} />

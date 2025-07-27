@@ -392,7 +392,7 @@ export function Goals({ onBack }: GoalsProps) {
   // ローディング状態
   if (loading) {
     return (
-      <div className="bg-gray-950 text-white min-h-screen">
+      <div className="bg-gray-950 text-white">
         <div className="p-6 container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -406,7 +406,7 @@ export function Goals({ onBack }: GoalsProps) {
   // エラー状態
   if (error) {
     return (
-      <div className="bg-gray-950 text-white min-h-screen">{/* ヘッダーは統一Header使用のため削除 */}
+      <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
         <div className="p-6 container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
@@ -420,7 +420,7 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   return (
-    <div className="bg-gray-950 text-white min-h-screen">{/* ヘッダーは統一Header使用のため削除 */}
+    <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
       <div className="p-6 container mx-auto max-w-4xl">
         {/* 目標追加ボタン */}
