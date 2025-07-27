@@ -51,9 +51,7 @@ export function useGoalsDb() {
       console.error('Error in fetchGoals:', err)
       setError(err instanceof Error ? err.message : '目標の取得に失敗しました')
     } finally {
-      if (forceLoading) {
-        setLoading(false)
-      }
+      setLoading(false)
     }
   }
 
