@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Save, User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock } from "lucide-react"
+import { User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useTimezone } from "@/contexts/timezone-context"
 import { TIMEZONES } from "@/lib/timezone-utils"
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface SettingsProps {
   onBack: () => void
@@ -23,6 +24,13 @@ interface SettingsProps {
 }
 
 export function Settings({ onBack, currentSession, isSessionActive }: SettingsProps) {
+  const isMobile = useIsMobile()
+  
+  // 編集モードの管理
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isEditingSecurity, setIsEditingSecurity] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  
   // ユーザー情報
   const [name, setName] = useState("山田太郎")
   const [email, setEmail] = useState("yamada@example.com")
@@ -43,18 +51,36 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   // 通知設定
   const [goalReminders, setGoalReminders] = useState(true)
 
-  // アクティビティ管理
+    // アクティビティ管理
   const { activities: customActivities, loading: activitiesLoading, deleteActivity } = useActivities()
 
-  const [isSaving, setIsSaving] = useState(false)
-
-  const handleSave = async () => {
+  // 保存ハンドラー
+  const handleSaveProfile = async () => {
     setIsSaving(true)
     // 保存処理のシミュレーション
     await new Promise(resolve => setTimeout(resolve, 1000))
     setIsSaving(false)
-    // 成功メッセージなどを表示
-    alert("設定が保存されました")
+    setIsEditingProfile(false)
+    alert("プロフィール情報が保存されました")
+  }
+
+  const handleSaveSecurity = async () => {
+    const passwordError = validatePasswords()
+    if (passwordError) {
+      alert(passwordError)
+      return
+    }
+    
+    setIsSaving(true)
+    // 保存処理のシミュレーション
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setIsSaving(false)
+    setIsEditingSecurity(false)
+    // パスワードフィールドをクリア
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
+    alert("セキュリティ設定が保存されました")
   }
 
   const handleDeleteActivity = async (activityId: string) => {
@@ -92,23 +118,23 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           <TabsList className="grid w-full grid-cols-5 bg-gray-900 border-gray-800">
             <TabsTrigger value="profile" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <User className="w-4 h-4" />
-              <span>プロフィール</span>
+              <span className={isMobile ? "hidden" : "block"}>プロフィール</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Lock className="w-4 h-4" />
-              <span>セキュリティ</span>
+              <span className={isMobile ? "hidden" : "block"}>セキュリティ</span>
             </TabsTrigger>
             <TabsTrigger value="timezone" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Globe className="w-4 h-4" />
-              <span>タイムゾーン</span>
+              <span className={isMobile ? "hidden" : "block"}>タイムゾーン</span>
             </TabsTrigger>
             <TabsTrigger value="activities" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Activity className="w-4 h-4" />
-              <span>アクティビティ</span>
+              <span className={isMobile ? "hidden" : "block"}>アクティビティ</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Bell className="w-4 h-4" />
-              <span>通知・その他</span>
+              <span className={isMobile ? "hidden" : "block"}>通知・その他</span>
             </TabsTrigger>
           </TabsList>
 
@@ -116,10 +142,23 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           <TabsContent value="profile" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  プロフィール情報
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white">
+                    {isEditingProfile ? "プロフィールを編集" : "プロフィール"}
+                  </CardTitle>
+                  <div className="flex space-x-2">
+                    {!isEditingProfile && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingProfile(true)}
+                        className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,7 +167,8 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                     <Input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      disabled={!isEditingProfile}
+                      className="bg-gray-800 border-gray-700 text-white disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -137,10 +177,39 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      disabled={!isEditingProfile}
+                      className="bg-gray-800 border-gray-700 text-white disabled:opacity-50"
                     />
                   </div>
                 </div>
+                
+                {/* 編集中のボタン */}
+                {isEditingProfile && (
+                  <div className="flex space-x-3 mt-6">
+                    <Button
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                      className="bg-green-500 hover:bg-green-600"
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>保存中...</span>
+                        </div>
+                      ) : (
+                        "保存"
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditingProfile(false)}
+                      disabled={isSaving}
+                      className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                    >
+                      キャンセル
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -149,10 +218,23 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           <TabsContent value="security" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Lock className="w-5 h-5 mr-2" />
-                  パスワード変更
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white">
+                    {isEditingSecurity ? "パスワードを変更" : "パスワード"}
+                  </CardTitle>
+                  <div className="flex space-x-2">
+                    {!isEditingSecurity && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingSecurity(true)}
+                        className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -162,13 +244,15 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                       type={showCurrentPassword ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white pr-10"
+                      disabled={!isEditingSecurity}
+                      className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700"
+                      disabled={!isEditingSecurity}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                     >
                       {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -183,13 +267,15 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                         type={showNewPassword ? "text" : "password"}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white pr-10"
+                        disabled={!isEditingSecurity}
+                        className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700"
+                        disabled={!isEditingSecurity}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                       >
                         {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -203,13 +289,15 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                         type={showConfirmPassword ? "text" : "password"}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="bg-gray-800 border-gray-700 text-white pr-10"
+                        disabled={!isEditingSecurity}
+                        className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700"
+                        disabled={!isEditingSecurity}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -220,6 +308,40 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                 {passwordError && (
                   <div className="text-red-400 text-sm">{passwordError}</div>
                 )}
+                
+                {/* 編集中のボタン */}
+                {isEditingSecurity && (
+                  <div className="flex space-x-3 mt-6">
+                    <Button
+                      onClick={handleSaveSecurity}
+                      disabled={isSaving || !!validatePasswords()}
+                      className="bg-green-500 hover:bg-green-600"
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>保存中...</span>
+                        </div>
+                      ) : (
+                        "保存"
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingSecurity(false)
+                        // フィールドをクリア
+                        setCurrentPassword("")
+                        setNewPassword("")
+                        setConfirmPassword("")
+                      }}
+                      disabled={isSaving}
+                      className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                    >
+                      キャンセル
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -228,8 +350,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           <TabsContent value="timezone" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Globe className="w-5 h-5 mr-2" />
+                <CardTitle className="text-white">
                   タイムゾーン設定
                 </CardTitle>
                 <p className="text-gray-400 text-sm">
@@ -316,12 +437,11 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           <TabsContent value="activities" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Activity className="w-5 h-5 mr-2" />
+                <CardTitle className="text-white">
                   アクティビティ管理
                 </CardTitle>
                 <p className="text-gray-400 text-sm">
-                  カスタムアクティビティの管理ができます。進行中のアクティビティは削除できません。
+                  進行中のアクティビティは削除できません。
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -396,8 +516,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           <TabsContent value="notifications" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <Bell className="w-5 h-5 mr-2" />
+                <CardTitle className="text-white">
                   通知設定
                 </CardTitle>
               </CardHeader>
@@ -418,27 +537,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
 
           </TabsContent>
 
-          {/* 保存ボタン - すべてのタブで共通 */}
-          <div className="flex justify-end pt-6 border-t border-gray-800">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || !!passwordError}
-              size="lg"
-              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8"
-            >
-              {isSaving ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>保存中...</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Save className="w-4 h-4" />
-                  <span>設定を保存</span>
-                </div>
-              )}
-            </Button>
-          </div>
+
         </Tabs>
       </div>
     </div>

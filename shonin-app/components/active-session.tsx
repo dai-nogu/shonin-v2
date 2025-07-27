@@ -361,13 +361,13 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           {/* 状態別メッセージ */}
           {sessionState === "paused" && (
             <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 border-opacity-30 rounded-lg p-3">
-              <p className="text-yellow-400 text-sm">⏸️ 一時停止中です。準備ができたら再開してください。</p>
+              <p className="text-yellow-400 text-sm">⏸一時停止中です。準備ができたら再開してください。</p>
             </div>
           )}
 
           {sessionState === "ended" && (
-            <div className="bg-blue-500 bg-opacity-20 border border-blue-500 border-opacity-30 rounded-lg p-3">
-              <p className="text-blue-400 text-sm">✏️ お疲れさまでした！振り返りを記録して保存しましょう。</p>
+            <div>
+              <p className="text-white text-sm">お疲れさまでした！<br />振り返りを記録して保存しましょう。</p>
             </div>
           )}
 
@@ -427,7 +427,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,image/heic,image/heif"
+              capture="environment"
               multiple
               onChange={handlePhotoUpload}
               className="hidden"
@@ -436,17 +437,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             {/* 写真アップロードエリア */}
             {showPhotos && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-gray-300 text-sm font-medium">写真を追加</Label>
-                  <Button
-                    onClick={handlePhotoButtonClick}
-                    size="sm"
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
-                    disabled={isUploading}
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    {isUploading ? "アップロード中..." : "写真を選択"}
-                  </Button>
+                <div className="mb-4">
+                  <Label className="text-white text-sm font-medium">写真を追加</Label>
                 </div>
 
                 {/* アップロードされた写真のプレビュー */}
@@ -503,7 +495,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                       onClick={handlePhotoButtonClick}
                       variant="outline"
                       size="sm"
-                      className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                      className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
                     >
                       写真を選択
                     </Button>
@@ -517,8 +509,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
               <div className="space-y-4">
                 {/* 気分評価 */}
                 <div className="space-y-2">
-                  <Label className="text-gray-300 text-sm font-medium">今の気分はどうですか？</Label>
-                  <div className="flex justify-center space-x-2">
+                  <Label className="text-white text-sm font-medium">今の気分はどうですか？</Label>
+                  <div className="flex justify-start space-x-2">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <Button
                         key={rating}
@@ -528,7 +520,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                         className={
                           mood === rating
                             ? "bg-green-500 hover:bg-green-600"
-                            : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
                         }
                       >
                         {rating === 1 && "😞"}
@@ -543,7 +535,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 {/* 学びや成果 */}
                 <div className="space-y-2">
-                  <Label className="text-gray-300 text-sm font-medium">今日学んだことや成果</Label>
+                  <Label className="text-white text-sm font-medium">今日学んだことや成果</Label>
                   <Textarea
                     ref={achievementsRef}
                     placeholder="どんなことを学びましたか？どんな成果がありましたか？"
@@ -555,7 +547,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 {/* 課題や改善点 */}
                 <div className="space-y-2">
-                  <Label className="text-gray-300 text-sm font-medium">課題や次回への改善点</Label>
+                  <Label className="text-white text-sm font-medium">課題や次回への改善点</Label>
                   <Textarea
                     placeholder="どんな課題がありましたか？次回はどう改善しますか？"
                     value={challenges}
@@ -566,7 +558,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 {/* 自由記述メモ */}
                 <div className="space-y-2">
-                  <Label className="text-gray-300 text-sm font-medium">その他のメモ</Label>
+                  <Label className="text-white text-sm font-medium">その他のメモ</Label>
                   <Textarea
                     placeholder="その他、記録しておきたいことがあれば..."
                     value={notes}
@@ -579,30 +571,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           </CardContent>
         </Card>
       )}
-
-      {/* 励ましメッセージ */}
-      <Card className="bg-gradient-to-r from-green-500 to-blue-500 bg-opacity-20 border-green-500 border-opacity-30 w-[90%] mx-auto">
-        <CardContent className="p-4 text-center">
-          {sessionState === "active" && (
-            <>
-              <p className="text-green-400 font-medium">🌟 素晴らしい集中力です！</p>
-              <p className="text-gray-300 text-sm mt-1">誰も見ていなくても、私たちはあなたの努力を見ています</p>
-            </>
-          )}
-          {sessionState === "paused" && (
-            <>
-              <p className="text-yellow-400 font-medium">⏸️ 少し休憩しましょう</p>
-              <p className="text-gray-300 text-sm mt-1">準備ができたら、また一緒に頑張りましょう</p>
-            </>
-          )}
-          {sessionState === "ended" && (
-            <>
-              <p className="text-white font-medium">🎉 お疲れさまでした！</p>
-              <p className="text-white text-sm mt-1">あなたの努力は確実に積み重なっています</p>
-            </>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
