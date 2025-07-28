@@ -14,6 +14,7 @@ import { useSessions } from "@/contexts/sessions-context"
 import { useTimezone } from "@/contexts/timezone-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
 import { getTimeStringInTimezone } from "@/lib/timezone-utils"
+import { cn } from "@/lib/utils"
 
 interface ActiveSessionProps {
   session: SessionData
@@ -510,18 +511,19 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 {/* 気分評価 */}
                 <div className="space-y-2">
                   <Label className="text-white text-sm font-medium">今の気分はどうですか？</Label>
-                  <div className="flex justify-start space-x-2">
+                  <div className="flex justify-start space-x-3">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <Button
                         key={rating}
                         onClick={() => setMood(rating)}
                         variant={mood === rating ? "default" : "outline"}
-                        size="sm"
-                        className={
+                        size="lg"
+                        className={cn(
+                          "h-14 w-14 text-2xl p-0 flex items-center justify-center",
                           mood === rating
                             ? "bg-green-500 hover:bg-green-600"
                             : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                        }
+                        )}
                       >
                         {rating === 1 && "😞"}
                         {rating === 2 && "😐"}

@@ -519,7 +519,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
       <div className="px-0">
         {/* 月/週切り替えボタン */}
-        <div className="bg-gray-900 border-b border-gray-800 px-4 py-3">
+        <div className="bg-gray-900 border-b border-gray-800 px-4 pt-4 pb-3">
           <div className="flex items-center space-x-2">
             <Button
               onClick={() => handleViewModeChange("month")}
