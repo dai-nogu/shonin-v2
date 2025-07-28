@@ -5,7 +5,10 @@ interface HeaderProps {
   onPageChange?: (pageId: string) => void
 }
 
-export function Header({ currentPage = "dashboard", onPageChange }: HeaderProps) {
+export function Header({ 
+  currentPage = "dashboard", 
+  onPageChange
+}: HeaderProps) {
   return (
     <header className="border-b border-gray-800 bg-gray-950">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">

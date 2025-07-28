@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { formatDuration } from "@/lib/format-duration"
+import { useTimezone } from "@/contexts/timezone-context"
+import { getWeekStartInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface CalendarSession {
@@ -30,6 +32,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")
   const [isMobile, setIsMobile] = useState(false)
+  // SP版用の下部表示状態
+  const [showBottomPanel, setShowBottomPanel] = useState(false)
+  const [bottomPanelDate, setBottomPanelDate] = useState<string>("")
+  const [bottomPanelSessions, setBottomPanelSessions] = useState<CalendarSession[]>([])
+  const { timezone } = useTimezone()
 
   useEffect(() => {
     setInternalViewMode(viewMode)
@@ -208,9 +215,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         return sessionDate.getFullYear() === year && sessionDate.getMonth() === month
       })
     } else {
-      const weekDays = getWeekDays(currentDate)
-      const weekStart = weekDays[0]
-      const weekEnd = weekDays[6]
+      // タイムゾーンを考慮した週の範囲を計算
+      const weekStart = getWeekStartInTimezone(currentDate, timezone)
+      const weekEnd = new Date(weekStart)
+      weekEnd.setDate(weekStart.getDate() + 6)
+      
       periodSessions = sessions.filter(session => {
         const sessionDate = new Date(session.date)
         return sessionDate >= weekStart && sessionDate <= weekEnd
@@ -332,9 +341,9 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
               return (
                 <div
                   key={index}
-                  onClick={day && daySessions.length > (isMobile ? 1 : 2) ? () => openSessionModal(day, daySessions) : undefined}
-                  className={`min-h-[80px] md:min-h-[120px] ${isMobile ? 'p-0' : 'md:p-2'} rounded-lg ${
-                    day ? `bg-gray-800 ${daySessions.length > (isMobile ? 1 : 2) ? "hover:bg-gray-700 cursor-pointer" : ""}` : "bg-gray-900"
+                  onClick={day ? () => openSessionModal(day, daySessions) : undefined}
+                  className={`${isMobile ? 'h-[70px]' : 'h-[120px]'} ${isMobile ? 'p-0' : 'md:p-2'} rounded-lg ${
+                    day ? `bg-gray-800 ${isMobile || daySessions.length > 2 ? "hover:bg-gray-700 cursor-pointer" : ""}` : "bg-gray-900"
                   } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                 >
                   {day && (
@@ -380,10 +389,19 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
   }
 
   const renderWeekView = () => {
-    const weekDays = getWeekDays(currentDate)
-    const weekStart = weekDays[0]
-    const weekEnd = weekDays[6]
+    // タイムゾーンを考慮した週の範囲を計算
+    const weekStart = getWeekStartInTimezone(currentDate, timezone)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekStart.getDate() + 6)
     const weekRange = `${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`
+    
+    // 週の各日を生成
+    const weekDays = []
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(weekStart)
+      day.setDate(weekStart.getDate() + i)
+      weekDays.push(day)
+    }
 
     return (
       <>
@@ -429,9 +447,9 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
               return (
                 <div
                   key={index}
-                  onClick={daySessions.length > 2 ? () => openSessionModal(day, daySessions) : undefined}
-                  className={`min-h-[280px] ${isMobile ? 'p-0' : 'p-3'} rounded-lg bg-gray-800 ${
-                    daySessions.length > 2 ? "hover:bg-gray-700 cursor-pointer" : ""
+                  onClick={isMobile ? () => openSessionModal(day, daySessions) : (daySessions.length > 2 ? () => openSessionModal(day, daySessions) : undefined)}
+                  className={`${isMobile ? '' : 'min-h-[280px]'} ${isMobile ? 'p-0' : 'p-3'} rounded-lg bg-gray-800 ${
+                    isMobile || daySessions.length > 2 ? "hover:bg-gray-700 cursor-pointer" : ""
                   } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                 >
                   <div className="text-center mb-3">
@@ -464,6 +482,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
                     )}
                   </div>
                 </div>
+                
               )
             })}
           </div>
@@ -482,8 +501,17 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
     } else {
       dateStr = `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${date}`
     }
-    setModalDate(dateStr)
-    setIsModalOpen(true)
+    
+    if (isMobile) {
+      // SP版：下部パネルを表示
+      setBottomPanelDate(dateStr)
+      setBottomPanelSessions(sessions)
+      setShowBottomPanel(true)
+    } else {
+      // PC版：モーダルを表示
+      setModalDate(dateStr)
+      setIsModalOpen(true)
+    }
   }
 
   return (
@@ -527,7 +555,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
         </Card>
 
         {/* 統計サマリー */}
-        <div className="grid grid-cols-2 gap-2 md:gap-4 mt-6">
+        <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-6 mb-2 md:mb-0">
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-2 md:p-4 text-center">
               <div className="text-lg md:text-2xl font-bold text-green-400">
@@ -547,17 +575,86 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
             <CardContent className="p-2 md:p-4 text-center">
               <div className="text-lg md:text-2xl font-bold text-purple-400">
                 {(() => {
-                  const periodSessions = getCurrentPeriodSessions()
-                  if (periodSessions.length === 0) return "0"
-                  const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
-                  const averageTime = Math.floor(totalTime / periodSessions.length)
-                  return formatDuration(averageTime)
+                  if (internalViewMode === "month") {
+                    // 月表示の場合は既存のロジック（セッション数で割る）
+                    const periodSessions = getCurrentPeriodSessions()
+                    if (periodSessions.length === 0) return "0"
+                    const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
+                    const averageTime = Math.floor(totalTime / periodSessions.length)
+                    return formatDuration(averageTime)
+                    } else {
+                     // 週表示の場合は今週の経過日数で割る
+                    const periodSessions = getCurrentPeriodSessions()
+                    if (periodSessions.length === 0) return "0"
+                    const totalTime = periodSessions.reduce((total, session) => total + session.duration, 0)
+
+                    // タイムゾーンを考慮した正確な今日の日付と週の開始日を取得
+                    const today = getCurrentTimeInTimezone(timezone)
+                    const currentWeekStart = getWeekStartInTimezone(currentDate, timezone)
+                    const currentWeekEnd = new Date(currentWeekStart)
+                    currentWeekEnd.setDate(currentWeekStart.getDate() + 6)
+                    
+                    // 今日が表示中の週の範囲内かチェック
+                    const isCurrentWeek = today >= currentWeekStart && today <= currentWeekEnd
+                    
+                    let daysPassed: number
+                    if (isCurrentWeek) {
+                      // 今週の場合：月曜日から今日までの日数
+                      const diffTime = today.getTime() - currentWeekStart.getTime()
+                      daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1 // +1は今日を含むため
+                    } else {
+                      // 過去または未来の週の場合：その週の7日間で割る
+                      daysPassed = 7
+                    }
+                    
+                    const averageTime = Math.floor(totalTime / daysPassed)
+                    return formatDuration(averageTime)
+                  }
                 })()}
               </div>
-              <div className="text-xs md:text-sm text-gray-400">今週の平均時間</div>
+              <div className="text-xs md:text-sm text-gray-400">
+                {internalViewMode === "month" ? "今月の平均時間" : "今週の平均時間"}
+              </div>
             </CardContent>
           </Card>
         </div>
+        
+        {/* SP版用：下部パネル（通常のフロー内） */}
+        {showBottomPanel && isMobile && (
+          <div>
+            {/* 日付部分 - 白い背景で区別 */}
+            <div className="text-black px-4 py-1" style={{backgroundColor: '#e4e4e4'}}>
+              <h3 className="text-lg font-medium">{bottomPanelDate}</h3>
+            </div>
+            
+            {/* アクティビティ部分 - 既存の背景色 */}
+            <div className="bg-gray-900 border-t border-gray-700">
+              <div className="pb-2">
+                <div className="space-y-3">
+                  {bottomPanelSessions.map((session) => (
+                    <div 
+                      key={session.id} 
+                      className="flex items-center justify-between pt-3 px-3 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${session.color}`} />
+                        <div className="text-white font-medium">{session.activity}</div>
+                      </div>
+                      <div className="text-gray-400 text-sm">
+                        {formatDuration(session.duration)}
+                      </div>
+                    </div>
+                  ))}
+                  {bottomPanelSessions.length === 0 && (
+                    <div className="text-center text-gray-400 py-4">
+                      この日はアクティビティがありません
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* セッション詳細モーダル */}

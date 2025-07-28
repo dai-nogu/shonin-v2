@@ -236,12 +236,15 @@ export default function Dashboard() {
     }
   }, [currentPage, isSessionActive])
 
-  // リロード時にアクティブなセッションがある場合はセッションページに遷移
+  // リロード時のみ：アクティブなセッションがある場合はセッションページに遷移
+  // ユーザーが意図的に他のページに遷移した場合は強制的に戻さない
   useEffect(() => {
-    if (isInitialized && isSessionActive && currentSession && currentPage !== "session") {
+    // 初期化完了時かつページリロード時のみセッションページに遷移
+    if (isInitialized && isSessionActive && currentSession && currentPage === "dashboard") {
+      // ダッシュボードにいる場合のみセッションページに遷移
       setCurrentPage("session")
     }
-  }, [isInitialized, isSessionActive, currentSession, currentPage])
+  }, [isInitialized, isSessionActive, currentSession])
 
   // 初期化が完了するまでローディング表示
   if (!isInitialized) {
@@ -275,7 +278,7 @@ export default function Dashboard() {
         
       case "calendar":
         return (
-          <main className="container mx-auto px-4 py-4 lg:py-4">
+          <main className="container mx-auto px-4">
             <CalendarView 
               viewMode={calendarViewMode} 
               onViewModeChange={setCalendarViewMode} 
@@ -326,6 +329,19 @@ export default function Dashboard() {
                 <div className="lg:hidden">
                   <WelcomeCard completedSessions={completedSessions} />
                 </div>
+                
+                {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
+                <div className="lg:hidden">
+                  <ActiveActivitySidebar
+                    activeSession={currentSession}
+                    isActive={isSessionActive}
+                    onViewSession={handleViewSession}
+                    onTogglePause={handleTogglePause}
+                    onEnd={handleEndSession}
+                    sessionState={sessionState}
+                  />
+                </div>
+                
                 <AIFeedback completedSessions={completedSessions} />
                 <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
               </div>
@@ -337,15 +353,17 @@ export default function Dashboard() {
                   <WelcomeCard completedSessions={completedSessions} />
                 </div>
                 
-                {/* 進行中の行動 */}
-                <ActiveActivitySidebar
-                  activeSession={currentSession}
-                  isActive={isSessionActive}
-                  onViewSession={handleViewSession}
-                  onTogglePause={handleTogglePause}
-                  onEnd={handleEndSession}
-                  sessionState={sessionState}
-                />
+                {/* PC用：進行中の行動、SP用：非表示 */}
+                <div className="hidden lg:block">
+                  <ActiveActivitySidebar
+                    activeSession={currentSession}
+                    isActive={isSessionActive}
+                    onViewSession={handleViewSession}
+                    onTogglePause={handleTogglePause}
+                    onEnd={handleEndSession}
+                    sessionState={sessionState}
+                  />
+                </div>
      
                 <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
               </div>

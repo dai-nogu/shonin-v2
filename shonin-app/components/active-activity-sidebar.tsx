@@ -48,7 +48,7 @@ export function ActiveActivitySidebar({
       <CardHeader className="pb-3">
         <CardTitle className="text-white flex items-center">
           <Clock className="w-4 h-4 mr-2" />
-          進行中の行動
+          進行中...
         </CardTitle>
       </CardHeader>
       
