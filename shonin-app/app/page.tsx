@@ -13,6 +13,7 @@ import { ActiveSession } from "@/components/active-session"
 import { CalendarView } from "@/components/calendar-view"
 import { Goals } from "@/components/goals"
 import { Settings } from "@/components/settings"
+import { BottomNavigation } from "@/components/bottom-navigation"
 import { useSessions } from "@/contexts/sessions-context"
 import { checkMultipleSessionPhotos, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
 import type { SessionData, CompletedSession } from "@/components/time-tracker"
@@ -377,14 +378,18 @@ export default function Dashboard() {
     <>
       <AppSidebar currentPage={currentPage} onPageChange={handlePageChange} />
       <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white">
-          {/* 全ページ共通：Header - PCでは非表示 */}
-          <div className="md:hidden">
-            <Header currentPage={currentPage} onPageChange={handlePageChange} />
-          </div>
+        <div className="md:min-h-screen bg-gray-950 text-white pb-20 md:pb-0">
+          {/* ダッシュボードのみ：Header - SPでのみ表示 */}
+          {currentPage === "dashboard" && (
+            <div className="md:hidden">
+              <Header currentPage={currentPage} onPageChange={handlePageChange} />
+            </div>
+          )}
           {renderContent()}
         </div>
       </SidebarInset>
+      {/* モバイル用下部固定ナビゲーション */}
+      <BottomNavigation currentPage={currentPage} onPageChange={handlePageChange} />
     </>
   )
 }

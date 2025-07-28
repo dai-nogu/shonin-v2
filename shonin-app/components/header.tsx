@@ -19,12 +19,12 @@ export function Header({
           <h1 className="text-xl font-bold text-white">SHONIN</h1>
         </div>
         
-        {/* SP専用：ハンバーガーメニュー */}
-        {onPageChange && (
+        {/* SP専用：ハンバーガーメニュー（ボトムナビゲーション実装により非表示） */}
+        {/* {onPageChange && (
           <div className="md:hidden">
             <MobileMenu currentPage={currentPage} onPageChange={onPageChange} />
           </div>
-        )}
+        )} */}
       </div>
     </header>
   )
