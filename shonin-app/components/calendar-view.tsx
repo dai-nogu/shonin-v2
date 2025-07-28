@@ -630,11 +630,11 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
             {/* アクティビティ部分 - 既存の背景色 */}
             <div className="bg-gray-900 border-t border-gray-700">
               <div className="pb-2">
-                <div className="space-y-3">
+                <div>
                   {bottomPanelSessions.map((session) => (
                     <div 
                       key={session.id} 
-                      className="flex items-center justify-between pt-3 px-3 rounded-lg"
+                      className="flex items-center justify-between py-2 px-3 rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full ${session.color}`} />
