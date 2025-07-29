@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, Calendar, History } from "lucide-react"
+import { X, Play, Eye, History } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ModalPagination } from "@/components/ui/modal-pagination"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
@@ -98,10 +99,11 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     return formatDate(date)
   }
 
-  // 最新順でセッションを取得
+  // 最新順でセッションを取得（最大100件）
   const getRecentSessions = (): SessionItem[] => {
     return completedSessions
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
+      .slice(0, 100) // 最大100件に制限
       .map(session => {
         const activityInfo = activityIcons[session.activityName] || {
           icon: session.activityIcon,
@@ -213,7 +215,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
             </CardTitle>
           </CardHeader>
 
-          <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6">
+          <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pb-3 sm:pb-6">
             <div className="space-y-2 sm:space-y-3">
               {currentSessions.map((sessionItem, index) => (
                 <div
@@ -297,65 +299,13 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
               )}
             </div>
 
-            {/* ページネーション */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2 sm:space-x-2 mt-3 sm:mt-6 pt-2 sm:pt-4 border-t border-gray-800">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50 px-3 sm:px-3"
-                >
-                  <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-                </Button>
-
-                <div className="flex items-center space-x-2">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number
-                    if (totalPages <= 5) {
-                      pageNum = i + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i
-                    } else {
-                      pageNum = currentPage - 2 + i
-                    }
-
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className={
-                          currentPage === pageNum
-                            ? "bg-green-600 hover:bg-green-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
-                            : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
-                        }
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50 px-3 sm:px-3"
-                >
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                </Button>
-
-                <span className="text-xs sm:text-sm text-gray-400 ml-2 sm:ml-4 hidden sm:inline">
-                  {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, sessions.length)} / {sessions.length}
-                </span>
-              </div>
-            )}
+            <ModalPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={sessions.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+            />
           </CardContent>
         </Card>
       </div>

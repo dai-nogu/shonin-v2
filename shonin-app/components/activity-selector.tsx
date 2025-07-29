@@ -182,7 +182,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
         <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
           行動を記録する
         </CardTitle>
-        <p className="text-gray-400 text-sm">見えない努力を、確かな記録へ</p>
+        <p className="text-gray-400 text-sm">私はすべての努力を記録します</p>
       </CardHeader>
 
       <CardContent className="space-y-4 lg:space-y-6">
@@ -430,10 +430,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 </>
               )}
             </Button>
-
-            <p className="text-gray-400 text-xs text-center">
-              *停止するまでは、ずっと記録されています。
-            </p>
           </>
         )}
       </CardContent>

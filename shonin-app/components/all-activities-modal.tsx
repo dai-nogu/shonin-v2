@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, ChevronLeft, ChevronRight, Play, Eye, Clock, Calendar, Star, MapPin, BarChart3 } from "lucide-react"
+import { X, Play, Eye, Clock, Calendar, Star, MapPin, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ModalPagination } from "@/components/ui/modal-pagination"
 import { SessionDetailModal } from "./session-detail-modal"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
@@ -85,10 +86,11 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
     })
   }
 
-  // 全セッションをアクティビティアイテムに変換
+  // 全セッションをアクティビティアイテムに変換（最大100件）
   const getAllActivities = (): ActivityItem[] => {
     return completedSessions
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
+      .slice(0, 100) // 最大100件に制限
       .map(session => {
         const activityInfo = activityIcons[session.activityName] || {
           icon: "📝",
@@ -101,7 +103,7 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatDate(new Date(session.endTime)),
-          rating: session.mood,
+          rating: session.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
@@ -111,7 +113,7 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
       })
   }
 
-  // アクティビティ名でグループ化（重複排除）
+  // アクティビティ名でグループ化（重複排除、最大100活動）
   const getUniqueActivities = (): ActivityItem[] => {
     const activityMap = new Map<string, ActivityItem>()
     
@@ -129,7 +131,7 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
           name: session.activityName,
           duration: formatDuration(session.duration),
           date: formatDate(new Date(session.endTime)),
-          rating: session.mood,
+          rating: session.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
@@ -141,6 +143,7 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
 
     return Array.from(activityMap.values())
       .sort((a, b) => new Date(b.session.endTime).getTime() - new Date(a.session.endTime).getTime())
+      .slice(0, 100) // 最大100活動に制限
   }
 
   const activities = activeTab === "all" ? getAllActivities() : getUniqueActivities()
@@ -310,65 +313,14 @@ export function AllActivitiesModal({ isOpen, completedSessions, onClose, onStart
               </TabsContent>
             </Tabs>
 
-            {/* ページネーション */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2 mt-6 pt-4 border-t border-gray-800">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number
-                    if (totalPages <= 5) {
-                      pageNum = i + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i
-                    } else {
-                      pageNum = currentPage - 2 + i
-                    }
-
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className={
-                          currentPage === pageNum
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                        }
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-
-                <span className="text-sm text-gray-400 ml-4">
-                  {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, activities.length)} / {activities.length}
-                </span>
-              </div>
-            )}
+            <ModalPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={activities.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              className="mt-6"
+            />
           </CardContent>
         </Card>
       </div>
