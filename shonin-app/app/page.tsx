@@ -279,7 +279,7 @@ export default function Dashboard() {
         
       case "calendar":
         return (
-          <main className="container mx-auto px-4">
+          <main className="container mx-auto px-4 py-4 lg:py-8">
             <CalendarView 
               viewMode={calendarViewMode} 
               onViewModeChange={setCalendarViewMode} 
@@ -325,14 +325,14 @@ export default function Dashboard() {
           <main className="container mx-auto px-4 py-4 lg:py-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
               {/* メインエリア - 2列分 */}
-              <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+              <div className="lg:col-span-2">
                 {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
-                <div className="lg:hidden">
+                <div className="lg:hidden mb-4 lg:mb-6">
                   <WelcomeCard completedSessions={completedSessions} />
                 </div>
                 
                 {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
-                <div className="lg:hidden">
+                <div className="lg:hidden mb-4 lg:mb-6">
                   <ActiveActivitySidebar
                     activeSession={currentSession}
                     isActive={isSessionActive}
@@ -344,11 +344,13 @@ export default function Dashboard() {
                 </div>
                 
                 <AIFeedback completedSessions={completedSessions} />
-                <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+                <div className="mt-4 lg:mt-6">
+                  <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+                </div>
               </div>
 
               {/* サイドバー - 1列分 */}
-              <div className="space-y-4 lg:space-y-6 mt-6">
+              <div className="space-y-4 lg:space-y-6">
                 {/* PC用：WelcomeCardを表示、SP用：非表示 */}
                 <div className="hidden lg:block">
                   <WelcomeCard completedSessions={completedSessions} />
