@@ -61,7 +61,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
   return (
     <Sidebar className="border-r border-gray-800">
-      <SidebarHeader className="border-b border-gray-800 p-4">
+      <SidebarHeader className="border-gray-800 p-4">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">S</span>
@@ -75,7 +75,6 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400">メニュー</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (

@@ -519,7 +519,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
       <div className="px-0">
         {/* 月/週切り替えボタン */}
-        <div className="bg-gray-900 border-b border-gray-800 px-4 pt-4 pb-3">
+        <div className="bg-gray-900 px-4 pt-6 pb-3">
           <div className="flex items-center space-x-2">
             <Button
               onClick={() => handleViewModeChange("month")}
@@ -550,7 +550,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
           </div>
         </div>
 
-        <Card className="bg-gray-900 border-gray-800 border-l-0 border-r-0 rounded-none">
+        <Card className="bg-gray-900 border-0 rounded-none">
           {internalViewMode === "month" ? renderMonthView() : renderWeekView()}
         </Card>
 
@@ -667,7 +667,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
             {selectedDateSessions.map((session) => (
               <div 
                 key={session.id} 
-                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30`}
+                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border-opacity-30`}
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{session.icon}</span>

@@ -199,14 +199,15 @@ export function Goals({ onBack }: GoalsProps) {
     <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
       <div className="container mx-auto max-w-4xl">
-        {/* 目標追加ボタン */}
+        {/* 目標追加ボタン - 右下固定 */}
         {!isAddingGoal && goals.length > 0 && (
-          <div className="mb-6 text-right">
+          <div className="fixed bottom-6 right-6 z-50">
             <Button
               onClick={() => setIsAddingGoal(true)}
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-green-500 hover:bg-green-600 shadow-lg"
+              size="lg"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               目標を追加
             </Button>
           </div>

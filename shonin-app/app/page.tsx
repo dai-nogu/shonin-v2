@@ -348,7 +348,7 @@ export default function Dashboard() {
               </div>
 
               {/* サイドバー - 1列分 */}
-              <div className="space-y-4 lg:space-y-6">
+              <div className="space-y-4 lg:space-y-6 mt-6">
                 {/* PC用：WelcomeCardを表示、SP用：非表示 */}
                 <div className="hidden lg:block">
                   <WelcomeCard completedSessions={completedSessions} />
