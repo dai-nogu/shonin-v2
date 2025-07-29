@@ -68,7 +68,6 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">SHONIN</h1>
-            <p className="text-xs text-gray-400">努力の証人</p>
           </div>
         </div>
       </SidebarHeader>
