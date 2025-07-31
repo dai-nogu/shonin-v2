@@ -56,7 +56,7 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
 
   // CompletedSessionをCalendarSessionに変換する関数
   const convertToCalendarSessions = (sessions: CompletedSession[]): CalendarSession[] => {
-    return sessions.map((session) => {
+    return sessions.map((session, index) => {
       // セッションデータの安全性チェック
       if (!session || !session.endTime) {
         return {
@@ -108,9 +108,17 @@ export function CalendarView({ viewMode = "month", onViewModeChange, completedSe
       }
 
       const style = getActivityStyle(session)
-      // セッションの開始時刻を基準に日付を決定（日付跨ぎ対応）
-      const sessionDate = new Date(session.startTime)
-      const dateStr = `${sessionDate.getFullYear()}-${String(sessionDate.getMonth() + 1).padStart(2, "0")}-${String(sessionDate.getDate()).padStart(2, "0")}`
+      
+      // セッション日付の決定：session_dateがあればそれを使用、なければstartTimeから計算
+      let dateStr: string
+      if (session.sessionDate) {
+        // データベースに保存されたsession_dateを使用（最も確実）
+        dateStr = session.sessionDate
+      } else {
+        // フォールバック：startTimeから計算（従来の方法）
+        const sessionDate = new Date(session.startTime)
+        dateStr = sessionDate.toLocaleDateString('sv-SE', { timeZone: timezone })
+      }
 
       return {
         id: session.id || Date.now().toString(),

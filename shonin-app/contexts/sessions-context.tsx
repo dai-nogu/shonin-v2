@@ -22,6 +22,7 @@ export interface CompletedSession extends SessionData {
   id: string
   endTime: Date
   duration: number
+  sessionDate?: string // セッション日付（YYYY-MM-DD形式）
   mood?: number
   achievements?: string
   challenges?: string
@@ -265,19 +266,24 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     try {
       // タイムゾーンを考慮した開始時刻を使用
       const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
+      const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
       
       await addSession({
         activity_id: sessionData.activityId,
         start_time: startTimeInTimezone.toISOString(),
         end_time: null, // 進行中なのでend_timeはnull
         duration: 0,
+        session_date: sessionDate, // セッション日付を設定
         location: sessionData.location || null,
         notes: null,
         mood: null,
         achievements: null,
         challenges: null,
         goal_id: sessionData.goalId || null, // 目標IDを保存
-      })
+      }, true) // refetchをスキップ
+      
+      // 手動でrefetch
+      await refetch()
       
       // セッションデータの開始時刻もタイムゾーンを考慮
       const updatedSessionData = {
@@ -295,6 +301,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       console.error('セッション開始時のDB保存エラー:', error)
       // エラーが発生してもセッションは開始する
       const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
+      const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
       const updatedSessionData = {
         ...sessionData,
         startTime: startTimeInTimezone
@@ -323,7 +330,17 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     return splitSessionByDateInTimezone(startTime, endTime, totalDuration, timezone)
   }
 
+  // 保存処理の重複実行を防ぐフラグ
+  const saveInProgressRef = useRef(false)
+
   const saveSession = async (completedSession: CompletedSession): Promise<string | null> => {
+    if (saveInProgressRef.current) {
+      return null
+    }
+    
+    // 保存処理開始フラグを設定
+    saveInProgressRef.current = true
+    
     try {
       let mainSessionId: string | null = null
       
@@ -338,14 +355,16 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         // 同じ日のセッション（従来の処理）
         if (activeSession) {
           // 既存の進行中セッションを更新
+          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
           const success = await updateSession(activeSession.id, {
             end_time: completedSession.endTime.toISOString(),
             duration: completedSession.duration,
+            session_date: sessionDate, // セッション日付を設定
             notes: completedSession.notes || null,
             mood: completedSession.mood || null,
             achievements: completedSession.achievements || null,
             challenges: completedSession.challenges || null,
-          })
+          }, true) // refetchをスキップ
           
           if (success) {
             mainSessionId = activeSession.id
@@ -354,19 +373,24 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           }
         } else {
           // 新規セッションとして保存
+          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
           mainSessionId = await addSession({
             activity_id: completedSession.activityId,
             start_time: completedSession.startTime.toISOString(),
             end_time: completedSession.endTime.toISOString(),
             duration: completedSession.duration,
+            session_date: sessionDate, // セッション日付を設定
             notes: completedSession.notes || null,
             mood: completedSession.mood || null,
             achievements: completedSession.achievements || null,
             challenges: completedSession.challenges || null,
             location: completedSession.location || null,
             goal_id: completedSession.goalId || null,
-          })
+          }, true) // refetchをスキップ
         }
+        
+        // 通常のセッション保存完了後にrefetch
+        await refetch()
       } else {
         // 日付を跨ぐセッション - 分割して保存
         
@@ -375,8 +399,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           completedSession.endTime,
           completedSession.duration
         )
-
-
 
         // 既存の進行中セッションがあれば削除（分割されたセッションで置き換える）
         if (activeSession) {
@@ -390,19 +412,21 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           // メモや気分などの情報は開始日のセッションに保存
           // （前日に終了して翌日に保存した場合、前日のセッションに記録される）
           const isStartSession = i === 0 // 最初のセッション（開始日）をメインとする
+          const isLastSession = i === splitSessions.length - 1 // 最後のセッション
           
           const sessionId = await addSession({
             activity_id: completedSession.activityId,
             start_time: splitSession.startTime.toISOString(),
             end_time: splitSession.endTime.toISOString(),
             duration: splitSession.duration,
+            session_date: splitSession.date, // 分割時に計算された正しい日付を保存
             notes: isStartSession ? (completedSession.notes || null) : null, // メモは開始日のセッションに
             mood: isStartSession ? (completedSession.mood || null) : null, // 気分も開始日のセッションに
             achievements: isStartSession ? (completedSession.achievements || null) : null,
             challenges: isStartSession ? (completedSession.challenges || null) : null,
             location: completedSession.location || null,
             goal_id: completedSession.goalId || null,
-          })
+          }, !isLastSession) // 最後のセッション以外はrefetchをスキップ
 
           if (isStartSession) {
             mainSessionId = sessionId
@@ -425,6 +449,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     } catch (error) {
       console.error("セッション保存エラー:", error)
       throw error
+    } finally {
+      // 保存処理終了フラグをリセット
+      saveInProgressRef.current = false
     }
   }
 

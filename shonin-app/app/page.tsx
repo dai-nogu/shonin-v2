@@ -99,6 +99,7 @@ export default function Dashboard() {
         startTime: new Date(session.start_time),
         endTime: new Date(session.end_time!),
         duration: session.duration,
+        sessionDate: session.session_date || undefined, // データベースのsession_dateを設定
         location: session.location || '',
         notes: session.notes || '',
         mood: session.mood || undefined,

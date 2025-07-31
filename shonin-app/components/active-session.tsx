@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -156,9 +156,16 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
     fileInputRef.current?.click()
   }
 
-  const handleSave = async () => {
-    if (isSaving) return // 重複保存を防ぐ
+  // 保存処理の重複実行を防ぐフラグ
+  const saveInProgressRef = useRef(false)
+
+  const handleSave = useCallback(async () => {
+    if (isSaving || saveInProgressRef.current) {
+      return // 重複保存を防ぐ
+    }
     
+    // 保存処理開始フラグを設定
+    saveInProgressRef.current = true
     setIsSaving(true)
     
     try {
@@ -182,7 +189,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
         try {
           setIsUploading(true)
           const uploadedPhotoResults = await uploadPhotos(photos, savedSessionId)
-          // setSavedPhotos(uploadedPhotoResults) // この行は削除
           setPhotos([]) // アップロード完了後にクリア
         } catch (photoError) {
           console.error('写真アップロードエラー:', photoError)
@@ -192,8 +198,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
         }
       }
        
-       // セッションが正常に保存された場合のみ振り返りデータを保存
-       if (savedSessionId) {
+      // セッションが正常に保存された場合のみ振り返りデータを保存
+      if (savedSessionId) {
         const reflectionData: SessionReflection = {
           moodScore: mood,
           achievements: achievements.trim() || '特になし',
@@ -204,23 +210,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
         
         const reflectionId = await saveReflection(savedSessionId, reflectionData)
         
-        if (reflectionId) {
-          // 振り返りが保存されたことを通知
-          setTimeout(() => {
-            onSave(sessionData)
-          }, 1000)
-        } else {
+        if (!reflectionId) {
           // 振り返り保存に失敗した場合でもセッション保存は継続
           setLocalReflectionError('振り返りの保存に失敗しました。')
-          setTimeout(() => {
-            onSave(sessionData)
-          }, 1000)
         }
-      } else {
-        // 振り返りデータがない場合は直接保存
-        setTimeout(() => {
-          onSave(sessionData)
-        }, 1000)
       }
       
       // 保存が成功したらローカルストレージをクリア
@@ -231,8 +224,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       setLocalReflectionError('保存処理でエラーが発生しました。')
     } finally {
       setIsSaving(false)
+      saveInProgressRef.current = false // 保存処理完了フラグをリセット
     }
-  }
+  }, [session, elapsedTime, notes, mood, achievements, challenges, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage])
 
   const getStatusInfo = () => {
     switch (sessionState) {

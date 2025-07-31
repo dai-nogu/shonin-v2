@@ -57,7 +57,7 @@ export function useSessionsDb() {
   }, []) // 依存配列を空にしてメモ化
 
   // セッションを追加
-  const addSession = useCallback(async (session: Omit<SessionInsert, 'user_id'>): Promise<string | null> => {
+  const addSession = useCallback(async (session: Omit<SessionInsert, 'user_id'>, skipRefetch: boolean = false): Promise<string | null> => {
     try {
       const { data, error } = await supabase
         .from('sessions')
@@ -73,8 +73,10 @@ export function useSessionsDb() {
         throw error
       }
 
-      // リストを更新（非同期で実行、エラーは無視）
-      fetchSessions().catch(console.error)
+      // skipRefetchがfalseの場合のみリストを更新
+      if (!skipRefetch) {
+        fetchSessions().catch(console.error)
+      }
       return data.id
     } catch (err) {
       console.error('Error in addSession:', err)
@@ -84,7 +86,7 @@ export function useSessionsDb() {
   }, [fetchSessions])
 
   // セッションを更新
-  const updateSession = useCallback(async (id: string, updates: SessionUpdate): Promise<boolean> => {
+  const updateSession = useCallback(async (id: string, updates: SessionUpdate, skipRefetch: boolean = false): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('sessions')
@@ -96,8 +98,10 @@ export function useSessionsDb() {
         throw error
       }
 
-      // リストを更新（非同期で実行、エラーは無視）
-      fetchSessions().catch(console.error)
+      // skipRefetchがfalseの場合のみリストを更新
+      if (!skipRefetch) {
+        fetchSessions().catch(console.error)
+      }
       return true
     } catch (err) {
       console.error('Error in updateSession:', err)

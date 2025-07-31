@@ -68,6 +68,7 @@ export interface Database {
           start_time: string
           end_time: string | null
           duration: number
+          session_date: string | null // セッション日付（追加）
           notes: string | null
           mood: number | null
           achievements: string | null
@@ -106,6 +107,7 @@ export interface Database {
           start_time: string
           end_time?: string | null
           duration?: number
+          session_date?: string | null // セッション日付（追加）
           notes?: string | null
           mood?: number | null
           achievements?: string | null
@@ -144,6 +146,7 @@ export interface Database {
           start_time?: string
           end_time?: string | null
           duration?: number
+          session_date?: string | null // セッション日付（追加）
           notes?: string | null
           mood?: number | null
           achievements?: string | null
