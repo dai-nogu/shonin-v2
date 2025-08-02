@@ -63,7 +63,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
     >
       <Card 
         className={`bg-gray-900 border-gray-800 max-w-md w-full mx-auto ${
-          isMobile ? 'h-[500px] overflow-hidden' : ''
+          isMobile ? 'h-[450px] overflow-hidden' : ''
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -79,7 +79,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
           <CardTitle className="text-white text-center text-lg">開始しますか？</CardTitle>
         </CardHeader>
 
-        <CardContent className={`space-y-4 ${isMobile ? 'h-[420px] overflow-y-auto' : 'space-y-6'}`}>
+        <CardContent className={`space-y-4 ${isMobile ? 'h-[390px] overflow-y-auto' : 'space-y-6'}`}>
           {/* アクティビティ情報 */}
           <div className={`p-3 rounded-lg ${activity.color} bg-opacity-20 border border-opacity-30`}>
             <div className="flex items-center space-x-3 mb-3">

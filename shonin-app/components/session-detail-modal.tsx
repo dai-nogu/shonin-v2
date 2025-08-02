@@ -172,7 +172,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const renderPage1 = () => (
     <div className="space-y-4">
       {/* 基本情報 */}
-      <div className="grid grid-cols-1 gap-5">
+      <div className="grid grid-cols-1 gap-1">
         {/* 実施日時と場所を横並び */}
         <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
           <Card className="bg-gray-800 border-gray-700">
@@ -340,7 +340,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     >
       <Card 
         className={`bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto ${
-          isMobile ? 'h-[500px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
+          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -376,7 +376,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         </CardHeader>
 
         {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
-        <CardContent className={`flex flex-col ${isMobile ? 'h-[340px]' : 'min-h-0'} relative`}>
+        <CardContent className={`flex flex-col ${isMobile ? 'h-[290px]' : 'min-h-0'} relative`}>
           {/* ナビゲーションボタン（SP用） */}
           {isMobile && currentPage > 1 && totalPages > 1 && (
             <Button
@@ -706,7 +706,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const renderPage1 = () => (
     <div className="space-y-4">
       {/* 基本情報 */}
-      <div className="grid grid-cols-1 gap-5">
+      <div className="grid grid-cols-1 gap-1">
         {/* 実施日時と場所を横並び */}
         <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
           <Card className="bg-gray-800 border-gray-700">
@@ -937,7 +937,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     >
       <Card 
         className={`bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto ${
-          isMobile ? 'h-[500px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
+          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -973,7 +973,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         </CardHeader>
 
         {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
-        <CardContent className={`flex flex-col ${isMobile ? 'h-[340px]' : 'min-h-0'} relative`}>
+        <CardContent className={`flex flex-col ${isMobile ? 'h-[290px]' : 'min-h-0'} relative`}>
           {/* ナビゲーションボタン（SP用） */}
           {isMobile && currentPage > 1 && totalPages > 1 && (
             <Button

@@ -29,7 +29,7 @@ const menuItems = [
     id: "calendar",
   },
   {
-    title: "目標管理",
+    title: "目標",
     url: "/goals",
     icon: Target,
     id: "goals",

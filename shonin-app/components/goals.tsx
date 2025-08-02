@@ -30,9 +30,11 @@ interface Goal {
 
 interface GoalsProps {
   onBack: () => void
+  onEditingChange?: (isEditing: boolean) => void
+  onAddingChange?: (isAdding: boolean) => void
 }
 
-export function Goals({ onBack }: GoalsProps) {
+export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
   // データベースフック
   const { 
     goals: dbGoals, 
@@ -120,6 +122,7 @@ export function Goals({ onBack }: GoalsProps) {
     
     if (goalId) {
       setIsAddingGoal(false)
+      onAddingChange?.(false)
     } else {
       alert('目標の追加に失敗しました')
     }
@@ -127,6 +130,7 @@ export function Goals({ onBack }: GoalsProps) {
 
   const handleEditGoal = (goalId: string) => {
     setEditingGoal(goalId)
+    onEditingChange?.(true)
   }
 
   const handleUpdateGoalFromForm = async (formData: any) => {
@@ -145,6 +149,7 @@ export function Goals({ onBack }: GoalsProps) {
     
     if (success) {
       setEditingGoal(null)
+      onEditingChange?.(false)
     } else {
       alert('目標の更新に失敗しました')
     }
@@ -152,6 +157,7 @@ export function Goals({ onBack }: GoalsProps) {
 
   const handleCancelEdit = () => {
     setEditingGoal(null)
+    onEditingChange?.(false)
   }
 
   const handleDeleteGoal = async (goalId: string) => {
@@ -165,24 +171,12 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
 
-  // ローディング状態
-  if (loading) {
-    return (
-      <div className="bg-gray-950 text-white">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-400">目標を読み込み中...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   // エラー状態
   if (error) {
     return (
-      <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
+      <div className="text-white">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
@@ -196,15 +190,29 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   return (
-    <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
+    <div className="text-white">
 
       <div className="container mx-auto max-w-4xl">
         {/* 目標追加ボタン - 右下固定 */}
-        {!isAddingGoal && goals.length > 0 && (
-          <div className="fixed bottom-6 right-6 z-50">
+        {!isAddingGoal && !editingGoal && goals.length > 0 && (
+          <div className="fixed bottom-24 md:bottom-6 right-6 z-[60]">
+            {/* スマートフォン表示：緑の丸ボタン */}
             <Button
-              onClick={() => setIsAddingGoal(true)}
-              className="bg-green-500 hover:bg-green-600 shadow-lg"
+              onClick={() => {
+                setIsAddingGoal(true)
+                onAddingChange?.(true)
+              }}
+              className="md:hidden bg-green-500 hover:bg-green-600 shadow-lg w-11 h-11 rounded-full p-0"
+            >
+              <Plus className="w-8 h-8" />
+            </Button>
+            {/* PC表示：従来のボタン */}
+            <Button
+              onClick={() => {
+                setIsAddingGoal(true)
+                onAddingChange?.(true)
+              }}
+              className="hidden md:flex bg-green-500 hover:bg-green-600 shadow-lg"
               size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -223,15 +231,28 @@ export function Goals({ onBack }: GoalsProps) {
               <GoalForm
                 mode="create"
                 onSubmit={handleAddGoalFromForm}
-                onCancel={() => setIsAddingGoal(false)}
+                onCancel={() => {
+                  setIsAddingGoal(false)
+                  onAddingChange?.(false)
+                }}
               />
             </CardContent>
           </Card>
         )}
 
         {/* 目標一覧 */}
-        <div className="space-y-6">
-          {goals.map((goal) => {
+        {!isAddingGoal && (
+          <div className="space-y-6">
+            {goals
+              .filter((goal) => {
+                // 編集中の場合は編集対象の目標のみ表示
+                if (editingGoal) {
+                  return goal.id === editingGoal
+                }
+                // 編集中でない場合は全ての目標を表示
+                return true
+              })
+              .map((goal) => {
             const progressPercentage = getProgressPercentage(goal.currentValue, goal.targetValue)
             const remainingDays = getRemainingDays(goal.deadline)
             const isOverdue = remainingDays < 0
@@ -247,7 +268,7 @@ export function Goals({ onBack }: GoalsProps) {
                     <div className="flex-1">
                       {/* タイトル編集 */}
                       {isEditing ? (
-                        <CardTitle className="text-white text-xl mb-3">目標を編集</CardTitle>
+                        <CardTitle className="text-white text-xl mb-3">編集中...</CardTitle>
                       ) : (
                         <CardTitle className="text-white text-xl mb-3">{goal.title}</CardTitle>
                       )}
@@ -357,13 +378,17 @@ export function Goals({ onBack }: GoalsProps) {
             )
           })}
         </div>
+        )}
 
         {!loading && goals.length === 0 && !isAddingGoal && (
           <div className="text-center py-12">
             <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-400 mb-2">目標を設定しよう</h3>
             <Button
-              onClick={() => setIsAddingGoal(true)}
+              onClick={() => {
+                setIsAddingGoal(true)
+                onAddingChange?.(true)
+              }}
               className="bg-green-500 hover:bg-green-600 px-8 md:px-12 py-3"
             >
               <Plus className="w-4 h-4 mr-2" />

@@ -185,7 +185,7 @@ export function GoalForm({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-gray-300">平日（月〜金）の時間</Label>
+          <Label className="text-gray-300">平日（月〜金）の時間 *</Label>
           <Input
             type="text"
             value={formData.weekdayHours}
@@ -201,7 +201,7 @@ export function GoalForm({
           )}
         </div>
         <div className="space-y-1">
-          <Label className="text-gray-300">土日の時間</Label>
+          <Label className="text-gray-300">土日の時間 *</Label>
           <Input
             type="text"
             value={formData.weekendHours}
@@ -240,19 +240,19 @@ export function GoalForm({
 
       <div className="flex space-x-3">
         <Button 
-          onClick={handleSubmit} 
-          disabled={isSubmitting}
-          className="bg-green-500 hover:bg-green-600"
-        >
-          {mode === "create" ? "目標を追加" : "保存"}
-        </Button>
-        <Button 
           variant="outline" 
           onClick={onCancel}
           disabled={isSubmitting}
           className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
         >
           キャンセル
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isSubmitting}
+          className="bg-green-500 hover:bg-green-600"
+        >
+          {mode === "create" ? "目標を追加" : "保存"}
         </Button>
       </div>
     </div>

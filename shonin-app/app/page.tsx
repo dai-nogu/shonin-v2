@@ -23,6 +23,8 @@ export default function Dashboard() {
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">("month")
   const [isInitialized, setIsInitialized] = useState(false)
   const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
+  const [isGoalEditing, setIsGoalEditing] = useState(false)
+  const [isGoalAdding, setIsGoalAdding] = useState(false)
 
   // セッションコンテキストから状態を取得
   const {
@@ -302,7 +304,11 @@ export default function Dashboard() {
       case "goals":
         return (
           <main className="container mx-auto px-4 py-4 lg:py-8">
-            <Goals onBack={() => setCurrentPage("dashboard")} />
+            <Goals 
+              onBack={() => setCurrentPage("dashboard")} 
+              onEditingChange={setIsGoalEditing}
+              onAddingChange={setIsGoalAdding}
+            />
           </main>
         )
         
@@ -379,9 +385,14 @@ export default function Dashboard() {
 
   return (
     <>
-      <AppSidebar currentPage={currentPage} onPageChange={handlePageChange} />
+      {/* 目標編集中・追加中はサイドバーを非表示 */}
+      {!(currentPage === "goals" && (isGoalEditing || isGoalAdding)) && (
+        <AppSidebar currentPage={currentPage} onPageChange={handlePageChange} />
+      )}
       <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white pb-20 md:pb-0">
+        <div className={`md:min-h-screen bg-gray-950 text-white md:pb-0 ${
+          currentPage === "goals" && (isGoalEditing || isGoalAdding) ? "pb-0" : "pb-20"
+        }`}>
           {/* ダッシュボードのみ：Header - SPでのみ表示 */}
           {currentPage === "dashboard" && (
             <div className="md:hidden">
@@ -391,8 +402,10 @@ export default function Dashboard() {
           {renderContent()}
         </div>
       </SidebarInset>
-      {/* モバイル用下部固定ナビゲーション */}
-      <BottomNavigation currentPage={currentPage} onPageChange={handlePageChange} />
+      {/* モバイル用下部固定ナビゲーション - 目標編集中・追加中は非表示 */}
+      {!(currentPage === "goals" && (isGoalEditing || isGoalAdding)) && (
+        <BottomNavigation currentPage={currentPage} onPageChange={handlePageChange} />
+      )}
     </>
   )
 }

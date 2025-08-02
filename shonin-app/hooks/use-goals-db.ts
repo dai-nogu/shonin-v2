@@ -38,7 +38,7 @@ export function useGoalsDb() {
         .from('goals')
         .select('*')
         .eq('user_id', DUMMY_USER_ID)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })
 
       if (error) {
         console.error('Goals fetch error:', error)
