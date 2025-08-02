@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save } from "lucide-react"
+import { User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save, LogOut } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useTimezone } from "@/contexts/timezone-context"
 import { TIMEZONES } from "@/lib/timezone-utils"
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useAuth } from "@/contexts/auth-context"
 
 interface SettingsProps {
   onBack: () => void
@@ -25,6 +26,7 @@ interface SettingsProps {
 
 export function Settings({ onBack, currentSession, isSessionActive }: SettingsProps) {
   const isMobile = useIsMobile()
+  const { signOut } = useAuth()
   
   // 編集モードの管理
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -95,6 +97,16 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
       if (!success) {
         alert("アクティビティの削除に失敗しました。")
       }
+    }
+  }
+
+  // ログアウト処理
+  const handleLogout = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('ログアウトに失敗しました:', error)
+      // TODO: エラートーストを表示
     }
   }
 
@@ -534,6 +546,37 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
               </CardContent>
             </Card>
 
+            {/* アカウント管理セクション */}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center space-x-2">
+                  <LogOut className="w-5 h-5" />
+                  <span>アカウント管理</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                                 <div className="flex items-center justify-between">
+                   <div>
+                     <Label className="text-gray-300">ログアウト</Label>
+                     <p className="text-sm text-gray-400">アカウントからサインアウトします</p>
+                   </div>
+                   <Button 
+                     onClick={handleLogout}
+                     className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+                   >
+                     <LogOut className="w-4 h-4 mr-2" />
+                     ログアウト
+                   </Button>
+                 </div>
+                
+                <div className="pt-4 border-t border-gray-700">
+                  <div className="text-sm text-gray-400">
+                    <p>ログアウト後は、再度ログインが必要になります。</p>
+                    <p>進行中のセッションがある場合は、事前に保存することをお勧めします。</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
           </TabsContent>
 

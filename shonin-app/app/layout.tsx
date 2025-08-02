@@ -1,10 +1,11 @@
 import type React from "react"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { SidebarProvider } from "@/components/ui/sidebar"
 import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
 import { TimezoneProvider } from "@/contexts/timezone-context"
+import { AuthProvider } from "@/contexts/auth-context"
+import { ConditionalSidebarProvider } from "@/components/conditional-sidebar-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -16,15 +17,17 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning className="dark">
       <body className={`${inter.className} dark`} suppressHydrationWarning>
-        <TimezoneProvider>
-          <ActivitiesProvider>
-            <SessionsProvider>
-              <SidebarProvider>
-                {children}
-              </SidebarProvider>
-            </SessionsProvider>
-          </ActivitiesProvider>
-        </TimezoneProvider>
+        <AuthProvider>
+          <TimezoneProvider>
+            <ActivitiesProvider>
+              <SessionsProvider>
+                <ConditionalSidebarProvider>
+                  {children}
+                </ConditionalSidebarProvider>
+              </SessionsProvider>
+            </ActivitiesProvider>
+          </TimezoneProvider>
+        </AuthProvider>
       </body>
     </html>
   )

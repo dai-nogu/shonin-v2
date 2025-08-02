@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Header } from "@/components/header"
@@ -19,6 +21,17 @@ import { checkMultipleSessionPhotos, preloadImages, getSessionPhotos } from "@/l
 import type { SessionData, CompletedSession } from "@/components/time-tracker"
 
 export default function Dashboard() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
+
+  // OAuth認証後のURLクリーンアップ
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+      // OAuth認証完了後にトークンをURLから除去
+      window.history.replaceState(null, '', '/')
+    }
+  }, [])
+  
   const [currentPage, setCurrentPage] = useState("dashboard")
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">("month")
   const [isInitialized, setIsInitialized] = useState(false)
@@ -42,8 +55,18 @@ export default function Dashboard() {
     refetch
   } = useSessions()
 
+  // 認証チェック
+  useEffect(() => {
+    // 未認証の場合はログインページにリダイレクト
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, authLoading, router])
+
   // 初期化処理
   useEffect(() => {
+    if (!user) return // 認証済みの場合のみ実行
+
     const initializeApp = async () => {
       try {
         // ローカルストレージから設定を復元
@@ -52,10 +75,12 @@ export default function Dashboard() {
           setCalendarViewMode(savedViewMode)
         }
 
-        // ページ状態を復元
+        // ページ状態を復元（ダッシュボードを優先）
         const savedPage = localStorage.getItem('shonin-current-page')
-        if (savedPage && ['dashboard', 'calendar', 'analytics', 'goals', 'settings'].includes(savedPage)) {
+        if (savedPage && ['calendar', 'analytics', 'goals', 'settings'].includes(savedPage)) {
           setCurrentPage(savedPage)
+        } else {
+          setCurrentPage('dashboard') // デフォルトはダッシュボード
         }
 
         // セッションデータを取得・更新
@@ -69,7 +94,7 @@ export default function Dashboard() {
     }
 
     initializeApp()
-  }, []) // refetchを依存配列から削除
+  }, [user, refetch])
 
   // セッションデータが更新されたときに写真の有無を確認
   useEffect(() => {
@@ -250,6 +275,23 @@ export default function Dashboard() {
     }
   }, [isInitialized, isSessionActive, currentSession])
 
+  // 認証状態をチェック中の場合はローディング表示
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 bg-gray-950 text-white flex items-center justify-center z-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400">認証確認中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 未認証の場合は何も表示しない（ログインページにリダイレクトされる）
+  if (!user) {
+    return null
+  }
+
   // 初期化が完了するまでローディング表示
   if (!isInitialized) {
     return (
@@ -408,4 +450,4 @@ export default function Dashboard() {
       )}
     </>
   )
-}
+} 
