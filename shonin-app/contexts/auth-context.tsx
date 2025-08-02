@@ -88,6 +88,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('shonin-current-page')
         localStorage.removeItem('shonin-calendar-view-mode')
+        localStorage.removeItem('shonin-user-name')
+        localStorage.removeItem('shonin-user-email')
+        localStorage.removeItem('shonin-auth')
+        localStorage.removeItem('shonin-goal-reminders')
+        localStorage.removeItem('shonin-timezone')
       }
     } catch (error) {
       console.error('ログアウト処理エラー:', error)

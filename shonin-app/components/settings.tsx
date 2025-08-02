@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save, LogOut } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useTimezone } from "@/contexts/timezone-context"
@@ -26,16 +26,16 @@ interface SettingsProps {
 
 export function Settings({ onBack, currentSession, isSessionActive }: SettingsProps) {
   const isMobile = useIsMobile()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   
   // 編集モードの管理
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isEditingSecurity, setIsEditingSecurity] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
-  // ユーザー情報
-  const [name, setName] = useState("山田太郎")
-  const [email, setEmail] = useState("yamada@example.com")
+  // ユーザー情報（Google認証から取得）
+  const [name, setName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || "")
+  const [email, setEmail] = useState(user?.email || "")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -52,6 +52,14 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
 
   // 通知設定
   const [goalReminders, setGoalReminders] = useState(true)
+
+  // ユーザー情報が更新された際に状態を同期
+  useEffect(() => {
+    if (user) {
+      setName(user.user_metadata?.full_name || user.user_metadata?.name || "")
+      setEmail(user.email || "")
+    }
+  }, [user])
 
     // アクティビティ管理
   const { activities: customActivities, loading: activitiesLoading, deleteActivity } = useActivities()
@@ -188,9 +196,9 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                     <Input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={!isEditingProfile}
+                      disabled={true}
                       className="bg-gray-800 border-gray-700 text-white disabled:opacity-50"
+                      placeholder="Google認証により自動設定"
                     />
                   </div>
                 </div>
