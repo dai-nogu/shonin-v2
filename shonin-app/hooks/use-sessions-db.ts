@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
 
 type Session = Database['public']['Tables']['sessions']['Row']
@@ -16,10 +17,8 @@ export interface SessionWithActivity extends Session {
   }
 }
 
-// テスト用のダミーユーザーID
-const DUMMY_USER_ID = '00000000-0000-0000-0000-000000000000'
-
 export function useSessionsDb() {
+  const { user } = useAuth()
   const [sessions, setSessions] = useState<SessionWithActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,6 +27,12 @@ export function useSessionsDb() {
   const fetchSessions = useCallback(async () => {
     try {
       setLoading(true)
+
+      if (!user?.id) {
+        setSessions([])
+        setLoading(false)
+        return
+      }
 
       const { data, error } = await supabase
         .from('sessions')
@@ -39,7 +44,7 @@ export function useSessionsDb() {
             color
           )
         `)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
         .order('start_time', { ascending: false })
 
       if (error) {
@@ -54,16 +59,21 @@ export function useSessionsDb() {
     } finally {
       setLoading(false)
     }
-  }, []) // 依存配列を空にしてメモ化
+  }, [user?.id]) // ユーザーIDに依存
 
   // セッションを追加
   const addSession = useCallback(async (session: Omit<SessionInsert, 'user_id'>, skipRefetch: boolean = false): Promise<string | null> => {
     try {
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return null
+      }
+
       const { data, error } = await supabase
         .from('sessions')
         .insert({
           ...session,
-          user_id: DUMMY_USER_ID,
+          user_id: user.id,
         })
         .select('id')
         .single()

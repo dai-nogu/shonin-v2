@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
 
 type Goal = Database['public']['Tables']['goals']['Row']
 type GoalInsert = Database['public']['Tables']['goals']['Insert']
 type GoalUpdate = Database['public']['Tables']['goals']['Update']
-
-// テスト用のダミーユーザーID
-const DUMMY_USER_ID = '00000000-0000-0000-0000-000000000000'
 
 // フォームからのデータ型
 export interface GoalFormData {
@@ -23,6 +21,7 @@ export interface GoalFormData {
 }
 
 export function useGoalsDb() {
+  const { user } = useAuth()
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -34,10 +33,18 @@ export function useGoalsDb() {
         setLoading(true)
       }
 
+      if (!user?.id) {
+        setGoals([])
+        if (forceLoading) {
+          setLoading(false)
+        }
+        return
+      }
+
       const { data, error } = await supabase
         .from('goals')
         .select('*')
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true })
 
       if (error) {
@@ -78,11 +85,16 @@ export function useGoalsDb() {
 
       console.log('goalInsert data:', goalInsert)
 
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return null
+      }
+
       const { data, error } = await supabase
         .from('goals')
         .insert({
           ...goalInsert,
-          user_id: DUMMY_USER_ID,
+          user_id: user.id,
         })
         .select('id')
         .single()
@@ -106,6 +118,11 @@ export function useGoalsDb() {
   const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<boolean> => {
     try {
       console.log('updateGoal called with id:', id, 'data:', goalData)
+      
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return false
+      }
       
       // 進捗更新のためのaddDuration処理
       if ('addDuration' in goalData && typeof goalData.addDuration === 'number') {
@@ -131,7 +148,7 @@ export function useGoalsDb() {
         .from('goals')
         .update(updateData)
         .eq('id', id)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
 
       if (error) {
         console.error('Goal update error:', error)
@@ -151,12 +168,17 @@ export function useGoalsDb() {
   // 目標の進捗を更新（時間を加算）
   const updateGoalProgress = async (id: string, additionalSeconds: number): Promise<boolean> => {
     try {
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return false
+      }
+
       // データベースから最新の目標を取得
       const { data: currentGoal, error: fetchError } = await supabase
         .from('goals')
         .select('current_value')
         .eq('id', id)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
         .single()
 
       if (fetchError || !currentGoal) {
@@ -174,7 +196,7 @@ export function useGoalsDb() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
 
       if (error) {
         console.error('Goal progress update error:', error)
@@ -193,11 +215,16 @@ export function useGoalsDb() {
   // 目標を削除
   const deleteGoal = async (id: string): Promise<boolean> => {
     try {
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return false
+      }
+
       const { error } = await supabase
         .from('goals')
         .delete()
         .eq('id', id)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
 
       if (error) {
         console.error('Goal delete error:', error)
@@ -216,6 +243,11 @@ export function useGoalsDb() {
   // 目標を完了に設定
   const completeGoal = async (id: string): Promise<boolean> => {
     try {
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return false
+      }
+
       const { error } = await supabase
         .from('goals')
         .update({
@@ -223,7 +255,7 @@ export function useGoalsDb() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
 
       if (error) {
         console.error('Goal completion error:', error)
@@ -251,8 +283,10 @@ export function useGoalsDb() {
 
   // 初回読み込み
   useEffect(() => {
-    fetchGoals()
-  }, [])
+    if (user?.id) {
+      fetchGoals()
+    }
+  }, [user?.id])
 
   return {
     goals,

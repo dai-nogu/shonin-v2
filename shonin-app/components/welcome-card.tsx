@@ -4,6 +4,7 @@ import { useTimezone } from "@/contexts/timezone-context"
 import { getTodaySessionsInTimezone, getWeekSessionsInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 import { useState, useEffect } from "react"
+import { useUserProfile } from "@/hooks/use-user-profile"
 
 interface WelcomeCardProps {
   completedSessions: CompletedSession[]
@@ -12,6 +13,9 @@ interface WelcomeCardProps {
 export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
   // タイムゾーンを取得
   const { timezone } = useTimezone()
+  
+  // ユーザープロフィールを取得
+  const { profile } = useUserProfile()
   
   // 今日のセッションを取得（タイムゾーン考慮）
   const todaysSessions = getTodaySessionsInTimezone(completedSessions, timezone)
@@ -32,9 +36,13 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
       localStorage.setItem('lastVisitDate', today)
     }
     
+    // ユーザー名を取得（設定されていない場合は空文字）
+    const userName = profile?.name || ''
+    const userNamePrefix = userName ? `${userName}さん` : ''
+    
     // 2回目以降の訪問の場合は「おかえりなさい」
     if (!isFirstVisitToday) {
-      return 'おかえりなさい'
+      return userNamePrefix ? `${userNamePrefix}、おかえりなさい` : 'おかえりなさい'
     }
     
     // 初回訪問の場合は時間帯による挨拶
@@ -45,13 +53,16 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
       hour12: false 
     }).split(':')[0])
     
+    let baseGreeting = ''
     if (hour >= 5 && hour <= 11) {
-      return 'おはようございます'
+      baseGreeting = 'おはようございます'
     } else if (hour >= 12 && hour <= 16) {
-      return 'こんにちは'
+      baseGreeting = 'こんにちは'
     } else {
-      return 'こんばんは'
+      baseGreeting = 'こんばんは'
     }
+    
+    return userNamePrefix ? `${userNamePrefix}${baseGreeting}` : baseGreeting
   }
 
   // 現在時刻（タイムゾーン考慮）

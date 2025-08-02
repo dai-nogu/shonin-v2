@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/contexts/auth-context"
+import { useUserProfile } from "@/hooks/use-user-profile"
 
 interface SettingsProps {
   onBack: () => void
@@ -27,14 +28,15 @@ interface SettingsProps {
 export function Settings({ onBack, currentSession, isSessionActive }: SettingsProps) {
   const isMobile = useIsMobile()
   const { signOut, user } = useAuth()
+  const { profile, loading: profileLoading, updateUserName } = useUserProfile()
   
   // 編集モードの管理
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isEditingSecurity, setIsEditingSecurity] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
-  // ユーザー情報（Google認証から取得）
-  const [name, setName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || "")
+  // ユーザー情報（データベースから取得）
+  const [name, setName] = useState("")
   const [email, setEmail] = useState(user?.email || "")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -56,10 +58,16 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   // ユーザー情報が更新された際に状態を同期
   useEffect(() => {
     if (user) {
-      setName(user.user_metadata?.full_name || user.user_metadata?.name || "")
       setEmail(user.email || "")
     }
   }, [user])
+
+  // プロフィール情報をローカル状態に同期
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || "")
+    }
+  }, [profile])
 
     // アクティビティ管理
   const { activities: customActivities, loading: activitiesLoading, deleteActivity } = useActivities()
@@ -67,11 +75,20 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   // 保存ハンドラー
   const handleSaveProfile = async () => {
     setIsSaving(true)
-    // 保存処理のシミュレーション
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setIsEditingProfile(false)
-    alert("プロフィール情報が保存されました")
+    try {
+      const success = await updateUserName(name)
+      if (success) {
+        setIsEditingProfile(false)
+        alert("プロフィール情報が保存されました")
+      } else {
+        alert("プロフィール情報の保存に失敗しました")
+      }
+    } catch (error) {
+      console.error('プロフィール保存エラー:', error)
+      alert("プロフィール情報の保存に失敗しました")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleSaveSecurity = async () => {

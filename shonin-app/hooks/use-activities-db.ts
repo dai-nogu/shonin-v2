@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 type ActivityInsert = Database['public']['Tables']['activities']['Insert']
 type ActivityUpdate = Database['public']['Tables']['activities']['Update']
 
-// テスト用のダミーユーザーID
-const DUMMY_USER_ID = '00000000-0000-0000-0000-000000000000'
-
 export function useActivitiesDb() {
+  const { user } = useAuth()
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,10 +20,16 @@ export function useActivitiesDb() {
     try {
       setLoading(true)
 
+      if (!user?.id) {
+        setActivities([])
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('activities')
         .select('*')
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -44,11 +49,16 @@ export function useActivitiesDb() {
   // アクティビティを追加
   const addActivity = async (activity: Omit<ActivityInsert, 'user_id'>): Promise<string | null> => {
     try {
+      if (!user?.id) {
+        setError('ログインが必要です')
+        return null
+      }
+
       const { data, error } = await supabase
         .from('activities')
         .insert({
           ...activity,
-          user_id: DUMMY_USER_ID,
+          user_id: user.id,
         })
         .select('id')
         .single()
@@ -118,8 +128,10 @@ export function useActivitiesDb() {
 
   // 初回読み込み
   useEffect(() => {
-    fetchActivities()
-  }, [])
+    if (user?.id) {
+      fetchActivities()
+    }
+  }, [user?.id])
 
   return {
     activities,
