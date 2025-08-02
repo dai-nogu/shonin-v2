@@ -27,32 +27,16 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
 
   // 挨拶メッセージを取得する関数
   const getGreeting = () => {
-    const today = new Date().toDateString()
-    const lastVisitDate = localStorage.getItem('lastVisitDate')
-    const isFirstVisitToday = lastVisitDate !== today
-    
-    // 今日の初回訪問の場合、localStorage を更新
-    if (isFirstVisitToday) {
-      localStorage.setItem('lastVisitDate', today)
-    }
-    
-    // ユーザー名を取得（設定されていない場合は空文字）
-    const userName = profile?.name || ''
-    const userNamePrefix = userName ? `${userName}さん` : ''
-    
-    // 2回目以降の訪問の場合は「おかえりなさい」
-    if (!isFirstVisitToday) {
-      return userNamePrefix ? `${userNamePrefix}、おかえりなさい` : 'おかえりなさい'
-    }
-    
-    // 初回訪問の場合は時間帯による挨拶
     const now = new Date()
+    
+    // 現在の時間を取得（タイムゾーン考慮）
     const hour = parseInt(now.toLocaleTimeString('ja-JP', { 
       timeZone: timezone,
       hour: '2-digit',
       hour12: false 
     }).split(':')[0])
     
+    // 時間帯による挨拶を判定
     let baseGreeting = ''
     if (hour >= 5 && hour <= 11) {
       baseGreeting = 'おはようございます'
@@ -62,7 +46,11 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
       baseGreeting = 'こんばんは'
     }
     
-    return userNamePrefix ? `${userNamePrefix}${baseGreeting}` : baseGreeting
+    // ユーザー名を取得
+    const userName = profile?.name || ''
+    
+    // 常に「○○さん、挨拶文」の形式で返す
+    return `${userName}さん、${baseGreeting}`
   }
 
   // 現在時刻（タイムゾーン考慮）

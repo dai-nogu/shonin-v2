@@ -93,6 +93,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem('shonin-auth')
         localStorage.removeItem('shonin-goal-reminders')
         localStorage.removeItem('shonin-timezone')
+        // 訪問履歴をクリア（古い形式と新しい形式両方）
+        localStorage.removeItem('lastVisitDate')
+        localStorage.removeItem('lastVisit_morning')
+        localStorage.removeItem('lastVisit_afternoon')
+        localStorage.removeItem('lastVisit_evening')
       }
     } catch (error) {
       console.error('ログアウト処理エラー:', error)
