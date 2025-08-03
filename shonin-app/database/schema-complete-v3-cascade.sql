@@ -1,6 +1,6 @@
 -- ==========================================
--- SHONIN アプリ 完全版スキーマ v2
--- 基本機能 + 統合振り返り機能 + 目標管理機能 + セッション日付管理
+-- SHONIN アプリ 完全版スキーマ v3
+-- 基本機能 + 統合振り返り機能 + 目標管理機能 + セッション日付管理 + 完全CASCADE削除対応
 -- Supabase SQL Editorで実行してください
 -- ==========================================
 
@@ -10,11 +10,14 @@ DROP TABLE IF EXISTS public.activities CASCADE;
 DROP TABLE IF EXISTS public.goals CASCADE;
 DROP TABLE IF EXISTS public.ai_feedback CASCADE;
 DROP TABLE IF EXISTS public.session_media CASCADE;
+DROP TABLE IF EXISTS public.session_photos CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
--- Create users table (auth.usersへの参照を削除)
-CREATE TABLE IF NOT EXISTS public.users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- ==========================================
+-- auth.usersと完全連携するusersテーブル
+-- ==========================================
+CREATE TABLE public.users (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     name TEXT,
     timezone TEXT DEFAULT 'Asia/Tokyo',
@@ -23,10 +26,14 @@ CREATE TABLE IF NOT EXISTS public.users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- ==========================================
+-- 全テーブルをauth.usersに直接参照してCASCADE削除
+-- ==========================================
+
 -- Create activities table
 CREATE TABLE IF NOT EXISTS public.activities (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     icon TEXT, -- NULL許可（アイコンがない場合もある）
     color TEXT NOT NULL DEFAULT 'bg-gray-500', -- CSS class形式で保存
@@ -37,7 +44,7 @@ CREATE TABLE IF NOT EXISTS public.activities (
 -- Create goals table (完全版：週間時間設定対応)
 CREATE TABLE IF NOT EXISTS public.goals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
     target_duration INTEGER, -- in seconds
@@ -58,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.goals (
 -- Create sessions table (基本機能 + 統合振り返り機能 + 目標連動機能 + セッション日付管理)
 CREATE TABLE IF NOT EXISTS public.sessions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     activity_id UUID REFERENCES public.activities(id) ON DELETE CASCADE NOT NULL,
     goal_id UUID REFERENCES public.goals(id) ON DELETE SET NULL, -- 関連する目標のID（NULL許可）
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -132,7 +139,7 @@ CREATE TABLE IF NOT EXISTS public.session_photos (
 -- Create ai_feedback table
 CREATE TABLE IF NOT EXISTS public.ai_feedback (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     feedback_type TEXT CHECK (feedback_type IN ('weekly', 'monthly')) NOT NULL,
     content TEXT NOT NULL,
     period_start DATE NOT NULL,
@@ -140,41 +147,12 @@ CREATE TABLE IF NOT EXISTS public.ai_feedback (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- テスト用のダミーユーザーを挿入
-INSERT INTO public.users (id, email, name) 
-VALUES ('00000000-0000-0000-0000-000000000000', 'test@example.com', 'Test User')
-ON CONFLICT (id) DO NOTHING;
+-- ==========================================
+-- インデックス作成（パフォーマンス向上）
+-- ==========================================
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON public.users(created_at);
 
--- テスト用のサンプルアクティビティを挿入
-INSERT INTO public.activities (id, user_id, name, icon, color) VALUES
-('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000000', '読書', '📚', 'bg-blue-500'),
-('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'プログラミング', '💻', 'bg-purple-500'),
-('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', '運動', '🏃', 'bg-red-500')
-ON CONFLICT (id) DO NOTHING;
-
--- テスト用のサンプルセッションを挿入（完了済み + 振り返り情報付き + session_date付き）
-INSERT INTO public.sessions (
-    id, user_id, activity_id, start_time, end_time, duration, session_date,
-    notes, mood, achievements, challenges, location,
-    mood_score, detailed_achievements, detailed_challenges, reflection_notes
-) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 
-'2024-01-15 09:00:00+00', '2024-01-15 10:30:00+00', 5400, '2024-01-15',
-'集中して読書できた', 4, 'ポモドーロ技法を使って集中力を維持', '少し眠くなった', '自宅',
-4, 'ポモドーロ技法をうまく活用できて、90分間集中して読書することができた。特に難しい箇所も理解できた。', '後半30分で少し集中力が切れた。次回は休憩を入れるタイミングを調整したい。', '天気が良くて気分も良かった。'),
-
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 
-'2024-01-14 14:00:00+00', '2024-01-14 16:15:00+00', 8100, '2024-01-14',
-'Reactの学習進んだ', 5, 'カスタムフック作成をマスター', 'TypeScriptの型定義で少し詰まった', 'カフェ',
-5, 'カスタムフック作成について完全に理解できた。useLocalStorageフックを自作して実際に動作させることができた。', 'TypeScriptの複雑な型定義でエラーが続いた。ジェネリクスの使い方をもう少し勉強する必要がある。', 'カフェの環境が集中しやすかった。'),
-
-('cccccccc-cccc-cccc-cccc-cccccccccccc', '00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 
-'2024-01-14 07:00:00+00', '2024-01-14 07:45:00+00', 2700, '2024-01-14',
-'朝のランニング', 4, '5km完走', '後半少しペースダウン', '公園',
-4, '5km を45分で完走できた。朝の清々しい空気の中で気持ちよく走れた。', '最後の1kmでペースが落ちた。普段の練習不足を感じる。週3回は走りたい。', '朝早い時間で公園が静かで良かった。')
-ON CONFLICT (id) DO NOTHING;
-
--- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_activities_user_id ON public.activities(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON public.sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_activity_id ON public.sessions(activity_id);
@@ -199,7 +177,9 @@ CREATE INDEX IF NOT EXISTS idx_session_media_media_type ON public.session_media(
 CREATE INDEX IF NOT EXISTS idx_session_photos_session_id ON public.session_photos(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_photos_uploaded_at ON public.session_photos(uploaded_at);
 
--- カラムコメントを追加
+-- ==========================================
+-- カラムコメント
+-- ==========================================
 COMMENT ON COLUMN public.goals.weekday_hours IS '平日（月〜金）の1日あたりの目標時間';
 COMMENT ON COLUMN public.goals.weekend_hours IS '土日の1日あたりの目標時間';
 COMMENT ON COLUMN public.goals.current_value IS '現在の進捗値（秒単位）';
@@ -208,7 +188,9 @@ COMMENT ON COLUMN public.goals.status IS '目標のステータス（active: 進
 COMMENT ON COLUMN public.sessions.goal_id IS '関連する目標のID（NULL許可）';
 COMMENT ON COLUMN public.sessions.session_date IS 'セッション日付（タイムゾーン考慮済み、分割セッション対応）';
 
--- AIフィードバック生成用のビュー（分析しやすくするため）
+-- ==========================================
+-- AIフィードバック生成用ビュー
+-- ==========================================
 CREATE OR REPLACE VIEW public.sessions_for_ai_analysis AS
 SELECT 
     id,
@@ -256,7 +238,9 @@ WHERE
     (detailed_achievements IS NOT NULL OR detailed_challenges IS NOT NULL OR mood_score IS NOT NULL)
 ORDER BY created_at DESC;
 
--- Create function to automatically update updated_at timestamp
+-- ==========================================
+-- 更新日時自動更新の関数とトリガー
+-- ==========================================
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -279,67 +263,96 @@ CREATE TRIGGER handle_updated_at_goals BEFORE UPDATE ON public.goals
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
 -- ==========================================
--- 実行完了 - 完全版スキーマ v2（セッション日付管理対応）
+-- RLS（Row Level Security）設定
+-- ==========================================
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ai_feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.session_media ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.session_photos ENABLE ROW LEVEL SECURITY;
+
+-- Users policies
+CREATE POLICY "Users can view own profile" ON public.users
+    FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.users  
+    FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON public.users
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Activities policies
+CREATE POLICY "Users can view own activities" ON public.activities
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own activities" ON public.activities
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own activities" ON public.activities
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own activities" ON public.activities
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Sessions policies
+CREATE POLICY "Users can view own sessions" ON public.sessions
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own sessions" ON public.sessions
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own sessions" ON public.sessions
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own sessions" ON public.sessions
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Goals policies
+CREATE POLICY "Users can view own goals" ON public.goals
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own goals" ON public.goals
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own goals" ON public.goals
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own goals" ON public.goals
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- AI Feedback policies
+CREATE POLICY "Users can view own ai_feedback" ON public.ai_feedback
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own ai_feedback" ON public.ai_feedback
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Session Media policies
+CREATE POLICY "Users can view session media" ON public.session_media
+    FOR SELECT USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+CREATE POLICY "Users can insert session media" ON public.session_media
+    FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+CREATE POLICY "Users can delete session media" ON public.session_media
+    FOR DELETE USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+
+-- Session Photos policies
+CREATE POLICY "Users can view session photos" ON public.session_photos
+    FOR SELECT USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+CREATE POLICY "Users can insert session photos" ON public.session_photos
+    FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+CREATE POLICY "Users can delete session photos" ON public.session_photos
+    FOR DELETE USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+
+-- ==========================================
+-- 完了 - スキーマ v3（完全CASCADE削除対応）
 -- ==========================================
 -- 
--- v2の新機能:
--- 1. sessions.session_date カラム追加
--- 2. タイムゾーンを考慮したセッション日付管理
--- 3. 分割セッション対応（各セッションが正しい日付に表示）
--- 4. セッション日付用インデックス追加
--- 5. 既存のサンプルデータにsession_date追加
+-- 【完全CASCADE削除フロー】
+-- auth.users削除 → 以下が自動削除される:
+-- 1. public.users (id → auth.users)
+-- 2. activities (user_id → auth.users)  
+-- 3. sessions (user_id → auth.users)
+-- 4. goals (user_id → auth.users)
+-- 5. ai_feedback (user_id → auth.users)
+-- 6. session_media (session_id → sessions)
+-- 7. session_photos (session_id → sessions)
 -- 
--- 特徴:
--- 1. 基本機能（アクティビティ、セッション）
--- 2. 統合振り返り機能（詳細な気分・成果・課題記録）
--- 3. AI分析結果保存（感情分析、キーワード抽出）
--- 4. メディアファイル対応（写真・動画・音声）
--- 5. 写真アップロード機能（session_photos テーブル）
--- 6. 目標管理機能（週間時間設定、進捗追跡）
--- 7. **目標とセッションの連動機能（goal_id追加）**
--- 8. **セッション日付管理機能（session_date追加）**
--- 9. サンプルデータ付き（すぐにテスト可能）
+-- 【セキュリティ】
+-- - RLS有効化済み
+-- - ユーザーは自分のデータのみアクセス可能
+-- - 本番環境対応のセキュリティポリシー設定済み
 -- 
--- 目標管理機能:
--- - weekday_hours: 平日の1日あたりの目標時間
--- - weekend_hours: 土日の1日あたりの目標時間
--- - current_value: 現在の進捗値（秒単位）
--- - unit: 目標の単位
--- - status: 目標のステータス（active/completed/paused）
--- 
--- セッション連動機能:
--- - sessions.goal_id: 各セッションが紐付く目標のID
--- - 自動進捗更新: セッション完了時に目標の current_value が自動更新
--- - 分単位の正確な進捗追跡
--- 
--- セッション日付管理機能:
--- - sessions.session_date: タイムゾーンを考慮したセッション日付
--- - 分割セッション対応: 日付跨ぎセッションが正しい日付に表示
--- - カレンダー表示の精度向上
--- 
--- AI分析用クエリ例:
--- SELECT * FROM sessions_for_ai_analysis 
--- WHERE user_id = '00000000-0000-0000-0000-000000000000'
--- ORDER BY session_date DESC LIMIT 10;
--- 
--- 目標管理クエリ例:
--- SELECT * FROM goals 
--- WHERE user_id = '00000000-0000-0000-0000-000000000000' 
--- AND status = 'active'
--- ORDER BY deadline ASC;
--- 
--- セッション日付別集計クエリ例:
--- SELECT 
---   session_date,
---   COUNT(*) as session_count,
---   SUM(duration) / 3600 as total_hours,
---   AVG(duration) / 3600 as avg_hours
--- FROM sessions 
--- WHERE user_id = '00000000-0000-0000-0000-000000000000'
---   AND session_date >= CURRENT_DATE - INTERVAL '30 days'
--- GROUP BY session_date
--- ORDER BY session_date DESC;
--- 
--- RLS is DISABLED for testing - DO NOT USE IN PRODUCTION
--- 本番環境では適切なRLSポリシーを設定してください
+-- 【実行方法】
+-- このファイル全体をSupabase SQL Editorで実行
+-- 一度の実行で完全なCASCADE削除対応データベースが構築されます
 -- ========================================== 

@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { supabase } from "@/lib/supabase"
 
 interface SettingsProps {
   onBack: () => void
@@ -132,6 +133,57 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     } catch (error) {
       console.error('ログアウトに失敗しました:', error)
       // TODO: エラートーストを表示
+    }
+  }
+
+  // アカウント削除処理
+  const handleDeleteAccount = async () => {
+    const confirmDelete = confirm('本当にアカウントを削除しますか？この操作は取り消すことができません。')
+    if (confirmDelete) {
+      try {
+        // 現在のセッションからアクセストークンを取得
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (!session?.access_token) {
+          alert('認証が必要です。再度ログインしてください。')
+          return
+        }
+
+        // Step 1: データベース関数を使用してStorageオブジェクトを削除
+        console.log('Storageのメディアファイルを削除中...')
+        const { data: storageDeleteResult, error: storageDeleteError } = await supabase.rpc('handle_delete_user_created_objects')
+        
+        if (storageDeleteError) {
+          console.error('Storageファイル削除エラー:', storageDeleteError)
+          alert('ファイルの削除に失敗しました。続行しますか？')
+        } else if (storageDeleteResult) {
+          console.log('Storageのファイルが削除されました')
+        }
+
+        // Step 2: サーバーサイドでauth.userとデータベースレコードを削除
+        console.log('ユーザーアカウントを削除中...')
+        const response = await fetch('/api/deleteUser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          }
+        })
+
+        if (response.ok) {
+          await signOut()
+          alert('アカウントとすべてのデータが削除されました')
+          // ログインページにリダイレクト
+          window.location.href = '/login'
+        } else {
+          const error = await response.json()
+          console.error('アカウント削除エラー:', error)
+          alert('アカウントの削除に失敗しました')
+        }
+      } catch (error) {
+        console.error('アカウント削除エラー:', error)
+        alert('アカウントの削除に失敗しました')
+      }
     }
   }
 
@@ -592,6 +644,23 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                      <LogOut className="w-4 h-4 mr-2" />
                      ログアウト
                    </Button>
+                 </div>
+
+                 <div className="pt-4 border-t border-gray-700">
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <Label className="text-red-400">アカウント削除</Label>
+                       <p className="text-sm text-gray-400">アカウントとすべてのデータを完全に削除します</p>
+                     </div>
+                     <Button 
+                       onClick={handleDeleteAccount}
+                       variant="outline"
+                       className="bg-transparent border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                     >
+                       <Trash2 className="w-4 h-4 mr-2" />
+                       削除
+                     </Button>
+                   </div>
                  </div>
                 
                 <div className="pt-4 border-t border-gray-700">
