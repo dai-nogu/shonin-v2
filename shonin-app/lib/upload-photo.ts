@@ -220,7 +220,7 @@ export function checkPreloadedImages(urls: string[]): Record<string, boolean> {
   return urls.reduce((acc, url) => {
     // ブラウザのキャッシュから確認（完全ではないが参考程度）
     acc[url] = document.querySelector(`img[src="${url}"]`) !== null
-
+    return acc
   }, {} as Record<string, boolean>)
 }
 

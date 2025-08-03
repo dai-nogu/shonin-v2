@@ -913,10 +913,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                       <div className="text-gray-500 text-sm">読み込み中...</div>
                     </div>
                   )}
-                  {/* ホバー効果（PCのみ） */}
-                  {!isMobile && (
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg" />
-                  )}
+
                 </div>
               ))}
             </div>
