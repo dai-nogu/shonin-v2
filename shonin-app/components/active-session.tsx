@@ -12,6 +12,7 @@ import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useSessions } from "@/contexts/sessions-context"
 import { useTimezone } from "@/contexts/timezone-context"
+import { useAuth } from "@/contexts/auth-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
 import { getTimeStringInTimezone } from "@/lib/timezone-utils"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,9 @@ interface ActiveSessionProps {
 }
 
 export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
+  // 認証フック
+  const { user } = useAuth()
+  
   // 振り返りデータベースフック
   const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
 
@@ -185,10 +189,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       const savedSessionId = result instanceof Promise ? await result : result
       
       // 写真をアップロード
-      if (photos.length > 0 && savedSessionId) {
+      if (photos.length > 0 && savedSessionId && user?.id) {
         try {
           setIsUploading(true)
-          const uploadedPhotoResults = await uploadPhotos(photos, savedSessionId)
+          const uploadedPhotoResults = await uploadPhotos(photos, savedSessionId, user.id)
           setPhotos([]) // アップロード完了後にクリア
         } catch (photoError) {
           console.error('写真アップロードエラー:', photoError)

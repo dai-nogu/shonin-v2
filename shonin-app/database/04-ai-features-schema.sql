@@ -1,0 +1,157 @@
+-- ==========================================
+-- SHONIN アプリ AI機能スキーマ v1
+-- AI分析・フィードバック機能
+-- 注意: 01-core-schema.sql を先に実行してください
+-- ==========================================
+
+-- AIフィードバックテーブル削除
+DROP TABLE IF EXISTS public.ai_feedback CASCADE;
+
+-- セッションテーブルにAI分析機能を拡張
+DO $$ 
+BEGIN
+    -- AI分析カラムを安全に追加
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_sentiment_score') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_sentiment_score DECIMAL(3,2) CHECK (ai_sentiment_score >= -1.0 AND ai_sentiment_score <= 1.0);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_positive_keywords') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_positive_keywords TEXT[];
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_negative_keywords') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_negative_keywords TEXT[];
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_improvement_keywords') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_improvement_keywords TEXT[];
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_effort_level') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_effort_level INTEGER CHECK (ai_effort_level >= 1 AND ai_effort_level <= 5);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_focus_level') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_focus_level INTEGER CHECK (ai_focus_level >= 1 AND ai_focus_level <= 5);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_satisfaction_level') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_satisfaction_level INTEGER CHECK (ai_satisfaction_level >= 1 AND ai_satisfaction_level <= 5);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'sessions' AND column_name = 'ai_analyzed_at') THEN
+        ALTER TABLE public.sessions ADD COLUMN ai_analyzed_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+EXCEPTION
+    WHEN others THEN
+        -- テーブルが存在しない場合は何もしない
+        NULL;
+END $$;
+
+-- ==========================================
+-- AIフィードバックテーブル作成
+-- ==========================================
+CREATE TABLE public.ai_feedback (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    feedback_type TEXT CHECK (feedback_type IN ('weekly', 'monthly')) NOT NULL,
+    content TEXT NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ==========================================
+-- AI機能用インデックス
+-- ==========================================
+CREATE INDEX IF NOT EXISTS idx_sessions_ai_sentiment ON public.sessions(ai_sentiment_score);
+CREATE INDEX IF NOT EXISTS idx_sessions_ai_analyzed ON public.sessions(ai_analyzed_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_ai_effort ON public.sessions(ai_effort_level);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_user_id ON public.ai_feedback(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_type ON public.ai_feedback(feedback_type);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_period ON public.ai_feedback(period_start, period_end);
+
+-- ==========================================
+-- AI分析用ビュー
+-- ==========================================
+CREATE OR REPLACE VIEW public.sessions_for_ai_analysis 
+WITH (security_invoker = on) AS
+SELECT 
+    id,
+    user_id,
+    activity_id,
+    goal_id,
+    start_time,
+    end_time,
+    duration,
+    session_date,
+    location,
+    notes,
+    
+    -- 振り返りデータ
+    mood_score,
+    mood_notes,
+    detailed_achievements,
+    achievement_satisfaction,
+    detailed_challenges,
+    challenge_severity,
+    reflection_notes,
+    reflection_duration,
+    
+    -- AI分析結果
+    ai_sentiment_score,
+    ai_positive_keywords,
+    ai_negative_keywords,
+    ai_improvement_keywords,
+    ai_effort_level,
+    ai_focus_level,
+    ai_satisfaction_level,
+    ai_analyzed_at,
+    
+    created_at,
+    updated_at
+FROM public.sessions
+WHERE 
+    -- 振り返りデータまたはAI分析データがあるセッション
+    (mood_score IS NOT NULL 
+     OR detailed_achievements IS NOT NULL 
+     OR detailed_challenges IS NOT NULL
+     OR ai_analyzed_at IS NOT NULL)
+ORDER BY created_at DESC;
+
+-- ==========================================
+-- RLS設定
+-- ==========================================
+ALTER TABLE public.ai_feedback ENABLE ROW LEVEL SECURITY;
+
+-- AI Feedback policies
+CREATE POLICY "Users can view own ai_feedback" ON public.ai_feedback
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own ai_feedback" ON public.ai_feedback
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- ==========================================
+-- カラムコメント
+-- ==========================================
+COMMENT ON COLUMN public.sessions.ai_sentiment_score IS 'AI感情スコア（-1.0〜1.0）';
+COMMENT ON COLUMN public.sessions.ai_positive_keywords IS 'AIが抽出したポジティブキーワード';
+COMMENT ON COLUMN public.sessions.ai_negative_keywords IS 'AIが抽出したネガティブキーワード';
+COMMENT ON COLUMN public.sessions.ai_improvement_keywords IS 'AIが提案する改善キーワード';
+COMMENT ON COLUMN public.sessions.ai_effort_level IS 'AI評価の努力レベル（1-5段階）';
+COMMENT ON COLUMN public.sessions.ai_focus_level IS 'AI評価の集中レベル（1-5段階）';
+COMMENT ON COLUMN public.sessions.ai_satisfaction_level IS 'AI評価の満足度（1-5段階）';
+COMMENT ON COLUMN public.sessions.ai_analyzed_at IS 'AI分析実行日時';
+
+COMMENT ON TABLE public.ai_feedback IS 'AI生成の週次・月次フィードバック';
+COMMENT ON COLUMN public.ai_feedback.feedback_type IS 'フィードバックタイプ（weekly: 週次, monthly: 月次）';
+COMMENT ON COLUMN public.ai_feedback.content IS 'AI生成フィードバック内容';
+COMMENT ON COLUMN public.ai_feedback.period_start IS 'フィードバック対象期間開始日';
+COMMENT ON COLUMN public.ai_feedback.period_end IS 'フィードバック対象期間終了日'; 

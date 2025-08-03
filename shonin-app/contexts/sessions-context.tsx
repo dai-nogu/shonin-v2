@@ -385,7 +385,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             achievements: completedSession.achievements || null,
             challenges: completedSession.challenges || null,
             location: completedSession.location || null,
-            goal_id: completedSession.goalId || null,
+            goal_id: completedSession.goalId || null, // 目標IDを保存
           }, true) // refetchをスキップ
         }
         
@@ -425,7 +425,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             achievements: isStartSession ? (completedSession.achievements || null) : null,
             challenges: isStartSession ? (completedSession.challenges || null) : null,
             location: completedSession.location || null,
-            goal_id: completedSession.goalId || null,
+            goal_id: completedSession.goalId || null, // 目標IDを保存
           }, !isLastSession) // 最後のセッション以外はrefetchをスキップ
 
           if (isStartSession) {

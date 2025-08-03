@@ -12,14 +12,15 @@ export interface UploadedPhoto {
  * 写真をSupabaseストレージにアップロードしてsession_mediaテーブルに保存する
  * @param file - アップロードするファイル
  * @param sessionId - セッションID
+ * @param userId - ユーザーID（セキュリティのため）
  * @returns アップロード結果
  */
-export async function uploadPhoto(file: File, sessionId: string): Promise<UploadedPhoto> {
+export async function uploadPhoto(file: File, sessionId: string, userId: string): Promise<UploadedPhoto> {
   try {
     // ファイル名を一意にする
     const fileExt = file.name.split('.').pop()
     const fileName = `${sessionId}_${Date.now()}.${fileExt}`
-    const filePath = `session-media/${fileName}`
+    const filePath = `${userId}/session-media/${fileName}`
 
     // Supabaseストレージにアップロード
     const { data, error } = await supabase.storage
@@ -41,17 +42,15 @@ export async function uploadPhoto(file: File, sessionId: string): Promise<Upload
 
     // session_mediaテーブルに写真情報を保存
     const mediaData = {
-      id: crypto.randomUUID(),
       session_id: sessionId,
-      media_type: 'image',
+      media_type: 'image' as const,
       file_path: filePath,
       file_name: file.name,
       file_size: file.size,
       mime_type: file.type,
       public_url: publicUrl,
       is_main_image: false,
-      caption: null,
-      created_at: new Date().toISOString()
+      caption: null
     }
 
     const { data: dbData, error: dbError } = await supabase
@@ -86,10 +85,11 @@ export async function uploadPhoto(file: File, sessionId: string): Promise<Upload
  * 複数の写真を一括でアップロードする
  * @param files - アップロードするファイルの配列
  * @param sessionId - セッションID
+ * @param userId - ユーザーID（セキュリティのため）
  * @returns アップロード結果の配列
  */
-export async function uploadPhotos(files: File[], sessionId: string): Promise<UploadedPhoto[]> {
-  const uploadPromises = files.map(file => uploadPhoto(file, sessionId))
+export async function uploadPhotos(files: File[], sessionId: string, userId: string): Promise<UploadedPhoto[]> {
+  const uploadPromises = files.map(file => uploadPhoto(file, sessionId, userId))
   return Promise.all(uploadPromises)
 }
 

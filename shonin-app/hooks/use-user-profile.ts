@@ -40,8 +40,7 @@ export function useUserProfile() {
             id: userId,
             email: user.email || '',
             name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            timezone: 'Asia/Tokyo',
-            goal_reminders: true
+            timezone: 'Asia/Tokyo'
           }
 
           const { data: insertData, error: insertError } = await supabase
@@ -51,20 +50,34 @@ export function useUserProfile() {
             .single()
 
           if (insertError) {
-            console.error('Profile creation error:', insertError)
+            console.error('Profile creation error:', {
+              message: insertError.message,
+              details: insertError.details,
+              hint: insertError.hint,
+              code: insertError.code
+            })
             throw insertError
           }
 
           setProfile(insertData)
         } else {
-          console.error('Profile fetch error:', error)
+          console.error('Profile fetch error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
           throw error
         }
       } else {
         setProfile(data)
       }
     } catch (err) {
-      console.error('Error in fetchProfile:', err)
+      console.error('Error in fetchProfile:', {
+        error: err,
+        message: err instanceof Error ? err.message : 'Unknown error',
+        userId: user?.id || 'No user ID'
+      })
       setError(err instanceof Error ? err.message : 'プロフィールの取得に失敗しました')
     } finally {
       setLoading(false)
@@ -96,7 +109,13 @@ export function useUserProfile() {
         .eq('id', userId)
 
       if (error) {
-        console.error('Profile update error:', error)
+        console.error('Profile update error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          updateData
+        })
         throw error
       }
 
@@ -104,7 +123,11 @@ export function useUserProfile() {
       await fetchProfile()
       return true
     } catch (err) {
-      console.error('Error in updateProfile:', err)
+      console.error('Error in updateProfile:', {
+        error: err,
+        message: err instanceof Error ? err.message : 'Unknown error',
+        userId: user?.id || 'No user ID'
+      })
       setError(err instanceof Error ? err.message : 'プロフィールの更新に失敗しました')
       return false
     }
@@ -120,10 +143,7 @@ export function useUserProfile() {
     return await updateProfile({ timezone })
   }, [updateProfile])
 
-  // 通知設定を更新
-  const updateGoalReminders = useCallback(async (goalReminders: boolean): Promise<boolean> => {
-    return await updateProfile({ goal_reminders: goalReminders })
-  }, [updateProfile])
+
 
   // 初期化
   useEffect(() => {
@@ -137,7 +157,6 @@ export function useUserProfile() {
     fetchProfile,
     updateProfile,
     updateUserName,
-    updateTimezone,
-    updateGoalReminders
+    updateTimezone
   }
 } 

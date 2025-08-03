@@ -79,8 +79,13 @@ export function useSessionsDb() {
         .single()
 
       if (error) {
-        console.error('Session insert error:', error)
-        throw error
+        console.error('Session insert error:')
+        console.error('Message:', error.message)
+        console.error('Details:', error.details)
+        console.error('Hint:', error.hint)
+        console.error('Code:', error.code)
+        console.error('Full error:', JSON.stringify(error, null, 2))
+        throw new Error(`Session insert failed: ${error.message || 'Unknown error'}`)
       }
 
       // skipRefetchがfalseの場合のみリストを更新
@@ -89,7 +94,10 @@ export function useSessionsDb() {
       }
       return data.id
     } catch (err) {
-      console.error('Error in addSession:', err)
+      console.error('Error in addSession:')
+      console.error('Message:', err instanceof Error ? err.message : String(err))
+      console.error('Stack:', err instanceof Error ? err.stack : undefined)
+      console.error('Full error:', JSON.stringify(err, null, 2))
       setError(err instanceof Error ? err.message : 'セッションの追加に失敗しました')
       return null
     }

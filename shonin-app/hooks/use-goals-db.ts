@@ -66,10 +66,9 @@ export function useGoalsDb() {
   const addGoal = async (goalData: GoalFormData): Promise<string | null> => {
     try {
       console.log('addGoal called with data:', goalData)
-      
+
       // calculatedHoursを秒に変換（時間 * 3600）
       const targetDurationSeconds = goalData.calculatedHours * 3600
-      console.log('Calculated target duration (seconds):', targetDurationSeconds)
 
       const goalInsert: Omit<GoalInsert, 'user_id'> = {
         title: goalData.title,

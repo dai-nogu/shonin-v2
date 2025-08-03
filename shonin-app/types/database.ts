@@ -7,7 +7,6 @@ export interface Database {
           email: string
           name: string | null
           timezone: string | null
-          goal_reminders: boolean | null
           created_at: string
           updated_at: string
         }
@@ -16,7 +15,6 @@ export interface Database {
           email: string
           name?: string | null
           timezone?: string | null
-          goal_reminders?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -25,7 +23,6 @@ export interface Database {
           email?: string
           name?: string | null
           timezone?: string | null
-          goal_reminders?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -184,9 +181,8 @@ export interface Database {
           user_id: string
           title: string
           description: string | null
-          target_duration: number | null
           deadline: string | null
-          is_completed: boolean | null
+          target_duration: number | null
           weekday_hours: number | null
           weekend_hours: number | null
           current_value: number | null
@@ -200,9 +196,8 @@ export interface Database {
           user_id: string
           title: string
           description?: string | null
-          target_duration?: number | null
           deadline?: string | null
-          is_completed?: boolean | null
+          target_duration?: number | null
           weekday_hours?: number | null
           weekend_hours?: number | null
           current_value?: number | null
@@ -216,9 +211,8 @@ export interface Database {
           user_id?: string
           title?: string
           description?: string | null
-          target_duration?: number | null
           deadline?: string | null
-          is_completed?: boolean | null
+          target_duration?: number | null
           weekday_hours?: number | null
           weekend_hours?: number | null
           current_value?: number | null
