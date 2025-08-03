@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '@/lib/supabase'
 
 export interface UploadedPhoto {
   id: string
@@ -9,7 +9,7 @@ export interface UploadedPhoto {
 }
 
 /**
- * 写真をSupabaseストレージにアップロードする
+ * 写真をSupabaseストレージにアップロードしてsession_mediaテーブルに保存する
  * @param file - アップロードするファイル
  * @param sessionId - セッションID
  * @returns アップロード結果
@@ -19,11 +19,11 @@ export async function uploadPhoto(file: File, sessionId: string): Promise<Upload
     // ファイル名を一意にする
     const fileExt = file.name.split('.').pop()
     const fileName = `${sessionId}_${Date.now()}.${fileExt}`
-    const filePath = `session-photos/${fileName}`
+    const filePath = `session-media/${fileName}`
 
     // Supabaseストレージにアップロード
     const { data, error } = await supabase.storage
-      .from('session-photos')
+      .from('session-media')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -36,24 +36,27 @@ export async function uploadPhoto(file: File, sessionId: string): Promise<Upload
 
     // パブリックURLを取得
     const { data: { publicUrl } } = supabase.storage
-      .from('session-photos')
+      .from('session-media')
       .getPublicUrl(filePath)
 
-    // データベースに写真情報を保存
-    const photoData = {
+    // session_mediaテーブルに写真情報を保存
+    const mediaData = {
       id: crypto.randomUUID(),
       session_id: sessionId,
-      file_name: file.name,
+      media_type: 'image',
       file_path: filePath,
+      file_name: file.name,
       file_size: file.size,
-      file_type: file.type,
+      mime_type: file.type,
       public_url: publicUrl,
-      uploaded_at: new Date().toISOString()
+      is_main_image: false,
+      caption: null,
+      created_at: new Date().toISOString()
     }
 
     const { data: dbData, error: dbError } = await supabase
-      .from('session_photos')
-      .insert(photoData)
+      .from('session_media')
+      .insert(mediaData)
       .select()
       .single()
 
@@ -61,17 +64,17 @@ export async function uploadPhoto(file: File, sessionId: string): Promise<Upload
       console.error('Database insert error:', dbError)
       // ストレージからファイルを削除
       await supabase.storage
-        .from('session-photos')
+        .from('session-media')
         .remove([filePath])
       throw new Error(`写真情報の保存に失敗しました: ${dbError.message}`)
     }
 
     return {
-      id: photoData.id,
+      id: dbData.id,
       url: publicUrl,
       fileName: file.name,
       fileSize: file.size,
-      uploadedAt: photoData.uploaded_at
+      uploadedAt: dbData.created_at
     }
   } catch (error) {
     console.error('Photo upload error:', error)
@@ -91,29 +94,30 @@ export async function uploadPhotos(files: File[], sessionId: string): Promise<Up
 }
 
 /**
- * セッションの写真を取得する
+ * セッションの写真をsession_mediaテーブルから取得する
  * @param sessionId - セッションID
  * @returns 写真の配列
  */
 export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto[]> {
   try {
     const { data, error } = await supabase
-      .from('session_photos')
+      .from('session_media')
       .select('*')
       .eq('session_id', sessionId)
-      .order('uploaded_at', { ascending: true })
+      .eq('media_type', 'image')
+      .order('created_at', { ascending: true })
 
     if (error) {
       console.error('Get session photos error:', error)
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
-    return data.map(photo => ({
-      id: photo.id,
-      url: photo.public_url,
-      fileName: photo.file_name,
-      fileSize: photo.file_size,
-      uploadedAt: photo.uploaded_at
+    return data.map(media => ({
+      id: media.id,
+      url: media.public_url || '', // public_urlがnullの場合は空文字列
+      fileName: media.file_name,
+      fileSize: media.file_size || 0,
+      uploadedAt: media.created_at
     }))
   } catch (error) {
     console.error('Get session photos error:', error)
@@ -129,9 +133,10 @@ export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto
 export async function hasSessionPhotos(sessionId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
-      .from('session_photos')
+      .from('session_media')
       .select('id')
       .eq('session_id', sessionId)
+      .eq('media_type', 'image')
       .limit(1)
 
     if (error) {
@@ -151,26 +156,30 @@ export async function hasSessionPhotos(sessionId: string): Promise<boolean> {
  * @param sessionIds - セッションIDの配列
  * @returns セッションIDと写真有無のマップ
  */
-export async function checkMultipleSessionPhotos(sessionIds: string[]): Promise<Record<string, boolean>> {
+export async function hasSessionPhotosMultiple(sessionIds: string[]): Promise<Record<string, boolean>> {
+  if (sessionIds.length === 0) {
+    return {}
+  }
+
   try {
     const { data, error } = await supabase
-      .from('session_photos')
+      .from('session_media')
       .select('session_id')
       .in('session_id', sessionIds)
+      .eq('media_type', 'image')
 
     if (error) {
       console.error('Check multiple session photos error:', error)
       return sessionIds.reduce((acc, id) => ({ ...acc, [id]: false }), {})
     }
 
-    // 写真があるセッションIDのセットを作成
-    const sessionsWithPhotos = new Set(data.map(photo => photo.session_id))
-    
-    // 結果マップを作成
+    // セッションIDごとに写真の有無をマッピング
+    const sessionsWithPhotos = new Set(data.map(item => item.session_id))
     return sessionIds.reduce((acc, id) => ({
       ...acc,
       [id]: sessionsWithPhotos.has(id)
     }), {})
+
   } catch (error) {
     console.error('Check multiple session photos error:', error)
     return sessionIds.reduce((acc, id) => ({ ...acc, [id]: false }), {})
@@ -178,57 +187,40 @@ export async function checkMultipleSessionPhotos(sessionIds: string[]): Promise<
 }
 
 /**
- * 画像をプリロードする
- * @param url - 画像URL
+ * 画像のプリロード用ヘルパー関数
+ * @param urls - プリロードする画像URLの配列
  * @returns プリロード完了のPromise
  */
-export function preloadImage(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error(`Failed to preload image: ${url}`))
-    img.src = url
+export function preloadImages(urls: string[]): Promise<void> {
+  if (urls.length === 0) {
+    return Promise.resolve()
+  }
+
+  const promises = urls.map(url => {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve()
+      img.onerror = () => {
+        console.warn(`Failed to preload image: ${url}`)
+        resolve() // エラーでも続行
+      }
+      img.src = url
+    })
   })
+
+  return Promise.all(promises).then(() => {})
 }
 
 /**
- * 複数の画像を並列でプリロードする
- * @param urls - 画像URLの配列
- * @returns 全画像のプリロード完了のPromise
- */
-export async function preloadImages(urls: string[]): Promise<void> {
-  try {
-    await Promise.all(urls.map(url => preloadImage(url)))
-  } catch (error) {
-    console.error('Failed to preload some images:', error)
-    // 一部の画像が失敗してもエラーを投げない
-  }
-}
-
-/**
- * 画像がプリロード済みかどうかを確認する
- * @param url - 画像URL
- * @returns プリロード済みかどうか
- */
-export function isImagePreloaded(url: string): boolean {
-  try {
-    const img = new Image()
-    img.src = url
-    return img.complete && img.naturalWidth > 0
-  } catch {
-    return false
-  }
-}
-
-/**
- * 複数の画像がプリロード済みかどうかを確認する
- * @param urls - 画像URLの配列
- * @returns プリロード済み状態のマップ
+ * プリロード済み画像の状態をチェックする
+ * @param urls - チェックする画像URLの配列
+ * @returns URLごとのプリロード状態のマップ
  */
 export function checkPreloadedImages(urls: string[]): Record<string, boolean> {
   return urls.reduce((acc, url) => {
-    acc[url] = isImagePreloaded(url)
-    return acc
+    // ブラウザのキャッシュから確認（完全ではないが参考程度）
+    acc[url] = document.querySelector(`img[src="${url}"]`) !== null
+
   }, {} as Record<string, boolean>)
 }
 
@@ -244,26 +236,27 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
 }> {
   try {
     const { data, error } = await supabase
-      .from('session_photos')
+      .from('session_media')
       .select('*')
       .eq('session_id', sessionId)
-      .order('uploaded_at', { ascending: true })
+      .eq('media_type', 'image')
+      .order('created_at', { ascending: true })
 
     if (error) {
       console.error('Get session photos error:', error)
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
-    const photos = data.map(photo => ({
-      id: photo.id,
-      url: photo.public_url,
-      fileName: photo.file_name,
-      fileSize: photo.file_size,
-      uploadedAt: photo.uploaded_at
+    const photos = data.map(media => ({
+      id: media.id,
+      url: media.public_url || '',
+      fileName: media.file_name,
+      fileSize: media.file_size || 0,
+      uploadedAt: media.created_at
     }))
 
     // 画像URLを抽出
-    const imageUrls = photos.map(photo => photo.url)
+    const imageUrls = photos.map(photo => photo.url).filter(url => url !== '')
     
     // プリロード済み状態を確認
     const preloadedStates = checkPreloadedImages(imageUrls)

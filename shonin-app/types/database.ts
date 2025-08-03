@@ -6,8 +6,8 @@ export interface Database {
           id: string
           email: string
           name: string | null
-          timezone: string
-          goal_reminders: boolean
+          timezone: string | null
+          goal_reminders: boolean | null
           created_at: string
           updated_at: string
         }
@@ -15,8 +15,8 @@ export interface Database {
           id: string
           email: string
           name?: string | null
-          timezone?: string
-          goal_reminders?: boolean
+          timezone?: string | null
+          goal_reminders?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -24,8 +24,8 @@ export interface Database {
           id?: string
           email?: string
           name?: string | null
-          timezone?: string
-          goal_reminders?: boolean
+          timezone?: string | null
+          goal_reminders?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -45,7 +45,7 @@ export interface Database {
           user_id: string
           name: string
           icon?: string | null
-          color: string
+          color?: string
           created_at?: string
           updated_at?: string
         }
@@ -64,18 +64,18 @@ export interface Database {
           id: string
           user_id: string
           activity_id: string
-          goal_id: string | null // 目標ID（追加）
+          goal_id: string | null
           start_time: string
           end_time: string | null
           duration: number
-          session_date: string | null // セッション日付（追加）
+          session_date: string | null
           notes: string | null
           mood: number | null
           achievements: string | null
           challenges: string | null
           location: string | null
           
-          // 詳細振り返り情報（統合）
+          // 詳細振り返り情報
           mood_score: number | null
           mood_notes: string | null
           detailed_achievements: string | null
@@ -85,7 +85,7 @@ export interface Database {
           reflection_notes: string | null
           reflection_duration: number | null
           
-          // AI分析結果（統合）
+          // AI分析結果
           ai_sentiment_score: number | null
           ai_positive_keywords: string[] | null
           ai_negative_keywords: string[] | null
@@ -103,18 +103,18 @@ export interface Database {
           id?: string
           user_id: string
           activity_id: string
-          goal_id?: string | null // 目標ID（追加）
+          goal_id?: string | null
           start_time: string
           end_time?: string | null
           duration?: number
-          session_date?: string | null // セッション日付（追加）
+          session_date?: string | null
           notes?: string | null
           mood?: number | null
           achievements?: string | null
           challenges?: string | null
           location?: string | null
           
-          // 詳細振り返り情報（統合）
+          // 詳細振り返り情報
           mood_score?: number | null
           mood_notes?: string | null
           detailed_achievements?: string | null
@@ -124,7 +124,7 @@ export interface Database {
           reflection_notes?: string | null
           reflection_duration?: number | null
           
-          // AI分析結果（統合）
+          // AI分析結果
           ai_sentiment_score?: number | null
           ai_positive_keywords?: string[] | null
           ai_negative_keywords?: string[] | null
@@ -142,18 +142,18 @@ export interface Database {
           id?: string
           user_id?: string
           activity_id?: string
-          goal_id?: string | null // 目標ID（追加）
+          goal_id?: string | null
           start_time?: string
           end_time?: string | null
           duration?: number
-          session_date?: string | null // セッション日付（追加）
+          session_date?: string | null
           notes?: string | null
           mood?: number | null
           achievements?: string | null
           challenges?: string | null
           location?: string | null
           
-          // 詳細振り返り情報（統合）
+          // 詳細振り返り情報
           mood_score?: number | null
           mood_notes?: string | null
           detailed_achievements?: string | null
@@ -163,7 +163,7 @@ export interface Database {
           reflection_notes?: string | null
           reflection_duration?: number | null
           
-          // AI分析結果（統合）
+          // AI分析結果
           ai_sentiment_score?: number | null
           ai_positive_keywords?: string[] | null
           ai_negative_keywords?: string[] | null
@@ -178,7 +178,6 @@ export interface Database {
           updated_at?: string
         }
       }
-
       goals: {
         Row: {
           id: string
@@ -187,12 +186,12 @@ export interface Database {
           description: string | null
           target_duration: number | null
           deadline: string | null
-          is_completed: boolean
-          weekday_hours: number
-          weekend_hours: number
-          current_value: number
-          unit: string
-          status: 'active' | 'completed' | 'paused'
+          is_completed: boolean | null
+          weekday_hours: number | null
+          weekend_hours: number | null
+          current_value: number | null
+          unit: string | null
+          status: string | null
           created_at: string
           updated_at: string
         }
@@ -203,12 +202,12 @@ export interface Database {
           description?: string | null
           target_duration?: number | null
           deadline?: string | null
-          is_completed?: boolean
-          weekday_hours?: number
-          weekend_hours?: number
-          current_value?: number
-          unit?: string
-          status?: 'active' | 'completed' | 'paused'
+          is_completed?: boolean | null
+          weekday_hours?: number | null
+          weekend_hours?: number | null
+          current_value?: number | null
+          unit?: string | null
+          status?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -219,12 +218,12 @@ export interface Database {
           description?: string | null
           target_duration?: number | null
           deadline?: string | null
-          is_completed?: boolean
-          weekday_hours?: number
-          weekend_hours?: number
-          current_value?: number
-          unit?: string
-          status?: 'active' | 'completed' | 'paused'
+          is_completed?: boolean | null
+          weekday_hours?: number | null
+          weekend_hours?: number | null
+          current_value?: number | null
+          unit?: string | null
+          status?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -233,7 +232,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          feedback_type: 'weekly' | 'monthly'
+          feedback_type: string
           content: string
           period_start: string
           period_end: string
@@ -242,7 +241,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          feedback_type: 'weekly' | 'monthly'
+          feedback_type: string
           content: string
           period_start: string
           period_end: string
@@ -251,67 +250,144 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          feedback_type?: 'weekly' | 'monthly'
+          feedback_type?: string
           content?: string
           period_start?: string
           period_end?: string
           created_at?: string
         }
       }
-      session_photos: {
+      session_media: {
         Row: {
           id: string
           session_id: string
-          file_name: string
+          media_type: string
           file_path: string
-          file_size: number
-          file_type: string
-          public_url: string
-          uploaded_at: string
+          file_name: string
+          file_size: number | null
+          mime_type: string | null
+          caption: string | null
+          is_main_image: boolean
+          public_url: string | null
+          created_at: string
         }
         Insert: {
           id?: string
           session_id: string
-          file_name: string
+          media_type: string
           file_path: string
-          file_size: number
-          file_type: string
-          public_url: string
-          uploaded_at?: string
+          file_name: string
+          file_size?: number | null
+          mime_type?: string | null
+          caption?: string | null
+          is_main_image?: boolean
+          public_url?: string | null
+          created_at?: string
         }
         Update: {
           id?: string
           session_id?: string
-          file_name?: string
+          media_type?: string
           file_path?: string
-          file_size?: number
-          file_type?: string
-          public_url?: string
-          uploaded_at?: string
+          file_name?: string
+          file_size?: number | null
+          mime_type?: string | null
+          caption?: string | null
+          is_main_image?: boolean
+          public_url?: string | null
+          created_at?: string
         }
       }
     }
     Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
+      sessions_for_ai_analysis: {
+        Row: {
+          id: string
+          user_id: string
+          activity_id: string
+          goal_id: string | null
+          start_time: string
+          end_time: string | null
+          duration: number
+          session_date: string | null
+          location: string | null
+          notes: string | null
+          mood: number | null
+          achievements: string | null
+          challenges: string | null
+          mood_score: number | null
+          mood_notes: string | null
+          detailed_achievements: string | null
+          achievement_satisfaction: number | null
+          detailed_challenges: string | null
+          challenge_severity: number | null
+          reflection_notes: string | null
+          reflection_duration: number | null
+          ai_sentiment_score: number | null
+          ai_positive_keywords: string[] | null
+          ai_negative_keywords: string[] | null
+          ai_improvement_keywords: string[] | null
+          ai_effort_level: number | null
+          ai_focus_level: number | null
+          ai_satisfaction_level: number | null
+          ai_analyzed_at: string | null
+          ai_feedback_generated: boolean | null
+          created_at: string
+          updated_at: string
+        }
+      }
     }
   }
 }
 
-export interface GoalDatabase {
+// 以下は現在のアプリケーションで使用されている型定義
+
+export interface Activity {
   id: string;
   user_id: string;
-  title: string;
-  description?: string;
-  target_value?: number;
-  target_unit?: string;
-  target_date?: string;
-  status: 'active' | 'completed' | 'paused';
+  name: string;
+  icon?: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Session {
+  id: string;
+  user_id: string;
+  activity_id: string;
+  goal_id?: string | null;
+  start_time: string;
+  end_time?: string | null;
+  duration: number;
+  session_date?: string | null;
+  notes?: string;
+  mood?: number;
+  achievements?: string;
+  challenges?: string;
+  location?: string;
+  
+  // 詳細振り返り情報（統合済み）
+  mood_score?: number;
+  mood_notes?: string;
+  detailed_achievements?: string;
+  achievement_satisfaction?: number;
+  detailed_challenges?: string;
+  challenge_severity?: number;
+  reflection_notes?: string;
+  reflection_duration?: number;
+  
+  // AI分析結果（統合済み）
+  ai_sentiment_score?: number;
+  ai_positive_keywords?: string[];
+  ai_negative_keywords?: string[];
+  ai_improvement_keywords?: string[];
+  ai_effort_level?: number;
+  ai_focus_level?: number;
+  ai_satisfaction_level?: number;
+  ai_analyzed_at?: string;
+  ai_feedback_generated?: boolean;
+  
   created_at: string;
   updated_at: string;
 }
@@ -319,25 +395,10 @@ export interface GoalDatabase {
 export interface AiFeedbackDatabase {
   id: string;
   user_id: string;
-  feedback_type: 'weekly' | 'monthly' | 'achievement' | 'encouragement';
+  feedback_type: 'weekly' | 'monthly';
   content: string;
   sentiment_score?: number;
   generated_at: string;
-}
-
-export interface SessionReflectionDatabase {
-  id: string;
-  session_id: string;
-  mood_score: number;
-  mood_notes?: string;
-  achievements: string;
-  achievements_rating?: number;
-  challenges: string;
-  challenges_severity?: number;
-  additional_notes?: string;
-  reflection_duration?: number;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface SessionMediaDatabase {
@@ -350,48 +411,22 @@ export interface SessionMediaDatabase {
   mime_type?: string;
   caption?: string;
   is_main_image: boolean;
+  public_url?: string | null; // 写真機能統合のため追加
   created_at: string;
 }
 
-export interface SessionSentimentAnalysisDatabase {
+export interface SessionMedia {
   id: string;
-  session_id: string;
-  overall_sentiment?: number;
-  achievements_sentiment?: number;
-  challenges_sentiment?: number;
-  notes_sentiment?: number;
-  positive_keywords?: string[];
-  negative_keywords?: string[];
-  improvement_keywords?: string[];
-  effort_level?: number;
-  focus_level?: number;
-  satisfaction_level?: number;
-  analyzed_at: string;
-  ai_model_version?: string;
-  processing_time_ms?: number;
-}
-
-export interface ReflectionTemplateDatabase {
-  id: string;
-  user_id?: string;
-  name: string;
-  description?: string;
-  questions: ReflectionQuestion[];
-  is_default: boolean;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ReflectionQuestion {
-  id: string;
-  type: 'rating' | 'text' | 'textarea' | 'select' | 'multiselect';
-  question: string;
-  placeholder?: string;
-  min?: number;
-  max?: number;
-  options?: string[];
-  required: boolean;
+  sessionId: string;
+  mediaType: 'image' | 'video' | 'audio';
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  caption?: string;
+  isMainImage: boolean;
+  publicUrl?: string; // 写真機能統合のため追加
+  createdAt: string;
 }
 
 export interface SessionReflection {
@@ -403,22 +438,4 @@ export interface SessionReflection {
   challengesSeverity?: number;
   additionalNotes?: string;
   reflectionDuration?: number;
-}
-
-export interface SessionMedia {
-  id?: string;
-  mediaType: 'image' | 'video' | 'audio';
-  filePath: string;
-  fileName: string;
-  fileSize?: number;
-  mimeType?: string;
-  caption?: string;
-  isMainImage: boolean;
-}
-
-// CompletedSessionは@/components/time-trackerで定義されています
-// export interface SessionWithReflection extends CompletedSession {
-//   reflection?: SessionReflection;
-//   media?: SessionMedia[];
-//   sentimentAnalysis?: SessionSentimentAnalysisDatabase;
-// } 
+} 

@@ -17,7 +17,7 @@ import { Goals } from "@/components/goals"
 import { Settings } from "@/components/settings"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { useSessions } from "@/contexts/sessions-context"
-import { checkMultipleSessionPhotos, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
+import { hasSessionPhotosMultiple, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
 import type { SessionData, CompletedSession } from "@/components/time-tracker"
 
 export default function Dashboard() {
@@ -116,7 +116,7 @@ export default function Dashboard() {
       const sessionIds = completedSessionsData.map(session => session.id)
       
       // 写真の有無を一括確認
-      const photoStatusMap = await checkMultipleSessionPhotos(sessionIds)
+      const photoStatusMap = await hasSessionPhotosMultiple(sessionIds)
 
       // CompletedSessionの型に合わせて変換（写真の有無を含む）
       const sessionsWithPhotos: CompletedSession[] = completedSessionsData.map(session => ({

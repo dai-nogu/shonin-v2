@@ -85,7 +85,7 @@ export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
         weekdayHours: goal.weekday_hours || 0,
         weekendHours: goal.weekend_hours || 0,
         createdAt: goal.created_at.split('T')[0],
-        status: goal.status || 'active',
+        status: (goal.status as "active" | "completed" | "paused") || 'active',
         // 生の秒値も保持
         targetDurationSeconds: goal.target_duration || 0,
         currentValueSeconds: goal.current_value || 0
