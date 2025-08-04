@@ -636,6 +636,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                    <div>
                      <Label className="text-gray-300">ログアウト</Label>
                      <p className="text-sm text-gray-400">アカウントからサインアウトします</p>
+                     <p className="text-sm text-gray-400">ログアウト後は、再度ログインが必要になります。</p>
                    </div>
                    <Button 
                      onClick={handleLogout}
@@ -663,12 +664,6 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                    </div>
                  </div>
                 
-                <div className="pt-4 border-t border-gray-700">
-                  <div className="text-sm text-gray-400">
-                    <p>ログアウト後は、再度ログインが必要になります。</p>
-                    <p>進行中のセッションがある場合は、事前に保存することをお勧めします。</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
