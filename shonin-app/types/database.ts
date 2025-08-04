@@ -91,7 +91,6 @@ export interface Database {
           ai_focus_level: number | null
           ai_satisfaction_level: number | null
           ai_analyzed_at: string | null
-          ai_feedback_generated: boolean | null
           
           created_at: string
           updated_at: string
@@ -130,7 +129,6 @@ export interface Database {
           ai_focus_level?: number | null
           ai_satisfaction_level?: number | null
           ai_analyzed_at?: string | null
-          ai_feedback_generated?: boolean | null
           
           created_at?: string
           updated_at?: string
@@ -169,7 +167,6 @@ export interface Database {
           ai_focus_level?: number | null
           ai_satisfaction_level?: number | null
           ai_analyzed_at?: string | null
-          ai_feedback_generated?: boolean | null
           
           created_at?: string
           updated_at?: string
@@ -325,7 +322,6 @@ export interface Database {
           ai_focus_level: number | null
           ai_satisfaction_level: number | null
           ai_analyzed_at: string | null
-          ai_feedback_generated: boolean | null
           created_at: string
           updated_at: string
         }
@@ -380,7 +376,6 @@ export interface Session {
   ai_focus_level?: number;
   ai_satisfaction_level?: number;
   ai_analyzed_at?: string;
-  ai_feedback_generated?: boolean;
   
   created_at: string;
   updated_at: string;
