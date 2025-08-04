@@ -498,7 +498,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            開始する
+            開始
           </CardTitle>
           <p className="text-gray-400 text-sm">最近の行動から素早く開始</p>
         </CardHeader>
@@ -517,7 +517,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            開始する
+            開始
           </CardTitle>
           <p className="text-gray-400 text-sm">最近の行動から素早く開始</p>
         </CardHeader>

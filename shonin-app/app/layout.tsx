@@ -5,6 +5,7 @@ import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
 import { TimezoneProvider } from "@/contexts/timezone-context"
 import { AuthProvider } from "@/contexts/auth-context"
+import { UIProvider } from "@/contexts/ui-context"
 import { ConditionalSidebarProvider } from "@/components/conditional-sidebar-provider"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -21,9 +22,11 @@ export default function RootLayout({
           <TimezoneProvider>
             <ActivitiesProvider>
               <SessionsProvider>
-                <ConditionalSidebarProvider>
-                  {children}
-                </ConditionalSidebarProvider>
+                <UIProvider>
+                  <ConditionalSidebarProvider>
+                    {children}
+                  </ConditionalSidebarProvider>
+                </UIProvider>
               </SessionsProvider>
             </ActivitiesProvider>
           </TimezoneProvider>

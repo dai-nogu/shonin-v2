@@ -470,7 +470,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 onClick={handleStartSimilar}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
               >
-                開始する
+                開始
               </Button>
             </div>
           )}
@@ -490,7 +490,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  開始する
+                  開始
                 </Button>
               )}
             </div>
@@ -1074,7 +1074,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 onClick={handleStartSimilar}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
               >
-                開始する
+                開始
               </Button>
             </div>
           )}
@@ -1094,7 +1094,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  開始する
+                  開始
                 </Button>
               )}
             </div>

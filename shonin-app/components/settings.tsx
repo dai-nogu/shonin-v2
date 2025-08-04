@@ -276,6 +276,14 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                 {isEditingProfile && (
                   <div className="flex space-x-3 mt-6">
                     <Button
+                      variant="outline"
+                      onClick={() => setIsEditingProfile(false)}
+                      disabled={isSaving}
+                      className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                    >
+                      キャンセル
+                    </Button>
+                    <Button
                       onClick={handleSaveProfile}
                       disabled={isSaving}
                       className="bg-green-500 hover:bg-green-600"
@@ -288,14 +296,6 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                       ) : (
                         "保存"
                       )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditingProfile(false)}
-                      disabled={isSaving}
-                      className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                    >
-                      キャンセル
                     </Button>
                   </div>
                 )}
@@ -402,20 +402,6 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                 {isEditingSecurity && (
                   <div className="flex space-x-3 mt-6">
                     <Button
-                      onClick={handleSaveSecurity}
-                      disabled={isSaving || !!validatePasswords()}
-                      className="bg-green-500 hover:bg-green-600"
-                    >
-                      {isSaving ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>保存中...</span>
-                        </div>
-                      ) : (
-                        "保存"
-                      )}
-                    </Button>
-                    <Button
                       variant="outline"
                       onClick={() => {
                         setIsEditingSecurity(false)
@@ -428,6 +414,20 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                       className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
                     >
                       キャンセル
+                    </Button>
+                    <Button
+                      onClick={handleSaveSecurity}
+                      disabled={isSaving || !!validatePasswords()}
+                      className="bg-green-500 hover:bg-green-600"
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>保存中...</span>
+                        </div>
+                      ) : (
+                        "保存"
+                      )}
                     </Button>
                   </div>
                 )}
