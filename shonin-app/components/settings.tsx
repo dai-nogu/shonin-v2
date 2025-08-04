@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save, LogOut } from "lucide-react"
+import { User, Globe, Bell, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save, LogOut } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useTimezone } from "@/contexts/timezone-context"
 import { TIMEZONES } from "@/lib/timezone-utils"
@@ -33,18 +33,11 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   
   // 編集モードの管理
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [isEditingSecurity, setIsEditingSecurity] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
   // ユーザー情報（データベースから取得）
   const [name, setName] = useState("")
   const [email, setEmail] = useState(user?.email || "")
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // タイムゾーン設定
   const { 
@@ -92,24 +85,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     }
   }
 
-  const handleSaveSecurity = async () => {
-    const passwordError = validatePasswords()
-    if (passwordError) {
-      alert(passwordError)
-      return
-    }
-    
-    setIsSaving(true)
-    // 保存処理のシミュレーション
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setIsEditingSecurity(false)
-    // パスワードフィールドをクリア
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    alert("セキュリティ設定が保存されました")
-  }
+
 
   const handleDeleteActivity = async (activityId: string) => {
     // 現在進行中のアクティビティかどうかをチェック
@@ -187,31 +163,17 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     }
   }
 
-  const validatePasswords = () => {
-    if (newPassword && newPassword !== confirmPassword) {
-      return "新しいパスワードが一致しません"
-    }
-    if (newPassword && newPassword.length < 8) {
-      return "パスワードは8文字以上で入力してください"
-    }
-    return null
-  }
 
-  const passwordError = validatePasswords()
 
   return (
     <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
       <div className="container mx-auto max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-900 border-gray-800">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-900 border-gray-800">
             <TabsTrigger value="profile" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <User className="w-4 h-4" />
               <span className={isMobile ? "hidden" : "block"}>プロフィール</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
-              <Lock className="w-4 h-4" />
-              <span className={isMobile ? "hidden" : "block"}>セキュリティ</span>
             </TabsTrigger>
             <TabsTrigger value="timezone" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Globe className="w-4 h-4" />
@@ -303,137 +265,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
             </Card>
           </TabsContent>
 
-          {/* セキュリティタブ */}
-          <TabsContent value="security" className="space-y-6">
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white">
-                    {isEditingSecurity ? "パスワードを変更" : "パスワード"}
-                  </CardTitle>
-                  <div className="flex space-x-2">
-                    {!isEditingSecurity && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditingSecurity(true)}
-                        className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300">現在のパスワード</Label>
-                  <div className="relative">
-                    <Input
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      disabled={!isEditingSecurity}
-                      className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={!isEditingSecurity}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">新しいパスワード</Label>
-                    <div className="relative">
-                      <Input
-                        type={showNewPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        disabled={!isEditingSecurity}
-                        className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={!isEditingSecurity}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">新しいパスワード（確認）</Label>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={!isEditingSecurity}
-                        className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={!isEditingSecurity}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                {passwordError && (
-                  <div className="text-red-400 text-sm">{passwordError}</div>
-                )}
-                
-                {/* 編集中のボタン */}
-                {isEditingSecurity && (
-                  <div className="flex space-x-3 mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditingSecurity(false)
-                        // フィールドをクリア
-                        setCurrentPassword("")
-                        setNewPassword("")
-                        setConfirmPassword("")
-                      }}
-                      disabled={isSaving}
-                      className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                    >
-                      キャンセル
-                    </Button>
-                    <Button
-                      onClick={handleSaveSecurity}
-                      disabled={isSaving || !!validatePasswords()}
-                      className="bg-green-500 hover:bg-green-600"
-                    >
-                      {isSaving ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>保存中...</span>
-                        </div>
-                      ) : (
-                        "保存"
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+
 
           {/* タイムゾーンタブ */}
           <TabsContent value="timezone" className="space-y-6">
