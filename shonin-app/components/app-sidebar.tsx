@@ -25,7 +25,7 @@ const menuItems = [
   },
   {
     title: "カレンダー",
-    url: "/calendar",
+    url: "/calendar/month",
     icon: Calendar,
     id: "calendar",
   },
@@ -57,7 +57,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   useEffect(() => {
     if (pathname === "/dashboard" || pathname === "/" || pathname === "/session") {
       setActivePage("dashboard")
-    } else if (pathname === "/calendar") {
+    } else if (pathname === "/calendar" || pathname.startsWith("/calendar/")) {
       setActivePage("calendar")
     } else if (pathname === "/goals") {
       setActivePage("goals")

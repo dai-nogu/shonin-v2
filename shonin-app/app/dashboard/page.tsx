@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
 
   const handleWeekViewTransition = () => {
-    router.push("/calendar?view=week")
+    router.push("/calendar/week")
   }
 
   // セッション開始

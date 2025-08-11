@@ -21,7 +21,7 @@ const menuItems = [
     id: "calendar", 
     label: "カレンダー",
     icon: Calendar,
-    url: "/calendar",
+    url: "/calendar/month",
   },
   {
     id: "goals",
@@ -47,7 +47,7 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
   useEffect(() => {
     if (pathname === "/dashboard" || pathname === "/" || pathname === "/session") {
       setActivePage("dashboard")
-    } else if (pathname === "/calendar") {
+    } else if (pathname === "/calendar" || pathname.startsWith("/calendar/")) {
       setActivePage("calendar")
     } else if (pathname === "/goals") {
       setActivePage("goals")
