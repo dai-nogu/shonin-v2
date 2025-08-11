@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import { Home, Calendar, BarChart3, Target, Settings } from "lucide-react"
 import {
   Sidebar,
@@ -18,7 +19,7 @@ import {
 const menuItems = [
   {
     title: "ダッシュボード",
-    url: "/",
+    url: "/dashboard",
     icon: Home,
     id: "dashboard",
   },
@@ -48,14 +49,30 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSidebarProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [activePage, setActivePage] = useState(currentPage)
+
+  // パスに基づいてアクティブページを設定
+  useEffect(() => {
+    if (pathname === "/dashboard" || pathname === "/") {
+      setActivePage("dashboard")
+    } else if (pathname === "/calendar") {
+      setActivePage("calendar")
+    } else if (pathname === "/goals") {
+      setActivePage("goals")
+    } else if (pathname === "/settings") {
+      setActivePage("settings")
+    }
+  }, [pathname])
 
   useEffect(() => {
     setActivePage(currentPage)
   }, [currentPage])
 
-  const handlePageChange = (pageId: string) => {
+  const handlePageChange = (pageId: string, url: string) => {
     setActivePage(pageId)
+    router.push(url)
     onPageChange?.(pageId)
   }
 
@@ -79,7 +96,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    onClick={() => handlePageChange(item.id)}
+                    onClick={() => handlePageChange(item.id, item.url)}
                     isActive={activePage === item.id}
                     className="text-gray-300 hover:text-white hover:bg-gray-800"
                   >

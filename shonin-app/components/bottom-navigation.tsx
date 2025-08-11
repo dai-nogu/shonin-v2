@@ -3,10 +3,11 @@
 import { Home, Calendar, Target, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
 
 interface BottomNavigationProps {
   currentPage: string
-  onPageChange: (pageId: string) => void
+  onPageChange?: (pageId: string) => void
 }
 
 const menuItems = [
@@ -14,26 +15,50 @@ const menuItems = [
     id: "dashboard",
     label: "ホーム",
     icon: Home,
+    url: "/dashboard",
   },
   {
     id: "calendar", 
     label: "カレンダー",
     icon: Calendar,
+    url: "/calendar",
   },
   {
     id: "goals",
     label: "目標",
     icon: Target,
+    url: "/goals",
   },
   {
     id: "settings",
     label: "設定",
     icon: Settings,
+    url: "/settings",
   },
 ]
 
 export function BottomNavigation({ currentPage, onPageChange }: BottomNavigationProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [isMobile, setIsMobile] = useState(false)
+  const [activePage, setActivePage] = useState(currentPage)
+
+  // パスに基づいてアクティブページを設定
+  useEffect(() => {
+    if (pathname === "/dashboard" || pathname === "/") {
+      setActivePage("dashboard")
+    } else if (pathname === "/calendar") {
+      setActivePage("calendar")
+    } else if (pathname === "/goals") {
+      setActivePage("goals")
+    } else if (pathname === "/settings") {
+      setActivePage("settings")
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    setActivePage(currentPage)
+  }, [currentPage])
 
   // モバイル判定
   useEffect(() => {
@@ -47,6 +72,12 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  const handlePageChange = (pageId: string, url: string) => {
+    setActivePage(pageId)
+    router.push(url)
+    onPageChange?.(pageId)
+  }
+
   // モバイルでない場合は非表示
   if (!isMobile) {
     return null
@@ -56,13 +87,13 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-700 safe-area-pb">
       <div className="flex justify-around items-center h-20 px-2">
         {menuItems.map((item) => {
-          const isActive = currentPage === item.id
+          const isActive = activePage === item.id
           const Icon = item.icon
           
           return (
             <button
               key={item.id}
-              onClick={() => onPageChange(item.id)}
+              onClick={() => handlePageChange(item.id, item.url)}
               className={cn(
                 "flex flex-col items-center justify-center h-16 w-24 rounded-xl transition-all duration-200",
                 isActive 
