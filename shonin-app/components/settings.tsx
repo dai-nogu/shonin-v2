@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Lock, Globe, Bell, Eye, EyeOff, Activity, Trash2, Plus, MapPin, Clock, Edit2, Save, LogOut } from "lucide-react"
+import { User, Globe, Activity, Trash2, Edit2, LogOut } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useTimezone } from "@/contexts/timezone-context"
 import { TIMEZONES } from "@/lib/timezone-utils"
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/contexts/auth-context"
@@ -33,18 +32,11 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   
   // 編集モードの管理
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [isEditingSecurity, setIsEditingSecurity] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
   // ユーザー情報（データベースから取得）
   const [name, setName] = useState("")
   const [email, setEmail] = useState(user?.email || "")
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // タイムゾーン設定
   const { 
@@ -52,9 +44,6 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     setTimezone, 
     getTimezoneDisplayName 
   } = useTimezone()
-
-  // 通知設定
-  const [goalReminders, setGoalReminders] = useState(true)
 
   // ユーザー情報が更新された際に状態を同期
   useEffect(() => {
@@ -92,126 +81,73 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     }
   }
 
-  const handleSaveSecurity = async () => {
-    const passwordError = validatePasswords()
-    if (passwordError) {
-      alert(passwordError)
-      return
-    }
-    
-    setIsSaving(true)
-    // 保存処理のシミュレーション
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setIsEditingSecurity(false)
-    // パスワードフィールドをクリア
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    alert("セキュリティ設定が保存されました")
+  // ログアウト処理
+  const handleLogout = () => {
+    signOut()
   }
 
-  const handleDeleteActivity = async (activityId: string) => {
-    // 現在進行中のアクティビティかどうかをチェック
-    if (isSessionActive && currentSession && currentSession.activityId === activityId) {
-      alert("現在進行中のアクティビティは削除できません。\nセッションを終了してから削除してください。")
+  // ユーザーアカウント削除（危険な操作）
+  const handleDeleteAccount = async () => {
+    const confirmText = "アカウントを削除"
+    const inputText = prompt(
+      `⚠️ 警告: この操作は取り消せません！\n\nアカウントとすべてのデータが完全に削除されます。\n削除を実行するには「${confirmText}」と入力してください:`
+    )
+    
+    if (inputText !== confirmText) {
+      if (inputText !== null) {
+        alert("入力が正しくありません。アカウント削除をキャンセルしました。")
+      }
       return
     }
-    
-    if (confirm("このアクティビティを削除しますか？")) {
+
+    try {
+      // バックエンドAPIを呼び出してユーザーアカウントを削除
+      const response = await fetch('/api/deleteUser', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        alert("アカウントが削除されました。ご利用ありがとうございました。")
+        await signOut() // ログアウト処理
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'アカウント削除に失敗しました')
+      }
+    } catch (error) {
+      console.error('アカウント削除エラー:', error)
+      alert("アカウント削除中にエラーが発生しました。時間をおいて再度お試しください。")
+    }
+  }
+
+  // アクティビティ削除ハンドラー
+  const handleDeleteActivity = async (activityId: string) => {
+    // 現在進行中のアクティビティかチェック
+    if (isSessionActive && currentSession && currentSession.activityId === activityId) {
+      alert("進行中のアクティビティは削除できません。先にアクティビティを終了してください。")
+      return
+    }
+
+    const confirmed = confirm("このアクティビティを削除しますか？\n関連するセッションデータも削除されます。")
+    if (confirmed) {
       const success = await deleteActivity(activityId)
       if (!success) {
-        alert("アクティビティの削除に失敗しました。")
+        alert("アクティビティの削除に失敗しました")
       }
     }
   }
-
-  // ログアウト処理
-  const handleLogout = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('ログアウトに失敗しました:', error)
-      // TODO: エラートーストを表示
-    }
-  }
-
-  // アカウント削除処理
-  const handleDeleteAccount = async () => {
-    const confirmDelete = confirm('本当にアカウントを削除しますか？この操作は取り消すことができません。')
-    if (confirmDelete) {
-      try {
-        // 現在のセッションからアクセストークンを取得
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (!session?.access_token) {
-          alert('認証が必要です。再度ログインしてください。')
-          return
-        }
-
-        // Step 1: データベース関数を使用してStorageオブジェクトを削除
-        console.log('Storageのメディアファイルを削除中...')
-        const { data: storageDeleteResult, error: storageDeleteError } = await supabase.rpc('handle_delete_user_created_objects')
-        
-        if (storageDeleteError) {
-          console.error('Storageファイル削除エラー:', storageDeleteError)
-          alert('ファイルの削除に失敗しました。続行しますか？')
-        } else if (storageDeleteResult) {
-          console.log('Storageのファイルが削除されました')
-        }
-
-        // Step 2: サーバーサイドでauth.userとデータベースレコードを削除
-        console.log('ユーザーアカウントを削除中...')
-        const response = await fetch('/api/deleteUser', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          }
-        })
-
-        if (response.ok) {
-          await signOut()
-          alert('アカウントとすべてのデータが削除されました')
-          // ログインページにリダイレクト
-          window.location.href = '/login'
-        } else {
-          const error = await response.json()
-          console.error('アカウント削除エラー:', error)
-          alert('アカウントの削除に失敗しました')
-        }
-      } catch (error) {
-        console.error('アカウント削除エラー:', error)
-        alert('アカウントの削除に失敗しました')
-      }
-    }
-  }
-
-  const validatePasswords = () => {
-    if (newPassword && newPassword !== confirmPassword) {
-      return "新しいパスワードが一致しません"
-    }
-    if (newPassword && newPassword.length < 8) {
-      return "パスワードは8文字以上で入力してください"
-    }
-    return null
-  }
-
-  const passwordError = validatePasswords()
 
   return (
     <div className="bg-gray-950 text-white">{/* ヘッダーは統一Header使用のため削除 */}
 
       <div className="container mx-auto max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-900 border-gray-800">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-900 border-gray-800">
             <TabsTrigger value="profile" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <User className="w-4 h-4" />
               <span className={isMobile ? "hidden" : "block"}>プロフィール</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
-              <Lock className="w-4 h-4" />
-              <span className={isMobile ? "hidden" : "block"}>セキュリティ</span>
             </TabsTrigger>
             <TabsTrigger value="timezone" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
               <Globe className="w-4 h-4" />
@@ -221,9 +157,9 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
               <Activity className="w-4 h-4" />
               <span className={isMobile ? "hidden" : "block"}>アクティビティ</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
-              <Bell className="w-4 h-4" />
-              <span className={isMobile ? "hidden" : "block"}>通知・その他</span>
+            <TabsTrigger value="account" className="flex items-center space-x-2 data-[state=active]:bg-gray-800">
+              <LogOut className="w-4 h-4" />
+              <span className={isMobile ? "hidden" : "block"}>アカウント管理</span>
             </TabsTrigger>
           </TabsList>
 
@@ -303,195 +239,27 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
             </Card>
           </TabsContent>
 
-          {/* セキュリティタブ */}
-          <TabsContent value="security" className="space-y-6">
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white">
-                    {isEditingSecurity ? "パスワードを変更" : "パスワード"}
-                  </CardTitle>
-                  <div className="flex space-x-2">
-                    {!isEditingSecurity && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditingSecurity(true)}
-                        className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300">現在のパスワード</Label>
-                  <div className="relative">
-                    <Input
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      disabled={!isEditingSecurity}
-                      className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={!isEditingSecurity}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">新しいパスワード</Label>
-                    <div className="relative">
-                      <Input
-                        type={showNewPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        disabled={!isEditingSecurity}
-                        className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={!isEditingSecurity}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">新しいパスワード（確認）</Label>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={!isEditingSecurity}
-                        className="bg-gray-800 border-gray-700 text-white pr-10 disabled:opacity-50"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={!isEditingSecurity}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-700 disabled:opacity-50"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                {passwordError && (
-                  <div className="text-red-400 text-sm">{passwordError}</div>
-                )}
-                
-                {/* 編集中のボタン */}
-                {isEditingSecurity && (
-                  <div className="flex space-x-3 mt-6">
-                    <Button
-                      onClick={handleSaveSecurity}
-                      disabled={isSaving || !!validatePasswords()}
-                      className="bg-green-500 hover:bg-green-600"
-                    >
-                      {isSaving ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>保存中...</span>
-                        </div>
-                      ) : (
-                        "保存"
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsEditingSecurity(false)
-                        // フィールドをクリア
-                        setCurrentPassword("")
-                        setNewPassword("")
-                        setConfirmPassword("")
-                      }}
-                      disabled={isSaving}
-                      className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                    >
-                      キャンセル
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           {/* タイムゾーンタブ */}
           <TabsContent value="timezone" className="space-y-6">
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">
-                  タイムゾーン設定
-                </CardTitle>
-                <p className="text-gray-400 text-sm">
-                  時間表示や統計の計算に使用されるタイムゾーンを設定します
-                </p>
+                <CardTitle className="text-white">タイムゾーン設定</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-
-
-                {/* 現在のタイムゾーン表示 */}
-                <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Clock className="w-5 h-5 text-green-400" />
-                      <div>
-                        <Label className="text-gray-300">現在のタイムゾーン</Label>
-                        <p className="text-sm text-gray-400">{getTimezoneDisplayName(timezone)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-white font-mono">
-                        {new Date().toLocaleTimeString('ja-JP', { 
-                          timeZone: timezone,
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        {new Date().toLocaleDateString('ja-JP', { 
-                          timeZone: timezone,
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* タイムゾーン選択 */}
-                <div className="space-y-4">
-                  <Label className="text-gray-300">タイムゾーンを選択</Label>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-300">タイムゾーン</Label>
                   <Select value={timezone} onValueChange={setTimezone}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="タイムゾーンを選択" />
+                      <SelectValue>
+                        {getTimezoneDisplayName(timezone)}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
                       {TIMEZONES.map((tz) => (
                         <SelectItem 
                           key={tz.value} 
                           value={tz.value}
-                          className="text-white hover:bg-gray-700"
+                          className="text-white hover:bg-gray-700 focus:bg-gray-700"
                         >
                           {tz.label}
                         </SelectItem>
@@ -499,8 +267,6 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                     </SelectContent>
                   </Select>
                 </div>
-
-
 
                 {/* 注意事項 */}
                 <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
@@ -601,28 +367,8 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
             </Card>
           </TabsContent>
 
-          {/* 通知・その他タブ */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white">
-                  通知設定
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-gray-300">目標リマインダー</Label>
-                    <p className="text-sm text-gray-400">目標達成をサポートする通知</p>
-                  </div>
-                  <Switch
-                    checked={goalReminders}
-                    onCheckedChange={setGoalReminders}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
+          {/* アカウント管理タブ */}
+          <TabsContent value="account" className="space-y-6">
             {/* アカウント管理セクション */}
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
@@ -651,25 +397,22 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                    <div className="flex items-center justify-between">
                      <div>
                        <Label className="text-red-400">アカウント削除</Label>
-                       <p className="text-sm text-gray-400">アカウントとすべてのデータを完全に削除します</p>
+                       <p className="text-sm text-gray-400">⚠️ この操作は取り消しできません</p>
+                       <p className="text-sm text-gray-400">すべてのデータが完全に削除されます。</p>
                      </div>
                      <Button 
                        onClick={handleDeleteAccount}
                        variant="outline"
-                       className="bg-transparent border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                       className="bg-red-950 border-red-800 text-red-400 hover:bg-red-900 hover:text-red-300"
                      >
                        <Trash2 className="w-4 h-4 mr-2" />
-                       削除
+                       アカウント削除
                      </Button>
                    </div>
                  </div>
-                
               </CardContent>
             </Card>
-
           </TabsContent>
-
-
         </Tabs>
       </div>
     </div>
