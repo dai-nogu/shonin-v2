@@ -1,15 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Plus, Target, Calendar, Clock, Edit2, Trash2, Calculator } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
-import { useGoalsDb, type GoalFormData } from "@/hooks/use-goals-db"
-import { GoalForm } from "@/components/goal-form"
+import { useGoalsDb } from "@/hooks/use-goals-db"
 
 interface Goal {
   id: string
@@ -30,25 +27,21 @@ interface Goal {
 
 interface GoalsProps {
   onBack: () => void
-  onEditingChange?: (isEditing: boolean) => void
-  onAddingChange?: (isAdding: boolean) => void
 }
 
-export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
+export function Goals({ onBack }: GoalsProps) {
+  const router = useRouter()
+  
   // データベースフック
   const { 
     goals: dbGoals, 
     loading, 
     error, 
-    addGoal, 
-    updateGoal, 
     deleteGoal: deleteGoalFromDb 
   } = useGoalsDb()
 
   // ローカルステート
   const [goals, setGoals] = useState<Goal[]>([])
-  const [isAddingGoal, setIsAddingGoal] = useState(false)
-  const [editingGoal, setEditingGoal] = useState<string | null>(null)
 
   // 週間時間の計算
   const calculateWeeklyHours = (weekdayHours: number, weekendHours: number) => {
@@ -94,8 +87,6 @@ export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
     }
   }, [dbGoals])
 
-
-
   const getProgressPercentage = (current: number, target: number) => {
     return Math.min((current / target) * 100, 100)
   }
@@ -108,56 +99,12 @@ export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
     return diffDays
   }
 
-  const handleAddGoalFromForm = async (formData: any) => {
-    const goalData: GoalFormData = {
-      title: formData.title,
-      motivation: formData.motivation,
-      deadline: formData.deadline,
-      weekdayHours: parseInt(formData.weekdayHours),
-      weekendHours: parseInt(formData.weekendHours),
-      calculatedHours: formData.calculatedHours
-    }
-
-    const goalId = await addGoal(goalData)
-    
-    if (goalId) {
-      setIsAddingGoal(false)
-      onAddingChange?.(false)
-    } else {
-      alert('目標の追加に失敗しました')
-    }
+  const handleAddGoal = () => {
+    router.push("/goals/add")
   }
 
   const handleEditGoal = (goalId: string) => {
-    setEditingGoal(goalId)
-    onEditingChange?.(true)
-  }
-
-  const handleUpdateGoalFromForm = async (formData: any) => {
-    if (!editingGoal) return
-
-    const goalData: GoalFormData = {
-      title: formData.title,
-      motivation: formData.motivation,
-      deadline: formData.deadline,
-      weekdayHours: parseInt(formData.weekdayHours),
-      weekendHours: parseInt(formData.weekendHours),
-      calculatedHours: formData.calculatedHours
-    }
-
-    const success = await updateGoal(editingGoal, goalData)
-    
-    if (success) {
-      setEditingGoal(null)
-      onEditingChange?.(false)
-    } else {
-      alert('目標の更新に失敗しました')
-    }
-  }
-
-  const handleCancelEdit = () => {
-    setEditingGoal(null)
-    onEditingChange?.(false)
+    router.push(`/goals/edit/${goalId}`)
   }
 
   const handleDeleteGoal = async (goalId: string) => {
@@ -169,9 +116,6 @@ export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
       }
     }
   }
-
-
-
 
   // エラー状態
   if (error) {
@@ -191,28 +135,123 @@ export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
 
   return (
     <div className="text-white">
-
       <div className="container mx-auto max-w-4xl">
-        {/* 目標追加ボタン - 右下固定 */}
-        {!isAddingGoal && !editingGoal && goals.length > 0 && (
-          <div className="fixed bottom-24 md:bottom-6 right-6 z-[60]">
-            {/* スマートフォン表示：緑の丸ボタン */}
+        {/* 目標追加ボタン - モバイル用右下固定 */}
+        {goals.length > 0 && (
+          <div className="fixed bottom-24 right-6 z-[60] md:hidden">
             <Button
-              onClick={() => {
-                setIsAddingGoal(true)
-                onAddingChange?.(true)
-              }}
-              className="md:hidden bg-green-500 hover:bg-green-600 shadow-lg w-11 h-11 rounded-full p-0"
+              onClick={handleAddGoal}
+              className="bg-green-500 hover:bg-green-600 shadow-lg w-11 h-11 rounded-full p-0"
             >
               <Plus className="w-8 h-8" />
             </Button>
-            {/* PC表示：従来のボタン */}
+          </div>
+        )}
+
+        {/* 目標一覧 */}
+        <div className="space-y-6">
+          {goals.map((goal) => {
+            const progressPercentage = getProgressPercentage(goal.currentValue, goal.targetValue)
+            const remainingDays = getRemainingDays(goal.deadline)
+            const isOverdue = remainingDays < 0
+            const isUrgent = remainingDays <= 7 && remainingDays >= 0
+            const weeklyHours = calculateWeeklyHours(goal.weekdayHours, goal.weekendHours)
+
+            return (
+              <Card key={goal.id} className="bg-gray-900 border-gray-800">
+                <CardHeader className="px-2 md:px-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-white text-xl mb-3">{goal.title}</CardTitle>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditGoal(goal.id)}
+                        className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteGoal(goal.id)}
+                        className="bg-gray-800 border-gray-700 text-red-400 hover:bg-red-900"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-2 md:px-6">
+                  {/* 動機表示 */}
+                  <div className="bg-gray-800 p-3 rounded-lg">
+                    <p className="text-sm text-white">{goal.motivation}</p>
+                  </div>
+                  
+                  {/* 進捗表示 */}
+                  <div className="space-y-2 mt-6">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-300">進捗状況</span>
+                      <span className="text-sm font-medium text-white">
+                        {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
+                      </span>
+                    </div>
+                    <Progress value={progressPercentage} className="h-2" />
+                  </div>
+
+                  {/* 期限と残り日数 */}
+                  <div className="flex items-center justify-between text-sm mt-6">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-400">期限: {goal.deadline}</span>
+                    </div>
+                    <div className={`flex items-center space-x-1 ${
+                      isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
+                    }`}>
+                      <Clock className="w-4 h-4" />
+                      <span>
+                        {isOverdue 
+                          ? `${Math.abs(remainingDays)}日遅れ` 
+                          : `残り${remainingDays}日`
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 取り組み時間の詳細 */}
+                  <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
+                    <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
+                      <div className="flex items-center justify-center space-x-1">
+                        <Clock className="w-4 h-4 text-blue-400" />
+                        <span className="text-gray-400">平日: </span>
+                        <span className="text-white">{goal.weekdayHours}時間</span>
+                      </div>
+                      <div className="flex items-center justify-center space-x-1">
+                        <Clock className="w-4 h-4 text-green-400" />
+                        <span className="text-gray-400">土日: </span>
+                        <span className="text-white">{goal.weekendHours}時間</span>
+                      </div>
+                      <div className="flex items-center justify-center space-x-1">
+                        <Clock className="w-4 h-4 text-purple-400" />
+                        <span className="text-gray-400">週間: </span>
+                        <span className="text-white">{weeklyHours}時間</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+
+        {/* 目標追加ボタン - PC用（目標一覧の下に配置） */}
+        {goals.length > 0 && (
+          <div className="mt-8 text-center hidden md:block">
             <Button
-              onClick={() => {
-                setIsAddingGoal(true)
-                onAddingChange?.(true)
-              }}
-              className="hidden md:flex bg-green-500 hover:bg-green-600 shadow-lg"
+              onClick={handleAddGoal}
+              className="bg-green-500 hover:bg-green-600 px-8 py-3"
               size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -221,174 +260,12 @@ export function Goals({ onBack, onEditingChange, onAddingChange }: GoalsProps) {
           </div>
         )}
 
-        {/* 目標追加フォーム */}
-        {isAddingGoal && (
-          <Card className="bg-gray-900 border-gray-800 mb-6">
-            <CardHeader>
-              <CardTitle className="text-white">目標を追加</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <GoalForm
-                mode="create"
-                onSubmit={handleAddGoalFromForm}
-                onCancel={() => {
-                  setIsAddingGoal(false)
-                  onAddingChange?.(false)
-                }}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 目標一覧 */}
-        {!isAddingGoal && (
-          <div className="space-y-6">
-            {goals
-              .filter((goal) => {
-                // 編集中の場合は編集対象の目標のみ表示
-                if (editingGoal) {
-                  return goal.id === editingGoal
-                }
-                // 編集中でない場合は全ての目標を表示
-                return true
-              })
-              .map((goal) => {
-            const progressPercentage = getProgressPercentage(goal.currentValue, goal.targetValue)
-            const remainingDays = getRemainingDays(goal.deadline)
-            const isOverdue = remainingDays < 0
-            const isUrgent = remainingDays <= 7 && remainingDays >= 0
-            const weeklyHours = calculateWeeklyHours(goal.weekdayHours, goal.weekendHours)
-
-            const isEditing = editingGoal === goal.id
-
-            return (
-                              <Card key={goal.id} className="bg-gray-900 border-gray-800">
-                 <CardHeader className="px-2 md:px-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      {/* タイトル編集 */}
-                      {isEditing ? (
-                        <CardTitle className="text-white text-xl mb-3">編集中...</CardTitle>
-                      ) : (
-                        <CardTitle className="text-white text-xl mb-3">{goal.title}</CardTitle>
-                      )}
-
-                    </div>
-                    <div className="flex space-x-2">
-                      {!isEditing && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditGoal(goal.id)}
-                            className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteGoal(goal.id)}
-                            className="bg-gray-800 border-gray-700 text-red-400 hover:bg-red-900"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                                 <CardContent className="px-2 md:px-6">
-                  {isEditing ? (
-                    <GoalForm
-                      mode="edit"
-                      initialData={{
-                        title: goal.title,
-                        motivation: goal.motivation,
-                        deadline: goal.deadline,
-                        weekdayHours: goal.weekdayHours.toString(),
-                        weekendHours: goal.weekendHours.toString()
-                      }}
-                      onSubmit={handleUpdateGoalFromForm}
-                      onCancel={handleCancelEdit}
-                    />
-                  ) : (
-                    <>
-                      {/* 動機表示 */}
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-white">{goal.motivation}</p>
-                      </div>
-                      
-                      {/* 進捗表示 */}
-                      <div className="space-y-2 mt-6">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-300">進捗状況</span>
-                          <span className="text-sm font-medium text-white">
-                            {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
-                          </span>
-                        </div>
-                        <Progress value={progressPercentage} className="h-2" />
-                      </div>
-
-                      {/* 期限と残り日数 */}
-                      <div className="flex items-center justify-between text-sm mt-6">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-400">期限: {goal.deadline}</span>
-                        </div>
-                        <div className={`flex items-center space-x-1 ${
-                          isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
-                        }`}>
-                          <Clock className="w-4 h-4" />
-                          <span>
-                            {isOverdue 
-                              ? `${Math.abs(remainingDays)}日遅れ` 
-                              : `残り${remainingDays}日`
-                            }
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 取り組み時間の詳細 */}
-                      <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
-                        <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
-                          <div className="flex items-center justify-center space-x-1">
-                            <Clock className="w-4 h-4 text-blue-400" />
-                            <span className="text-gray-400">平日: </span>
-                            <span className="text-white">{goal.weekdayHours}時間</span>
-                          </div>
-                          <div className="flex items-center justify-center space-x-1">
-                            <Clock className="w-4 h-4 text-green-400" />
-                            <span className="text-gray-400">土日: </span>
-                            <span className="text-white">{goal.weekendHours}時間</span>
-                          </div>
-                          <div className="flex items-center justify-center space-x-1">
-                            <Clock className="w-4 h-4 text-purple-400" />
-                            <span className="text-gray-400">週間: </span>
-                            <span className="text-white">{weeklyHours}時間</span>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-        )}
-
-        {!loading && goals.length === 0 && !isAddingGoal && (
+        {!loading && goals.length === 0 && (
           <div className="text-center py-12">
             <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-400 mb-2">目標を設定しよう</h3>
             <Button
-              onClick={() => {
-                setIsAddingGoal(true)
-                onAddingChange?.(true)
-              }}
+              onClick={handleAddGoal}
               className="bg-green-500 hover:bg-green-600 px-8 md:px-12 py-3"
             >
               <Plus className="w-4 h-4 mr-2" />
