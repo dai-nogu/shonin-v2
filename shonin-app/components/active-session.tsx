@@ -212,6 +212,8 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           reflectionDuration: undefined, // 今回は振り返り時間は記録しない
         }
         
+        console.log('振り返りデータ送信:', { savedSessionId, reflectionData });
+        
         const reflectionId = await saveReflection(savedSessionId, reflectionData)
         
         if (!reflectionId) {

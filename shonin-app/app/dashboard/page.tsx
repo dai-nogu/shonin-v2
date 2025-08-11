@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -10,12 +10,11 @@ import { TimeTracker } from "@/components/time-tracker"
 import { ActiveActivitySidebar } from "@/components/active-activity-sidebar"
 import { AIFeedback } from "@/components/ai-feedback"
 import { WeeklyProgress } from "@/components/weekly-progress"
-import { ActiveSession } from "@/components/active-session"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { useSessions } from "@/contexts/sessions-context"
 import { useSessionList } from "@/hooks/useSessionList"
 import { useSessionPhotos } from "@/hooks/useSessionPhotos"
-import type { SessionData, CompletedSession } from "@/components/time-tracker"
+import type { SessionData } from "@/components/time-tracker"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -26,20 +25,13 @@ export default function DashboardPage() {
   // 写真処理フック（Dashboard専用）
   useSessionPhotos({ completedSessions, setCompletedSessions })
 
-  const [currentPage, setCurrentPage] = useState("dashboard")
-
   // セッションコンテキストから状態を取得
   const {
     loading,
     error,
     currentSession,
     isSessionActive,
-    sessionState,
-    startSession,
-    endSession,
-    pauseSession,
-    resumeSession,
-    saveSession
+    startSession
   } = useSessions()
 
 
@@ -52,67 +44,24 @@ export default function DashboardPage() {
 
   // セッション開始
   const handleStartSession = async (sessionData: SessionData) => {
-    await startSession(sessionData)
-    setCurrentPage("session")
-  }
-
-  // セッション終了
-  const handleEndSession = () => {
-    endSession()
-    setCurrentPage("session")
-  }
-
-  // セッション保存
-  const handleSaveSession = async (sessionData: CompletedSession): Promise<string | null> => {
     try {
-      const sessionId = await saveSession(sessionData)
-      setCurrentPage("dashboard")
-      return sessionId
+      await startSession(sessionData)
+      // セッション開始直後に専用ページに遷移
+      router.push("/session")
     } catch (error) {
-      console.error("セッション保存エラー:", error)
-      return null
+      console.error("セッション開始エラー:", error)
     }
   }
 
   // セッション詳細表示
   const handleViewSession = () => {
-    setCurrentPage("session")
+    router.push("/session")
   }
 
   // 目標管理画面への遷移
   const handleGoalSettingClick = () => {
     router.push("/goals")
   }
-
-  // 一時停止/再開
-  const handleTogglePause = () => {
-    if (sessionState === "active") {
-      pauseSession()
-    } else {
-      resumeSession()
-    }
-  }
-
-  // セッション再開（終了状態からアクティブ状態に戻る）
-  const handleResumeSession = () => {
-    resumeSession()
-  }
-
-  // セッション画面でセッションが存在しない場合にダッシュボードに戻る
-  useEffect(() => {
-    if (currentPage === "session" && !isSessionActive) {
-      setCurrentPage("dashboard")
-    }
-  }, [currentPage, isSessionActive])
-
-  // アクティブなセッションがある場合はセッションページに遷移
-  useEffect(() => {
-    if (isInitialized && isSessionActive && currentSession && currentPage === "dashboard") {
-      setCurrentPage("session")
-    }
-  }, [isInitialized, isSessionActive, currentSession])
-
-
 
   // 初期化が完了するまでローディング表示
   if (!isInitialized) {
@@ -126,24 +75,8 @@ export default function DashboardPage() {
     )
   }
 
+  // ダッシュボードコンテンツ
   const renderContent = () => {
-    if (currentPage === "session") {
-      if (isSessionActive && currentSession) {
-        return (
-          <ActiveSession 
-            session={currentSession} 
-            onEnd={handleEndSession} 
-            onSave={handleSaveSession}
-            sessionState={sessionState}
-            onTogglePause={handleTogglePause}
-            onResume={handleResumeSession}
-          />
-        )
-      }
-      return null
-    }
-    
-    // ダッシュボードコンテンツ
     return (
       <main className="container mx-auto px-4 py-4 lg:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
@@ -154,17 +87,17 @@ export default function DashboardPage() {
               <WelcomeCard completedSessions={completedSessions} />
             </div>
             
-            {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
-            <div className="lg:hidden mb-4 lg:mb-6">
-              <ActiveActivitySidebar
-                activeSession={currentSession}
-                isActive={isSessionActive}
-                onViewSession={handleViewSession}
-                onTogglePause={handleTogglePause}
-                onEnd={handleEndSession}
-                sessionState={sessionState}
-              />
-            </div>
+                            {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
+                <div className="lg:hidden mb-4 lg:mb-6">
+                  <ActiveActivitySidebar
+                    activeSession={currentSession}
+                    isActive={isSessionActive}
+                    onViewSession={handleViewSession}
+                    onTogglePause={() => {}} // 暫定：セッションページで処理
+                    onEnd={() => {}} // 暫定：セッションページで処理
+                    sessionState="active" // 暫定：実際の値は不要
+                  />
+                </div>
             
             <AIFeedback completedSessions={completedSessions} />
             <div className="mt-4 lg:mt-6">
@@ -179,17 +112,17 @@ export default function DashboardPage() {
               <WelcomeCard completedSessions={completedSessions} />
             </div>
             
-            {/* PC用：進行中の行動、SP用：非表示 */}
-            <div className="hidden lg:block">
-              <ActiveActivitySidebar
-                activeSession={currentSession}
-                isActive={isSessionActive}
-                onViewSession={handleViewSession}
-                onTogglePause={handleTogglePause}
-                onEnd={handleEndSession}
-                sessionState={sessionState}
-              />
-            </div>
+                            {/* PC用：進行中の行動、SP用：非表示 */}
+                <div className="hidden lg:block">
+                  <ActiveActivitySidebar
+                    activeSession={currentSession}
+                    isActive={isSessionActive}
+                    onViewSession={handleViewSession}
+                    onTogglePause={() => {}} // 暫定：セッションページで処理
+                    onEnd={() => {}} // 暫定：セッションページで処理
+                    sessionState="active" // 暫定：実際の値は不要
+                  />
+                </div>
  
             <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
           </div>
@@ -200,18 +133,18 @@ export default function DashboardPage() {
 
   return (
     <>
-      <AppSidebar currentPage={currentPage} />
+      <AppSidebar currentPage="dashboard" />
       <SidebarInset>
         <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
           {/* Header - SPでのみ表示 */}
           <div className="md:hidden">
-            <Header currentPage={currentPage} />
+            <Header currentPage="dashboard" />
           </div>
           {renderContent()}
         </div>
       </SidebarInset>
       {/* モバイル用下部固定ナビゲーション */}
-      <BottomNavigation currentPage={currentPage} />
+      <BottomNavigation currentPage="dashboard" />
     </>
   )
 } 

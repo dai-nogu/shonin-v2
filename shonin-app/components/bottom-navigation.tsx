@@ -43,9 +43,9 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
   const [isMobile, setIsMobile] = useState(false)
   const [activePage, setActivePage] = useState(currentPage)
 
-  // パスに基づいてアクティブページを設定
+  // パスに基づいてアクティブページを設定（pathnameを優先）
   useEffect(() => {
-    if (pathname === "/dashboard" || pathname === "/") {
+    if (pathname === "/dashboard" || pathname === "/" || pathname === "/session") {
       setActivePage("dashboard")
     } else if (pathname === "/calendar") {
       setActivePage("calendar")
@@ -53,12 +53,11 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       setActivePage("goals")
     } else if (pathname === "/settings") {
       setActivePage("settings")
+    } else {
+      // パスが一致しない場合のみcurrentPageを使用
+      setActivePage(currentPage)
     }
-  }, [pathname])
-
-  useEffect(() => {
-    setActivePage(currentPage)
-  }, [currentPage])
+  }, [pathname, currentPage])
 
   // モバイル判定
   useEffect(() => {

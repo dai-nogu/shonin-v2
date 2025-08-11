@@ -25,9 +25,9 @@ export function useReflectionsDb() {
           mood_score: reflection.moodScore,
           mood_notes: reflection.moodNotes || null,
           detailed_achievements: reflection.achievements,
-          achievement_satisfaction: reflection.achievementsRating || null,
+          // achievement_satisfaction: reflection.achievementsRating || null, // UI未実装のため削除
           detailed_challenges: reflection.challenges,
-          challenge_severity: reflection.challengesSeverity || null,
+          // challenge_severity: reflection.challengesSeverity || null, // UI未実装のため削除
           reflection_notes: reflection.additionalNotes || null,
           reflection_duration: reflection.reflectionDuration || null,
         })
@@ -63,9 +63,7 @@ export function useReflectionsDb() {
           mood_score,
           mood_notes,
           detailed_achievements,
-          achievement_satisfaction,
           detailed_challenges,
-          challenge_severity,
           reflection_notes,
           reflection_duration
         `)
@@ -87,9 +85,9 @@ export function useReflectionsDb() {
         moodScore: data.mood_score || 3,
         moodNotes: data.mood_notes || undefined,
         achievements: data.detailed_achievements || '',
-        achievementsRating: data.achievement_satisfaction || undefined,
+        achievementsRating: undefined, // UI未実装のため削除
         challenges: data.detailed_challenges || '',
-        challengesSeverity: data.challenge_severity || undefined,
+        challengesSeverity: undefined, // UI未実装のため削除
         additionalNotes: data.reflection_notes || undefined,
         reflectionDuration: data.reflection_duration || undefined,
       };

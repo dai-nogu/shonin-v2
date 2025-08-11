@@ -53,9 +53,9 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const pathname = usePathname()
   const [activePage, setActivePage] = useState(currentPage)
 
-  // パスに基づいてアクティブページを設定
+  // パスに基づいてアクティブページを設定（pathnameを優先）
   useEffect(() => {
-    if (pathname === "/dashboard" || pathname === "/") {
+    if (pathname === "/dashboard" || pathname === "/" || pathname === "/session") {
       setActivePage("dashboard")
     } else if (pathname === "/calendar") {
       setActivePage("calendar")
@@ -63,12 +63,11 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       setActivePage("goals")
     } else if (pathname === "/settings") {
       setActivePage("settings")
+    } else {
+      // パスが一致しない場合のみcurrentPageを使用
+      setActivePage(currentPage)
     }
-  }, [pathname])
-
-  useEffect(() => {
-    setActivePage(currentPage)
-  }, [currentPage])
+  }, [pathname, currentPage])
 
   const handlePageChange = (pageId: string, url: string) => {
     setActivePage(pageId)

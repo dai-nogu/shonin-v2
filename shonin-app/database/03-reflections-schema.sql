@@ -25,18 +25,8 @@ BEGIN
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'sessions' AND column_name = 'achievement_satisfaction') THEN
-        ALTER TABLE public.sessions ADD COLUMN achievement_satisfaction INTEGER CHECK (achievement_satisfaction >= 1 AND achievement_satisfaction <= 5);
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_name = 'sessions' AND column_name = 'detailed_challenges') THEN
         ALTER TABLE public.sessions ADD COLUMN detailed_challenges TEXT;
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'sessions' AND column_name = 'challenge_severity') THEN
-        ALTER TABLE public.sessions ADD COLUMN challenge_severity INTEGER CHECK (challenge_severity >= 1 AND challenge_severity <= 5);
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
@@ -58,8 +48,6 @@ END $$;
 -- 振り返り用インデックス
 -- ==========================================
 CREATE INDEX IF NOT EXISTS idx_sessions_mood_score ON public.sessions(mood_score);
-CREATE INDEX IF NOT EXISTS idx_sessions_achievement_satisfaction ON public.sessions(achievement_satisfaction);
-CREATE INDEX IF NOT EXISTS idx_sessions_challenge_severity ON public.sessions(challenge_severity);
 
 -- ==========================================
 -- 振り返りデータ用ビュー
@@ -89,9 +77,7 @@ BEGIN
             mood_score,
             mood_notes,
             detailed_achievements,
-            achievement_satisfaction,
             detailed_challenges,
-            challenge_severity,
             reflection_notes,
             reflection_duration,
             
@@ -124,9 +110,7 @@ BEGIN
             mood_score,
             mood_notes,
             detailed_achievements,
-            achievement_satisfaction,
             detailed_challenges,
-            challenge_severity,
             reflection_notes,
             reflection_duration,
             
@@ -148,8 +132,6 @@ END $$;
 COMMENT ON COLUMN public.sessions.mood_score IS '気分評価（1-5段階）';
 COMMENT ON COLUMN public.sessions.mood_notes IS '気分についての詳細メモ';
 COMMENT ON COLUMN public.sessions.detailed_achievements IS '詳細な成果記録';
-COMMENT ON COLUMN public.sessions.achievement_satisfaction IS '成果の満足度（1-5段階）';
 COMMENT ON COLUMN public.sessions.detailed_challenges IS '詳細な課題記録';
-COMMENT ON COLUMN public.sessions.challenge_severity IS '課題の深刻度（1-5段階）';
 COMMENT ON COLUMN public.sessions.reflection_notes IS 'その他の振り返りメモ';
 COMMENT ON COLUMN public.sessions.reflection_duration IS '振り返りにかけた時間（秒）'; 
