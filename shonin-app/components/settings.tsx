@@ -15,6 +15,17 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { supabase } from "@/lib/supabase"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface SettingsProps {
   onBack: () => void
@@ -37,6 +48,14 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
   // ユーザー情報（データベースから取得）
   const [name, setName] = useState("")
   const [email, setEmail] = useState(user?.email || "")
+
+  // アカウント削除確認用の状態
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // ログアウト確認用の状態
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   // タイムゾーン設定
   const { 
@@ -86,26 +105,37 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     signOut()
   }
 
+  // ログアウト確認ダイアログの処理
+  const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true)
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('ログアウトエラー:', error)
+      alert("ログアウト中にエラーが発生しました。時間をおいて再度お試しください。")
+    } finally {
+      setIsLoggingOut(false)
+      setLogoutDialogOpen(false)
+    }
+  }
+
   // ユーザーアカウント削除（危険な操作）
   const handleDeleteAccount = async () => {
-    const confirmText = "アカウントを削除"
-    const inputText = prompt(
-      `⚠️ 警告: この操作は取り消せません！\n\nアカウントとすべてのデータが完全に削除されます。\n削除を実行するには「${confirmText}」と入力してください:`
-    )
-    
-    if (inputText !== confirmText) {
-      if (inputText !== null) {
-        alert("入力が正しくありません。アカウント削除をキャンセルしました。")
-      }
-      return
-    }
-
+    setIsDeleting(true)
     try {
+      // 現在のセッションからアクセストークンを取得
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error('認証セッションが見つかりません')
+      }
+
       // バックエンドAPIを呼び出してユーザーアカウントを削除
       const response = await fetch('/api/deleteUser', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
       })
 
@@ -119,6 +149,9 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
     } catch (error) {
       console.error('アカウント削除エラー:', error)
       alert("アカウント削除中にエラーが発生しました。時間をおいて再度お試しください。")
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
     }
   }
 
@@ -384,13 +417,51 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                      <p className="text-sm text-gray-400">アカウントからサインアウトします</p>
                      <p className="text-sm text-gray-400">ログアウト後は、再度ログインが必要になります。</p>
                    </div>
-                   <Button 
-                     onClick={handleLogout}
-                     className="bg-red-600 hover:bg-red-700 text-white border-red-600"
-                   >
-                     <LogOut className="w-4 h-4 mr-2" />
-                     ログアウト
-                   </Button>
+                   
+                   <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+                     <AlertDialogTrigger asChild>
+                       <Button 
+                         className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+                       >
+                         <LogOut className="w-4 h-4 mr-2" />
+                         ログアウト
+                       </Button>
+                     </AlertDialogTrigger>
+                     <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+                       <AlertDialogHeader>
+                         <AlertDialogTitle className="text-yellow-400 flex items-center space-x-2">
+                           <LogOut className="w-5 h-5" />
+                           <span>ログアウトの確認</span>
+                         </AlertDialogTitle>
+                         <AlertDialogDescription className="text-gray-300">
+                           本当にログアウトしますか？
+                           <br />
+                           ログアウト後は、再度ログインが必要になります。
+                         </AlertDialogDescription>
+                       </AlertDialogHeader>
+                       <AlertDialogFooter>
+                         <AlertDialogCancel 
+                           className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                         >
+                           戻る
+                         </AlertDialogCancel>
+                         <AlertDialogAction
+                           onClick={handleLogoutConfirm}
+                           disabled={isLoggingOut}
+                           className="bg-red-600 hover:bg-red-700 text-white"
+                         >
+                           {isLoggingOut ? (
+                             <div className="flex items-center space-x-2">
+                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                               <span>ログアウト中...</span>
+                             </div>
+                           ) : (
+                             "ログアウト"
+                           )}
+                         </AlertDialogAction>
+                       </AlertDialogFooter>
+                     </AlertDialogContent>
+                   </AlertDialog>
                  </div>
 
                  <div className="pt-4 border-t border-gray-700">
@@ -400,14 +471,61 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
                        <p className="text-sm text-gray-400">⚠️ この操作は取り消しできません</p>
                        <p className="text-sm text-gray-400">すべてのデータが完全に削除されます。</p>
                      </div>
-                     <Button 
-                       onClick={handleDeleteAccount}
-                       variant="outline"
-                       className="bg-red-950 border-red-800 text-red-400 hover:bg-red-900 hover:text-red-300"
-                     >
-                       <Trash2 className="w-4 h-4 mr-2" />
-                       アカウント削除
-                     </Button>
+                     
+                     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                       <AlertDialogTrigger asChild>
+                         <Button 
+                           variant="outline"
+                           className="bg-red-950 border-red-800 text-red-400 hover:bg-red-900 hover:text-red-300"
+                         >
+                           <Trash2 className="w-4 h-4 mr-2" />
+                           アカウント削除
+                         </Button>
+                       </AlertDialogTrigger>
+                       <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+                         <AlertDialogHeader>
+                           <AlertDialogTitle className="text-red-400 flex items-center space-x-2">
+                             <Trash2 className="w-5 h-5" />
+                             <span>アカウント削除の確認</span>
+                           </AlertDialogTitle>
+                                                      <AlertDialogDescription className="text-gray-300">
+                             <div className="p-4 bg-red-950/20 border border-red-800/50 rounded-lg">
+                               <p className="text-red-300 font-medium mb-2">⚠️ 重要な警告</p>
+                               <ul className="text-sm space-y-1 text-gray-300">
+                                 <li>• この操作は取り消すことができません</li>
+                                 <li>• すべてのアクティビティデータが削除されます</li>
+                                 <li>• セッション履歴が完全に削除されます</li>
+                                 <li>• 目標設定とAI分析データも削除されます</li>
+                               </ul>
+                             </div>
+                             <p className="mt-3">
+                               本当にアカウントを削除しますか？
+                             </p>
+                           </AlertDialogDescription>
+                         </AlertDialogHeader>
+                         <AlertDialogFooter>
+                           <AlertDialogCancel 
+                             className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                           >
+                             いいえ
+                           </AlertDialogCancel>
+                           <AlertDialogAction
+                             onClick={handleDeleteAccount}
+                             disabled={isDeleting}
+                             className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                           >
+                             {isDeleting ? (
+                               <div className="flex items-center space-x-2">
+                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                 <span>削除中...</span>
+                               </div>
+                             ) : (
+                               "削除する"
+                             )}
+                           </AlertDialogAction>
+                         </AlertDialogFooter>
+                       </AlertDialogContent>
+                     </AlertDialog>
                    </div>
                  </div>
               </CardContent>
