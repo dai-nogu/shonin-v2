@@ -37,7 +37,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
     if (goalId && goalId !== "none") {
       const selectedGoalData = availableGoals.find(goal => goal.id === goalId)
       if (selectedGoalData) {
-        const targetHours = isWeekday() ? selectedGoalData.weekday_hours : selectedGoalData.weekend_hours
+        const targetHours = isWeekday() ? (selectedGoalData.weekday_hours || 0) : (selectedGoalData.weekend_hours || 0)
         setTargetHours((targetHours || 0).toString())
         setTargetMinutes("0") // 分はデフォルトで0
       }
@@ -160,8 +160,8 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       const selectedGoalData = activeGoals.find(goal => goal.id === selectedGoal)
       if (selectedGoalData) {
         // 平日・土日の目標時間を計算（分単位）
-        const weekdayMinutes = selectedGoalData.weekday_hours * 60
-        const weekendMinutes = selectedGoalData.weekend_hours * 60
+        const weekdayMinutes = (selectedGoalData.weekday_hours || 0) * 60
+        const weekendMinutes = (selectedGoalData.weekend_hours || 0) * 60
         
         // 今日が平日か土日かで目標時間を決定
         const today = new Date()

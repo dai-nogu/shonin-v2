@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { hasSessionPhotosMultiple, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
-import type { CompletedSession } from "@/components/time-tracker"
+import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 
 interface UseSessionPhotosProps {
   completedSessions: CompletedSession[]

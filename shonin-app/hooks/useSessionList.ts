@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useSessions } from "@/contexts/sessions-context"
-import type { CompletedSession } from "@/components/time-tracker"
+import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 
 export function useSessionList() {
   const { user } = useAuth()

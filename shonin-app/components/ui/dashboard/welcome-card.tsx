@@ -1,9 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { formatTime } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
-import { getTodaySessionsInTimezone, getWeekSessionsInTimezone } from "@/lib/timezone-utils"
+import { getTodaySessionsInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
-import { useState, useEffect } from "react"
 import { useUserProfile } from "@/hooks/use-user-profile"
 
 interface WelcomeCardProps {

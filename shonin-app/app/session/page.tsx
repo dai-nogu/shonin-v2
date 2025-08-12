@@ -6,8 +6,8 @@ import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { useSessions } from "@/contexts/sessions-context"
-import { ActiveSession } from "@/components/active-session"
-import type { CompletedSession } from "@/components/time-tracker"
+import { ActiveSession } from "@/components/ui/dashboard/active-session"
+import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 
 export default function SessionPage() {
   const router = useRouter()
