@@ -1,14 +1,185 @@
+// カレンダー月の固有ロジック
+
 "use client"
 
-import { useRouter } from "next/navigation"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
-import { CalendarView } from "@/components/calendar-view"
 import { BottomNavigation } from "@/components/bottom-navigation"
+import { MonthCalendarCSR } from "@/components/ui/calendar/month/month-calendar-csr"
 import { useSessionList } from "@/hooks/useSessionList"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { formatDuration } from "@/lib/format-duration"
+import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
+import { 
+  convertToCalendarSessions, 
+  getDaysInMonth, 
+  getSessionsForDate, 
+  isToday, 
+  getCurrentMonthSessions,
+  type CalendarSession 
+} from "@/lib/calendar-utils"
+
+interface MonthCalendarSSRProps {
+  currentDate: Date
+  completedSessions: CompletedSession[]
+  onNavigate: (direction: "prev" | "next") => void
+  onTodayClick: () => void
+  onDateClick: (date: number, sessions: CalendarSession[]) => void
+}
+
+// 共通ユーティリティを使用
+
+function MonthCalendarSSR({ 
+  currentDate, 
+  completedSessions, 
+  onNavigate, 
+  onTodayClick, 
+  onDateClick 
+}: MonthCalendarSSRProps) {
+  // セッションデータの変換（SSR側で実行）
+  const sessions = convertToCalendarSessions(completedSessions)
+  const days = getDaysInMonth(currentDate)
+  const monthName = currentDate.toLocaleDateString("ja-JP", { year: "numeric", month: "long" })
+  
+  // 月間統計の計算
+  const currentMonthSessions = getCurrentMonthSessions(currentDate, sessions)
+  const totalMonthTime = currentMonthSessions.reduce((total, session) => total + session.duration, 0)
+  const averageMonthTime = currentMonthSessions.length > 0 ? Math.floor(totalMonthTime / currentMonthSessions.length) : 0
+
+  return (
+    <div className="bg-gray-950 text-white">
+      <div className="px-0">
+        <Card className="bg-gray-900 border-0 rounded-none">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white">{monthName}</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate("prev")}
+                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onTodayClick}
+                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                >
+                  今日
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate("next")}
+                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            {/* 曜日ヘッダー */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {["月", "火", "水", "木", "金", "土", "日"].map((day) => (
+                <div key={day} className="p-2 text-center text-gray-400 font-medium text-sm">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* カレンダーグリッド */}
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day, index) => {
+                const daySessions = getSessionsForDate(day, currentDate, sessions)
+                const todayCheck = isToday(day, currentDate)
+
+                return (
+                  <div
+                    key={index}
+                    onClick={day ? () => onDateClick(day, daySessions) : undefined}
+                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-lg ${
+                      day ? `bg-gray-800 hover:bg-gray-700 cursor-pointer` : "bg-gray-900"
+                    } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
+                  >
+                    {day && (
+                      <>
+                        <div className="mb-1 md:mb-2 text-center">
+                          <span className={`text-xs md:text-sm font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
+                            {day}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1">
+                          {/* SP: 1つまで、PC: 2つまで表示 */}
+                          {daySessions.slice(0, 2).map((session) => (
+                            <div
+                              key={session.id}
+                              className={`text-xs p-[0.1rem] md:p-1 rounded ${session.color} bg-opacity-20 border-opacity-30`}
+                            >
+                              <div className="flex items-center space-x-1">
+                                <div className="hidden md:block">
+                                  {session.icon ? (
+                                    <span className="text-xs">{session.icon}</span>
+                                  ) : (
+                                    <div className={`w-2 md:w-3 h-2 md:h-3 rounded-full ${session.color}`}></div>
+                                  )}
+                                </div>
+                                <span className="text-white truncate text-xs">{session.activity}</span>
+                              </div>
+                            </div>
+                          ))}
+                          {daySessions.length > 2 && (
+                            <div className={`text-xs text-gray-400 text-center py-[0.1rem] md:py-1 rounded bg-gray-700 bg-opacity-50`}>
+                              +{daySessions.length - 2}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 統計サマリー */}
+        <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-6 mb-2 md:mb-0">
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-2 md:p-4 text-center">
+              <div className="text-lg md:text-2xl font-bold text-green-400">
+                {formatDuration(totalMonthTime)}
+              </div>
+              <div className="text-xs md:text-sm text-gray-400">
+                今月の総時間
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-2 md:p-4 text-center">
+              <div className="text-lg md:text-2xl font-bold text-purple-400">
+                {formatDuration(averageMonthTime)}
+              </div>
+              <div className="text-xs md:text-sm text-gray-400">
+                今月の平均時間
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function CalendarMonthPage() {
-  const router = useRouter()
   // セッション一覧取得フック
   const { user, isInitialized, completedSessions } = useSessionList()
 
@@ -17,16 +188,10 @@ export default function CalendarMonthPage() {
       <AppSidebar currentPage="calendar" />
       <SidebarInset>
         <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
-          <main className="container mx-auto px-4 py-4 lg:py-8">
-            <CalendarView 
-              viewMode="month"
-              onViewModeChange={(mode) => {
-                // 週表示に切り替える場合は/calendar/weekに遷移
-                if (mode === "week") {
-                  router.push("/calendar/week")
-                }
-              }}
+          <main className="container mx-auto px-2 md:px-4 py-4 lg:py-8">
+            <MonthCalendarCSR 
               completedSessions={completedSessions}
+              CalendarComponent={MonthCalendarSSR}
             />
           </main>
         </div>
