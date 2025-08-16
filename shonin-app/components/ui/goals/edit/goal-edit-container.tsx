@@ -1,0 +1,155 @@
+"use client"
+
+import { useRouter } from "next/navigation"
+import { useEffect, useState, use } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { GoalTitleInput } from "../goal-title-input"
+import { GoalMotivationTextarea } from "../goal-motivation-textarea"
+import { GoalDeadlineInput } from "../goal-deadline-input"
+import { GoalHoursInputs } from "../goal-hours-inputs"
+import { GoalCalculationDisplay } from "../goal-calculation-display"
+import { GoalFormActions } from "../goal-form-actions"
+import { useGoalForm } from "@/hooks/use-goal-form"
+import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
+
+interface GoalEditContainerProps {
+  params: Promise<{
+    id: string
+  }>
+}
+
+export function GoalEditContainer({ params }: GoalEditContainerProps) {
+  const router = useRouter()
+  const { goals, updateGoal, loading } = useGoalsDb()
+  const [currentGoal, setCurrentGoal] = useState<any>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // paramsをunwrap
+  const { id } = use(params)
+
+  // 初期データを設定
+  const initialData = currentGoal ? {
+    title: currentGoal.title,
+    motivation: currentGoal.description || '',
+    deadline: currentGoal.deadline || '',
+    weekdayHours: (currentGoal.weekday_hours || 0).toString(),
+    weekendHours: (currentGoal.weekend_hours || 0).toString()
+  } : undefined
+
+  const {
+    formData,
+    validationErrors,
+    updateField,
+    validateForm,
+    weeklyHours,
+    monthlyHours
+  } = useGoalForm(initialData)
+
+  // 該当の目標を取得
+  useEffect(() => {
+    if (goals && id) {
+      const goal = goals.find(g => g.id === id)
+      setCurrentGoal(goal)
+    }
+  }, [goals, id])
+
+  const handleUpdateGoal = async () => {
+    if (!validateForm()) return
+
+    setIsSubmitting(true)
+    try {
+      const goalData: DbGoalFormData = {
+        title: formData.title,
+        motivation: formData.motivation,
+        deadline: formData.deadline,
+        weekdayHours: parseInt(formData.weekdayHours),
+        weekendHours: parseInt(formData.weekendHours),
+        calculatedHours: formData.calculatedHours
+      }
+
+      const success = await updateGoal(id, goalData)
+      
+      if (success) {
+        router.push("/goals")
+      } else {
+        alert('目標の更新に失敗しました')
+      }
+    } catch (error) {
+      console.error('目標更新エラー:', error)
+      alert('目標の更新に失敗しました')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCancel = () => {
+    router.push("/goals")
+  }
+
+  // ローディング中またはデータがない場合
+  if (loading || !currentGoal) {
+    return (
+      <div className="container mx-auto max-w-4xl">
+        <Card className="bg-gray-900 border-gray-800">
+          <CardContent className="p-6">
+            <div className="text-center text-white">
+              {loading ? "読み込み中..." : "目標が見つかりません"}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto max-w-4xl">
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">目標を編集</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <GoalTitleInput
+            value={formData.title}
+            onChange={(value) => updateField("title", value)}
+          />
+
+          <GoalMotivationTextarea
+            value={formData.motivation}
+            onChange={(value) => updateField("motivation", value)}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <GoalDeadlineInput
+              value={formData.deadline}
+              onChange={(value) => updateField("deadline", value)}
+            />
+            
+            <div className="md:col-span-2">
+              <GoalHoursInputs
+                weekdayHours={formData.weekdayHours}
+                weekendHours={formData.weekendHours}
+                onWeekdayHoursChange={(value) => updateField("weekdayHours", value)}
+                onWeekendHoursChange={(value) => updateField("weekendHours", value)}
+                validationErrors={validationErrors}
+              />
+            </div>
+          </div>
+
+          <GoalCalculationDisplay
+            weeklyHours={weeklyHours}
+            monthlyHours={monthlyHours}
+            totalHours={formData.calculatedHours}
+          />
+
+          <GoalFormActions
+            mode="edit"
+            onSubmit={handleUpdateGoal}
+            onCancel={handleCancel}
+            isSubmitting={isSubmitting}
+            isValid={formData.title.trim() !== "" && formData.deadline !== "" && formData.calculatedHours > 0}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  )
+} 
