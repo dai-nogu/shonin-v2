@@ -1,9 +1,9 @@
 -- ==========================================
--- SHONIN アプリ セッションメディア ストレージポリシー
+-- SHONIN アプリ セッションメディア ストレージポリシー（統一版）
 -- session_mediaテーブルとストレージの権限設定（修正版）
 -- ==========================================
 
--- 1. 既存のRLSポリシーを削除
+-- 1. 既存のRLSポリシーを完全に削除
 DROP POLICY IF EXISTS "Users can view session media" ON public.session_media;
 DROP POLICY IF EXISTS "Users can insert session media" ON public.session_media;
 DROP POLICY IF EXISTS "Users can update session media" ON public.session_media;
@@ -18,16 +18,9 @@ DROP POLICY IF EXISTS "Authenticated users can upload session media" ON storage.
 DROP POLICY IF EXISTS "Authenticated users can view session media" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete session media" ON storage.objects;
 
--- 3. session_mediaテーブルのRLSポリシーを再作成（シンプル版）
-CREATE POLICY "Users can manage own session media" ON public.session_media
-    FOR ALL USING (
-        auth.uid() IN (
-            SELECT user_id 
-            FROM public.sessions 
-            WHERE id = session_id
-        )
-    )
-    WITH CHECK (
+-- 3. session_mediaテーブルのRLSポリシーを作成（詳細版）
+CREATE POLICY "Users can view own session media" ON public.session_media
+    FOR SELECT USING (
         auth.uid() IN (
             SELECT user_id 
             FROM public.sessions 
@@ -35,7 +28,34 @@ CREATE POLICY "Users can manage own session media" ON public.session_media
         )
     );
 
--- 4. ストレージポリシーを再作成（認証済みユーザー用）
+CREATE POLICY "Users can insert own session media" ON public.session_media
+    FOR INSERT WITH CHECK (
+        auth.uid() IN (
+            SELECT user_id 
+            FROM public.sessions 
+            WHERE id = session_id
+        )
+    );
+
+CREATE POLICY "Users can update own session media" ON public.session_media
+    FOR UPDATE USING (
+        auth.uid() IN (
+            SELECT user_id 
+            FROM public.sessions 
+            WHERE id = session_id
+        )
+    );
+
+CREATE POLICY "Users can delete own session media" ON public.session_media
+    FOR DELETE USING (
+        auth.uid() IN (
+            SELECT user_id 
+            FROM public.sessions 
+            WHERE id = session_id
+        )
+    );
+
+-- 4. ストレージポリシーを作成（認証済みユーザー用）
 CREATE POLICY "Authenticated users can upload session media" ON storage.objects
     FOR INSERT WITH CHECK (
         bucket_id = 'session-media' AND
@@ -70,10 +90,17 @@ ALTER TABLE public.session_media ENABLE ROW LEVEL SECURITY;
 -- ==========================================
 -- 確認用クエリ
 -- ==========================================
-SELECT 'session_media RLS policies created' as status;
+SELECT 'session_media RLS policies updated' as status;
+
+-- session_mediaテーブルのポリシー確認
+SELECT policyname, cmd, qual, with_check
+FROM pg_policies 
+WHERE schemaname = 'public' 
+AND tablename = 'session_media';
 
 -- ストレージポリシー確認
 SELECT policyname, cmd, qual, with_check
 FROM pg_policies 
 WHERE schemaname = 'storage' 
-AND tablename = 'objects'; 
+AND tablename = 'objects'
+AND policyname LIKE '%session media%'; 

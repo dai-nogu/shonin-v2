@@ -17,10 +17,85 @@ export interface UploadedPhoto {
  */
 export async function uploadPhoto(file: File, sessionId: string, userId: string): Promise<UploadedPhoto> {
   try {
+    console.log('写真アップロード開始:', { 
+      fileName: file.name, 
+      fileSize: file.size, 
+      sessionId, 
+      userId 
+    })
+
+    // 認証状態を確認
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    console.log('認証状態確認:', { 
+      authData: authData?.user,
+      authError,
+      providedUserId: userId,
+      authUserId: authData?.user?.id
+    })
+
+    if (authError) {
+      console.error('認証エラー:', authError)
+      throw new Error('認証に失敗しました。ログインし直してください。')
+    }
+
+    if (!authData?.user) {
+      throw new Error('ユーザーが認証されていません。ログインしてください。')
+    }
+
+    if (authData.user.id !== userId) {
+      console.error('ユーザーID不一致:', { 
+        authUserId: authData.user.id, 
+        providedUserId: userId 
+      })
+      throw new Error('認証されたユーザーIDと提供されたユーザーIDが一致しません。')
+    }
+
+    // セッションの所有者確認
+    console.log('セッション所有者確認開始:', { sessionId, userId })
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('user_id, id')
+      .eq('id', sessionId)
+      .single()
+
+    console.log('セッション所有者確認結果:', { sessionData, sessionError })
+
+    if (sessionError) {
+      console.error('セッション確認エラー:', sessionError)
+      throw new Error('セッション情報の確認に失敗しました。')
+    }
+
+    if (!sessionData || sessionData.user_id !== userId) {
+      console.error('セッション所有者不一致:', { 
+        sessionUserId: sessionData?.user_id, 
+        providedUserId: userId 
+      })
+      throw new Error('指定されたセッションにアクセスする権限がありません。')
+    }
+
+    // 入力値の検証
+    if (!file || !sessionId || !userId) {
+      throw new Error('必要なパラメータが不足しています')
+    }
+
+    // ファイルサイズの検証（10MB制限）
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('ファイルサイズが大きすぎます（10MB以下にしてください）')
+    }
+
+    // ファイル形式の検証
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('サポートされていないファイル形式です（JPEG、PNG、WebPのみ対応）')
+    }
+
     // ファイル名を一意にする
     const fileExt = file.name.split('.').pop()
     const fileName = `${sessionId}_${Date.now()}.${fileExt}`
     const filePath = `${userId}/session-media/${fileName}`
+
+    console.log('ストレージアップロード開始:', { filePath })
 
     // Supabaseストレージにアップロード
     const { data, error } = await supabase.storage
@@ -32,13 +107,17 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
 
     if (error) {
       console.error('Storage upload error:', error)
-      throw new Error(`写真のアップロードに失敗しました: ${error.message}`)
+      throw new Error(`ストレージへのアップロードに失敗しました: ${error.message}`)
     }
+
+    console.log('ストレージアップロード成功:', data)
 
     // パブリックURLを取得
     const { data: { publicUrl } } = supabase.storage
       .from('session-media')
       .getPublicUrl(filePath)
+
+    console.log('パブリックURL取得:', publicUrl)
 
     // session_mediaテーブルに写真情報を保存
     const mediaData = {
@@ -53,6 +132,17 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       caption: null
     }
 
+    console.log('データベース挿入開始:', mediaData)
+
+    // 現在の認証トークンも確認
+    const { data: { session } } = await supabase.auth.getSession()
+    console.log('現在のセッション情報:', { 
+      hasSession: !!session,
+      accessToken: session?.access_token ? 'あり' : 'なし',
+      tokenType: session?.token_type,
+      expiresAt: session?.expires_at
+    })
+
     const { data: dbData, error: dbError } = await supabase
       .from('session_media')
       .insert(mediaData)
@@ -61,12 +151,35 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
 
     if (dbError) {
       console.error('Database insert error:', dbError)
-      // ストレージからファイルを削除
-      await supabase.storage
-        .from('session-media')
-        .remove([filePath])
-      throw new Error(`写真情報の保存に失敗しました: ${dbError.message}`)
+      console.error('Insert data was:', mediaData)
+      console.error('Error details:', {
+        code: dbError.code,
+        message: dbError.message,
+        details: dbError.details,
+        hint: dbError.hint
+      })
+      
+      // ストレージからファイルを削除（クリーンアップ）
+      try {
+        await supabase.storage
+          .from('session-media')
+          .remove([filePath])
+        console.log('クリーンアップ完了: ストレージからファイルを削除')
+      } catch (cleanupError) {
+        console.error('クリーンアップエラー:', cleanupError)
+      }
+      
+      // より詳細なエラーメッセージ
+      if (dbError.code === '42501') {
+        throw new Error('権限エラー: データベースへの保存権限がありません。ログイン直してください。')
+      } else if (dbError.code === '23503') {
+        throw new Error('セッションが見つかりません。有効なセッションを選択してください。')
+      } else {
+        throw new Error(`写真情報の保存に失敗しました: ${dbError.message}`)
+      }
     }
+
+    console.log('データベース挿入成功:', dbData)
 
     return {
       id: dbData.id,
@@ -77,7 +190,13 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
     }
   } catch (error) {
     console.error('Photo upload error:', error)
-    throw error
+    
+    // エラーの種類に応じてユーザーフレンドリーなメッセージを返す
+    if (error instanceof Error) {
+      throw error // 既に適切なメッセージが設定されている
+    } else {
+      throw new Error('写真のアップロードに失敗しました。しばらく時間をおいて再試行してください。')
+    }
   }
 }
 

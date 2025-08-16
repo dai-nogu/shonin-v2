@@ -2,6 +2,7 @@
 -- SHONIN アプリ メディア管理スキーマ v1
 -- 画像・動画・音声アップロード機能
 -- 注意: 01-core-schema.sql を先に実行してください
+-- 注意: session-media-storage-policies.sql でRLSポリシーを設定してください
 -- ==========================================
 
 -- セッションメディアテーブル削除
@@ -44,15 +45,7 @@ CREATE INDEX idx_session_media_created_at ON public.session_media(created_at);
 -- ==========================================
 ALTER TABLE public.session_media ENABLE ROW LEVEL SECURITY;
 
--- Session Media policies
-CREATE POLICY "Users can view session media" ON public.session_media
-    FOR SELECT USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
-CREATE POLICY "Users can insert session media" ON public.session_media
-    FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
-CREATE POLICY "Users can update session media" ON public.session_media
-    FOR UPDATE USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
-CREATE POLICY "Users can delete session media" ON public.session_media
-    FOR DELETE USING (auth.uid() IN (SELECT user_id FROM public.sessions WHERE id = session_id));
+-- 注意: RLSポリシーは session-media-storage-policies.sql で管理されます
 
 -- ==========================================
 -- メディア統計用ビュー
