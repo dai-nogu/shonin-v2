@@ -7,7 +7,7 @@ const supabaseServer = createClient(
   process.env.SERVICE_ROLE_KEY as string
 )
 
-async function handleDeleteUser(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // レート制限チェック（簡易版）
     const userAgent = request.headers.get('user-agent')
@@ -49,12 +49,4 @@ async function handleDeleteUser(request: NextRequest) {
     console.error('予期しないエラー:', error)
     return NextResponse.json({ error: '内部サーバーエラー' }, { status: 500 })
   }
-}
-
-export async function POST(request: NextRequest) {
-  return handleDeleteUser(request)
-}
-
-export async function DELETE(request: NextRequest) {
-  return handleDeleteUser(request)
 } 

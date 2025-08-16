@@ -1,63 +1,75 @@
 "use client"
 
-import { useState } from "react"
-import { Trash2 } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
-import { supabase } from "@/lib/supabase"
-import { Button } from "@/components/ui/common/button"
-import { Label } from "@/components/ui/common/label"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/settings/alert-dialog"
+import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/common/button'
+import { Label } from '@/components/ui/common/label'
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/settings/alert-dialog'
 
 export function DeleteAccountSection() {
   const { signOut } = useAuth()
-  
-  // アカウント削除確認用の状態
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // ユーザーアカウント削除（危険な操作）
+  // アカウント削除処理
   const handleDeleteAccount = async () => {
     setIsDeleting(true)
+    
     try {
       // 現在のセッションからアクセストークンを取得
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
-        throw new Error('認証セッションが見つかりません')
+        alert('認証が必要です。再度ログインしてください。')
+        return
       }
 
-      // バックエンドAPIを呼び出してユーザーアカウントを削除
+      // Step 1: データベース関数を使用してStorageオブジェクトを削除
+      console.log('Storageのメディアファイルを削除中...')
+      const { data: storageDeleteResult, error: storageDeleteError } = await supabase.rpc('handle_delete_user_created_objects')
+      
+      if (storageDeleteError) {
+        console.error('Storageファイル削除エラー:', storageDeleteError)
+        alert('ファイルの削除に失敗しました。続行しますか？')
+      } else if (storageDeleteResult) {
+        console.log('Storageのファイルが削除されました')
+      }
+
+      // Step 2: サーバーサイドでauth.userとデータベースレコードを削除
+      console.log('ユーザーアカウントを削除中...')
       const response = await fetch('/api/deleteUser', {
-        method: 'DELETE',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
-        },
+        }
       })
 
       if (response.ok) {
-        alert("アカウントが削除されました。ご利用ありがとうございました。")
-        await signOut() // ログアウト処理
+        await signOut()
+        alert('アカウントとすべてのデータが削除されました')
+        // ログインページにリダイレクト
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'アカウント削除に失敗しました')
+        const error = await response.json()
+        console.error('アカウント削除エラー:', error)
+        alert('アカウントの削除に失敗しました')
       }
     } catch (error) {
       console.error('アカウント削除エラー:', error)
-      alert("アカウント削除中にエラーが発生しました。時間をおいて再度お試しください。")
+      alert('アカウントの削除に失敗しました')
     } finally {
       setIsDeleting(false)
-      setDeleteDialogOpen(false)
     }
   }
 
