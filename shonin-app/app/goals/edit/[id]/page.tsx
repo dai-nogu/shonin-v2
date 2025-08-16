@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useState, use } from "react"
-import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { GoalForm } from "@/components/goal-form"
 import { useGoalsDb, type GoalFormData } from "@/hooks/use-goals-db"
@@ -56,57 +54,47 @@ export default function GoalEditPage({ params }: GoalEditPageProps) {
   // ローディング中またはデータがない場合
   if (loading || !currentGoal) {
     return (
-      <>
-        <AppSidebar currentPage="goals" />
-        <SidebarInset>
-          <div className="md:min-h-screen bg-gray-950 text-white pb-0">
-            <main className="container mx-auto px-4 py-4 lg:py-8">
-              <div className="container mx-auto max-w-4xl">
-                <Card className="bg-gray-900 border-gray-800">
-                  <CardContent className="p-6">
-                    <div className="text-center">
-                      {loading ? "読み込み中..." : "目標が見つかりません"}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </main>
+      <div className="min-h-screen bg-gray-950 text-white pb-0">
+        <main className="container mx-auto px-4 py-4 lg:py-8">
+          <div className="container mx-auto max-w-4xl">
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  {loading ? "読み込み中..." : "目標が見つかりません"}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </SidebarInset>
-      </>
+        </main>
+      </div>
     )
   }
 
   return (
-    <>
-      <AppSidebar currentPage="goals" />
-      <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white pb-0">
-          <main className="container mx-auto px-4 py-4 lg:py-8">
-            <div className="container mx-auto max-w-4xl">
-              <Card className="bg-gray-900 border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">目標を編集</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <GoalForm
-                    mode="edit"
-                    initialData={{
-                      title: currentGoal.title,
-                      motivation: currentGoal.description || '',
-                      deadline: currentGoal.deadline || '',
-                      weekdayHours: (currentGoal.weekday_hours || 0).toString(),
-                      weekendHours: (currentGoal.weekend_hours || 0).toString()
-                    }}
-                    onSubmit={handleUpdateGoal}
-                    onCancel={handleCancel}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </main>
+    <div className="min-h-screen bg-gray-950 text-white pb-0">
+      <main className="container mx-auto px-4 py-4 lg:py-8">
+        <div className="container mx-auto max-w-4xl">
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">目標を編集</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GoalForm
+                mode="edit"
+                initialData={{
+                  title: currentGoal.title,
+                  motivation: currentGoal.description || '',
+                  deadline: currentGoal.deadline || '',
+                  weekdayHours: (currentGoal.weekday_hours || 0).toString(),
+                  weekendHours: (currentGoal.weekend_hours || 0).toString()
+                }}
+                onSubmit={handleUpdateGoal}
+                onCancel={handleCancel}
+              />
+            </CardContent>
+          </Card>
         </div>
-      </SidebarInset>
-    </>
+      </main>
+    </div>
   )
 } 

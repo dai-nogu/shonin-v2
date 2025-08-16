@@ -7,8 +7,9 @@ import { usePathname } from "next/navigation"
 export function ConditionalSidebarProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isLoginPage = pathname === '/login'
+  const isGoalEditPage = pathname.startsWith('/goals/edit/')
 
-  if (isLoginPage) {
+  if (isLoginPage || isGoalEditPage) {
     return <>{children}</>
   }
 
