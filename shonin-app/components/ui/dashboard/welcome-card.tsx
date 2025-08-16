@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/common/card"
 import { formatTime } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
 import { getTodaySessionsInTimezone } from "@/lib/timezone-utils"

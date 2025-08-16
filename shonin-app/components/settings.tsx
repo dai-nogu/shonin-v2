@@ -1,7 +1,7 @@
 "use client"
 
 import { User, Globe, Activity, LogOut } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/common/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ProfileSettings } from "@/components/ui/settings/profile-settings"
 import { TimezoneSettings } from "@/components/ui/settings/timezone-settings"

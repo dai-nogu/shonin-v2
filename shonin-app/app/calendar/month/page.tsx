@@ -7,8 +7,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { MonthCalendarCSR } from "@/components/ui/calendar/month/month-calendar-csr"
 import { useSessionList } from "@/hooks/useSessionList"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
@@ -180,9 +180,6 @@ function MonthCalendarSSR({
 }
 
 export default function CalendarMonthPage() {
-  // セッション一覧取得フック
-  const { user, isInitialized, completedSessions } = useSessionList()
-
   return (
     <>
       <AppSidebar currentPage="calendar" />
@@ -190,7 +187,6 @@ export default function CalendarMonthPage() {
         <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
           <main className="container mx-auto px-2 md:px-4 py-4 lg:py-8">
             <MonthCalendarCSR 
-              completedSessions={completedSessions}
               CalendarComponent={MonthCalendarSSR}
             />
           </main>

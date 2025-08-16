@@ -1,6 +1,6 @@
 import { Book, Dumbbell, Code, Music } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
 
 export function QuickStartCard() {
   const activities = [

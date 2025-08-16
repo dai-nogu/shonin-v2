@@ -1,9 +1,9 @@
 "use client"
 
 import { BarChart3, Calendar } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Progress } from "@/components/ui/common/progress"
 import { formatDuration } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
 import { getWeekStartInTimezone, getCurrentTimeInTimezone, getDateStringInTimezone } from "@/lib/timezone-utils"

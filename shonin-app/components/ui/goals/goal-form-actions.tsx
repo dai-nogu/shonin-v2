@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/common/button"
 
 interface GoalFormActionsProps {
   mode: "create" | "edit"

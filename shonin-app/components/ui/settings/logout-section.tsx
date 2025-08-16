@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/common/button"
+import { Label } from "@/components/ui/common/label"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/settings/alert-dialog"
 
 export function LogoutSection() {
   const { signOut } = useAuth()

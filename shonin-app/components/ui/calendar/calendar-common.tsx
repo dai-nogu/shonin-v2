@@ -4,8 +4,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/common/dialog"
+import { Button } from "@/components/ui/common/button"
 import { Calendar } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"

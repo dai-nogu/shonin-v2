@@ -1,8 +1,8 @@
 "use client"
 
 import { Play, Pause, Clock, Target, Square } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
 import type { SessionData } from "./time-tracker"
 import { useSessions } from "@/contexts/sessions-context"
 

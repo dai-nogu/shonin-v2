@@ -1,7 +1,7 @@
 "use client"
 
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/common/textarea"
+import { Label } from "@/components/ui/common/label"
 
 interface GoalMotivationTextareaProps {
   value: string

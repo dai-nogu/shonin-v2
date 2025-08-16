@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Clock, Star } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Badge } from "@/components/ui/common/badge"
 import { ConfirmStartModal } from "./confirm-start-modal"
 import type { SessionData } from "./time-tracker"
 

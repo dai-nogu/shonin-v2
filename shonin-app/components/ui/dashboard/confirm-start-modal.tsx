@@ -1,9 +1,9 @@
 "use client"
 
 import { Play, X, Target, MapPin } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Badge } from "@/components/ui/common/badge"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
 import { useEffect, useState } from "react"

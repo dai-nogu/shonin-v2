@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Target, Calendar, Clock, Edit2, Trash2, Calculator } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Progress } from "@/components/ui/common/progress"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 
 interface Goal {

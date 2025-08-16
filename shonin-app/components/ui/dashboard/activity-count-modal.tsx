@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { X, Play, Eye, BarChart3 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ModalPagination } from "@/components/ui/modal-pagination"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"

@@ -3,9 +3,9 @@
 import { Globe } from "lucide-react"
 import { useTimezone } from "@/contexts/timezone-context"
 import { TIMEZONES } from "@/lib/timezone-utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Label } from "@/components/ui/common/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
 
 export function TimezoneSettings() {
   const { 

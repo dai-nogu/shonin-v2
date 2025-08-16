@@ -1,6 +1,6 @@
 import { Clock, CheckCircle, Flame } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Progress } from "@/components/ui/common/progress"
 import { useTimezone } from "@/contexts/timezone-context"
 import { getTodaySessionsInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"

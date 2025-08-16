@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/common/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/common/card'
 
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)

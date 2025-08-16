@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { ArrowLeft, Clock, Calendar, Star, MapPin, Plus } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Badge } from "@/components/ui/common/badge"
+import { Input } from "@/components/ui/common/input"
 import type { CompletedSession } from "./time-tracker"
 
 interface SessionHistoryProps {

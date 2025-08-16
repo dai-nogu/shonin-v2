@@ -1,7 +1,7 @@
 import { MessageCircle, Calendar, TrendingUp, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Badge } from "@/components/ui/common/badge"
+import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
 import type { CompletedSession } from "./time-tracker"
 

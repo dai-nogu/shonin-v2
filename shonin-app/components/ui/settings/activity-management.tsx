@@ -2,8 +2,8 @@
 
 import { Activity, Trash2 } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
 
 interface ActivityManagementProps {
   currentSession?: {

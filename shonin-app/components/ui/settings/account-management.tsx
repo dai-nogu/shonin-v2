@@ -1,7 +1,7 @@
 "use client"
 
 import { LogOut } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { LogoutSection } from "./logout-section"
 import { DeleteAccountSection } from "./delete-account-section"
 

@@ -7,8 +7,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { BottomNavigation } from "@/components/bottom-navigation"
 import { WeekCalendarCSR } from "@/components/ui/calendar/week/week-calendar-csr"
 import { useSessionList } from "@/hooks/useSessionList"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
 import { getWeekStartInTimezone } from "@/lib/timezone-utils"
@@ -182,9 +182,6 @@ function WeekCalendarSSR({
 }
 
 export default function CalendarWeekPage() {
-  // セッション一覧取得フック
-  const { user, isInitialized, completedSessions } = useSessionList()
-
   return (
     <>
       <AppSidebar currentPage="calendar" />
@@ -192,7 +189,6 @@ export default function CalendarWeekPage() {
         <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
           <main className="container mx-auto px-2 md:px-4 py-4 lg:py-8">
             <WeekCalendarCSR 
-              completedSessions={completedSessions}
               CalendarComponent={WeekCalendarSSR}
             />
           </main>

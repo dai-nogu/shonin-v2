@@ -4,10 +4,10 @@ import { useState, useEffect } from "react"
 import { User, Edit2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserProfile } from "@/hooks/use-user-profile"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Input } from "@/components/ui/common/input"
+import { Label } from "@/components/ui/common/label"
 
 export function ProfileSettings() {
   const { user } = useAuth()

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { X, Play, Eye, Clock, Calendar, Star, MapPin, BarChart3 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ModalPagination } from "@/components/ui/modal-pagination"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Badge } from "@/components/ui/common/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/common/tabs"
+import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
 import { SessionDetailModal } from "./session-detail-modal"
 import type { CompletedSession, SessionData } from "./time-tracker"
 

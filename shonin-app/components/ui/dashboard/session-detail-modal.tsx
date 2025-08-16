@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { X, Clock, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Button } from "@/components/ui/common/button"
+import { Progress } from "@/components/ui/common/progress"
 import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } from "@/lib/upload-photo"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
