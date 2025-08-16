@@ -20,6 +20,50 @@ export interface GoalFormData {
   addDuration?: number // 進捗更新用：追加する時間（秒単位）
 }
 
+// 個別の目標を取得するフック
+export function useSingleGoal(goalId: string) {
+  const { user } = useAuth()
+  const [goal, setGoal] = useState<Goal | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchGoal = async () => {
+      if (!user?.id || !goalId) {
+        setGoal(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('goals')
+          .select('*')
+          .eq('id', goalId)
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Goal fetch error:', error)
+          throw error
+        }
+
+        setGoal(data)
+      } catch (err) {
+        console.error('Error in fetchGoal:', err)
+        setError(err instanceof Error ? err.message : '目標の取得に失敗しました')
+        setGoal(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchGoal()
+  }, [user?.id, goalId])
+
+  return { goal, loading, error }
+}
+
 export function useGoalsDb() {
   const { user } = useAuth()
   const [goals, setGoals] = useState<Goal[]>([])

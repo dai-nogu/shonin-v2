@@ -1,18 +1,11 @@
-import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
 import { GoalAddContainer } from "@/components/ui/goals/add/goal-add-container"
 
 export default async function GoalAddPage() {
   return (
-    <>
-      <AppSidebar currentPage="goals" />
-      <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white pb-0">
-          <main className="container mx-auto px-4 py-4 lg:py-8">
-            <GoalAddContainer />
-          </main>
-        </div>
-      </SidebarInset>
-    </>
+    <div className="md:min-h-screen bg-gray-950 text-white pb-0">
+      <main className="container mx-auto px-4 py-4 lg:py-8">
+        <GoalAddContainer />
+      </main>
+    </div>
   )
 } 

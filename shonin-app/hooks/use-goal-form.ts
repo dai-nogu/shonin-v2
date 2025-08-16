@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 export interface GoalFormData {
   title: string
@@ -105,6 +105,17 @@ export function useGoalForm(initialData?: Partial<GoalFormData>) {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const setInitialData = useCallback((data: Partial<GoalFormData>) => {
+    setFormData({
+      title: data.title || "",
+      motivation: data.motivation || "",
+      deadline: data.deadline || "",
+      weekdayHours: data.weekdayHours || "",
+      weekendHours: data.weekendHours || "",
+      calculatedHours: data.calculatedHours || 0
+    })
+  }, [])
+
   const validateForm = (): boolean => {
     const weekdayValidation = validateHours(formData.weekdayHours)
     const weekendValidation = validateHours(formData.weekendHours)
@@ -125,6 +136,7 @@ export function useGoalForm(initialData?: Partial<GoalFormData>) {
     formData,
     validationErrors,
     updateField,
+    setInitialData,
     validateForm,
     weeklyHours: calculateWeeklyHours(weekdayHours, weekendHours),
     monthlyHours: calculateMonthlyHours(weekdayHours, weekendHours)

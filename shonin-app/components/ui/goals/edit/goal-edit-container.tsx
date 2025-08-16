@@ -10,7 +10,7 @@ import { GoalHoursInputs } from "../goal-hours-inputs"
 import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
 import { useGoalForm } from "@/hooks/use-goal-form"
-import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
+import { useSingleGoal, useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
 
 interface GoalEditContainerProps {
   params: Promise<{
@@ -20,38 +20,38 @@ interface GoalEditContainerProps {
 
 export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const router = useRouter()
-  const { goals, updateGoal, loading } = useGoalsDb()
-  const [currentGoal, setCurrentGoal] = useState<any>(null)
+  const { updateGoal } = useGoalsDb()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   // paramsをunwrap
   const { id } = use(params)
-
-  // 初期データを設定
-  const initialData = currentGoal ? {
-    title: currentGoal.title,
-    motivation: currentGoal.description || '',
-    deadline: currentGoal.deadline || '',
-    weekdayHours: (currentGoal.weekday_hours || 0).toString(),
-    weekendHours: (currentGoal.weekend_hours || 0).toString()
-  } : undefined
-
+  
+  // 目標を取得
+  const { goal, loading, error } = useSingleGoal(id)
+  
+  // フォーム管理
   const {
     formData,
     validationErrors,
     updateField,
+    setInitialData,
     validateForm,
     weeklyHours,
     monthlyHours
-  } = useGoalForm(initialData)
+  } = useGoalForm()
 
-  // 該当の目標を取得
+  // 目標データが取得できたらフォームに設定
   useEffect(() => {
-    if (goals && id) {
-      const goal = goals.find(g => g.id === id)
-      setCurrentGoal(goal)
+    if (goal) {
+      setInitialData({
+        title: goal.title,
+        motivation: goal.description || '',
+        deadline: goal.deadline || '',
+        weekdayHours: (goal.weekday_hours || 0).toString(),
+        weekendHours: (goal.weekend_hours || 0).toString()
+      })
     }
-  }, [goals, id])
+  }, [goal, setInitialData])
 
   const handleUpdateGoal = async () => {
     if (!validateForm()) return
@@ -86,14 +86,14 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
     router.push("/goals")
   }
 
-  // ローディング中またはデータがない場合
-  if (loading || !currentGoal) {
+  // ローディング中またはエラーの場合
+  if (loading || error || !goal) {
     return (
       <div className="container mx-auto max-w-4xl">
         <Card className="bg-gray-900 border-gray-800">
           <CardContent className="p-6">
             <div className="text-center text-white">
-              {loading ? "読み込み中..." : "目標が見つかりません"}
+              {loading ? "読み込み中..." : error || "目標が見つかりません"}
             </div>
           </CardContent>
         </Card>
