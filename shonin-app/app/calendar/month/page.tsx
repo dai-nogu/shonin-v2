@@ -3,8 +3,8 @@
 "use client"
 
 import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { BottomNavigation } from "@/components/layout/bottom-navigation"
 import { MonthCalendarCSR } from "@/components/ui/calendar/month/month-calendar-csr"
 import { useSessionList } from "@/hooks/useSessionList"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"

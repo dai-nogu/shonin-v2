@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Settings } from "@/components/settings"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Settings } from "@/components/pages/settings"
+import { BottomNavigation } from "@/components/layout/bottom-navigation"
 import { useSessions } from "@/contexts/sessions-context"
 
 export default function SettingsPage() {

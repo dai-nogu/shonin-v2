@@ -5,7 +5,7 @@ import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
 import { TimezoneProvider } from "@/contexts/timezone-context"
 import { AuthProvider } from "@/contexts/auth-context"
-import { ConditionalSidebarProvider } from "@/components/conditional-sidebar-provider"
+import { ConditionalSidebarProvider } from "@/components/layout/conditional-sidebar-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 

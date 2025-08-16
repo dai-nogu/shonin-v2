@@ -3,8 +3,8 @@
 "use client"
 
 import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { BottomNavigation } from "@/components/layout/bottom-navigation"
 import { WeekCalendarCSR } from "@/components/ui/calendar/week/week-calendar-csr"
 import { useSessionList } from "@/hooks/useSessionList"
 import { Card, CardContent, CardHeader } from "@/components/ui/common/card"

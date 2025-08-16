@@ -1,4 +1,4 @@
-import { MobileMenu } from "@/components/mobile-menu"
+import { MobileMenu } from "@/components/layout/mobile-menu"
 
 interface HeaderProps {
   currentPage?: string

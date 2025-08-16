@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Goals } from "@/components/goals"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Goals } from "@/components/pages/goals"
+import { BottomNavigation } from "@/components/layout/bottom-navigation"
 
 export default function GoalsPage() {
   const router = useRouter()
