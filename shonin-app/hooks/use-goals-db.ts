@@ -96,7 +96,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      console.log('Raw goals data from database:', data)
+
       setGoals(data || [])
     } catch (err) {
       console.error('Error in fetchGoals:', err)
@@ -109,8 +109,6 @@ export function useGoalsDb() {
   // 目標を追加
   const addGoal = async (goalData: GoalFormData): Promise<string | null> => {
     try {
-      console.log('addGoal called with data:', goalData)
-
       // calculatedHoursを秒に変換（時間 * 3600）
       const targetDurationSeconds = goalData.calculatedHours * 3600
 
@@ -126,7 +124,7 @@ export function useGoalsDb() {
         status: 'active' as const, // 新規作成時は常にactive
       }
 
-      console.log('goalInsert data:', goalInsert)
+
 
       if (!user?.id) {
         setError('ログインが必要です')
@@ -147,7 +145,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      console.log('Goal inserted successfully with id:', data.id)
+
       await fetchGoals() // リストを更新
       return data.id
     } catch (err) {
@@ -160,8 +158,6 @@ export function useGoalsDb() {
   // 目標を更新
   const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<boolean> => {
     try {
-      console.log('updateGoal called with id:', id, 'data:', goalData)
-      
       if (!user?.id) {
         setError('ログインが必要です')
         return false
@@ -185,7 +181,7 @@ export function useGoalsDb() {
       // 更新日時を追加
       updateData.updated_at = new Date().toISOString()
 
-      console.log('updateData:', updateData)
+
 
       const { error } = await supabase
         .from('goals')
@@ -198,7 +194,7 @@ export function useGoalsDb() {
         throw error
       }
 
-      console.log('Goal updated successfully')
+
       await fetchGoals() // リストを更新
       return true
     } catch (err) {

@@ -154,6 +154,10 @@ export function useSessionsDb() {
   // 期間指定でセッションを取得
   const getSessionsByDateRange = useCallback(async (startDate: string, endDate: string): Promise<SessionWithActivity[]> => {
     try {
+      if (!user?.id) {
+        return []
+      }
+
       const { data, error } = await supabase
         .from('sessions')
         .select(`
@@ -164,7 +168,7 @@ export function useSessionsDb() {
             color
           )
         `)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
         .gte('start_time', startDate)
         .lte('start_time', endDate)
         .order('start_time', { ascending: false })
@@ -177,11 +181,15 @@ export function useSessionsDb() {
       setError(err instanceof Error ? err.message : '期間指定セッションの取得に失敗しました')
       return []
     }
-  }, [])
+  }, [user?.id])
 
   // アクティビティ別の統計を取得
   const getActivityStats = useCallback(async () => {
     try {
+      if (!user?.id) {
+        return {}
+      }
+
       const { data, error } = await supabase
         .from('sessions')
         .select(`
@@ -193,7 +201,7 @@ export function useSessionsDb() {
             color
           )
         `)
-        .eq('user_id', DUMMY_USER_ID)
+        .eq('user_id', user.id)
         .not('end_time', 'is', null) // 終了済みのセッションのみ
 
       if (error) throw error
@@ -224,7 +232,7 @@ export function useSessionsDb() {
       setError(err instanceof Error ? err.message : '統計の取得に失敗しました')
       return []
     }
-  }, [])
+  }, [user?.id])
 
   // 初回読み込み
   useEffect(() => {

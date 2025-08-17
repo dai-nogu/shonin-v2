@@ -17,21 +17,8 @@ export interface UploadedPhoto {
  */
 export async function uploadPhoto(file: File, sessionId: string, userId: string): Promise<UploadedPhoto> {
   try {
-    console.log('写真アップロード開始:', { 
-      fileName: file.name, 
-      fileSize: file.size, 
-      sessionId, 
-      userId 
-    })
-
     // 認証状態を確認
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    console.log('認証状態確認:', { 
-      authData: authData?.user,
-      authError,
-      providedUserId: userId,
-      authUserId: authData?.user?.id
-    })
 
     if (authError) {
       console.error('認証エラー:', authError)
@@ -51,14 +38,11 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
     }
 
     // セッションの所有者確認
-    console.log('セッション所有者確認開始:', { sessionId, userId })
     const { data: sessionData, error: sessionError } = await supabase
       .from('sessions')
       .select('user_id, id')
       .eq('id', sessionId)
       .single()
-
-    console.log('セッション所有者確認結果:', { sessionData, sessionError })
 
     if (sessionError) {
       console.error('セッション確認エラー:', sessionError)
@@ -95,8 +79,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
     const fileName = `${sessionId}_${Date.now()}.${fileExt}`
     const filePath = `${userId}/session-media/${fileName}`
 
-    console.log('ストレージアップロード開始:', { filePath })
-
     // Supabaseストレージにアップロード
     const { data, error } = await supabase.storage
       .from('session-media')
@@ -110,14 +92,10 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       throw new Error(`ストレージへのアップロードに失敗しました: ${error.message}`)
     }
 
-    console.log('ストレージアップロード成功:', data)
-
     // パブリックURLを取得
     const { data: { publicUrl } } = supabase.storage
       .from('session-media')
       .getPublicUrl(filePath)
-
-    console.log('パブリックURL取得:', publicUrl)
 
     // session_mediaテーブルに写真情報を保存
     const mediaData = {
@@ -131,17 +109,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       is_main_image: false,
       caption: null
     }
-
-    console.log('データベース挿入開始:', mediaData)
-
-    // 現在の認証トークンも確認
-    const { data: { session } } = await supabase.auth.getSession()
-    console.log('現在のセッション情報:', { 
-      hasSession: !!session,
-      accessToken: session?.access_token ? 'あり' : 'なし',
-      tokenType: session?.token_type,
-      expiresAt: session?.expires_at
-    })
 
     const { data: dbData, error: dbError } = await supabase
       .from('session_media')
@@ -164,7 +131,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
         await supabase.storage
           .from('session-media')
           .remove([filePath])
-        console.log('クリーンアップ完了: ストレージからファイルを削除')
       } catch (cleanupError) {
         console.error('クリーンアップエラー:', cleanupError)
       }
@@ -178,8 +144,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
         throw new Error(`写真情報の保存に失敗しました: ${dbError.message}`)
       }
     }
-
-    console.log('データベース挿入成功:', dbData)
 
     return {
       id: dbData.id,
