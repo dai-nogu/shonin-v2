@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/common/button"
@@ -19,6 +20,7 @@ import {
 
 export function LogoutSection() {
   const { signOut } = useAuth()
+  const router = useRouter()
   
   // ログアウト確認用の状態
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
@@ -29,6 +31,8 @@ export function LogoutSection() {
     setIsLoggingOut(true)
     try {
       await signOut()
+      // ログアウト後にログインページにリダイレクト
+      router.push('/login')
     } catch (error) {
       console.error('ログアウトエラー:', error)
       alert("ログアウト中にエラーが発生しました。時間をおいて再度お試しください。")

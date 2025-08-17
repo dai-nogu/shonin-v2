@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from "next/navigation"
 import { Trash2 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -19,6 +20,7 @@ import {
 
 export function DeleteAccountSection() {
   const { signOut } = useAuth()
+  const router = useRouter()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -59,7 +61,8 @@ export function DeleteAccountSection() {
       if (response.ok) {
         await signOut()
         alert('アカウントとすべてのデータが削除されました')
-        // ログインページにリダイレクト
+        // アカウント削除後にログインページにリダイレクト
+        router.push('/login')
       } else {
         const error = await response.json()
         console.error('アカウント削除エラー:', error)
@@ -70,6 +73,7 @@ export function DeleteAccountSection() {
       alert('アカウントの削除に失敗しました')
     } finally {
       setIsDeleting(false)
+      setDeleteDialogOpen(false)
     }
   }
 
