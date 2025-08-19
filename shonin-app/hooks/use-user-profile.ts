@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
 
@@ -11,6 +11,7 @@ export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [supabase] = useState(() => createClient())
 
   // プロフィールを取得
   const fetchProfile = useCallback(async () => {

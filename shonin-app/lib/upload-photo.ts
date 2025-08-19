@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 
 export interface UploadedPhoto {
   id: string
@@ -16,6 +16,8 @@ export interface UploadedPhoto {
  * @returns アップロード結果
  */
 export async function uploadPhoto(file: File, sessionId: string, userId: string): Promise<UploadedPhoto> {
+  const supabase = createClient()
+  
   try {
     // 認証状態を確認
     const { data: authData, error: authError } = await supabase.auth.getUser()

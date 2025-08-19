@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from "next/navigation"
 import { Trash2 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/common/button'
 import { Label } from '@/components/ui/common/label'
 import { 
@@ -23,6 +23,7 @@ export function DeleteAccountSection() {
   const router = useRouter()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [supabase] = useState(() => createClient())
 
   // アカウント削除処理
   const handleDeleteAccount = async () => {

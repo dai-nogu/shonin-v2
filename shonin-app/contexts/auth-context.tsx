@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     // 初期セッションを取得
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabase])
 
   // Google OAuth認証
   const signInWithGoogle = async () => {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: `${window.location.origin}/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

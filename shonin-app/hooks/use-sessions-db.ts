@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
 
@@ -22,6 +22,7 @@ export function useSessionsDb() {
   const [sessions, setSessions] = useState<SessionWithActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [supabase] = useState(() => createClient())
 
   // セッションを取得（アクティビティ情報とタグも含む）
   const fetchSessions = useCallback(async () => {

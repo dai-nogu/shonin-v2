@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
 
@@ -69,6 +69,7 @@ export function useGoalsDb() {
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [supabase] = useState(() => createClient())
 
   // 目標を取得
   const fetchGoals = async (forceLoading: boolean = false) => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { 
   SessionReflection, 
   SessionMedia, 
@@ -11,6 +11,7 @@ import {
 export function useReflectionsDb() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [supabase] = useState(() => createClient());
 
   // 振り返り情報をsessionsテーブルに保存（統合版）
   const saveReflection = async (sessionId: string, reflection: SessionReflection): Promise<string | null> => {
