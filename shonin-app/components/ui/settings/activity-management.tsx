@@ -26,10 +26,8 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
 
     const confirmed = confirm("このアクティビティを削除しますか？\n関連するセッションデータも削除されます。")
     if (confirmed) {
-      const success = await deleteActivity(activityId)
-      if (!success) {
-        alert("アクティビティの削除に失敗しました")
-      }
+      await deleteActivity(activityId)
+      // エラーは useActivities hook で既に処理されているので、重複alertは削除
     }
   }
 

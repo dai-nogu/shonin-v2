@@ -71,7 +71,8 @@ export function DeleteAccountSection() {
       }
     } catch (error) {
       console.error('アカウント削除エラー:', error)
-      alert('アカウントの削除に失敗しました')
+      // レスポンスのパースに失敗した場合やネットワークエラーの場合
+      alert('アカウント削除処理でエラーが発生しました')
     } finally {
       setIsDeleting(false)
       setDeleteDialogOpen(false)

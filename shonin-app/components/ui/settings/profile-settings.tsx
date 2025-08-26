@@ -43,12 +43,11 @@ export function ProfileSettings() {
       if (success) {
         setIsEditingProfile(false)
         alert("プロフィール情報が保存されました")
-      } else {
-        alert("プロフィール情報の保存に失敗しました")
       }
+      // エラーは useUserProfile hook で既に処理されているので、重複alertは削除
     } catch (error) {
       console.error('プロフィール保存エラー:', error)
-      alert("プロフィール情報の保存に失敗しました")
+      // エラーは useUserProfile hook で既に処理されているので、重複alertは削除
     } finally {
       setIsSaving(false)
     }

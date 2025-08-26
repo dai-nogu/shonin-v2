@@ -44,12 +44,11 @@ export function GoalAddContainer() {
       
       if (goalId) {
         router.push("/goals")
-      } else {
-        alert('目標の追加に失敗しました')
       }
+      // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない
     } catch (error) {
       console.error('目標追加エラー:', error)
-      alert('目標の追加に失敗しました')
+      // エラーは useGoalsDb hook で既に処理されているので、重複alertは削除
     } finally {
       setIsSubmitting(false)
     }
