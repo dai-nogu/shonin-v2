@@ -41,10 +41,7 @@ export function ProfileSettings() {
     try {
       const success = await updateUserName(name)
       if (success) {
-        setIsEditingProfile(false)
-        alert("プロフィール情報が保存されました")
       }
-      // エラーは useUserProfile hook で既に処理されているので、重複alertは削除
     } catch (error) {
       console.error('プロフィール保存エラー:', error)
       // エラーは useUserProfile hook で既に処理されているので、重複alertは削除

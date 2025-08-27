@@ -17,10 +17,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/settings/alert-dialog"
+import { useToast } from "@/contexts/toast-context"
 
 export function LogoutSection() {
   const { signOut } = useAuth()
   const router = useRouter()
+  const { showError } = useToast()
   
   // ログアウト確認用の状態
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
@@ -35,7 +37,7 @@ export function LogoutSection() {
       router.push('/login')
     } catch (error) {
       console.error('ログアウトエラー:', error)
-      alert("ログアウト中にエラーが発生しました。時間をおいて再度お試しください。")
+      showError("ログアウト中にエラーが発生しました。時間をおいて再度お試しください。")
     } finally {
       setIsLoggingOut(false)
       setLogoutDialogOpen(false)

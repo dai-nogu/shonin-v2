@@ -5,6 +5,7 @@ import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
 import { TimezoneProvider } from "@/contexts/timezone-context"
 import { AuthProvider } from "@/contexts/auth-context"
+import { ToastProvider } from "@/contexts/toast-context"
 import { ConditionalSidebarProvider } from "@/components/layout/conditional-sidebar-provider"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -19,13 +20,15 @@ export default function RootLayout({
       <body className={`${inter.className} dark`} suppressHydrationWarning>
         <AuthProvider>
           <TimezoneProvider>
-            <ActivitiesProvider>
-              <SessionsProvider>
-                <ConditionalSidebarProvider>
-                  {children}
-                </ConditionalSidebarProvider>
-              </SessionsProvider>
-            </ActivitiesProvider>
+            <ToastProvider>
+              <ActivitiesProvider>
+                <SessionsProvider>
+                  <ConditionalSidebarProvider>
+                    {children}
+                  </ConditionalSidebarProvider>
+                </SessionsProvider>
+              </ActivitiesProvider>
+            </ToastProvider>
           </TimezoneProvider>
         </AuthProvider>
       </body>

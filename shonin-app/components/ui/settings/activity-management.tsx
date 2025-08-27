@@ -4,6 +4,7 @@ import { Activity, Trash2 } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { useToast } from "@/contexts/toast-context"
 
 interface ActivityManagementProps {
   currentSession?: {
@@ -15,12 +16,13 @@ interface ActivityManagementProps {
 
 export function ActivityManagement({ currentSession, isSessionActive }: ActivityManagementProps) {
   const { activities: customActivities, loading: activitiesLoading, deleteActivity } = useActivities()
+  const { showWarning } = useToast()
 
   // アクティビティ削除ハンドラー
   const handleDeleteActivity = async (activityId: string) => {
     // 現在進行中のアクティビティかチェック
     if (isSessionActive && currentSession && currentSession.activityId === activityId) {
-      alert("進行中のアクティビティは削除できません。先にアクティビティを終了してください。")
+      showWarning("進行中は削除できません。先にアクティビティを終了してください。")
       return
     }
 

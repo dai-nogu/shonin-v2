@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { SessionData } from "./time-tracker"
 import { useActivities, type Activity } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useToast } from "@/contexts/toast-context"
 
 interface ActivitySelectorProps {
   onStart: (session: SessionData) => void
@@ -23,6 +24,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const [targetMinutes, setTargetMinutes] = useState("")
   const [selectedGoal, setSelectedGoal] = useState("")
   const [isStarting, setIsStarting] = useState(false)
+  const { showError } = useToast()
 
   // 今日が平日かどうかを判定
   const isWeekday = () => {
@@ -123,7 +125,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       setHoveredColor(null)
       setShowAddForm(false)
     } else {
-      alert("行動の追加に失敗しました。")
+      showError("行動の追加に失敗しました。")
     }
   }
 

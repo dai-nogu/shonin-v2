@@ -26,6 +26,7 @@ export function useSingleGoal(goalId: string) {
   const [goal, setGoal] = useState<Goal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     const fetchGoal = async () => {

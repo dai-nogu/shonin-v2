@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useToast } from "@/contexts/toast-context"
 
 interface Goal {
   id: string
@@ -31,6 +32,7 @@ interface GoalsProps {
 
 export function Goals({ onBack }: GoalsProps) {
   const router = useRouter()
+  const { showError } = useToast()
   
   // データベースフック
   const { 
@@ -112,7 +114,7 @@ export function Goals({ onBack }: GoalsProps) {
     if (confirmed) {
       const success = await deleteGoalFromDb(goalId)
       if (!success) {
-        alert('目標の削除に失敗しました')
+        showError('目標の削除に失敗しました')
       }
     }
   }

@@ -17,12 +17,14 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from '@/components/ui/settings/alert-dialog'
+import { useToast } from '@/contexts/toast-context'
 
 export function DeleteAccountSection() {
   const { signOut } = useAuth()
   const router = useRouter()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const { showError, showSuccess, showWarning } = useToast()
   const [supabase] = useState(() => createClient())
 
   // アカウント削除処理
@@ -34,7 +36,7 @@ export function DeleteAccountSection() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
-        alert('認証が必要です。再度ログインしてください。')
+        showError('認証が必要です。ログインしてください。')
         return
       }
 
@@ -44,7 +46,7 @@ export function DeleteAccountSection() {
       
       if (storageDeleteError) {
         console.error('Storageファイル削除エラー:', storageDeleteError)
-        alert('ファイルの削除に失敗しました。続行しますか？')
+        showWarning('ファイルの削除に失敗しました。続行しますか？')
       } else if (storageDeleteResult) {
         console.log('Storageのファイルが削除されました')
       }
@@ -61,18 +63,18 @@ export function DeleteAccountSection() {
 
       if (response.ok) {
         await signOut()
-        alert('アカウントとすべてのデータが削除されました')
+        showSuccess('ご利用ありがとうございました。')
         // アカウント削除後にログインページにリダイレクト
         router.push('/login')
       } else {
         const error = await response.json()
         console.error('アカウント削除エラー:', error)
-        alert('アカウントの削除に失敗しました')
+        showError('アカウント削除に失敗しました。再度お試しください。')
       }
     } catch (error) {
       console.error('アカウント削除エラー:', error)
       // レスポンスのパースに失敗した場合やネットワークエラーの場合
-      alert('アカウント削除処理でエラーが発生しました')
+      showError('エラーが発生しました。再度お試しください。')
     } finally {
       setIsDeleting(false)
       setDeleteDialogOpen(false)
