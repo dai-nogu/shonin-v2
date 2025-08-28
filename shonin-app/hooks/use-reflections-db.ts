@@ -37,14 +37,12 @@ export function useReflectionsDb() {
         .single();
 
       if (error) {
-        console.error('振り返り保存エラー:', error);
         setError(`振り返りの保存に失敗しました: ${error.message}`);
         return null;
       }
 
       return data.id;
     } catch (err) {
-      console.error('振り返り保存エラー:', err);
       setError('振り返りの保存中にエラーが発生しました');
       return null;
     } finally {
@@ -76,7 +74,6 @@ export function useReflectionsDb() {
           // データが見つからない場合
           return null;
         }
-        console.error('振り返りの取得に失敗しました');
         setError('振り返りの取得に失敗しました');
         return null;
       }
@@ -95,7 +92,6 @@ export function useReflectionsDb() {
 
       return reflection;
     } catch (err) {
-      console.error('振り返り取得エラー:', err);
       setError('振り返りの取得中にエラーが発生しました');
       return null;
     } finally {
@@ -130,7 +126,6 @@ export function useReflectionsDb() {
           .upload(filePath, file);
 
         if (uploadError) {
-          console.error('ファイルアップロードエラー:', uploadError);
           setError(`ファイルのアップロードに失敗しました: ${uploadError.message}`);
           continue;
         }
@@ -155,7 +150,6 @@ export function useReflectionsDb() {
           .single();
 
         if (dbError) {
-          console.error('メディア情報保存エラー:', dbError);
           setError(`メディア情報の保存に失敗しました: ${dbError.message}`);
           continue;
         }
@@ -176,7 +170,6 @@ export function useReflectionsDb() {
 
       return uploadedMedia;
     } catch (err) {
-      console.error('メディアアップロードエラー:', err);
       setError('メディアのアップロード中にエラーが発生しました');
       return [];
     } finally {
@@ -197,7 +190,6 @@ export function useReflectionsDb() {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('メディア取得エラー:', error);
         setError(`メディアの取得に失敗しました: ${error.message}`);
         return [];
       }
@@ -215,7 +207,6 @@ export function useReflectionsDb() {
         createdAt: media.created_at,
       }));
     } catch (err) {
-      console.error('メディア取得エラー:', err);
       setError('メディアの取得中にエラーが発生しました');
       return [];
     } finally {
@@ -262,15 +253,13 @@ export function useReflectionsDb() {
         .single();
 
       if (error) {
-        console.error('AI分析保存エラー:', error);
         setError(`AI分析の保存に失敗しました: ${error.message}`);
         return null;
       }
 
       return data.id;
     } catch (err) {
-      console.error('AI分析保存エラー:', err);
-      setError('AI分析の保存中にエラーが発生しました');
+      setError('保存中にエラーが発生しました');
       return null;
     } finally {
       setIsLoading(false);
@@ -303,8 +292,7 @@ export function useReflectionsDb() {
           // データが見つからない場合
           return null;
         }
-        console.error('AI分析取得エラー:', error);
-        setError(`AI分析の取得に失敗しました: ${error.message}`);
+        setError(`分析の取得に失敗しました: ${error.message}`);
         return null;
       }
 
@@ -319,8 +307,7 @@ export function useReflectionsDb() {
         analyzed_at: data.ai_analyzed_at,
       };
     } catch (err) {
-      console.error('AI分析取得エラー:', err);
-      setError('AI分析の取得中にエラーが発生しました');
+      setError('分析の取得中にエラーが発生しました');
       return null;
     } finally {
       setIsLoading(false);

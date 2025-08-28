@@ -25,7 +25,6 @@ export function useSessionList() {
         await refetch()
         setIsInitialized(true)
       } catch (error) {
-        console.error('初期化エラー:', error)
         setIsInitialized(true)
       }
     }

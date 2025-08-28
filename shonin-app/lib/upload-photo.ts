@@ -23,7 +23,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
     const { data: authData, error: authError } = await supabase.auth.getUser()
 
     if (authError) {
-      console.error('認証エラー:', authError)
       throw new Error('認証に失敗しました。ログインし直してください。')
     }
 
@@ -32,11 +31,7 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
     }
 
     if (authData.user.id !== userId) {
-      console.error('ユーザーID不一致:', { 
-        authUserId: authData.user.id, 
-        providedUserId: userId 
-      })
-      throw new Error('認証されたユーザーIDと提供されたユーザーIDが一致しません。')
+      throw new Error('ユーザーが認証されていません。ログインしてください。')
     }
 
     // セッションの所有者確認
@@ -47,21 +42,16 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       .single()
 
     if (sessionError) {
-      console.error('セッション確認エラー:', sessionError)
-      throw new Error('セッション情報の確認に失敗しました。')
+      throw new Error('情報の確認に失敗しました。')
     }
 
     if (!sessionData || sessionData.user_id !== userId) {
-      console.error('セッション所有者不一致:', { 
-        sessionUserId: sessionData?.user_id, 
-        providedUserId: userId 
-      })
-      throw new Error('指定されたセッションにアクセスする権限がありません。')
+      throw new Error('アクセス権限がありません。')
     }
 
     // 入力値の検証
     if (!file || !sessionId || !userId) {
-      throw new Error('必要なパラメータが不足しています')
+      throw new Error('ファイルエラー')
     }
 
     // ファイルサイズの検証（10MB制限）
@@ -90,7 +80,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       })
 
     if (error) {
-      console.error('Storage upload error:', error)
       throw new Error(`ストレージへのアップロードに失敗しました: ${error.message}`)
     }
 
@@ -119,22 +108,12 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       .single()
 
     if (dbError) {
-      console.error('Database insert error:', dbError)
-      console.error('Insert data was:', mediaData)
-      console.error('Error details:', {
-        code: dbError.code,
-        message: dbError.message,
-        details: dbError.details,
-        hint: dbError.hint
-      })
-      
       // ストレージからファイルを削除（クリーンアップ）
       try {
         await supabase.storage
           .from('session-media')
           .remove([filePath])
       } catch (cleanupError) {
-        console.error('クリーンアップエラー:', cleanupError)
       }
       
       // より詳細なエラーメッセージ
@@ -155,8 +134,6 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       uploadedAt: dbData.created_at
     }
   } catch (error) {
-    console.error('Photo upload error:', error)
-    
     // エラーの種類に応じてユーザーフレンドリーなメッセージを返す
     if (error instanceof Error) {
       throw error // 既に適切なメッセージが設定されている
@@ -193,7 +170,6 @@ export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto
       .order('created_at', { ascending: true })
 
     if (error) {
-      console.error('Get session photos error:', error)
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
@@ -205,7 +181,6 @@ export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto
       uploadedAt: media.created_at
     }))
   } catch (error) {
-    console.error('Get session photos error:', error)
     throw error
   }
 }
@@ -225,13 +200,11 @@ export async function hasSessionPhotos(sessionId: string): Promise<boolean> {
       .limit(1)
 
     if (error) {
-      console.error('Check session photos error:', error)
       return false
     }
 
     return data.length > 0
   } catch (error) {
-    console.error('Check session photos error:', error)
     return false
   }
 }
@@ -254,7 +227,6 @@ export async function hasSessionPhotosMultiple(sessionIds: string[]): Promise<Re
       .eq('media_type', 'image')
 
     if (error) {
-      console.error('Check multiple session photos error:', error)
       return sessionIds.reduce((acc, id) => ({ ...acc, [id]: false }), {})
     }
 
@@ -266,7 +238,6 @@ export async function hasSessionPhotosMultiple(sessionIds: string[]): Promise<Re
     }), {})
 
   } catch (error) {
-    console.error('Check multiple session photos error:', error)
     return sessionIds.reduce((acc, id) => ({ ...acc, [id]: false }), {})
   }
 }
@@ -286,7 +257,6 @@ export function preloadImages(urls: string[]): Promise<void> {
       const img = new Image()
       img.onload = () => resolve()
       img.onerror = () => {
-        console.warn(`Failed to preload image: ${url}`)
         resolve() // エラーでも続行
       }
       img.src = url
@@ -328,7 +298,6 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
       .order('created_at', { ascending: true })
 
     if (error) {
-      console.error('Get session photos error:', error)
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
@@ -352,7 +321,6 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
 
     return { photos, preloadPromise, preloadedStates }
   } catch (error) {
-    console.error('Get session photos error:', error)
     throw error
   }
 } 

@@ -143,7 +143,6 @@ export const getSessionsForWeekDate = (
 // 月の日数を取得
 export const getDaysInMonth = (date: Date) => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-    console.error('Invalid date passed to getDaysInMonth:', date)
     date = new Date() // デフォルトで今日の日付を使用
   }
   

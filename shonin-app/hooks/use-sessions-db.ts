@@ -49,13 +49,11 @@ export function useSessionsDb() {
         .order('start_time', { ascending: false })
 
       if (error) {
-        console.error('Sessions fetch error:', error)
         throw error
       }
 
       setSessions(data || [])
     } catch (err) {
-      console.error('Error in fetchSessions:', err)
       setError(err instanceof Error ? err.message : 'セッションの取得に失敗しました')
     } finally {
       setLoading(false)
@@ -80,25 +78,15 @@ export function useSessionsDb() {
         .single()
 
       if (error) {
-        console.error('Session insert error:')
-        console.error('Message:', error.message)
-        console.error('Details:', error.details)
-        console.error('Hint:', error.hint)
-        console.error('Code:', error.code)
-        console.error('Full error:', JSON.stringify(error, null, 2))
         throw new Error(`Session insert failed: ${error.message || 'Unknown error'}`)
       }
 
       // skipRefetchがfalseの場合のみリストを更新
       if (!skipRefetch) {
-        fetchSessions().catch(console.error)
+        fetchSessions()
       }
       return data.id
     } catch (err) {
-      console.error('Error in addSession:')
-      console.error('Message:', err instanceof Error ? err.message : String(err))
-      console.error('Stack:', err instanceof Error ? err.stack : undefined)
-      console.error('Full error:', JSON.stringify(err, null, 2))
       setError(err instanceof Error ? err.message : 'セッションの追加に失敗しました')
       return null
     }
@@ -113,17 +101,15 @@ export function useSessionsDb() {
         .eq('id', id)
 
       if (error) {
-        console.error('Session update error:', error)
         throw error
       }
 
       // skipRefetchがfalseの場合のみリストを更新
       if (!skipRefetch) {
-        fetchSessions().catch(console.error)
+        fetchSessions()
       }
       return true
     } catch (err) {
-      console.error('Error in updateSession:', err)
       setError(err instanceof Error ? err.message : 'セッションの更新に失敗しました')
       return false
     }
@@ -138,15 +124,13 @@ export function useSessionsDb() {
         .eq('id', id)
 
       if (error) {
-        console.error('Session delete error:', error)
         throw error
       }
 
       // リストを更新（非同期で実行、エラーは無視）
-      fetchSessions().catch(console.error)
+      fetchSessions()
       return true
     } catch (err) {
-      console.error('Error in deleteSession:', err)
       setError(err instanceof Error ? err.message : 'セッションの削除に失敗しました')
       return false
     }
@@ -178,7 +162,6 @@ export function useSessionsDb() {
 
       return data || []
     } catch (err) {
-      console.error('Error in getSessionsByDateRange:', err)
       setError(err instanceof Error ? err.message : '期間指定セッションの取得に失敗しました')
       return []
     }
@@ -229,7 +212,6 @@ export function useSessionsDb() {
 
       return Object.values(stats || {})
     } catch (err) {
-      console.error('Error in getActivityStats:', err)
       setError(err instanceof Error ? err.message : '統計の取得に失敗しました')
       return []
     }

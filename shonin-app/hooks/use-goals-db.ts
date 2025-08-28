@@ -45,13 +45,11 @@ export function useSingleGoal(goalId: string) {
           .single()
 
         if (error) {
-          console.error('Goal fetch error:', error)
           throw error
         }
 
         setGoal(data)
       } catch (err) {
-        console.error('Error in fetchGoal:', err)
         setError(err instanceof Error ? err.message : '目標の取得に失敗しました')
         setGoal(null)
       } finally {
@@ -94,14 +92,12 @@ export function useGoalsDb() {
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.error('Goals fetch error:', error)
         throw error
       }
 
 
       setGoals(data || [])
     } catch (err) {
-      console.error('Error in fetchGoals:', err)
       setError(err instanceof Error ? err.message : '目標の取得に失敗しました')
     } finally {
       setLoading(false)
@@ -143,7 +139,6 @@ export function useGoalsDb() {
         .single()
 
       if (error) {
-        console.error('Goal insert error:', error)
         throw error
       }
 
@@ -151,7 +146,6 @@ export function useGoalsDb() {
       await fetchGoals() // リストを更新
       return data.id
     } catch (err) {
-      console.error('Error in addGoal:', err)
       setError(err instanceof Error ? err.message : '目標の追加に失敗しました')
       return null
     }
@@ -192,7 +186,6 @@ export function useGoalsDb() {
         .eq('user_id', user.id)
 
       if (error) {
-        console.error('Goal update error:', error)
         throw error
       }
 
@@ -200,7 +193,6 @@ export function useGoalsDb() {
       await fetchGoals() // リストを更新
       return true
     } catch (err) {
-      console.error('Error in updateGoal:', err)
       setError(err instanceof Error ? err.message : '目標の更新に失敗しました')
       return false
     }
@@ -223,7 +215,6 @@ export function useGoalsDb() {
         .single()
 
       if (fetchError || !currentGoal) {
-        console.error('Goal fetch error:', fetchError)
         throw new Error('目標が見つかりません')
       }
 
@@ -240,14 +231,12 @@ export function useGoalsDb() {
         .eq('user_id', user.id)
 
       if (error) {
-        console.error('Goal progress update error:', error)
         throw error
       }
 
       await fetchGoals(true) // リストを更新（強制ローディング）
       return true
     } catch (err) {
-      console.error('Error in updateGoalProgress:', err)
       setError(err instanceof Error ? err.message : '目標進捗の更新に失敗しました')
       return false
     }
@@ -268,14 +257,12 @@ export function useGoalsDb() {
         .eq('user_id', user.id)
 
       if (error) {
-        console.error('Goal delete error:', error)
         throw error
       }
 
       await fetchGoals() // リストを更新
       return true
     } catch (err) {
-      console.error('Error in deleteGoal:', err)
       setError(err instanceof Error ? err.message : '目標の削除に失敗しました')
       return false
     }
@@ -299,14 +286,12 @@ export function useGoalsDb() {
         .eq('user_id', user.id)
 
       if (error) {
-        console.error('Goal completion error:', error)
         throw error
       }
 
       await fetchGoals() // リストを更新
       return true
     } catch (err) {
-      console.error('Error in completeGoal:', err)
       setError(err instanceof Error ? err.message : '目標の完了に失敗しました')
       return false
     }

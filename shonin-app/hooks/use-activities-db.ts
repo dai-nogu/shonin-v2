@@ -34,13 +34,11 @@ export function useActivitiesDb() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Activities fetch error:', error)
         throw error
       }
 
       setActivities(data || [])
     } catch (err) {
-      console.error('Error in fetchActivities:', err)
       setError(err instanceof Error ? err.message : 'アクティビティの取得に失敗しました')
     } finally {
       setLoading(false)
@@ -65,14 +63,12 @@ export function useActivitiesDb() {
         .single()
 
       if (error) {
-        console.error('Activity insert error:', error)
         throw error
       }
 
       await fetchActivities() // リストを更新
       return data.id
     } catch (err) {
-      console.error('Error in addActivity:', err)
       setError(err instanceof Error ? err.message : 'アクティビティの追加に失敗しました')
       return null
     }
@@ -87,14 +83,12 @@ export function useActivitiesDb() {
         .eq('id', id)
 
       if (error) {
-        console.error('Activity update error:', error)
         throw error
       }
 
       await fetchActivities() // リストを更新
       return true
     } catch (err) {
-      console.error('Error in updateActivity:', err)
       setError(err instanceof Error ? err.message : 'アクティビティの更新に失敗しました')
       return false
     }
@@ -109,14 +103,12 @@ export function useActivitiesDb() {
         .eq('id', id)
 
       if (error) {
-        console.error('Activity delete error:', error)
         throw error
       }
 
       await fetchActivities() // リストを更新
       return true
     } catch (err) {
-      console.error('Error in deleteActivity:', err)
       setError(err instanceof Error ? err.message : 'アクティビティの削除に失敗しました')
       return false
     }
