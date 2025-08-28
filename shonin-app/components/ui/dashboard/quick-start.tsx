@@ -306,7 +306,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           if (newActivityId) {
             activityId = newActivityId
           } else {
-            console.error('Failed to create activity for QuickStart')
+            // アクティビティ作成に失敗した場合は処理を中止
             return
           }
         }

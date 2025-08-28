@@ -565,7 +565,6 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             console.warn('一部の画像のプリロードに失敗しました:', preloadError)
           }
         } catch (error) {
-          console.error('写真の読み込みに失敗しました:', error)
           // エラー時は空配列を設定
           setSessionPhotos([])
         } finally {

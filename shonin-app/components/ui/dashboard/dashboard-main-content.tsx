@@ -8,6 +8,7 @@ import { AIFeedback } from "./ai-feedback"
 import { useSessions } from "@/contexts/sessions-context"
 import { useSessionList } from "@/hooks/useSessionList"
 import { useSessionPhotos } from "@/hooks/useSessionPhotos"
+import { useToast } from "@/contexts/toast-context"
 import type { SessionData } from "./time-tracker"
 
 interface DashboardMainContentProps {
@@ -17,6 +18,7 @@ interface DashboardMainContentProps {
 
 export function DashboardMainContent({ initialCompletedSessions, user }: DashboardMainContentProps) {
   const router = useRouter()
+  const { showError } = useToast()
   
   // セッション一覧取得フック
   const { user: currentUser, isInitialized, completedSessions, setCompletedSessions } = useSessionList()
@@ -40,7 +42,7 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
       // セッション開始直後に専用ページに遷移
       router.push("/session")
     } catch (error) {
-      console.error("セッション開始エラー:", error)
+      showError('セッションの開始に失敗しました')
     }
   }
 

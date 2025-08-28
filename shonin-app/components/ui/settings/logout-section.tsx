@@ -36,7 +36,6 @@ export function LogoutSection() {
       // ログアウト後にログインページにリダイレクト
       router.push('/login')
     } catch (error) {
-      console.error('ログアウトエラー:', error)
       showError("ログアウト中にエラーが発生しました。時間をおいて再度お試しください。")
     } finally {
       setIsLoggingOut(false)

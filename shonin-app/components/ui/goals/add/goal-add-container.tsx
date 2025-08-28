@@ -47,8 +47,7 @@ export function GoalAddContainer() {
       }
       // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない
     } catch (error) {
-      console.error('目標追加エラー:', error)
-      // エラーは useGoalsDb hook で既に処理されているので、重複alertは削除
+      // エラーは useGoalsDb hook で既に処理されているので、重複処理は削除
     } finally {
       setIsSubmitting(false)
     }

@@ -6,11 +6,13 @@ import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { BottomNavigation } from "@/components/layout/bottom-navigation"
 import { useSessions } from "@/contexts/sessions-context"
+import { useToast } from "@/contexts/toast-context"
 import { ActiveSession } from "@/components/ui/dashboard/active-session"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 
 export default function SessionPage() {
   const router = useRouter()
+  const { showError } = useToast()
 
   // セッションコンテキストから状態を取得
   const {
@@ -44,7 +46,7 @@ export default function SessionPage() {
       router.push('/dashboard')
       return sessionId
     } catch (error) {
-      console.error("セッション保存エラー:", error)
+      showError('保存に失敗しました')
       return null
     }
   }

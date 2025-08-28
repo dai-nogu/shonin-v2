@@ -76,8 +76,8 @@ export function useReflectionsDb() {
           // データが見つからない場合
           return null;
         }
-        console.error('振り返り取得エラー:', error);
-        setError(`振り返りの取得に失敗しました: ${error.message}`);
+        console.error('振り返りの取得に失敗しました');
+        setError('振り返りの取得に失敗しました');
         return null;
       }
 

@@ -37,12 +37,9 @@ export async function POST(request: NextRequest) {
     const { data: deletedUser, error } = await supabaseServer.auth.admin.deleteUser(user.id)
 
     if (error) {
-      console.error('ユーザー削除エラー:', error.message)
+      console.error('アカウント削除に失敗しました')
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
-
-    // 削除成功ログ
-    console.log('ユーザー削除完了', { userId: user.id })
 
     return NextResponse.json({ message: 'ユーザーが削除されました' }, { status: 200 })
   } catch (error) {

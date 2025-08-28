@@ -43,8 +43,7 @@ export function ProfileSettings() {
       if (success) {
       }
     } catch (error) {
-      console.error('プロフィール保存エラー:', error)
-      // エラーは useUserProfile hook で既に処理されているので、重複alertは削除
+      // エラーは useUserProfile hook で既に処理されているので、重複処理は削除
     } finally {
       setIsSaving(false)
     }

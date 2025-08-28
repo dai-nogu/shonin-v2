@@ -41,18 +41,13 @@ export function DeleteAccountSection() {
       }
 
       // Step 1: データベース関数を使用してStorageオブジェクトを削除
-      console.log('Storageのメディアファイルを削除中...')
       const { data: storageDeleteResult, error: storageDeleteError } = await supabase.rpc('handle_delete_user_created_objects')
       
       if (storageDeleteError) {
-        console.error('Storageファイル削除エラー:', storageDeleteError)
         showWarning('ファイルの削除に失敗しました。続行しますか？')
-      } else if (storageDeleteResult) {
-        console.log('Storageのファイルが削除されました')
       }
 
       // Step 2: サーバーサイドでauth.userとデータベースレコードを削除
-      console.log('ユーザーアカウントを削除中...')
       const response = await fetch('/api/deleteUser', {
         method: 'POST',
         headers: {
@@ -68,11 +63,9 @@ export function DeleteAccountSection() {
         router.push('/login')
       } else {
         const error = await response.json()
-        console.error('アカウント削除エラー:', error)
         showError('アカウント削除に失敗しました。再度お試しください。')
       }
     } catch (error) {
-      console.error('アカウント削除エラー:', error)
       // レスポンスのパースに失敗した場合やネットワークエラーの場合
       showError('エラーが発生しました。再度お試しください。')
     } finally {

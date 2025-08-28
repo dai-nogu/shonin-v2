@@ -115,15 +115,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       if (success) {
         // 目標進捗更新成功
       } else {
-        console.error('目標進捗の更新が失敗しました')
+        // 目標進捗の更新が失敗（エラーは上位で処理）
       }
     } catch (error) {
-      console.error('目標進捗の更新に失敗:', error)
-      console.error('エラー詳細:', { 
-        goalId: sessionData.goalId, 
-        duration: sessionData.duration,
-        errorMessage: error instanceof Error ? error.message : String(error)
-      })
       // エラーが発生してもセッション保存は継続
     }
   }
@@ -298,7 +292,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setSessionState("active")
       
     } catch (error) {
-      console.error('セッション開始時のDB保存エラー:', error)
       // エラーが発生してもセッションは開始する
       const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
       const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
@@ -447,7 +440,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       
       return mainSessionId
     } catch (error) {
-      console.error("セッション保存エラー:", error)
       throw error
     } finally {
       // 保存処理終了フラグをリセット

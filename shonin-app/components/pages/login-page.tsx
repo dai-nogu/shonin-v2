@@ -2,20 +2,21 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
+import { useToast } from '@/contexts/toast-context'
 import { Button } from '@/components/ui/common/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/common/card'
 
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { signInWithGoogle } = useAuth()
+  const { showError } = useToast()
 
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true)
       await signInWithGoogle()
     } catch (error) {
-      console.error('ログインエラー:', error)
-      // TODO: エラートーストを表示
+      showError('ログインに失敗しました。再度お試しください')
     } finally {
       setIsLoading(false)
     }

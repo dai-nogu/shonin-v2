@@ -195,7 +195,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           const uploadedPhotoResults = await uploadPhotos(photos, savedSessionId, user.id)
           setPhotos([]) // アップロード完了後にクリア
         } catch (photoError) {
-          console.error('写真アップロードエラー:', photoError)
           // 写真アップロードに失敗してもセッション保存は継続
         } finally {
           setIsUploading(false)
@@ -226,7 +225,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       clearLocalStorage()
       
     } catch (error) {
-      console.error('保存処理でエラーが発生:', error)
       setLocalReflectionError('保存処理でエラーが発生しました。')
     } finally {
       setIsSaving(false)

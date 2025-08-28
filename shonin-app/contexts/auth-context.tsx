@@ -67,11 +67,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
       
       if (error) {
-        console.error('Google認証エラー:', error.message)
         throw error
       }
     } catch (error) {
-      console.error('認証処理エラー:', error)
       throw error
     }
   }
@@ -81,7 +79,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('ログアウトエラー:', error.message)
         throw error
       }
       
@@ -101,7 +98,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem('lastVisit_evening')
       }
     } catch (error) {
-      console.error('ログアウト処理エラー:', error)
       throw error
     }
   }
