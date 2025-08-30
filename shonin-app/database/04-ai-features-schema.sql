@@ -98,13 +98,9 @@ SELECT
     
     -- 振り返りデータ
     mood_score,
-    mood_notes,
     detailed_achievements,
-    achievement_satisfaction,
     detailed_challenges,
-    challenge_severity,
     reflection_notes,
-    reflection_duration,
     
     -- AI分析結果
     ai_sentiment_score,

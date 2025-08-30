@@ -24,13 +24,11 @@ export function useReflectionsDb() {
         .from('sessions')
         .update({
           mood_score: reflection.moodScore,
-          mood_notes: reflection.moodNotes || null,
           detailed_achievements: reflection.achievements,
           // achievement_satisfaction: reflection.achievementsRating || null, // UI未実装のため削除
           detailed_challenges: reflection.challenges,
           // challenge_severity: reflection.challengesSeverity || null, // UI未実装のため削除
           reflection_notes: reflection.additionalNotes || null,
-          reflection_duration: reflection.reflectionDuration || null,
         })
         .eq('id', sessionId)
         .select('id')

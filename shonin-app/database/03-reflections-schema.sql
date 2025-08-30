@@ -15,11 +15,6 @@ BEGIN
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'sessions' AND column_name = 'mood_notes') THEN
-        ALTER TABLE public.sessions ADD COLUMN mood_notes TEXT;
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_name = 'sessions' AND column_name = 'detailed_achievements') THEN
         ALTER TABLE public.sessions ADD COLUMN detailed_achievements TEXT;
     END IF;
@@ -32,11 +27,6 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_name = 'sessions' AND column_name = 'reflection_notes') THEN
         ALTER TABLE public.sessions ADD COLUMN reflection_notes TEXT;
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'sessions' AND column_name = 'reflection_duration') THEN
-        ALTER TABLE public.sessions ADD COLUMN reflection_duration INTEGER;
     END IF;
 EXCEPTION
     WHEN others THEN
@@ -75,11 +65,9 @@ BEGIN
             
             -- 振り返りデータ
             mood_score,
-            mood_notes,
             detailed_achievements,
             detailed_challenges,
             reflection_notes,
-            reflection_duration,
             
             created_at,
             updated_at
@@ -108,11 +96,9 @@ BEGIN
             
             -- 振り返りデータ
             mood_score,
-            mood_notes,
             detailed_achievements,
             detailed_challenges,
             reflection_notes,
-            reflection_duration,
             
             created_at,
             updated_at
@@ -130,8 +116,6 @@ END $$;
 -- カラムコメント
 -- ==========================================
 COMMENT ON COLUMN public.sessions.mood_score IS '気分評価（1-5段階）';
-COMMENT ON COLUMN public.sessions.mood_notes IS '気分についての詳細メモ';
 COMMENT ON COLUMN public.sessions.detailed_achievements IS '詳細な成果記録';
 COMMENT ON COLUMN public.sessions.detailed_challenges IS '詳細な課題記録';
-COMMENT ON COLUMN public.sessions.reflection_notes IS 'その他の振り返りメモ';
-COMMENT ON COLUMN public.sessions.reflection_duration IS '振り返りにかけた時間（秒）'; 
+COMMENT ON COLUMN public.sessions.reflection_notes IS 'その他の振り返りメモ'; 

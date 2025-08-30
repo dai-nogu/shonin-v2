@@ -112,13 +112,11 @@ export interface Database {
           
           // 詳細振り返り情報
           mood_score?: number | null
-          mood_notes?: string | null
           detailed_achievements?: string | null
           achievement_satisfaction?: number | null
           detailed_challenges?: string | null
           challenge_severity?: number | null
           reflection_notes?: string | null
-          reflection_duration?: number | null
           
           // AI分析結果
           ai_sentiment_score?: number | null
@@ -150,13 +148,11 @@ export interface Database {
           
           // 詳細振り返り情報
           mood_score?: number | null
-          mood_notes?: string | null
           detailed_achievements?: string | null
           achievement_satisfaction?: number | null
           detailed_challenges?: string | null
           challenge_severity?: number | null
           reflection_notes?: string | null
-          reflection_duration?: number | null
           
           // AI分析結果
           ai_sentiment_score?: number | null
@@ -359,13 +355,11 @@ export interface Session {
   
   // 詳細振り返り情報（統合済み）
   mood_score?: number;
-  mood_notes?: string;
   detailed_achievements?: string;
   achievement_satisfaction?: number;
   detailed_challenges?: string;
   challenge_severity?: number;
   reflection_notes?: string;
-  reflection_duration?: number;
   
   // AI分析結果（統合済み）
   ai_sentiment_score?: number;
@@ -420,11 +414,9 @@ export interface SessionMedia {
 
 export interface SessionReflection {
   moodScore: number;
-  moodNotes?: string;
   achievements: string;
   achievementsRating?: number;
   challenges: string;
   challengesSeverity?: number;
   additionalNotes?: string;
-  reflectionDuration?: number;
 } 
