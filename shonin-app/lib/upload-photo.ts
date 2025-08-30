@@ -161,6 +161,8 @@ export async function uploadPhotos(files: File[], sessionId: string, userId: str
  * @returns 写真の配列
  */
 export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto[]> {
+  const supabase = createClient()
+  
   try {
     const { data, error } = await supabase
       .from('session_media')
@@ -191,6 +193,8 @@ export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto
  * @returns 写真の有無
  */
 export async function hasSessionPhotos(sessionId: string): Promise<boolean> {
+  const supabase = createClient()
+  
   try {
     const { data, error } = await supabase
       .from('session_media')
@@ -219,6 +223,8 @@ export async function hasSessionPhotosMultiple(sessionIds: string[]): Promise<Re
     return {}
   }
 
+  const supabase = createClient()
+
   try {
     const { data, error } = await supabase
       .from('session_media')
@@ -231,7 +237,7 @@ export async function hasSessionPhotosMultiple(sessionIds: string[]): Promise<Re
     }
 
     // セッションIDごとに写真の有無をマッピング
-    const sessionsWithPhotos = new Set(data.map(item => item.session_id))
+    const sessionsWithPhotos = new Set(data.map((item: { session_id: string }) => item.session_id))
     return sessionIds.reduce((acc, id) => ({
       ...acc,
       [id]: sessionsWithPhotos.has(id)
@@ -289,6 +295,8 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
   preloadPromise: Promise<void>
   preloadedStates: Record<string, boolean>
 }> {
+  const supabase = createClient()
+  
   try {
     const { data, error } = await supabase
       .from('session_media')
@@ -301,7 +309,7 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
-    const photos = data.map(media => ({
+    const photos = data.map((media: any) => ({
       id: media.id,
       url: media.public_url || '',
       fileName: media.file_name,
@@ -310,13 +318,13 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
     }))
 
     // 画像URLを抽出
-    const imageUrls = photos.map(photo => photo.url).filter(url => url !== '')
+    const imageUrls = photos.map((photo: UploadedPhoto) => photo.url).filter((url: string) => url !== '')
     
     // プリロード済み状態を確認
     const preloadedStates = checkPreloadedImages(imageUrls)
     
     // まだプリロードされていない画像のみプリロード
-    const unpreloadedUrls = imageUrls.filter(url => !preloadedStates[url])
+    const unpreloadedUrls = imageUrls.filter((url: string) => !preloadedStates[url])
     const preloadPromise = unpreloadedUrls.length > 0 ? preloadImages(unpreloadedUrls) : Promise.resolve()
 
     return { photos, preloadPromise, preloadedStates }

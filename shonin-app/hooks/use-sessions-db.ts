@@ -171,7 +171,7 @@ export function useSessionsDb() {
   const getActivityStats = useCallback(async () => {
     try {
       if (!user?.id) {
-        return {}
+        return []
       }
 
       const { data, error } = await supabase

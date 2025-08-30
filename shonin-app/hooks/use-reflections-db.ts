@@ -139,7 +139,7 @@ export function useReflectionsDb() {
           file_name: fileName,
           file_size: file.size,
           mime_type: file.type,
-          caption: caption || null,
+          caption: caption || undefined,
           is_main_image: i === 0, // 最初の画像をメイン画像に設定
         };
 
