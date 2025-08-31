@@ -58,11 +58,9 @@ export function useReflectionsDb() {
         .from('sessions')
         .select(`
           mood_score,
-          mood_notes,
           detailed_achievements,
           detailed_challenges,
-          reflection_notes,
-          reflection_duration
+          reflection_notes
         `)
         .eq('id', sessionId)
         .single();
@@ -79,13 +77,11 @@ export function useReflectionsDb() {
       // データを変換
       const reflection: SessionReflection = {
         moodScore: data.mood_score || 3,
-        moodNotes: data.mood_notes || undefined,
         achievements: data.detailed_achievements || '',
         achievementsRating: undefined, // UI未実装のため削除
         challenges: data.detailed_challenges || '',
         challengesSeverity: undefined, // UI未実装のため削除
         additionalNotes: data.reflection_notes || undefined,
-        reflectionDuration: data.reflection_duration || undefined,
       };
 
       return reflection;

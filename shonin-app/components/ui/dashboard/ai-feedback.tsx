@@ -1,59 +1,59 @@
-import { MessageCircle, Calendar, TrendingUp, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
+import { MessageCircle, Calendar, TrendingUp, Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Badge } from "@/components/ui/common/badge"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
+import { useAIFeedback } from "@/hooks/use-ai-feedback"
 import type { CompletedSession } from "./time-tracker"
 
 interface AIFeedbackProps {
   completedSessions: CompletedSession[]
 }
 
+interface FeedbackData {
+  type: string
+  date: string
+  message: string
+}
+
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
-  // 先週の日付を計算
-  const getLastWeekString = () => {
-    const today = new Date()
-    
-    // 今週の日曜日を取得
-    const currentSunday = new Date(today)
-    currentSunday.setDate(today.getDate() - today.getDay())
-    
-    // 先週の日曜日を取得
-    const lastSunday = new Date(currentSunday)
-    lastSunday.setDate(currentSunday.getDate() - 7)
-    
-    // 先週の土曜日を取得
-    const lastSaturday = new Date(lastSunday)
-    lastSaturday.setDate(lastSunday.getDate() + 6)
-    
-    // 日付をフォーマット（月/日形式）
-    const formatDate = (date: Date) => {
-      return `${date.getMonth() + 1}/${date.getDate()}`
-    }
-    
-    return `${formatDate(lastSunday)} 〜 ${formatDate(lastSaturday)}`
+  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
+    { type: "週次", date: "", message: "フィードバックを読み込み中..." },
+    { type: "月次", date: "", message: "フィードバックを読み込み中..." }
+  ])
+  
+  const { 
+    isLoading, 
+    error, 
+    generateWeeklyFeedback, 
+    generateMonthlyFeedback,
+    getLastWeekRange,
+    getLastMonthRange
+  } = useAIFeedback()
+
+  // 日付をフォーマット（月/日形式）
+  const formatDate = (date: Date) => {
+    return `${date.getMonth() + 1}/${date.getDate()}`
   }
 
-  // 週次フィードバック
-  const weeklyFeedback = {
-    type: "週次",
-    date: getLastWeekString(),
-    message: "",
+  // 日付範囲を文字列に変換
+  const formatDateRange = (start: string, end: string) => {
+    const startDate = new Date(start)
+    const endDate = new Date(end)
+    return `${formatDate(startDate)} 〜 ${formatDate(endDate)}`
   }
 
-  // 先月の日付を計算
-  const getLastMonthString = () => {
+  // 来週月曜日の日付を計算
+  const getNextWeekMonday = () => {
     const today = new Date()
-    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0)
-    
-    const formatDate = (date: Date) => {
-      return `${date.getMonth() + 1}/${date.getDate()}`
-    }
-    
-    return `${formatDate(lastMonth)} 〜 ${formatDate(lastMonthEnd)}`
+    const thisWeekMonday = new Date(today)
+    const daysSinceMonday = (today.getDay() + 6) % 7
+    thisWeekMonday.setDate(today.getDate() - daysSinceMonday)
+    const nextWeekMonday = new Date(thisWeekMonday)
+    nextWeekMonday.setDate(thisWeekMonday.getDate() + 7)
+    return `${nextWeekMonday.getMonth() + 1}/${nextWeekMonday.getDate()}`
   }
 
   // 来月1日の日付を計算
@@ -63,30 +63,42 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     return `${nextMonth.getMonth() + 1}/${nextMonth.getDate()}`
   }
 
-  // 来週月曜日の日付を計算
-  const getNextWeekMonday = () => {
-    const today = new Date()
-    
-    // 今週の月曜日を計算
-    const thisWeekMonday = new Date(today)
-    const daysSinceMonday = (today.getDay() + 6) % 7 // 月曜日を0とする
-    thisWeekMonday.setDate(today.getDate() - daysSinceMonday)
-    
-    // 来週の月曜日（今週の月曜日 + 7日）
-    const nextWeekMonday = new Date(thisWeekMonday)
-    nextWeekMonday.setDate(thisWeekMonday.getDate() + 7)
-    
-    return `${nextWeekMonday.getMonth() + 1}/${nextWeekMonday.getDate()}`
+  // フィードバックを読み込む
+  const loadFeedbacks = async () => {
+    try {
+      const weekRange = getLastWeekRange()
+      const monthRange = getLastMonthRange()
+
+      const [weeklyResult, monthlyResult] = await Promise.all([
+        generateWeeklyFeedback(),
+        generateMonthlyFeedback()
+      ])
+
+      setFeedbacks([
+        {
+          type: "週次",
+          date: formatDateRange(weekRange.start, weekRange.end),
+          message: weeklyResult?.feedback || "フィードバックの取得に失敗しました"
+        },
+        {
+          type: "月次", 
+          date: formatDateRange(monthRange.start, monthRange.end),
+          message: monthlyResult?.feedback || "フィードバックの取得に失敗しました"
+        }
+      ])
+    } catch (err) {
+      console.error('フィードバック読み込みエラー:', err)
+      setFeedbacks([
+        { type: "週次", date: "", message: "フィードバックの読み込みに失敗しました" },
+        { type: "月次", date: "", message: "フィードバックの読み込みに失敗しました" }
+      ])
+    }
   }
 
-  // 先月フィードバック
-  const monthlyFeedback = {
-    type: "月次",
-    date: getLastMonthString(),
-    message: "",
-  }
-
-  const feedbacks = [weeklyFeedback, monthlyFeedback]
+  // コンポーネントマウント時にフィードバックを読み込む
+  useEffect(() => {
+    loadFeedbacks()
+  }, [])
 
   // 自動ループ機能
   useEffect(() => {
@@ -121,18 +133,34 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     handleTransition(newIndex)
   }
 
+  const handleRefresh = () => {
+    loadFeedbacks()
+  }
+
   const currentFeedback = feedbacks[currentIndex]
 
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
-                      <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-              {currentFeedback.type}フィードバック
-            </CardTitle>
+          <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
+            <Sparkles className="w-5 h-5 mr-2 text-blue-400" />
+            {currentFeedback.type}フィードバック
+          </CardTitle>
           
-          {/* スライダーコントロール */}
+          {/* コントロール */}
           <div className="flex items-center space-x-2">
+            {/* 更新ボタン */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
+            
             <Button
               variant="ghost"
               size="sm"
@@ -170,16 +198,27 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       <CardContent>
         <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
           {/* 日付表示 */}
-          <div className="flex justify-end mb-2 lg:mb-3">
-            <span className="text-xs text-gray-400">{currentFeedback.date}</span>
-          </div>
+          {currentFeedback.date && (
+            <div className="flex justify-end mb-2 lg:mb-3">
+              <span className="text-xs text-gray-400">{currentFeedback.date}</span>
+            </div>
+          )}
 
           {/* フィードバックメッセージ */}
           <div className="bg-gray-800 rounded-lg p-3 mb-3">
             <div className="flex items-start space-x-2">
               <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
               <p className="text-gray-300 text-sm leading-relaxed">
-                {currentFeedback.message || "フィードバックを準備中です..."}
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                    フィードバックを生成中...
+                  </span>
+                ) : error ? (
+                  <span className="text-red-400">エラー: {error}</span>
+                ) : (
+                  currentFeedback.message
+                )}
               </p>
             </div>
           </div>
