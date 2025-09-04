@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { Database } from '@/types/database';
 
 interface SessionData {
   id: string;
@@ -23,7 +24,18 @@ interface AnalysisRequest {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const supabase = createClient();
+    
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
 
     // ユーザー認証確認
     const { data: { user }, error: authError } = await supabase.auth.getUser();

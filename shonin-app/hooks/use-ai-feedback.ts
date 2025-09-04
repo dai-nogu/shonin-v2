@@ -32,6 +32,7 @@ export function useAIFeedback() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 認証情報を含める
         body: JSON.stringify({
           period_type: periodType,
           period_start: periodStart,

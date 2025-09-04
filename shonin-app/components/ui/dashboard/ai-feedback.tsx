@@ -1,6 +1,5 @@
 import { MessageCircle, Calendar, TrendingUp, Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
-import { Badge } from "@/components/ui/common/badge"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
@@ -20,8 +19,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
-    { type: "週次", date: "", message: "フィードバックを読み込み中..." },
-    { type: "月次", date: "", message: "フィードバックを読み込み中..." }
+    { type: "週次", date: "", message: "セッションを記録すると、週次フィードバックが受け取れます。まずは何か活動を記録してみましょう！" },
+    { type: "月次", date: "", message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねが大切です。" }
   ])
   
   const { 
@@ -89,8 +88,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     } catch (err) {
       console.error('フィードバック読み込みエラー:', err)
       setFeedbacks([
-        { type: "週次", date: "", message: "フィードバックの読み込みに失敗しました" },
-        { type: "月次", date: "", message: "フィードバックの読み込みに失敗しました" }
+        { type: "週次", date: "", message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。" },
+        { type: "月次", date: "", message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。" }
       ])
     }
   }
