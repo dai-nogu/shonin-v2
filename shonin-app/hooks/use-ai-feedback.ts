@@ -10,6 +10,8 @@ interface AIFeedbackResponse {
   period_start: string;
   period_end: string;
   sessions_count?: number;
+  created_at?: string;
+  is_existing?: boolean;
 }
 
 interface AIFeedbackError {
@@ -99,17 +101,98 @@ export function useAIFeedback() {
     };
   }, [timezone]);
 
-  // 週次フィードバックを生成
+  // 週次フィードバックを生成（強制再生成）
   const generateWeeklyFeedback = useCallback(async () => {
     const { start, end } = getLastWeekRange();
     return generateFeedback('weekly', start, end);
   }, [generateFeedback, getLastWeekRange]);
 
-  // 月次フィードバックを生成
+  // 月次フィードバックを生成（強制再生成）
   const generateMonthlyFeedback = useCallback(async () => {
     const { start, end } = getLastMonthRange();
     return generateFeedback('monthly', start, end);
   }, [generateFeedback, getLastMonthRange]);
+
+  // APIルート経由で既存フィードバックを取得
+  const getExistingFeedback = useCallback(async (
+    feedbackType: 'weekly' | 'monthly',
+    periodStart: string,
+    periodEnd: string
+  ): Promise<AIFeedbackResponse | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/ai/get-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // 認証情報を含める
+        body: JSON.stringify({
+          feedback_type: feedbackType,
+          period_start: periodStart,
+          period_end: periodEnd,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'フィードバック取得に失敗しました');
+      }
+
+      const data = await response.json();
+      
+      // フィードバックが存在しない場合
+      if (!data.feedback) {
+        return null;
+      }
+
+      return {
+        feedback: data.feedback,
+        period_type: data.period_type as 'weekly' | 'monthly',
+        period_start: data.period_start,
+        period_end: data.period_end,
+        created_at: data.created_at,
+        is_existing: true
+      };
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'フィードバック取得中にエラーが発生しました';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // 週次フィードバックを取得（既存 or 新規生成）
+  const getWeeklyFeedback = useCallback(async () => {
+    const { start, end } = getLastWeekRange();
+    
+    // まずDBから既存をチェック
+    const existing = await getExistingFeedback('weekly', start, end);
+    if (existing) {
+      return existing;
+    }
+    
+    // 存在しない場合は新規生成
+    return generateFeedback('weekly', start, end);
+  }, [getLastWeekRange, getExistingFeedback, generateFeedback]);
+
+  // 月次フィードバックを取得（既存 or 新規生成）
+  const getMonthlyFeedback = useCallback(async () => {
+    const { start, end } = getLastMonthRange();
+    
+    // まずDBから既存をチェック
+    const existing = await getExistingFeedback('monthly', start, end);
+    if (existing) {
+      return existing;
+    }
+    
+    // 存在しない場合は新規生成
+    return generateFeedback('monthly', start, end);
+  }, [getLastMonthRange, getExistingFeedback, generateFeedback]);
 
   return {
     isLoading,
@@ -117,6 +200,9 @@ export function useAIFeedback() {
     generateFeedback,
     generateWeeklyFeedback,
     generateMonthlyFeedback,
+    getExistingFeedback,
+    getWeeklyFeedback,
+    getMonthlyFeedback,
     getLastWeekRange,
     getLastMonthRange,
   };

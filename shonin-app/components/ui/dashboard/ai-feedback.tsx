@@ -26,6 +26,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const { 
     isLoading, 
     error, 
+    getWeeklyFeedback, 
+    getMonthlyFeedback,
     generateWeeklyFeedback, 
     generateMonthlyFeedback,
     getLastWeekRange,
@@ -69,22 +71,43 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       const monthRange = getLastMonthRange()
 
       const [weeklyResult, monthlyResult] = await Promise.all([
-        generateWeeklyFeedback(),
-        generateMonthlyFeedback()
+        getWeeklyFeedback(),
+        getMonthlyFeedback()
       ])
 
-      setFeedbacks([
-        {
+      const newFeedbacks = []
+
+      // 週次フィードバック
+      if (weeklyResult?.feedback) {
+        newFeedbacks.push({
           type: "週次",
-          date: formatDateRange(weekRange.start, weekRange.end),
-          message: weeklyResult?.feedback || "フィードバックの取得に失敗しました"
-        },
-        {
+          date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
+          message: weeklyResult.feedback
+        })
+      } else {
+        newFeedbacks.push({
+          type: "週次", 
+          date: "", 
+          message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。"
+        })
+      }
+
+      // 月次フィードバック
+      if (monthlyResult?.feedback) {
+        newFeedbacks.push({
+          type: "月次",
+          date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
+          message: monthlyResult.feedback
+        })
+      } else {
+        newFeedbacks.push({
           type: "月次", 
-          date: formatDateRange(monthRange.start, monthRange.end),
-          message: monthlyResult?.feedback || "フィードバックの取得に失敗しました"
-        }
-      ])
+          date: "", 
+          message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。"
+        })
+      }
+
+      setFeedbacks(newFeedbacks)
     } catch (err) {
       console.error('フィードバック読み込みエラー:', err)
       setFeedbacks([
@@ -132,8 +155,55 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     handleTransition(newIndex)
   }
 
-  const handleRefresh = () => {
-    loadFeedbacks()
+  const handleRefresh = async () => {
+    try {
+      const weekRange = getLastWeekRange()
+      const monthRange = getLastMonthRange()
+
+      // 強制的に新しいフィードバックを生成
+      const [weeklyResult, monthlyResult] = await Promise.all([
+        generateWeeklyFeedback(),
+        generateMonthlyFeedback()
+      ])
+
+      const newFeedbacks = []
+
+      // 週次フィードバック
+      if (weeklyResult?.feedback) {
+        newFeedbacks.push({
+          type: "週次",
+          date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
+          message: weeklyResult.feedback
+        })
+      } else {
+        newFeedbacks.push({
+          type: "週次", 
+          date: "", 
+          message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。"
+        })
+      }
+
+      // 月次フィードバック
+      if (monthlyResult?.feedback) {
+        newFeedbacks.push({
+          type: "月次",
+          date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
+          message: monthlyResult.feedback
+        })
+      } else {
+        newFeedbacks.push({
+          type: "月次", 
+          date: "", 
+          message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。"
+        })
+      }
+
+      setFeedbacks(newFeedbacks)
+    } catch (err) {
+      console.error('フィードバック更新エラー:', err)
+      // エラー時は既存のフィードバックを再読み込み
+      loadFeedbacks()
+    }
   }
 
   const currentFeedback = feedbacks[currentIndex]
@@ -178,6 +248,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
                   className={`w-2 h-2 rounded-full transition-colors ${
                     index === currentIndex ? 'bg-blue-500' : 'bg-gray-600'
                   }`}
+                  aria-label={`${index === 0 ? '週次' : '月次'}フィードバックに切り替え`}
                 />
               ))}
             </div>
