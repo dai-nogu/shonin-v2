@@ -93,13 +93,10 @@ export function useAIFeedback() {
     // 前月の末日（今月の0日目 = 前月の最終日）
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
     
-    const result = {
+    return {
       start: getDateStringInTimezone(lastMonthStart, timezone),
       end: getDateStringInTimezone(lastMonthEnd, timezone),
     };
-    
-    console.log('月次フィードバック期間 (タイムゾーン考慮):', result);
-    return result;
   }, [timezone]);
 
   // 週次フィードバックを生成

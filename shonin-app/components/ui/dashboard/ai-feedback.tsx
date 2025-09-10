@@ -68,9 +68,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       const weekRange = getLastWeekRange()
       const monthRange = getLastMonthRange()
 
-      // デバッグ用：期間を確認
-      console.log('月次フィードバック期間:', monthRange)
-
       const [weeklyResult, monthlyResult] = await Promise.all([
         generateWeeklyFeedback(),
         generateMonthlyFeedback()
