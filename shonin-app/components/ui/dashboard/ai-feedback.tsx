@@ -28,6 +28,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     error, 
     getWeeklyFeedback, 
     getMonthlyFeedback,
+    getExistingFeedback,
     generateWeeklyFeedback, 
     generateMonthlyFeedback,
     getLastWeekRange,
@@ -160,10 +161,10 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       const weekRange = getLastWeekRange()
       const monthRange = getLastMonthRange()
 
-      // 強制的に新しいフィードバックを生成
+      // 既存のフィードバックのみを取得（新規生成はしない）
       const [weeklyResult, monthlyResult] = await Promise.all([
-        generateWeeklyFeedback(),
-        generateMonthlyFeedback()
+        getExistingFeedback('weekly', weekRange.start, weekRange.end),
+        getExistingFeedback('monthly', monthRange.start, monthRange.end)
       ])
 
       const newFeedbacks = []
@@ -200,9 +201,11 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
       setFeedbacks(newFeedbacks)
     } catch (err) {
-      console.error('フィードバック更新エラー:', err)
-      // エラー時は既存のフィードバックを再読み込み
-      loadFeedbacks()
+      console.error('フィードバック再読み込みエラー:', err)
+      setFeedbacks([
+        { type: "週次", date: "", message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。" },
+        { type: "月次", date: "", message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。" }
+      ])
     }
   }
 
