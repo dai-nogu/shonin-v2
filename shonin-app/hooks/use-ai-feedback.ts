@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { getDateStringInTimezone } from '@/lib/timezone-utils';
+import { useTimezone } from '@/contexts/timezone-context';
 
 interface AIFeedbackResponse {
   feedback: string;
@@ -17,6 +19,7 @@ interface AIFeedbackError {
 export function useAIFeedback() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { timezone } = useTimezone();
 
   const generateFeedback = useCallback(async (
     periodType: 'weekly' | 'monthly',
@@ -75,22 +78,29 @@ export function useAIFeedback() {
     lastWeekSunday.setDate(lastWeekMonday.getDate() + 6);
     
     return {
-      start: lastWeekMonday.toISOString().split('T')[0],
-      end: lastWeekSunday.toISOString().split('T')[0],
+      start: getDateStringInTimezone(lastWeekMonday, timezone),
+      end: getDateStringInTimezone(lastWeekSunday, timezone),
     };
-  }, []);
+  }, [timezone]);
 
-  // 先月の日付範囲を計算
+  // 先月の日付範囲を計算（前月1日〜前月末日）
   const getLastMonthRange = useCallback(() => {
     const today = new Date();
-    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    
+    // 前月の1日
+    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    
+    // 前月の末日（今月の0日目 = 前月の最終日）
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
     
-    return {
-      start: lastMonth.toISOString().split('T')[0],
-      end: lastMonthEnd.toISOString().split('T')[0],
+    const result = {
+      start: getDateStringInTimezone(lastMonthStart, timezone),
+      end: getDateStringInTimezone(lastMonthEnd, timezone),
     };
-  }, []);
+    
+    console.log('月次フィードバック期間 (タイムゾーン考慮):', result);
+    return result;
+  }, [timezone]);
 
   // 週次フィードバックを生成
   const generateWeeklyFeedback = useCallback(async () => {
