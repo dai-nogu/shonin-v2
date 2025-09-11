@@ -123,18 +123,18 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     loadFeedbacks()
   }, [])
 
-  // 自動ループ機能
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % feedbacks.length)
-        setIsTransitioning(false)
-      }, 1000) // フェードアウト時間
-    }, 20000) // 20秒ごとに切り替え
+  // 自動ループ機能は無効化（手動操作のみ）
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setIsTransitioning(true)
+  //     setTimeout(() => {
+  //       setCurrentIndex((prev) => (prev + 1) % feedbacks.length)
+  //       setIsTransitioning(false)
+  //     }, 1000) // フェードアウト時間
+  //   }, 20000) // 20秒ごとに切り替え
 
-    return () => clearInterval(interval)
-  }, [feedbacks.length])
+  //   return () => clearInterval(interval)
+  // }, [feedbacks.length])
 
   const handleTransition = (newIndex: number) => {
     if (newIndex === currentIndex) return
@@ -209,6 +209,39 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     }
   }
 
+  const handleForceRegenerate = async () => {
+    try {
+      // 現在表示中のフィードバックタイプに応じて強制再生成
+      const isWeekly = currentFeedback.type === "週次"
+      
+      if (isWeekly) {
+        const weeklyResult = await generateWeeklyFeedback()
+        if (weeklyResult?.feedback) {
+          const updatedFeedbacks = [...feedbacks]
+          updatedFeedbacks[0] = {
+            type: "週次",
+            date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
+            message: weeklyResult.feedback
+          }
+          setFeedbacks(updatedFeedbacks)
+        }
+      } else {
+        const monthlyResult = await generateMonthlyFeedback()
+        if (monthlyResult?.feedback) {
+          const updatedFeedbacks = [...feedbacks]
+          updatedFeedbacks[1] = {
+            type: "月次",
+            date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
+            message: monthlyResult.feedback
+          }
+          setFeedbacks(updatedFeedbacks)
+        }
+      }
+    } catch (err) {
+      console.error('フィードバック強制再生成エラー:', err)
+    }
+  }
+
   const currentFeedback = feedbacks[currentIndex]
 
   return (
@@ -222,6 +255,18 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           
           {/* コントロール */}
           <div className="flex items-center space-x-2">
+            {/* 強制再生成ボタン */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleForceRegenerate}
+              disabled={isLoading}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+              title="新しいフィードバックを生成"
+            >
+              <Sparkles className={`w-4 h-4 ${isLoading ? 'animate-pulse' : ''}`} />
+            </Button>
+            
             {/* 更新ボタン */}
             <Button
               variant="ghost"
@@ -229,6 +274,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
               onClick={handleRefresh}
               disabled={isLoading}
               className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
+              title="既存フィードバックを再読み込み"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
