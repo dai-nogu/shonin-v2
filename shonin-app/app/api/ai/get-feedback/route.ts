@@ -33,11 +33,10 @@ export async function POST(request: NextRequest) {
 
     const { feedback_type, period_start, period_end }: GetFeedbackRequest = await request.json();
 
-    // 既存フィードバックを取得
+    // 既存フィードバックを取得（復号化ビュー使用）
     const { data, error: fetchError } = await supabase
-      .from('ai_feedback')
+      .from('ai_feedback_decrypted')
       .select('content, period_start, period_end, feedback_type, created_at')
-      .eq('user_id', user.id)
       .eq('feedback_type', feedback_type)
       .eq('period_start', period_start)
       .eq('period_end', period_end)

@@ -379,9 +379,20 @@ export interface AiFeedbackDatabase {
   id: string;
   user_id: string;
   feedback_type: 'weekly' | 'monthly';
-  content: string;
-  sentiment_score?: number;
-  generated_at: string;
+  content_encrypted: Uint8Array; // pgcryptoで暗号化されたコンテンツ
+  period_start: string;
+  period_end: string;
+  created_at: string;
+}
+
+export interface AiFeedbackDecrypted {
+  id: string;
+  user_id: string;
+  feedback_type: 'weekly' | 'monthly';
+  content: string; // 復号化されたコンテンツ
+  period_start: string;
+  period_end: string;
+  created_at: string;
 }
 
 export interface SessionMediaDatabase {

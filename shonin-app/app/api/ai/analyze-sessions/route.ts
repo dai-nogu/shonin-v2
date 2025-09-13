@@ -97,11 +97,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 過去のフィードバックを取得
+    // 過去のフィードバックを取得（復号化ビュー使用）
     const { data: pastFeedbacks } = await supabase
-      .from('ai_feedback')
+      .from('ai_feedback_decrypted')
       .select('content, period_start, period_end, feedback_type, created_at')
-      .eq('user_id', user.id)
       .eq('feedback_type', period_type)
       .order('created_at', { ascending: false })
       .limit(3); // 過去3回分を参照
@@ -109,15 +108,13 @@ export async function POST(request: NextRequest) {
     // OpenAI APIでフィードバック生成（文字数超過時は再生成）
     const feedback = await generateAIFeedbackWithRetry(sessions, period_type, period_start, period_end, pastFeedbacks || []);
 
-    // フィードバックをデータベースに保存
+    // フィードバックをデータベースに保存（暗号化）
     const { error: saveError } = await supabase
-      .from('ai_feedback')
-      .insert({
-        user_id: user.id,
-        feedback_type: period_type,
-        content: feedback,
-        period_start,
-        period_end
+      .rpc('insert_encrypted_feedback', {
+        p_feedback_type: period_type,
+        p_content: feedback,
+        p_period_start: period_start,
+        p_period_end: period_end
       });
 
     if (saveError) {
