@@ -13,6 +13,13 @@ interface SessionData {
   detailed_challenges?: string;
   reflection_notes?: string;
   location?: string;
+  goal_id?: string;
+  goal_title?: string;
+  goal_description?: string;
+  goal_deadline?: string;
+  goal_target_duration?: number;
+  goal_current_value?: number;
+  goal_status?: string;
 }
 
 interface AnalysisRequest {
@@ -59,7 +66,17 @@ export async function POST(request: NextRequest) {
         location,
         goal_id,
         activities!inner(name),
-        goals(title, description)
+        goals(
+          id,
+          title,
+          description,
+          deadline,
+          target_duration,
+          weekday_hours,
+          weekend_hours,
+          current_value,
+          status
+        )
       `)
       .eq('user_id', user.id)
       .gte('session_date', period_start)
@@ -73,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     if (!sessions || sessions.length === 0) {
       return NextResponse.json({ 
-        feedback: `${period_type === 'weekly' ? '先週' : '先月'}は記録されたデータがありませんでしたが、それでも大丈夫です。休息も大切な時間ですし、新たなスタートを切る準備期間だったのかもしれませんね。いつでもあなたのペースで始めてください。私はいつでもここで見守っています。`,
+        feedback: `${period_type === 'weekly' ? '先週' : '先月'}は記録されたデータがありませんでしたが、それでも大丈夫です。休息も大切な時間ですし、新たなスタートを切る準備期間だったのかもしれませんね。いつでもあなたのペースで始めてください。${period_type === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`,
         period_type,
         period_start,
         period_end
@@ -89,8 +106,8 @@ export async function POST(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(3); // 過去3回分を参照
 
-    // OpenAI APIでフィードバック生成
-    const feedback = await generateAIFeedback(sessions, period_type, period_start, period_end, pastFeedbacks || []);
+    // OpenAI APIでフィードバック生成（文字数超過時は再生成）
+    const feedback = await generateAIFeedbackWithRetry(sessions, period_type, period_start, period_end, pastFeedbacks || []);
 
     // フィードバックをデータベースに保存
     const { error: saveError } = await supabase
@@ -122,12 +139,63 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateAIFeedback(
+async function generateAIFeedbackWithRetry(
   sessions: any[],
   periodType: 'weekly' | 'monthly',
   periodStart: string,
   periodEnd: string,
   pastFeedbacks: any[] = []
+): Promise<string> {
+  const maxRetries = 3;
+  const maxChars = periodType === 'weekly' ? 200 : 550;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const feedback = await generateAIFeedback(sessions, periodType, periodStart, periodEnd, pastFeedbacks, attempt);
+      const charCount = feedback.length;
+      
+      console.log(`Attempt ${attempt}: Generated ${charCount} characters (max: ${maxChars})`);
+      
+      if (charCount <= maxChars) {
+        return feedback;
+      }
+      
+      if (attempt === maxRetries) {
+        // 最後の試行で文字数超過の場合、強制的に調整
+        console.log(`Max retries reached. Truncating to ${maxChars} characters.`);
+        const truncated = feedback.substring(0, maxChars - 50);
+        const lastSentenceEnd = Math.max(
+          truncated.lastIndexOf('。'),
+          truncated.lastIndexOf('！'),
+          truncated.lastIndexOf('？')
+        );
+        
+        if (lastSentenceEnd > maxChars * 0.7) {
+          return truncated.substring(0, lastSentenceEnd + 1);
+        }
+        return truncated;
+      }
+      
+      console.log(`Attempt ${attempt} exceeded ${maxChars} characters (${charCount}). Retrying...`);
+      
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed:`, error);
+      if (attempt === maxRetries) {
+        throw error;
+      }
+    }
+  }
+  
+  throw new Error('Failed to generate feedback within character limit after max retries');
+}
+
+async function generateAIFeedback(
+  sessions: any[],
+  periodType: 'weekly' | 'monthly',
+  periodStart: string,
+  periodEnd: string,
+  pastFeedbacks: any[] = [],
+  attempt: number = 1
 ): Promise<string> {
   try {
     // セッションデータを分析用に整形
@@ -142,6 +210,34 @@ async function generateAIFeedback(
       acc[activityName] = (acc[activityName] || 0) + (session.duration || 0);
       return acc;
     }, {} as Record<string, number>);
+
+    // 目標別の進捗分析
+    const goalProgress = sessions.reduce((acc, session) => {
+      if (session.goals && session.goal_id) {
+        const goalId = session.goal_id;
+        const goalTitle = session.goals.title;
+        const activityName = session.activities?.name || '不明な活動';
+        
+        if (!acc[goalId]) {
+          acc[goalId] = {
+            title: goalTitle,
+            description: session.goals.description,
+            deadline: session.goals.deadline,
+            target_duration: session.goals.target_duration || 0,
+            current_value: session.goals.current_value || 0,
+            status: session.goals.status,
+            activities: {},
+            total_session_time: 0,
+            session_count: 0
+          };
+        }
+        
+        acc[goalId].activities[activityName] = (acc[goalId].activities[activityName] || 0) + (session.duration || 0);
+        acc[goalId].total_session_time += (session.duration || 0);
+        acc[goalId].session_count += 1;
+      }
+      return acc;
+    }, {} as Record<string, any>);
 
     const achievements = sessions
       .filter(s => s.detailed_achievements)
@@ -184,29 +280,42 @@ async function generateAIFeedback(
             role: 'system',
             content: `あなたは深層心理を読み解く洞察力を持つ、心理分析の専門家です。表面的な行動だけでなく、データの奥に隠された無意識のパターン、心理的な変化の兆し、本人も気づいていない成長を発見して伝える存在です。
 
+【最重要】文字数制限を絶対に守ること：${periodType === 'weekly' ? '150文字以上200文字以内' : attempt > 1 ? `520文字以内（${attempt}回目の試行のため更に厳格）` : '520-550文字'}で必ず完結させ、1文字でも超過してはいけません。
+
 あなたの専門性と役割：
-- 行動データから無意識の心理パターンを読み解く深層分析の専門家（専門用語は使わず分かりやすく）
-- 時間帯、場所、気分スコア、振り返り内容の微細な変化から心理状態の変遷を察知する
-- 活動の組み合わせや順序から、無意識の優先順位や価値観の変化を見抜く
-- 課題として書かれていることの背後にある真の心理的要因を推察する
-- 成果の表現方法の変化から、自己認識や自信レベルの変動を読み取る
-- 継続パターンや中断パターンから、モチベーションの源泉や阻害要因を分析する
-- 本人が意識していない習慣形成の兆しや、思考の柔軟性の向上を発見する
-- 数値データの変化だけでなく、言葉選びや表現の変化から内面の成長を察知する
+あなたは、ユーザーの努力を深く理解し、データの奥に隠された本質的な意味を見抜く洞察力を持つ存在です。
+
+重要な心構え：
+- 分析項目を機械的にチェックするのではなく、ユーザーの心に響く「本当に大切な気づき」を1-2つ見つける
+- 「確かにそうだ！」「気づかなかった」「なるほど」とユーザーが納得できる具体的で説得力のある洞察を提供
+- 数値や表面的な事実ではなく、その背後にある心理的な変化や成長の兆しを温かく伝える
+- 要件を全て満たそうとせず、最も印象的で意味のあるポイントに集中して深く掘り下げる
+- 一人の理解者として、自然で親しみやすい語りかけを心がける
 
 【重要】専門用語の使用禁止：「メタ認知」「認知的負荷」「フロー状態」「認知バイアス」などの心理学用語は使わず、一般的で分かりやすい言葉で表現してください。
 
 ユーザーの${periodType === 'weekly' ? '週次' : '月次'}の活動データを分析し、温かく励ましのフィードバックを日本語で提供してください。${periodType === 'weekly' && pastFeedbacks.length === 0 ? '\n\n【重要】これは初回の週次フィードバックです。過去との比較はせず、今週の頑張りを認めることに集中してください。' : ''}
 
 フィードバックの要件：
-- ${periodType === 'weekly' ? '【絶対厳守】200文字前後。文字数をカウントしながら書く' : '【絶対厳守】300文字前後。文字数をカウントしながら書く'}
-- ${periodType === 'weekly' ? '表面的な成果だけでなく、無意識の変化パターンを1つ見抜いて伝える' : '【最重要】冒頭で総合判断による一言要約：行動・気分・目標の因果関係を分析し「○○な月でした」と全体像を表現する'}
-- ${periodType === 'weekly' ? '洞察力のある深い分析を簡潔に' : '深層心理分析：本人も気づいていない心理的変化や成長パターンを必ず含める'}
-- ${periodType === 'weekly' ? '' : '時間帯・場所・気分・言葉選びの変化から内面の成長を読み取る'}${periodType === 'weekly' ? '' : '\n- 表面的な数値ではなく、行動の背後にある価値観や優先順位の変化を指摘する'}${periodType === 'weekly' ? '' : '\n- 課題として挙げられていることの真の心理的要因を推察して伝える'}${periodType === 'weekly' ? '' : '\n- 【総合判断の例】「挑戦の月」「基盤固めの月」「転換点の月」「成長実感の月」「模索の月」「安定化の月」など、その月の本質を一言で表現する'}
-${periodType === 'weekly' ? '' : '- 専門性があるけど、親しみやすい口調'}
-${periodType === 'weekly' ? '' : '- 【構造例】「先月は『基盤を築く月』でした。3つのポイントがあります。1つ目は...、2つ目は...、3つ目は...。今月も一緒に頑張りましょう。」のように総合判断→詳細分析の順で構成する'}
-- ${periodType === 'weekly' ? '先週' : '先月'}の振り返りとして作成
-${periodType === 'weekly' ? '' : '- 最後は必ず見守りメッセージで締める'}`
+${periodType === 'weekly' ? `
+【週次フィードバック要件】
+- 【文字数】150文字以上200文字以内（厳守）- 必ず完結した文章で終わること
+- 【一点集中】先週の活動から最も印象的な1つのポイントに絞って深く洞察
+- 【具体的な気づき】ユーザーが「そうそう！」「気づかなかった」と納得できる具体的な発見
+- 【自然な語りかけ】分析項目を並べるのではなく、一人の理解者として自然に話す
+- 【成長の証拠】小さくても確実な変化や成長を温かく認める
+- 【簡潔で深い】短い文字数でも心に残る、本質的なメッセージ
+- 【締めの文言】「今週も頑張りましょう」「今週も一緒に進んでいきましょう」のような前向きな表現で締める` : `
+【月次フィードバック要件】
+- 【文字数】520-550文字（絶対厳守）- 必ず完結した文章で終わること
+- 【核心を突く】データから最も印象的で意味のある1-2つのポイントに集中し、深く掘り下げる
+- 【共感と洞察】ユーザーが「確かに！」「なるほど」「よし、頑張ろう」と心から思える気づきを提供
+- 【自然な流れ】要件チェックリストではなく、一人の理解者として自然に語りかける
+- 【具体的な証拠】抽象的な分析ではなく、具体的なデータや行動パターンを根拠にした説得力のある洞察
+- 【成長の実感】本人も気づいていない変化や成長を、温かく具体的に伝える
+- 【未来への希望】現在の努力が将来にどうつながるかを示し、継続への動機を与える
+- 【構造】自然な会話調で：印象的な発見→深い分析→励ましと展望の流れ`}
+- ${periodType === 'weekly' ? '先週' : '先月'}の振り返りとして作成`
           },
           {
             role: 'user',
@@ -227,10 +336,16 @@ ${achievements || '記録なし'}
 ${challenges || '記録なし'}
 
 目標別の活動状況:
-${Object.keys(goalInfo).length > 0 
-  ? Object.values(goalInfo).map((goal: any) => 
-      `- ${goal.title}: ${Math.round(goal.totalTime / 3600 * 10) / 10}時間 (${goal.sessionCount}セッション)${goal.description ? ` - ${goal.description}` : ''}`
-    ).join('\n')
+${Object.keys(goalProgress).length > 0 
+  ? Object.values(goalProgress).map((goal: any) => {
+      const progressPercent = goal.target_duration > 0 
+        ? Math.round((goal.current_value + goal.total_session_time) / goal.target_duration * 100)
+        : 0;
+      const deadlineText = goal.deadline ? ` (期限: ${goal.deadline})` : '';
+      return `- ${goal.title}: ${Math.round(goal.total_session_time / 3600 * 10) / 10}時間 (${goal.session_count}セッション)${deadlineText}
+    進捗: ${progressPercent}% (目標: ${Math.round(goal.target_duration / 3600 * 10) / 10}時間)
+    活動内訳: ${Object.entries(goal.activities).map(([name, time]) => `${name} ${Math.round((time as number) / 3600 * 10) / 10}h`).join(', ')}`;
+    }).join('\n\n')
   : '目標設定されたセッションなし'}
 
 【深層分析用データ】
@@ -249,7 +364,7 @@ ${pastFeedbacks.length > 0
   : '過去のフィードバックなし（初回）'}` : ''}`
           }
         ],
-        max_tokens: periodType === 'weekly' ? 200 : 350,
+        max_tokens: periodType === 'weekly' ? 400 : 750,
         temperature: 0.7,
       }),
     });
@@ -257,16 +372,27 @@ ${pastFeedbacks.length > 0
     if (!response.ok) {
       if (response.status === 429) {
         console.warn('OpenAI API Rate limit reached. Using fallback message.');
-        return `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。現在、多くのリクエストが集中しているため、フィードバック生成に時間がかかっています。少し時間をおいて再度お試しください。あなたの努力は確実に記録されています。`;
+        return `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。現在、多くのリクエストが集中しているため、フィードバック生成に時間がかかっています。少し時間をおいて再度お試しください。あなたの努力は確実に記録されています。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`;
       }
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || '無理しなくて大丈夫です。あなたの努力をいつも見守っています。';
+    const content = data.choices[0]?.message?.content || `無理しなくて大丈夫です。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`;
+    
+    // レスポンスが途中で切れていないかチェック
+    const isComplete = content.endsWith('。') || content.endsWith('！') || content.endsWith('？');
+    
+          if (!isComplete && data.choices[0]?.finish_reason === 'length') {
+        // トークン制限で切れた場合のフォールバック
+        const fallbackLength = periodType === 'weekly' ? 190 : 480;
+        return `${periodType === 'weekly' ? '先週' : '先月'}の活動を分析していたところ、詳細な分析が長くなってしまいました。あなたの努力の深さを物語っていますね。重要なポイントは、着実に成長されていることです。この調子で続けていけば、必ず目標に近づいていけると確信しています。`.substring(0, fallbackLength);
+      }
+    
+    return content;
 
   } catch (error) {
     console.error('OpenAI API エラー:', error);
-    return `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。今、フィードバックの準備に少し時間がかかっていますが、あなたの努力が確実に積み重なっているのは見ています。また後で確認してみてくださいね。いつもあなたを応援しています。`;
+    return `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。今、フィードバックの準備に少し時間がかかっていますが、あなたの努力が確実に積み重なっているのは見ています。また後で確認してみてくださいね。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`;
   }
 } 

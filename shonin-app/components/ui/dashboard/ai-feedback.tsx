@@ -1,4 +1,4 @@
-import { MessageCircle, Calendar, TrendingUp, Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
@@ -248,8 +248,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            <Sparkles className="w-5 h-5 mr-2 text-blue-400" />
+          <CardTitle className="text-white text-[1.25rem] md:text-2xl">
             {currentFeedback.type}フィードバック
           </CardTitle>
           
@@ -325,21 +324,18 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
           {/* フィードバックメッセージ */}
           <div className="bg-gray-800 rounded-lg p-3 mb-3">
-            <div className="flex items-start space-x-2">
-              <MessageCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-              <p className="text-gray-300 text-sm leading-relaxed">
-                {isLoading ? (
-                  <span className="flex items-center">
-                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    フィードバックを生成中...
-                  </span>
-                ) : error ? (
-                  <span className="text-red-400">エラー: {error}</span>
-                ) : (
-                  currentFeedback.message
-                )}
-              </p>
-            </div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              {isLoading ? (
+                <span className="flex items-center">
+                  <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                  フィードバックを生成中...
+                </span>
+              ) : error ? (
+                <span className="text-red-400">エラー: {error}</span>
+              ) : (
+                currentFeedback.message
+              )}
+            </p>
           </div>
 
           {/* 次回フィードバック予告 */}

@@ -48,8 +48,11 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
     // ユーザー名を取得
     const userName = profile?.name || ''
     
-    // 常に「○○さん、挨拶文」の形式で返す
-    return `${userName}さん、${baseGreeting}`
+    // 改行表示用の表示を返すオブジェクト
+    return {
+      userName: `${userName}さん`,
+      greeting: baseGreeting
+    }
   }
 
   // 現在時刻（タイムゾーン考慮）
@@ -61,10 +64,15 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
 
   return (
     <Card className="bg-green-500 border-0 text-white">
-      <CardContent className="p-4 lg:p-6">
-        <div className="mb-4">
-          <h2 className="text-xl lg:text-2xl font-bold mb-1">{getGreeting()}</h2>
-          <p className="text-green-100 opacity-90 text-sm lg:text-base">今日も努力を積み重ねましょう - {currentTime}</p>
+      <CardContent className="p-2 lg:p-4">
+        <div>
+          {/* PC・SP共通：改行表示 */}
+          <div>
+            <h2 className="text-xl lg:text-2xl font-bold">{getGreeting().userName}</h2>
+            <h2 className="text-xl lg:text-2xl font-bold mb-1">{getGreeting().greeting}</h2>
+          </div>
+          
+          <p className="text-green-100 opacity-90 text-sm mt-3">今日も努力を積み重ねましょう</p>
         </div>
 
         <div className="text-center">
