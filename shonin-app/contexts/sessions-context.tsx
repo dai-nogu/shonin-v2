@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react"
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useTimezone } from "@/contexts/timezone-context"
 import { splitSessionByDateInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
 
@@ -77,6 +78,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   
   // 目標管理フック
   const { updateGoal } = useGoalsDb()
+  
+  // 振り返りデータ管理フック
+  const { saveReflection } = useReflectionsDb()
   
   // タイムゾーンフック
   const { timezone } = useTimezone()
@@ -348,25 +352,34 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         // 同じ日のセッション（従来の処理）
         if (activeSession) {
           // 既存の進行中セッションを更新
-          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
+          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timezone: timezone })
           const success = await updateSession(activeSession.id, {
             end_time: completedSession.endTime.toISOString(),
             duration: completedSession.duration,
             session_date: sessionDate, // セッション日付を設定
             notes: completedSession.notes || null,
-            mood: completedSession.mood || null,
-            achievements: completedSession.achievements || null,
-            challenges: completedSession.challenges || null,
+            location: completedSession.location || null,
           }, true) // refetchをスキップ
           
-          if (success) {
-            mainSessionId = activeSession.id
-          } else {
-            throw new Error('セッション更新に失敗しました')
-          }
+                      if (success) {
+              mainSessionId = activeSession.id
+              
+              // 振り返りデータがある場合は暗号化して保存
+              if (completedSession.mood || completedSession.achievements || completedSession.challenges) {
+                const reflectionData = {
+                  moodScore: completedSession.mood || 3,
+                  achievements: completedSession.achievements || '',
+                  challenges: completedSession.challenges || '',
+                  additionalNotes: undefined,
+                };
+                await saveReflection(activeSession.id, reflectionData);
+              }
+            } else {
+              throw new Error('セッション更新に失敗しました')
+            }
         } else {
           // 新規セッションとして保存
-          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
+          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timezone: timezone })
           mainSessionId = await addSession({
             activity_id: completedSession.activityId,
             start_time: completedSession.startTime.toISOString(),
@@ -374,12 +387,20 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             duration: completedSession.duration,
             session_date: sessionDate, // セッション日付を設定
             notes: completedSession.notes || null,
-            mood: completedSession.mood || null,
-            achievements: completedSession.achievements || null,
-            challenges: completedSession.challenges || null,
             location: completedSession.location || null,
             goal_id: completedSession.goalId || null, // 目標IDを保存
           }, true) // refetchをスキップ
+          
+                      // 振り返りデータがある場合は暗号化して保存
+            if (mainSessionId && (completedSession.mood || completedSession.achievements || completedSession.challenges)) {
+              const reflectionData = {
+                moodScore: completedSession.mood || 3,
+                achievements: completedSession.achievements || '',
+                challenges: completedSession.challenges || '',
+                additionalNotes: undefined,
+              };
+              await saveReflection(mainSessionId, reflectionData);
+            }
         }
         
         // 通常のセッション保存完了後にrefetch

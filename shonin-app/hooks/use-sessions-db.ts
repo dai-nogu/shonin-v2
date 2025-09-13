@@ -24,7 +24,7 @@ export function useSessionsDb() {
   const [error, setError] = useState<string | null>(null)
   const [supabase] = useState(() => createClient())
 
-  // セッションを取得（アクティビティ情報とタグも含む）
+  // セッションを取得（アクティビティ情報とタグも含む）- 復号化ビューを使用
   const fetchSessions = useCallback(async () => {
     try {
       setLoading(true)
@@ -36,7 +36,7 @@ export function useSessionsDb() {
       }
 
       const { data, error } = await supabase
-        .from('sessions')
+        .from('sessions_reflections_decrypted')
         .select(`
           *,
           activities (

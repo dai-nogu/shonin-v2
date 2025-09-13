@@ -13,33 +13,30 @@ export function useReflectionsDb() {
   const [error, setError] = useState<string | null>(null);
   const [supabase] = useState(() => createClient());
 
-  // 振り返り情報をsessionsテーブルに保存（統合版）
+  // 振り返り情報を暗号化して保存（統合版）
   const saveReflection = async (sessionId: string, reflection: SessionReflection): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // sessionsテーブルの振り返りカラムを更新
-      const { data, error } = await supabase
-        .from('sessions')
-        .update({
-          mood_score: reflection.moodScore,
-          detailed_achievements: reflection.achievements,
-          // achievement_satisfaction: reflection.achievementsRating || null, // UI未実装のため削除
-          detailed_challenges: reflection.challenges,
-          // challenge_severity: reflection.challengesSeverity || null, // UI未実装のため削除
-          reflection_notes: reflection.additionalNotes || null,
-        })
-        .eq('id', sessionId)
-        .select('id')
-        .single();
+      // 暗号化関数を使用して振り返りデータを保存（基本データも含む）
+      const { data, error } = await supabase.rpc('update_session_reflections_encrypted', {
+        p_session_id: sessionId,
+        p_mood: reflection.moodScore || null,
+        p_achievements: reflection.achievements || null,
+        p_challenges: reflection.challenges || null,
+        p_mood_score: reflection.moodScore || null,
+        p_detailed_achievements: reflection.achievements || null,
+        p_detailed_challenges: reflection.challenges || null,
+        p_reflection_notes: reflection.additionalNotes || null,
+      });
 
       if (error) {
         setError(`振り返りの保存に失敗しました: ${error.message}`);
         return null;
       }
 
-      return data.id;
+      return sessionId;
     } catch (err) {
       setError('振り返りの保存中にエラーが発生しました');
       return null;
@@ -48,14 +45,15 @@ export function useReflectionsDb() {
     }
   };
 
-  // 振り返り情報をsessionsテーブルから取得（統合版）
+  // 振り返り情報を復号化して取得（統合版）
   const getReflection = async (sessionId: string): Promise<SessionReflection | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // 復号化ビューから振り返りデータを取得
       const { data, error } = await supabase
-        .from('sessions')
+        .from('sessions_reflections_decrypted')
         .select(`
           mood_score,
           detailed_achievements,

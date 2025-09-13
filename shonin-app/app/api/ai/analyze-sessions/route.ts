@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
 
     const { period_type, period_start, period_end }: AnalysisRequest = await request.json();
 
-    // セッションデータを取得
+    // セッションデータを取得（復号化ビューを使用）
     const { data: sessions, error: sessionsError } = await supabase
-      .from('sessions')
+      .from('sessions_reflections_decrypted')
       .select(`
         id,
         duration,
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         reflection_notes,
         location,
         goal_id,
+        activity_id,
         activities!inner(name),
         goals(
           id,
@@ -78,10 +79,10 @@ export async function POST(request: NextRequest) {
           status
         )
       `)
-      .eq('user_id', user.id)
       .gte('session_date', period_start)
       .lte('session_date', period_end)
-      .order('session_date', { ascending: true });
+      .eq('user_id', user.id)
+      .order('session_date', { ascending: false });
 
     if (sessionsError) {
       console.error('セッション取得エラー:', sessionsError);
