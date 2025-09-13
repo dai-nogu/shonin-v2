@@ -372,7 +372,7 @@ ${pastFeedbacks.length > 0
     if (!response.ok) {
       if (response.status === 429) {
         console.warn('OpenAI API Rate limit reached. Using fallback message.');
-        return `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。現在、多くのリクエストが集中しているため、フィードバック生成に時間がかかっています。少し時間をおいて再度お試しください。あなたの努力は確実に記録されています。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`;
+        return `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。フィードバック生成に時間がかかっています。少し時間をおいて再度お試しください。あなたの努力は確実に記録されています。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`;
       }
       throw new Error(`OpenAI API error: ${response.status}`);
     }
