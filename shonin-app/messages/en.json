@@ -1,0 +1,111 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "goals": "Goals",
+    "settings": "Settings",
+    "home": "Home"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "forgotPassword": "Forgot Password",
+    "loginWithGoogle": "Login with Google",
+    "loginWithGitHub": "Login with GitHub"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeMessage": "Good work! Let's keep pushing forward today.",
+    "activeSession": "Active Session",
+    "recentSessions": "Recent Sessions",
+    "weeklyProgress": "Weekly Progress",
+    "startActivity": "Start Activity",
+    "stopActivity": "Stop Activity",
+    "noActiveSessions": "No active sessions",
+    "totalTime": "Total Time",
+    "sessionsCount": "Sessions"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "month": "Month",
+    "week": "Week",
+    "today": "Today",
+    "noEvents": "No events",
+    "sessionDetails": "Session Details"
+  },
+  "goals": {
+    "title": "Goals",
+    "addGoal": "Add Goal",
+    "editGoal": "Edit Goal",
+    "goalTitle": "Goal Title",
+    "description": "Description",
+    "deadline": "Deadline",
+    "progress": "Progress",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "account": "Account",
+    "timezone": "Timezone",
+    "language": "Language",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "deleteAccount": "Delete Account"
+  },
+  "activities": {
+    "title": "Activities",
+    "addActivity": "Add Activity",
+    "editActivity": "Edit Activity",
+    "name": "Name",
+    "color": "Color",
+    "tags": "Tags",
+    "location": "Location"
+  },
+  "time": {
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "duration": "Duration",
+    "startTime": "Start Time",
+    "endTime": "End Time"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "networkError": "Network error occurred",
+    "authError": "Authentication error occurred",
+    "validationError": "Please check your input",
+    "notFound": "Page not found",
+    "unauthorized": "Access denied"
+  },
+  "success": {
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "updated": "Updated",
+    "created": "Created"
+  }
+} 

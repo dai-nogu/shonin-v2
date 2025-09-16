@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/common
 import { useIsMobile } from "@/hooks/use-mobile"
 import { ProfileSettings } from "@/components/ui/settings/profile-settings"
 import { TimezoneSettings } from "@/components/ui/settings/timezone-settings"
+import { LanguageSettings } from "@/components/ui/settings/language-settings"
 import { ActivityManagement } from "@/components/ui/settings/activity-management"
 import { AccountManagement } from "@/components/ui/settings/account-management"
 
@@ -51,6 +52,7 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
           {/* タイムゾーンタブ */}
           <TabsContent value="timezone" className="space-y-6">
             <TimezoneSettings />
+            <LanguageSettings />
           </TabsContent>
 
           {/* アクティビティタブ */}

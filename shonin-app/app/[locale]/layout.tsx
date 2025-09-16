@@ -1,6 +1,6 @@
 import type React from "react"
 import { Inter } from "next/font/google"
-import "./globals.css"
+import "../globals.css"
 import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
 import { TimezoneProvider } from "@/contexts/timezone-context"
@@ -10,13 +10,19 @@ import { ConditionalSidebarProvider } from "@/components/layout/conditional-side
 
 const inter = Inter({ subsets: ["latin"] })
 
-export default function RootLayout({
-  children,
-}: {
+type Props = {
   children: React.ReactNode
-}) {
+  params: Promise<{ locale: string }>
+}
+
+export default async function LocaleLayout({
+  children,
+  params
+}: Props) {
+  const { locale } = await params
+
   return (
-    <html lang="ja" suppressHydrationWarning className="dark">
+    <html lang={locale} suppressHydrationWarning className="dark">
       <body className={`${inter.className} dark`} suppressHydrationWarning>
         <AuthProvider>
           <TimezoneProvider>
@@ -36,8 +42,26 @@ export default function RootLayout({
   )
 }
 
-export const metadata = {
-  title: "SHONIN - 証人",
-  description: "あなたの成長を見つめ、証明する",
-  generator: 'v0.dev'
-};
+export async function generateStaticParams() {
+  return [
+    { locale: 'ja' },
+    { locale: 'en' }
+  ]
+}
+
+// 動的メタデータ生成
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  
+  return {
+    title: locale === 'ja' ? "SHONIN - 証人" : "SHONIN - Witness",
+    description: locale === 'ja' 
+      ? "あなたの成長を見つめ、証明する" 
+      : "Be a witness to your growth",
+    generator: 'v0.dev'
+  }
+} 

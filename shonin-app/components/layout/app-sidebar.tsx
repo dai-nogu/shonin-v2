@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter, usePathname, useParams } from "next/navigation"
 import { Home, Calendar, BarChart3, Target, Settings } from "lucide-react"
 import {
   Sidebar,
@@ -16,33 +16,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-const menuItems = [
-  {
-    title: "ダッシュボード",
-    url: "/dashboard",
-    icon: Home,
-    id: "dashboard",
-  },
-  {
-    title: "カレンダー",
-    url: "/calendar/month",
-    icon: Calendar,
-    id: "calendar",
-  },
-  {
-    title: "目標",
-    url: "/goals",
-    icon: Target,
-    id: "goals",
-  },
-  {
-    title: "設定",
-    url: "/settings",
-    icon: Settings,
-    id: "settings",
-  },
-]
-
 interface AppSidebarProps {
   currentPage?: string
   onPageChange?: (pageId: string) => void
@@ -51,23 +24,55 @@ interface AppSidebarProps {
 export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const params = useParams()
+  const locale = params.locale as string
   const [activePage, setActivePage] = useState(currentPage)
+
+  // 一時的にハードコードされたメニューアイテム（後でnext-intl再導入時に修正）
+  const menuItems = [
+    {
+      title: locale === 'ja' ? 'ダッシュボード' : 'Dashboard',
+      url: `/${locale}/dashboard`,
+      icon: Home,
+      id: "dashboard",
+    },
+    {
+      title: locale === 'ja' ? 'カレンダー' : 'Calendar',
+      url: `/${locale}/calendar/month`,
+      icon: Calendar,
+      id: "calendar",
+    },
+    {
+      title: locale === 'ja' ? '目標' : 'Goals',
+      url: `/${locale}/goals`,
+      icon: Target,
+      id: "goals",
+    },
+    {
+      title: locale === 'ja' ? '設定' : 'Settings',
+      url: `/${locale}/settings`,
+      icon: Settings,
+      id: "settings",
+    },
+  ]
 
   // パスに基づいてアクティブページを設定（pathnameを優先）
   useEffect(() => {
-    if (pathname === "/dashboard" || pathname === "/" || pathname === "/session") {
+    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
+    
+    if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session") {
       setActivePage("dashboard")
-    } else if (pathname === "/calendar" || pathname.startsWith("/calendar/")) {
+    } else if (pathWithoutLocale === "/calendar" || pathWithoutLocale.startsWith("/calendar/")) {
       setActivePage("calendar")
-    } else if (pathname === "/goals") {
+    } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
-    } else if (pathname === "/settings") {
+    } else if (pathWithoutLocale === "/settings") {
       setActivePage("settings")
     } else {
       // パスが一致しない場合のみcurrentPageを使用
       setActivePage(currentPage)
     }
-  }, [pathname, currentPage])
+  }, [pathname, currentPage, locale])
 
   const handlePageChange = (pageId: string, url: string) => {
     setActivePage(pageId)

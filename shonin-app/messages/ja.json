@@ -1,0 +1,111 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "confirm": "確認",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "search": "検索",
+    "filter": "フィルター",
+    "all": "すべて",
+    "none": "なし",
+    "yes": "はい",
+    "no": "いいえ"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "calendar": "カレンダー",
+    "goals": "目標",
+    "settings": "設定",
+    "home": "ホーム"
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "signIn": "サインイン",
+    "signUp": "サインアップ",
+    "forgotPassword": "パスワードを忘れた方",
+    "loginWithGoogle": "Googleでログイン",
+    "loginWithGitHub": "GitHubでログイン"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcomeMessage": "お疲れ様です！今日も頑張りましょう。",
+    "activeSession": "進行中のセッション",
+    "recentSessions": "最近のセッション",
+    "weeklyProgress": "今週の進捗",
+    "startActivity": "アクティビティを開始",
+    "stopActivity": "アクティビティを停止",
+    "noActiveSessions": "進行中のセッションはありません",
+    "totalTime": "合計時間",
+    "sessionsCount": "セッション数"
+  },
+  "calendar": {
+    "title": "カレンダー",
+    "month": "月",
+    "week": "週",
+    "today": "今日",
+    "noEvents": "イベントはありません",
+    "sessionDetails": "セッション詳細"
+  },
+  "goals": {
+    "title": "目標",
+    "addGoal": "目標を追加",
+    "editGoal": "目標を編集",
+    "goalTitle": "目標タイトル",
+    "description": "説明",
+    "deadline": "期限",
+    "progress": "進捗",
+    "completed": "完了",
+    "inProgress": "進行中",
+    "notStarted": "未開始"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "account": "アカウント",
+    "timezone": "タイムゾーン",
+    "language": "言語",
+    "notifications": "通知",
+    "privacy": "プライバシー",
+    "deleteAccount": "アカウントを削除"
+  },
+  "activities": {
+    "title": "アクティビティ",
+    "addActivity": "アクティビティを追加",
+    "editActivity": "アクティビティを編集",
+    "name": "名前",
+    "color": "色",
+    "tags": "タグ",
+    "location": "場所"
+  },
+  "time": {
+    "hours": "時間",
+    "minutes": "分",
+    "seconds": "秒",
+    "duration": "継続時間",
+    "startTime": "開始時刻",
+    "endTime": "終了時刻"
+  },
+  "errors": {
+    "generic": "エラーが発生しました",
+    "networkError": "ネットワークエラーが発生しました",
+    "authError": "認証エラーが発生しました",
+    "validationError": "入力内容を確認してください",
+    "notFound": "ページが見つかりません",
+    "unauthorized": "アクセス権限がありません"
+  },
+  "success": {
+    "saved": "保存しました",
+    "deleted": "削除しました",
+    "updated": "更新しました",
+    "created": "作成しました"
+  }
+} 

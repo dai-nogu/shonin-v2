@@ -2,6 +2,7 @@ import { GoalEditContainer } from "@/components/ui/goals/edit/goal-edit-containe
 
 interface GoalEditPageProps {
   params: Promise<{
+    locale: string
     id: string
   }>
 }
