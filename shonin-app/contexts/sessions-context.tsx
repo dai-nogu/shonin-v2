@@ -273,7 +273,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         duration: 0,
         session_date: sessionDate, // セッション日付を設定
         location: sessionData.location || null,
-        notes: null,
+        notes: sessionData.notes || null, // セッション開始時のメモを保存
         mood: null,
         achievements: null,
         challenges: null,

@@ -279,9 +279,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
           <>
             {/* 行動選択 */}
             <div className="space-y-2">
-              <Label className="text-gray-300">行動を選択</Label>
+              <Label className="text-white">行動を選択</Label>
               <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
                   <SelectValue placeholder="何に取り組みますか？" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
@@ -330,7 +330,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 場所設定 */}
             <div className="space-y-2">
-              <Label className="text-gray-300 flex items-center text-sm">
+              <Label className="text-white flex items-center text-sm">
                 <MapPin className="w-4 h-4 mr-2" />
                 場所
               </Label>
@@ -338,18 +338,18 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 placeholder="どこで取り組みますか？"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm"
               />
             </div>
 
             {/* 目標選択 */}
             <div className="space-y-2">
-              <Label className="text-gray-300 flex items-center text-sm">
+              <Label className="text-white flex items-center text-sm">
                 <Target className="w-4 h-4 mr-2" />
                 目標を選択
               </Label>
               <Select value={selectedGoal} onValueChange={handleGoalSelection}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
                   <SelectValue placeholder="目標を選択してください（任意）" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
@@ -382,7 +382,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 目標時間設定 */}
             <div className="space-y-2">
-              <Label className="text-gray-300 flex items-center text-sm">
+              <Label className="text-white flex items-center text-sm">
                 <Clock className="w-4 h-4 mr-2" />
                 目標時間
               </Label>

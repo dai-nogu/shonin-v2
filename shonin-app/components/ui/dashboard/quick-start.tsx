@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/common/tabs"
-import { ConfirmStartModal } from "./confirm-start-modal"
+
 import { SessionDetailModal } from "./session-detail-modal"
 import { ActivityCountModal } from "./activity-count-modal"
 import { RecentSessionsModal } from "./recent-sessions-modal"
@@ -37,7 +37,7 @@ interface QuickStartProps {
 
 export function QuickStart({ completedSessions, onStartActivity }: QuickStartProps) {
   const [selectedActivity, setSelectedActivity] = useState<QuickStartActivity | null>(null)
-  const [showModal, setShowModal] = useState(false)
+
   const [activeTab, setActiveTab] = useState("most-recorded")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
@@ -260,28 +260,16 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       })
   }
 
-  const handleActivityClick = (activity: QuickStartActivity) => {
+  const handleActivityClick = async (activity: QuickStartActivity) => {
     setSelectedActivity(activity)
-    setShowModal(true)
-  }
-
-  // SPでの詳細表示用のハンドラー
-  const handleActivityDetailClick = (activity: QuickStartActivity) => {
-    // 対応するセッションを見つける
-    const session = completedSessions.find(s => s.id === activity.id)
-    if (session) {
-      setSelectedSession(session)
-      setShowDetailModal(true)
-    }
-  }
-
-  const handleConfirmStart = async () => {
-    if (selectedActivity && onStartActivity) {
-      let activityId = selectedActivity.id
+    
+    // 確認モーダルを表示せず、直接セッション開始処理を実行
+    if (onStartActivity) {
+      let activityId = activity.id
       
       // データベースに対応する行動が存在するかチェック
       const correspondingSession = completedSessions.find(session => 
-        session.activityName === selectedActivity.name
+        session.activityName === activity.name
       )
       
       if (correspondingSession) {
@@ -289,8 +277,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         activityId = correspondingSession.activityId
       } else {
         // データベースに直接行動が存在するかチェック
-        const existingActivity = activities.find(activity => 
-          activity.name === selectedActivity.name
+        const existingActivity = activities.find(existingActivity => 
+          existingActivity.name === activity.name
         )
         
         if (existingActivity) {
@@ -298,9 +286,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         } else {
           // 行動が存在しない場合は新規作成
           const newActivityId = await addActivity({
-            name: selectedActivity.name,
-            icon: selectedActivity.icon || null,
-            color: selectedActivity.color,
+            name: activity.name,
+            icon: activity.icon || null,
+            color: activity.color,
           })
           
           if (newActivityId) {
@@ -314,26 +302,33 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       
       const sessionData: SessionData = {
         activityId: activityId,
-        activityName: selectedActivity.name,
+        activityName: activity.name,
         startTime: new Date(),
-        location: selectedActivity.location || "",
+        location: activity.location || "",
         notes: "",
         // 行動の色とアイコン情報を保持
-        activityColor: selectedActivity.color,
-        activityIcon: selectedActivity.icon,
+        activityColor: activity.color,
+        activityIcon: activity.icon,
         // 目標IDを保持
-        goalId: selectedActivity.goalId,
+        goalId: activity.goalId,
       }
       onStartActivity(sessionData)
     }
-    setShowModal(false)
+    
     setSelectedActivity(null)
   }
 
-  const handleCancel = () => {
-    setShowModal(false)
-    setSelectedActivity(null)
+  // SPでの詳細表示用のハンドラー
+  const handleActivityDetailClick = (activity: QuickStartActivity) => {
+    // 対応するセッションを見つける
+    const session = completedSessions.find(s => s.id === activity.id)
+    if (session) {
+      setSelectedSession(session)
+      setShowDetailModal(true)
+    }
   }
+
+
 
   const handleViewDetail = (activity: QuickStartActivity) => {
     // 行動IDに対応するセッションを見つける
@@ -611,13 +606,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         </CardContent>
       </Card>
 
-      <ConfirmStartModal
-        isOpen={showModal}
-        activity={selectedActivity}
-        onConfirm={handleConfirmStart}
-        onCancel={handleCancel}
-        showTags={false}
-      />
+
 
       <SessionDetailModal
         isOpen={showDetailModal}

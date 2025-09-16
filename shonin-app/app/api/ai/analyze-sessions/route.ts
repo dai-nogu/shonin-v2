@@ -8,10 +8,10 @@ interface SessionData {
   activity_name: string;
   duration: number;
   session_date: string;
-  mood_score?: number;
-  detailed_achievements?: string;
-  detailed_challenges?: string;
-  reflection_notes?: string;
+  mood?: number;
+  achievements?: string;
+  challenges?: string;
+  notes?: string;
   location?: string;
   goal_id?: string;
   goal_title?: string;
@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
         id,
         duration,
         session_date,
-        mood_score,
-        detailed_achievements,
-        detailed_challenges,
-        reflection_notes,
+        mood,
+        achievements,
+        challenges,
+        notes,
         location,
         goal_id,
         activity_id,
@@ -200,8 +200,8 @@ async function generateAIFeedback(
     const totalDuration = sessions.reduce((sum, session) => sum + (session.duration || 0), 0);
     const totalHours = Math.round(totalDuration / 3600 * 10) / 10;
     const averageMood = sessions
-      .filter(s => s.mood_score)
-      .reduce((sum, s, _, arr) => sum + s.mood_score / arr.length, 0);
+      .filter(s => s.mood)
+      .reduce((sum, s, _, arr) => sum + s.mood / arr.length, 0);
 
     const activities = sessions.reduce((acc, session) => {
       const activityName = session.activities?.name || '不明な活動';
@@ -238,13 +238,13 @@ async function generateAIFeedback(
     }, {} as Record<string, any>);
 
     const achievements = sessions
-      .filter(s => s.detailed_achievements)
-      .map(s => s.detailed_achievements)
+      .filter(s => s.achievements)
+      .map(s => s.achievements)
       .join('\n');
 
     const challenges = sessions
-      .filter(s => s.detailed_challenges)
-      .map(s => s.detailed_challenges)
+      .filter(s => s.challenges)
+      .map(s => s.challenges)
       .join('\n');
 
     // 目標情報を整理
@@ -349,9 +349,9 @@ ${Object.keys(goalProgress).length > 0
 【深層分析用データ】
 時間帯パターン: ${sessions.map(s => new Date(s.start_time).getHours() + '時').join(', ')}
 場所の変化: ${sessions.map(s => s.location || '未記録').join(' → ')}
-気分スコアの推移: ${sessions.filter(s => s.mood_score).map(s => s.mood_score).join(' → ')}
-振り返り文字数の変化: ${sessions.map(s => (s.detailed_achievements || '').length + (s.detailed_challenges || '').length).join(' → ')}
-使用語彙の特徴: ${sessions.map(s => (s.detailed_achievements || '') + (s.detailed_challenges || '')).join(' ').match(/[。！？]/g)?.length || 0}個の文章
+気分スコアの推移: ${sessions.filter(s => s.mood).map(s => s.mood).join(' → ')}
+振り返り文字数の変化: ${sessions.map(s => (s.achievements || '').length + (s.challenges || '').length).join(' → ')}
+使用語彙の特徴: ${sessions.map(s => (s.achievements || '') + (s.challenges || '')).join(' ').match(/[。！？]/g)?.length || 0}個の文章
 
 ${periodType === 'weekly' ? `
 過去のフィードバック履歴（深層パターン分析用）:

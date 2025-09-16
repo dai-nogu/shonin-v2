@@ -116,6 +116,7 @@ CREATE TRIGGER handle_updated_at_sessions BEFORE UPDATE ON public.sessions
 -- ==========================================
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
@@ -134,6 +135,16 @@ CREATE POLICY "Users can insert own activities" ON public.activities
 CREATE POLICY "Users can update own activities" ON public.activities
     FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own activities" ON public.activities
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Goals policies
+CREATE POLICY "Users can view own goals" ON public.goals
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own goals" ON public.goals
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own goals" ON public.goals
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own goals" ON public.goals
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Sessions policies

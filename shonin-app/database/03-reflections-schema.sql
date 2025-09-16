@@ -105,7 +105,7 @@ SELECT
     CASE 
         WHEN mood_encrypted IS NOT NULL THEN
             (pgp_sym_decrypt(mood_encrypted, auth.uid()::text))::INTEGER
-        ELSE NULL
+        ELSE mood_score -- フォールバック
     END AS mood,
     
     CASE 
@@ -120,10 +120,7 @@ SELECT
         ELSE NULL
     END AS challenges,
     
-    -- 詳細振り返りデータ
-    mood_score,
-    
-    -- 暗号化された振り返りデータを復号化（暗号化カラムのみ使用）
+    -- 詳細振り返りデータ（暗号化カラムのみ使用）
     CASE 
         WHEN detailed_achievements_encrypted IS NOT NULL THEN
             pgp_sym_decrypt(detailed_achievements_encrypted, auth.uid()::text)
@@ -145,8 +142,7 @@ SELECT
     created_at,
     updated_at
 FROM public.sessions
-WHERE auth.uid() = user_id -- RLS適用
-ORDER BY created_at DESC;
+WHERE auth.uid() = user_id; -- RLS適用（ORDER BYを削除）
 
 -- ==========================================
 -- 暗号化振り返り挿入/更新用の関数（完全暗号化版）

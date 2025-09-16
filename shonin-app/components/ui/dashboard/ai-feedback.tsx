@@ -118,10 +118,10 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     }
   }
 
-  // コンポーネントマウント時にフィードバックを読み込む
-  useEffect(() => {
-    loadFeedbacks()
-  }, [])
+  // 初期状態ではAPIアクセスしない（フィードバック生成ボタン押下時のみ）
+  // useEffect(() => {
+  //   loadFeedbacks()
+  // }, [])
 
   // 自動ループ機能は無効化（手動操作のみ）
   // useEffect(() => {

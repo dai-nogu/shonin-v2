@@ -183,9 +183,6 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               </div>
               <div className="text-white">
                 <div className="text-sm">{formatDateTime(session.startTime)}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {session.startTime.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} ～ {session.endTime.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -210,12 +207,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 <span className="text-gray-300 font-medium text-sm">関連する目標</span>
               </div>
               {goalInfo ? (
-                <>
-                  <div className="text-white text-sm">{goalInfo.title}</div>
-                  {goalInfo.description && (
-                    <div className="text-gray-400 text-xs mt-1">{goalInfo.description}</div>
-                  )}
-                </>
+                <div className="text-white text-sm">{goalInfo.title}</div>
               ) : (
                 <div className="text-gray-400 text-sm">未設定</div>
               )}
@@ -229,7 +221,6 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 <span className="text-gray-300 font-medium text-sm">気分</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="text-xl">{getMoodEmoji(session.mood || 3)}</div>
                 <div>
                   <div className="flex items-center space-x-1">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -241,7 +232,6 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                       />
                     ))}
                   </div>
-                  <div className="text-white text-sm mt-1">{getMoodText(session.mood || 3)}</div>
                 </div>
               </div>
             </CardContent>
@@ -716,9 +706,6 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               </div>
               <div className="text-white">
                 <div className="text-sm">{formatDateTime(session.startTime)}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {session.startTime.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} ～ {session.endTime.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -743,12 +730,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 <span className="text-gray-300 font-medium text-sm">関連する目標</span>
               </div>
               {goalInfo ? (
-                <>
-                  <div className="text-white text-sm">{goalInfo.title}</div>
-                  {goalInfo.description && (
-                    <div className="text-gray-400 text-xs mt-1">{goalInfo.description}</div>
-                  )}
-                </>
+                <div className="text-white text-sm">{goalInfo.title}</div>
               ) : (
                 <div className="text-gray-400 text-sm">未設定</div>
               )}
