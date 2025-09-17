@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
+import { useTranslations } from 'next-intl'
 import { Home, Calendar, BarChart3, Target, Settings } from "lucide-react"
 import {
   Sidebar,
@@ -25,31 +26,32 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const router = useRouter()
   const pathname = usePathname()
   const params = useParams()
-  const locale = params.locale as string
+  const locale = (params?.locale as string) || 'ja'
   const [activePage, setActivePage] = useState(currentPage)
+  const t = useTranslations()
 
-  // 一時的にハードコードされたメニューアイテム（後でnext-intl再導入時に修正）
+  // next-intlを使用したメニューアイテム
   const menuItems = [
     {
-      title: locale === 'ja' ? 'ダッシュボード' : 'Dashboard',
+      title: t('navigation.dashboard'),
       url: `/${locale}/dashboard`,
       icon: Home,
       id: "dashboard",
     },
     {
-      title: locale === 'ja' ? 'カレンダー' : 'Calendar',
+      title: t('navigation.calendar'),
       url: `/${locale}/calendar/month`,
       icon: Calendar,
       id: "calendar",
     },
     {
-      title: locale === 'ja' ? '目標' : 'Goals',
+      title: t('navigation.goals'),
       url: `/${locale}/goals`,
       icon: Target,
       id: "goals",
     },
     {
-      title: locale === 'ja' ? '設定' : 'Settings',
+      title: t('navigation.settings'),
       url: `/${locale}/settings`,
       icon: Settings,
       id: "settings",
@@ -58,6 +60,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
   // パスに基づいてアクティブページを設定（pathnameを優先）
   useEffect(() => {
+    if (!pathname) return
+    
     const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
     
     if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session") {

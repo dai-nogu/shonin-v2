@@ -1,8 +1,10 @@
+const withNextIntl = require('next-intl/plugin')(
+  './i18n/request.ts'
+)
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js']
-  }
+  serverExternalPackages: ['@supabase/supabase-js']
 }
 
-module.exports = nextConfig 
+module.exports = withNextIntl(nextConfig) 

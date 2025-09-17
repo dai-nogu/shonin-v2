@@ -1,5 +1,7 @@
 import type React from "react"
 import { Inter } from "next/font/google"
+import { NextIntlClientProvider } from 'next-intl'
+import { notFound } from 'next/navigation'
 import "../globals.css"
 import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
@@ -21,22 +23,31 @@ export default async function LocaleLayout({
 }: Props) {
   const { locale } = await params
 
+  let messages;
+  try {
+    messages = (await import(`../../messages/${locale}.json`)).default;
+  } catch (error) {
+    notFound();
+  }
+
   return (
     <html lang={locale} suppressHydrationWarning className="dark">
       <body className={`${inter.className} dark`} suppressHydrationWarning>
-        <AuthProvider>
-          <TimezoneProvider>
-            <ToastProvider>
-              <ActivitiesProvider>
-                <SessionsProvider>
-                  <ConditionalSidebarProvider>
-                    {children}
-                  </ConditionalSidebarProvider>
-                </SessionsProvider>
-              </ActivitiesProvider>
-            </ToastProvider>
-          </TimezoneProvider>
-        </AuthProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AuthProvider>
+            <TimezoneProvider>
+              <ToastProvider>
+                <ActivitiesProvider>
+                  <SessionsProvider>
+                    <ConditionalSidebarProvider>
+                      {children}
+                    </ConditionalSidebarProvider>
+                  </SessionsProvider>
+                </ActivitiesProvider>
+              </ToastProvider>
+            </TimezoneProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

@@ -1,63 +1,72 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter, usePathname, useParams } from "next/navigation"
+import { useTranslations } from 'next-intl'
 import { Home, Calendar, Target, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
 
 interface BottomNavigationProps {
-  currentPage: string
+  currentPage?: string
   onPageChange?: (pageId: string) => void
 }
-
-const menuItems = [
-  {
-    id: "dashboard",
-    label: "ホーム",
-    icon: Home,
-    url: "/dashboard",
-  },
-  {
-    id: "calendar", 
-    label: "カレンダー",
-    icon: Calendar,
-    url: "/calendar/month",
-  },
-  {
-    id: "goals",
-    label: "目標",
-    icon: Target,
-    url: "/goals",
-  },
-  {
-    id: "settings",
-    label: "設定",
-    icon: Settings,
-    url: "/settings",
-  },
-]
 
 export function BottomNavigation({ currentPage, onPageChange }: BottomNavigationProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const params = useParams()
+  const locale = (params?.locale as string) || 'ja'
   const [isMobile, setIsMobile] = useState(false)
   const [activePage, setActivePage] = useState(currentPage)
+  const t = useTranslations()
+
+  // next-intlを使用したメニューアイテム
+  const menuItems = [
+    {
+      id: "dashboard",
+      label: t('navigation.dashboard'),
+      icon: Home,
+      url: `/${locale}/dashboard`,
+    },
+    {
+      id: "calendar", 
+      label: t('navigation.calendar'),
+      icon: Calendar,
+      url: `/${locale}/calendar/month`,
+    },
+    {
+      id: "goals",
+      label: t('navigation.goals'),
+      icon: Target,
+      url: `/${locale}/goals`,
+    },
+    {
+      id: "settings",
+      label: t('navigation.settings'),
+      icon: Settings,
+      url: `/${locale}/settings`,
+    },
+  ]
 
   // パスに基づいてアクティブページを設定（pathnameを優先）
   useEffect(() => {
-    if (pathname === "/dashboard" || pathname === "/" || pathname === "/session") {
+    if (!pathname) return
+    
+    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
+    
+    if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session") {
       setActivePage("dashboard")
-    } else if (pathname === "/calendar" || pathname.startsWith("/calendar/")) {
+    } else if (pathWithoutLocale === "/calendar" || pathWithoutLocale.startsWith("/calendar/")) {
       setActivePage("calendar")
-    } else if (pathname === "/goals") {
+    } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
-    } else if (pathname === "/settings") {
+    } else if (pathWithoutLocale === "/settings") {
       setActivePage("settings")
     } else {
       // パスが一致しない場合のみcurrentPageを使用
       setActivePage(currentPage)
     }
-  }, [pathname, currentPage])
+  }, [pathname, currentPage, locale])
 
   // モバイル判定
   useEffect(() => {

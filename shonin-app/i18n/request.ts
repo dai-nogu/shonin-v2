@@ -5,8 +5,12 @@ export const locales = ['ja', 'en'] as const
 export type Locale = typeof locales[number]
 
 export default getRequestConfig(async ({ locale }) => {
+  // localeが未定義またはサポートされていない場合はデフォルトを使用
+  const validLocale = locale && locales.includes(locale as Locale) ? locale : 'ja'
+  
   return {
-    messages: (await import(`../messages/${locale}.json`)).default,
-    timeZone: locale === 'ja' ? 'Asia/Tokyo' : 'UTC'
+    locale: validLocale,
+    messages: (await import(`../messages/${validLocale}.json`)).default,
+    timeZone: validLocale === 'ja' ? 'Asia/Tokyo' : 'UTC'
   }
 }) 

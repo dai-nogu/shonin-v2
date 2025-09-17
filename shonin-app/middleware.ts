@@ -1,30 +1,29 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { locales } from './i18n/request'
 
-export function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
-  const locales = ['ja', 'en']
+export default createMiddleware({
+  // A list of all locales that are supported
+  locales: locales,
+
+  // Used when no locale matches
+  defaultLocale: 'ja',
   
-  // ロケールを含まないパスの場合は、デフォルトロケール（ja）にリダイレクト
-  const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
-  )
-
-  if (pathnameIsMissingLocale && pathname !== '/') {
-    // デフォルトロケール（ja）を追加してリダイレクト
-    return NextResponse.redirect(new URL(`/ja${pathname}`, request.url))
-  }
-
-  // ルートパスの場合は /ja にリダイレクト
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL('/ja', request.url))
-  }
-
-  return NextResponse.next()
-}
+  // Always show locale in URL
+  localePrefix: 'always'
+})
 
 export const config = {
+  // Match only internationalized pathnames
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*$).*)',
-  ],
+    // Enable a redirect to a matching locale at the root
+    '/',
+    
+    // Set a cookie to remember the previous locale for
+    // all requests that have a locale prefix
+    '/(ja|en)/:path*',
+    
+    // Enable redirects that add missing locales
+    // (e.g. `/pathnames` -> `/en/pathnames`)
+    '/((?!_next|_vercel|.*\\..*).*)'
+  ]
 } 
