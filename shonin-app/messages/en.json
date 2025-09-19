@@ -173,7 +173,7 @@
   },
   "session_start": {
     "title": "Record Activity",
-    "subtitle": "I will record all my efforts",
+    "subtitle": "I will record all your efforts",
     "select_activity": "Select Activity",
     "activity_placeholder": "What are you working on?",
     "location": "Location",
@@ -194,5 +194,19 @@
     "activity_icon": "Icon",
     "save": "Save",
     "cancel": "Cancel"
+  },
+  "weekly_progress": {
+    "title": "Weekly Progress",
+    "week_view": "Switch to Week",
+    "total_this_week": "Total",
+    "days": {
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "sunday": "Sun"
+    }
   }
 } 

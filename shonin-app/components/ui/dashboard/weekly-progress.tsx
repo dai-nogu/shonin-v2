@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
 import { formatDuration } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
+import { useTranslations } from 'next-intl'
 import { getWeekStartInTimezone, getCurrentTimeInTimezone, getDateStringInTimezone } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
@@ -15,6 +16,7 @@ interface WeeklyProgressProps {
 }
 
 export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
+  const t = useTranslations()
   // タイムゾーンを取得
   const { timezone } = useTimezone()
   
@@ -24,7 +26,15 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
   
   // 今週の各日のデータを計算
   const weekData = []
-  const dayNames = ["月", "火", "水", "木", "金", "土", "日"]
+  const dayNames = [
+    t('weekly_progress.days.monday'),
+    t('weekly_progress.days.tuesday'),
+    t('weekly_progress.days.wednesday'),
+    t('weekly_progress.days.thursday'),
+    t('weekly_progress.days.friday'),
+    t('weekly_progress.days.saturday'),
+    t('weekly_progress.days.sunday')
+  ]
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart)
@@ -58,7 +68,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center">
-            今週の進捗
+            {t('weekly_progress.title')}
           </CardTitle>
           <Button
             onClick={onWeekViewClick}
@@ -67,16 +77,16 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
             className="text-green-400 hover:text-green-300 hover:bg-gray-800 text-xs lg:text-sm"
           >
             <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
-            週表示
+            {t('weekly_progress.week_view')}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-2 lg:space-y-3">
         {weekData.map((day) => (
-          <div key={day.day} className="flex items-center space-x-2 lg:space-x-3">
-            <span className="text-gray-300 w-3 lg:w-4 text-xs lg:text-sm">{day.day}</span>
+          <div key={day.day} className="flex items-center">
+            <span className="text-gray-300 w-8 lg:w-10 text-xs lg:text-sm">{day.day}</span>
             <Progress value={day.progress} className="flex-1 h-1.5 lg:h-2" />
-            <span className="text-gray-400 text-xs lg:text-sm w-10 lg:w-12 text-right">
+            <span className="text-gray-300 text-xs lg:text-sm w-10 lg:w-12 text-right">
               {formatDuration(day.totalSeconds)}
             </span>
           </div>
@@ -87,7 +97,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
             <div className="text-xl lg:text-2xl font-bold text-green-400">
               {formatDuration(totalWeekSeconds)}
             </div>
-            <div className="text-xs lg:text-sm text-gray-400">今週の合計</div>
+            <div className="text-xs lg:text-sm text-gray-400">{t('weekly_progress.total_this_week')}</div>
           </div>
         </div>
       </CardContent>

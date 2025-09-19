@@ -194,5 +194,19 @@
     "activity_icon": "アイコン",
     "save": "保存",
     "cancel": "キャンセル"
+  },
+  "weekly_progress": {
+    "title": "今週の進捗",
+    "week_view": "週表示",
+    "total_this_week": "今週の合計",
+    "days": {
+      "monday": "月",
+      "tuesday": "火",
+      "wednesday": "水",
+      "thursday": "木",
+      "friday": "金",
+      "saturday": "土",
+      "sunday": "日"
+    }
   }
 } 
