@@ -15,7 +15,12 @@
     "all": "All",
     "none": "None",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "seeMore": "See More",
+    "times": " times",
+    "start": "Start",
+    "details": "Details",
+    "not_set": "Not set"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -45,7 +50,58 @@
     "stopActivity": "Stop Activity",
     "noActiveSessions": "No active sessions",
     "totalTime": "Total Time",
-    "sessionsCount": "Sessions"
+    "sessionsCount": "Sessions",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "userSuffix": ""
+    },
+    "encouragement": "Let's build on your efforts today",
+    "quickStart": {
+      "description": "Quick start from recent activities",
+      "noRecentActivities": "No recent activities",
+      "noYesterdayActivities": "No activities from yesterday"
+    }
+  },
+  "session_detail": {
+    "title": "Details",
+    "implementation_date": "Date",
+    "location": "Location",
+    "related_goal": "Related Goal",
+    "mood": "Mood",
+    "achievements": "What you learned and achieved today",
+    "improvements": "Challenges and improvements for next time",
+    "no_content": "None",
+    "start_session": "Start",
+    "close": "Close"
+  },
+  "ai_feedback": {
+    "title": "Weekly Feedback",
+    "feedback": " Feedback",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "weekly_default_message": "Record sessions to receive weekly feedback. Start by logging some activities.",
+    "monthly_default_message": "Consistent recording will unlock monthly feedback. Daily progress matters.",
+    "weekly_no_data_message": "Not enough data accumulated yet. Record sessions to start receiving weekly feedback.",
+    "monthly_no_data_message": "Consistent recording will unlock monthly feedback. Keep building your daily progress.",
+    "next_weekly_feedback": "Next weekly feedback",
+    "next_monthly_feedback": "Next monthly feedback",
+    "scheduled": "scheduled",
+    "generating": "Generating feedback..."
+  },
+  "quick_start": {
+    "start_activity": "Start Activity",
+    "start_from_recent": "Quick start from recent activities",
+    "no_activity_yet": "No activities yet",
+    "complete_first_session": "Complete your first session to see activities here",
+    "latest": "Latest",
+    "most_recorded": "Most Recorded",
+    "yesterday": "Yesterday",
+    "not_enough_data": "Not enough data yet",
+    "see_more": "See More",
+    "no_recent_activity": "No recent activities",
+    "no_yesterday_activity": "No activities from yesterday"
   },
   "calendar": {
     "title": "Calendar",
@@ -92,7 +148,14 @@
     "seconds": "Seconds",
     "duration": "Duration",
     "startTime": "Start Time",
-    "endTime": "End Time"
+    "endTime": "End Time",
+    "hours_unit": "h",
+    "minutes_unit": "min",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "days_ago": " days ago",
+    "minutes_ago": " min ago",
+    "hours_ago": " hours ago"
   },
   "errors": {
     "generic": "An error occurred",
@@ -107,5 +170,29 @@
     "deleted": "Deleted",
     "updated": "Updated",
     "created": "Created"
+  },
+  "session_start": {
+    "title": "Record Activity",
+    "subtitle": "I will record all my efforts",
+    "select_activity": "Select Activity",
+    "activity_placeholder": "What are you working on?",
+    "location": "Location",
+    "location_placeholder": "Where are you working?",
+    "select_goal": "Select Goal",
+    "goal_placeholder": "Select a goal (optional)",
+    "no_goal": "No goal selected",
+    "target_time": "Target Time",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "start_recording": "Start Recording",
+    "starting_recording": "Starting recording...",
+    "add_new_activity": "Add New Activity",
+    "activity_name": "Name",
+    "activity_description": "Description",
+    "activity_category": "Category",
+    "activity_color": "Color",
+    "activity_icon": "Icon",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 } 

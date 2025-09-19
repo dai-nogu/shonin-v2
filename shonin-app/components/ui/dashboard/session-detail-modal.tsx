@@ -5,6 +5,7 @@ import { X, Clock, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Ca
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
+import { useTranslations } from 'next-intl'
 import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } from "@/lib/upload-photo"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
@@ -19,6 +20,7 @@ interface SessionDetailModalProps {
 
 // 写真なしモーダル
 function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimilar }: SessionDetailModalProps) {
+  const t = useTranslations()
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   
@@ -65,9 +67,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return `${hours}時間${minutes}分`
+      return `${hours}${t('time.hours_unit')}${minutes}${t('time.minutes_unit')}`
     }
-    return `${minutes}分`
+    return `${minutes}${t('time.minutes_unit')}`
   }
 
   const formatDateTime = (date: Date) => {
@@ -179,7 +181,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Calendar className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">実施日時</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.implementation_date')}</span>
               </div>
               <div className="text-white">
                 <div className="text-sm">{formatDateTime(session.startTime)}</div>
@@ -191,9 +193,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <MapPin className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300 font-medium text-sm">場所</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.location')}</span>
               </div>
-              <div className="text-white text-sm">{session.location || '未設定'}</div>
+              <div className="text-white text-sm">{session.location || t('common.not_set')}</div>
             </CardContent>
           </Card>
         </div>
@@ -204,12 +206,12 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Target className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">関連する目標</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.related_goal')}</span>
               </div>
               {goalInfo ? (
                 <div className="text-white text-sm">{goalInfo.title}</div>
               ) : (
-                <div className="text-gray-400 text-sm">未設定</div>
+                <div className="text-gray-400 text-sm">{t('common.not_set')}</div>
               )}
             </CardContent>
           </Card>
@@ -218,7 +220,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-gray-300 font-medium text-sm">気分</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.mood')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div>
@@ -250,7 +252,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           <CardContent className="p-3">
             <div className="flex items-center space-x-2 mb-2">
               <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-gray-300 font-medium text-sm">今日学んだことや成果</span>
+              <span className="text-gray-300 font-medium text-sm">{t('session_detail.achievements')}</span>
             </div>
             <div className="text-white text-sm whitespace-pre-wrap">{session.achievements}</div>
           </CardContent>
@@ -263,7 +265,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           <CardContent className="p-3">
             <div className="flex items-center space-x-2 mb-2">
               <MessageSquare className="w-4 h-4 text-orange-400" />
-              <span className="text-gray-300 font-medium text-sm">課題や次回への改善点</span>
+              <span className="text-gray-300 font-medium text-sm">{t('session_detail.improvements')}</span>
             </div>
             <div className="text-white text-sm whitespace-pre-wrap">{session.challenges}</div>
           </CardContent>
@@ -460,7 +462,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 onClick={handleStartSimilar}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
               >
-                開始する
+                {t('session_detail.start_session')}
               </Button>
             </div>
           )}
@@ -473,14 +475,14 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 variant="outline"
                 className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
               >
-                閉じる
+                {t('session_detail.close')}
               </Button>
               {onStartSimilar && (
                 <Button
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  開始する
+                  {t('session_detail.start_session')}
                 </Button>
               )}
             </div>
@@ -493,6 +495,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
 
 // 写真ありモーダル
 function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar }: SessionDetailModalProps) {
+  const t = useTranslations()
   const [sessionPhotos, setSessionPhotos] = useState<UploadedPhoto[]>([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
   const [imageLoadStates, setImageLoadStates] = useState<Record<string, boolean>>({})
@@ -581,9 +584,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return `${hours}時間${minutes}分`
+      return `${hours}${t('time.hours_unit')}${minutes}${t('time.minutes_unit')}`
     }
-    return `${minutes}分`
+    return `${minutes}${t('time.minutes_unit')}`
   }
 
   const formatDateTime = (date: Date) => {
@@ -702,7 +705,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Calendar className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">実施日時</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.implementation_date')}</span>
               </div>
               <div className="text-white">
                 <div className="text-sm">{formatDateTime(session.startTime)}</div>
@@ -714,9 +717,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <MapPin className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300 font-medium text-sm">場所</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.location')}</span>
               </div>
-              <div className="text-white text-sm">{session.location || '未設定'}</div>
+              <div className="text-white text-sm">{session.location || t('common.not_set')}</div>
             </CardContent>
           </Card>
         </div>
@@ -727,12 +730,12 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Target className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">関連する目標</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.related_goal')}</span>
               </div>
               {goalInfo ? (
                 <div className="text-white text-sm">{goalInfo.title}</div>
               ) : (
-                <div className="text-gray-400 text-sm">未設定</div>
+                <div className="text-gray-400 text-sm">{t('common.not_set')}</div>
               )}
             </CardContent>
           </Card>
@@ -741,7 +744,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             <CardContent className="p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-gray-300 font-medium text-sm">気分</span>
+                <span className="text-gray-300 font-medium text-sm">{t('session_detail.mood')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="text-xl">{getMoodEmoji(session.mood || 3)}</div>
@@ -775,7 +778,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           <CardContent className="p-3">
             <div className="flex items-center space-x-2 mb-2">
               <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-gray-300 font-medium text-sm">今日学んだことや成果</span>
+              <span className="text-gray-300 font-medium text-sm">{t('session_detail.achievements')}</span>
             </div>
             <div className="text-white text-sm whitespace-pre-wrap">{session.achievements}</div>
           </CardContent>
@@ -788,7 +791,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           <CardContent className="p-3">
             <div className="flex items-center space-x-2 mb-2">
               <MessageSquare className="w-4 h-4 text-orange-400" />
-              <span className="text-gray-300 font-medium text-sm">課題や次回への改善点</span>
+              <span className="text-gray-300 font-medium text-sm">{t('session_detail.improvements')}</span>
             </div>
             <div className="text-white text-sm whitespace-pre-wrap">{session.challenges}</div>
           </CardContent>
@@ -1055,7 +1058,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 onClick={handleStartSimilar}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
               >
-                開始する
+                {t('session_detail.start_session')}
               </Button>
             </div>
           )}
@@ -1068,14 +1071,14 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 variant="outline"
                 className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
               >
-                閉じる
+                {t('session_detail.close')}
               </Button>
               {onStartSimilar && (
                 <Button
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  開始する
+                                      {t('session_detail.start_session')}
                 </Button>
               )}
             </div>

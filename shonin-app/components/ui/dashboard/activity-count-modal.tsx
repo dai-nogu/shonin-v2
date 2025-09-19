@@ -5,6 +5,7 @@ import { X, Play, Eye, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
+import { useTranslations } from 'next-intl'
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
@@ -32,6 +33,7 @@ interface ActivityItem {
 const ITEMS_PER_PAGE = 10
 
 export function ActivityCountModal({ isOpen, completedSessions, onClose, onStartActivity, onViewDetail }: ActivityCountModalProps) {
+  const t = useTranslations()
   const [currentPage, setCurrentPage] = useState(1)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
@@ -214,7 +216,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
             
             <CardTitle className="text-white flex items-center text-lg sm:text-xl">
               <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              回数順
+              {t('quick_start.most_recorded')}
             </CardTitle>
           </CardHeader>
 
@@ -244,7 +246,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <div className="flex flex-col">
                         <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{activity.name}</h3>
                         <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
-                          <span className="font-medium text-green-400">{activity.sessionCount}回</span>
+                          <span className="font-medium text-green-400">{activity.sessionCount}{t('common.times')}</span>
                         </div>
                       </div>
                     </div>
@@ -260,10 +262,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                           e.stopPropagation()
                           handleViewDetail(activity)
                         }}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        詳細
-                      </Button>
+                                              >
+                          <Eye className="w-3 h-3 mr-1" />
+                          {t('common.details')}
+                        </Button>
                       <Button
                         size="sm"
                         className="bg-green-500 hover:bg-green-600"
@@ -273,7 +275,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         }}
                       >
                         <Play className="w-3 h-3 mr-1" />
-                        開始
+                        {t('common.start')}
                       </Button>
                     </div>
                     
@@ -286,10 +288,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                           e.stopPropagation()
                           handleActivityClick(activity)
                         }}
-                      >
-                        <Play className="w-3 h-3 mr-1" />
-                        開始
-                      </Button>
+                                              >
+                          <Play className="w-3 h-3 mr-1" />
+                          {t('common.start')}
+                        </Button>
                     </div>
                   </div>
                 </div>

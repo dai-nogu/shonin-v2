@@ -1,7 +1,10 @@
+"use client"
+
 import { Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
+import { useTranslations } from 'next-intl'
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
 import type { CompletedSession } from "./time-tracker"
 
@@ -16,11 +19,12 @@ interface FeedbackData {
 }
 
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
+  const t = useTranslations()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
-    { type: "週次", date: "", message: "セッションを記録すると、週次フィードバックが受け取れます。まずは何か活動を記録してみましょう！" },
-    { type: "月次", date: "", message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねが大切です。" }
+    { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_default_message') },
+    { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }
   ])
   
   const { 
@@ -81,30 +85,30 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       // 週次フィードバック
       if (weeklyResult?.feedback) {
         newFeedbacks.push({
-          type: "週次",
+          type: t('ai_feedback.weekly'),
           date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
           message: weeklyResult.feedback
         })
       } else {
         newFeedbacks.push({
-          type: "週次", 
+          type: t('ai_feedback.weekly'), 
           date: "", 
-          message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。"
+          message: t('ai_feedback.weekly_no_data_message')
         })
       }
 
       // 月次フィードバック
       if (monthlyResult?.feedback) {
         newFeedbacks.push({
-          type: "月次",
+          type: t('ai_feedback.monthly'),
           date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
           message: monthlyResult.feedback
         })
       } else {
         newFeedbacks.push({
-          type: "月次", 
+          type: t('ai_feedback.monthly'), 
           date: "", 
-          message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。"
+          message: t('ai_feedback.monthly_no_data_message')
         })
       }
 
@@ -112,8 +116,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     } catch (err) {
       console.error('フィードバック読み込みエラー:', err)
       setFeedbacks([
-        { type: "週次", date: "", message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。" },
-        { type: "月次", date: "", message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。" }
+        { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_no_data_message') },
+        { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_no_data_message') }
       ])
     }
   }
@@ -172,30 +176,30 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       // 週次フィードバック
       if (weeklyResult?.feedback) {
         newFeedbacks.push({
-          type: "週次",
+          type: t('ai_feedback.weekly'),
           date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
           message: weeklyResult.feedback
         })
       } else {
         newFeedbacks.push({
-          type: "週次", 
+          type: t('ai_feedback.weekly'), 
           date: "", 
-          message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。"
+          message: t('ai_feedback.weekly_no_data_message')
         })
       }
 
       // 月次フィードバック
       if (monthlyResult?.feedback) {
         newFeedbacks.push({
-          type: "月次",
+          type: t('ai_feedback.monthly'),
           date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
           message: monthlyResult.feedback
         })
       } else {
         newFeedbacks.push({
-          type: "月次", 
+          type: t('ai_feedback.monthly'), 
           date: "", 
-          message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。"
+          message: t('ai_feedback.monthly_no_data_message')
         })
       }
 
@@ -203,8 +207,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     } catch (err) {
       console.error('フィードバック再読み込みエラー:', err)
       setFeedbacks([
-        { type: "週次", date: "", message: "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。" },
-        { type: "月次", date: "", message: "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。" }
+        { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_no_data_message') },
+        { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_no_data_message') }
       ])
     }
   }
@@ -212,14 +216,14 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const handleForceRegenerate = async () => {
     try {
       // 現在表示中のフィードバックタイプに応じて強制再生成
-      const isWeekly = currentFeedback.type === "週次"
+      const isWeekly = currentFeedback.type === t('ai_feedback.weekly')
       
       if (isWeekly) {
         const weeklyResult = await generateWeeklyFeedback()
         if (weeklyResult?.feedback) {
           const updatedFeedbacks = [...feedbacks]
           updatedFeedbacks[0] = {
-            type: "週次",
+            type: t('ai_feedback.weekly'),
             date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
             message: weeklyResult.feedback
           }
@@ -230,7 +234,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
         if (monthlyResult?.feedback) {
           const updatedFeedbacks = [...feedbacks]
           updatedFeedbacks[1] = {
-            type: "月次",
+            type: t('ai_feedback.monthly'),
             date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
             message: monthlyResult.feedback
           }
@@ -249,7 +253,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       <CardHeader className="pb-3 lg:pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white text-[1.25rem] md:text-2xl">
-            {currentFeedback.type}フィードバック
+            {currentFeedback.type}{t('ai_feedback.feedback')}
           </CardTitle>
           
           {/* コントロール */}
@@ -328,25 +332,25 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
               {isLoading ? (
                 <span className="flex items-center">
                   <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                  フィードバックを生成中...
+                  {t('ai_feedback.generating')}
                 </span>
               ) : error ? (
-                <span className="text-red-400">エラー: {error}</span>
+                <span className="text-red-400">{t('errors.generic')}: {error}</span>
               ) : (
                 currentFeedback.message
               )}
             </p>
           </div>
 
-          {/* 次回フィードバック予告 */}
-          <div className="text-xs text-gray-500">
-            {currentFeedback.type === "週次" && (
-              <div>次回の週次フィードバック: {getNextWeekMonday()}予定</div>
-            )}
-            {currentFeedback.type === "月次" && (
-              <div>次回の月次フィードバック: {getNextMonthFirstDay()}予定</div>
-            )}
-          </div>
+                      {/* 次回フィードバック予告 */}
+            <div className="text-xs text-gray-500">
+              {currentFeedback.type === t('ai_feedback.weekly') && (
+                <div>{t('ai_feedback.next_weekly_feedback')}: {getNextWeekMonday()} {t('ai_feedback.scheduled')}</div>
+              )}
+              {currentFeedback.type === t('ai_feedback.monthly') && (
+                <div>{t('ai_feedback.next_monthly_feedback')}: {getNextMonthFirstDay()} {t('ai_feedback.scheduled')}</div>
+              )}
+            </div>
         </div>
       </CardContent>
     </Card>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-
+import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/common/tabs"
 
 import { SessionDetailModal } from "./session-detail-modal"
@@ -36,6 +36,8 @@ interface QuickStartProps {
 }
 
 export function QuickStart({ completedSessions, onStartActivity }: QuickStartProps) {
+  const t = useTranslations()
+  
   const [selectedActivity, setSelectedActivity] = useState<QuickStartActivity | null>(null)
 
   const [activeTab, setActiveTab] = useState("most-recorded")
@@ -133,9 +135,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     const diffTime = now.getTime() - date.getTime()
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
 
-    if (diffDays === 0) return "今日"
-    if (diffDays === 1) return "昨日"
-    if (diffDays < 7) return `${diffDays}日前`
+    if (diffDays === 0) return t('time.today')
+    if (diffDays === 1) return t('time.yesterday')
+    if (diffDays < 7) return `${diffDays}${t('time.days_ago')}`
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
   }
 
@@ -146,10 +148,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
     const diffMinutes = Math.floor(diffTime / (1000 * 60))
 
-    if (diffMinutes < 60) return `${diffMinutes}分前`
-    if (diffHours < 24) return `${diffHours}時間前`
-    if (diffDays === 1) return "昨日"
-    if (diffDays < 7) return `${diffDays}日前`
+    if (diffMinutes < 60) return `${diffMinutes}${t('time.minutes_ago')}`
+    if (diffHours < 24) return `${diffHours}${t('time.hours_ago')}`
+    if (diffDays === 1) return t('time.yesterday')
+    if (diffDays < 7) return `${diffDays}${t('time.days_ago')}`
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
   }
 
@@ -426,7 +428,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   {activeTab === "most-recorded" ? (
                     <>
                       <div className="flex items-center space-x-1">
-                        <span className="font-medium text-green-400">{activity.sessionCount}回</span>
+                        <span className="font-medium text-green-400">{activity.sessionCount}{t('common.times')}</span>
                       </div>
                     </>
                                     ) : (
@@ -452,7 +454,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 }}
               >
                 <Play className="w-3 h-3 mr-1" />
-                開始
+                {t('common.start')}
               </Button>
             ) : (
               // PC版: 詳細ボタン + 開始ボタン
@@ -467,7 +469,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   }}
                 >
                   <Eye className="w-3 h-3 mr-1" />
-                  詳細
+                  {t('common.details')}
                 </Button>
                 <Button
                   size="sm"
@@ -478,7 +480,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   }}
                 >
                   <Play className="w-3 h-3 mr-1" />
-                  開始
+                  {t('common.start')}
                 </Button>
               </div>
             )}
@@ -493,14 +495,14 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            開始する
+            {t('quick_start.start_activity')}
           </CardTitle>
-          <p className="text-gray-400 text-sm">最近の行動から素早く開始</p>
+          <p className="text-gray-400 text-sm">{t('quick_start.start_from_recent')}</p>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-gray-400">まだ行動がありません</p>
-            <p className="text-gray-500 text-sm mt-2">最初のセッションを完了すると、ここに表示されます</p>
+            <p className="text-gray-400">{t('quick_start.no_activity_yet')}</p>
+            <p className="text-gray-500 text-sm mt-2">{t('quick_start.complete_first_session')}</p>
           </div>
         </CardContent>
       </Card>
@@ -512,9 +514,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            開始する
+            {t('quick_start.start_activity')}
           </CardTitle>
-          <p className="text-gray-400 text-sm">最近の行動から素早く開始</p>
+          <p className="text-gray-400 text-sm">{t('quick_start.start_from_recent')}</p>
         </CardHeader>
 
         <CardContent>
@@ -524,26 +526,26 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 value="recent" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
-                最新
+                {t('quick_start.latest')}
               </TabsTrigger>
               <TabsTrigger 
                 value="most-recorded" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
-                回数順
+                {t('quick_start.most_recorded')}
               </TabsTrigger>
               <TabsTrigger 
                 value="yesterday" 
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
               >
-                昨日
+                {t('quick_start.yesterday')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="most-recorded" className="mt-4">
               {renderActivityList(
                 getMostRecordedActivities(),
-                "まだ十分なデータがありません"
+                t('quick_start.not_enough_data')
               )}
               {/* 回数順タブ：ユニークな行動が3つを超える場合のみ表示 */}
               {getMostRecordedActivities().length >= 3 && Array.from(new Set(completedSessions.map(s => s.activityName))).length > 3 && (
@@ -555,7 +557,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     className="text-gray-400 hover:text-white hover:bg-gray-800"
                   >
                     <MoreHorizontal className="w-4 h-4 mr-1" />
-                    もっと見る
+                    {t('quick_start.see_more')}
                   </Button>
                 </div>
               )}
@@ -564,7 +566,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <TabsContent value="recent" className="mt-4">
               {renderActivityList(
                 getRecentActivities(),
-                "最近の行動がありません"
+                t('quick_start.no_recent_activity')
               )}
               {/* 最新タブ：全セッション数が3つを超える場合のみ表示 */}
               {completedSessions.length > 3 && (
@@ -576,7 +578,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     className="text-gray-400 hover:text-white hover:bg-gray-800"
                   >
                     <MoreHorizontal className="w-4 h-4 mr-1" />
-                    もっと見る
+                    {t('quick_start.see_more')}
                   </Button>
                 </div>
               )}
@@ -585,7 +587,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <TabsContent value="yesterday" className="mt-4">
               {renderActivityList(
                 getYesterdayActivities(),
-                "昨日の行動がありません"
+                t('quick_start.no_yesterday_activity')
               )}
               {/* 昨日タブ：昨日の行動が3つを超える場合のみ表示 */}
               {getYesterdayActivities().length > 3 && (
@@ -597,7 +599,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     className="text-gray-400 hover:text-white hover:bg-gray-800"
                   >
                     <MoreHorizontal className="w-4 h-4 mr-1" />
-                    もっと見る
+                    {t('quick_start.see_more')}
                   </Button>
                 </div>
               )}

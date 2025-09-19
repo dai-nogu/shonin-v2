@@ -15,7 +15,12 @@
     "all": "すべて",
     "none": "なし",
     "yes": "はい",
-    "no": "いいえ"
+    "no": "いいえ",
+    "seeMore": "もっと見る",
+    "times": "回",
+    "start": "開始",
+    "details": "詳細",
+    "not_set": "未設定"
   },
   "navigation": {
     "dashboard": "ダッシュボード",
@@ -45,7 +50,58 @@
     "stopActivity": "アクティビティを停止",
     "noActiveSessions": "進行中のセッションはありません",
     "totalTime": "合計時間",
-    "sessionsCount": "セッション数"
+    "sessionsCount": "セッション数",
+    "greeting": {
+      "morning": "おはようございます",
+      "afternoon": "こんにちは",
+      "evening": "こんばんは",
+      "userSuffix": "さん"
+    },
+    "encouragement": "今日も努力を積み重ねましょう",
+    "quickStart": {
+      "description": "最近の行動から素早く開始",
+      "noRecentActivities": "最近の行動がありません",
+      "noYesterdayActivities": "昨日の行動がありません"
+    }
+  },
+  "session_detail": {
+    "title": "セッション詳細",
+    "implementation_date": "実施日時",
+    "location": "場所",
+    "related_goal": "関連する目標",
+    "mood": "気分",
+    "achievements": "今日学んだことや成果",
+    "improvements": "課題や次回への改善点",
+    "no_content": "特になし",
+    "start_session": "開始する",
+    "close": "閉じる"
+  },
+  "ai_feedback": {
+    "title": "週次フィードバック",
+    "feedback": "フィードバック",
+    "weekly": "週次",
+    "monthly": "月次",
+    "weekly_default_message": "セッションを記録すると、週次フィードバックが受け取れます。まずは何か活動を記録してみましょう！",
+    "monthly_default_message": "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねが大切です。",
+    "weekly_no_data_message": "まだ十分なデータが蓄積されていません。セッションを記録すると、週次フィードバックが受け取れるようになります。",
+    "monthly_no_data_message": "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。",
+    "next_weekly_feedback": "次回の週次フィードバック",
+    "next_monthly_feedback": "次回の月次フィードバック",
+    "scheduled": "予定",
+    "generating": "フィードバックを生成中..."
+  },
+  "quick_start": {
+    "start_activity": "開始する",
+    "start_from_recent": "最近の行動から素早く開始",
+    "no_activity_yet": "まだ行動がありません",
+    "complete_first_session": "最初のセッションを完了すると、ここに表示されます",
+    "latest": "最新",
+    "most_recorded": "回数順",
+    "yesterday": "昨日",
+    "not_enough_data": "まだ十分なデータがありません",
+    "see_more": "もっと見る",
+    "no_recent_activity": "最近の行動がありません",
+    "no_yesterday_activity": "昨日の行動がありません"
   },
   "calendar": {
     "title": "カレンダー",
@@ -92,7 +148,14 @@
     "seconds": "秒",
     "duration": "継続時間",
     "startTime": "開始時刻",
-    "endTime": "終了時刻"
+    "endTime": "終了時刻",
+    "hours_unit": "時間",
+    "minutes_unit": "分",
+    "today": "今日",
+    "yesterday": "昨日",
+    "days_ago": "日前",
+    "minutes_ago": "分前",
+    "hours_ago": "時間前"
   },
   "errors": {
     "generic": "エラーが発生しました",
@@ -107,5 +170,29 @@
     "deleted": "削除しました",
     "updated": "更新しました",
     "created": "作成しました"
+  },
+  "session_start": {
+    "title": "行動を記録する",
+    "subtitle": "私はすべての努力を記録します",
+    "select_activity": "行動を選択",
+    "activity_placeholder": "何に取り組みますか？",
+    "location": "場所",
+    "location_placeholder": "どこで取り組みますか？",
+    "select_goal": "目標を選択",
+    "goal_placeholder": "目標を選択してください（任意）",
+    "no_goal": "目標を選択しない",
+    "target_time": "目標時間",
+    "hours": "時間",
+    "minutes": "分",
+    "start_recording": "記録開始",
+    "starting_recording": "記録開始中...",
+    "add_new_activity": "新しい行動を追加",
+    "activity_name": "名前",
+    "activity_description": "説明",
+    "activity_category": "カテゴリ",
+    "activity_color": "色",
+    "activity_icon": "アイコン",
+    "save": "保存",
+    "cancel": "キャンセル"
   }
 } 

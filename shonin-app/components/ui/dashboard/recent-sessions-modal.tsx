@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Play, Eye, History } from "lucide-react"
+import { X, Play, Eye, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
+import { useTranslations } from 'next-intl'
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
@@ -34,6 +35,7 @@ interface SessionItem {
 const ITEMS_PER_PAGE = 10
 
 export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStartActivity, onViewDetail }: RecentSessionsModalProps) {
+  const t = useTranslations()
   const [currentPage, setCurrentPage] = useState(1)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
@@ -92,10 +94,10 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
     const diffMinutes = Math.floor(diffTime / (1000 * 60))
 
-    if (diffMinutes < 60) return `${diffMinutes}分前`
-    if (diffHours < 24) return `${diffHours}時間前`
-    if (diffDays === 1) return "昨日"
-    if (diffDays < 7) return `${diffDays}日前`
+    if (diffMinutes < 60) return `${diffMinutes}${t('time.minutes_ago')}`
+    if (diffHours < 24) return `${diffHours}${t('time.hours_ago')}`
+    if (diffDays === 1) return t('time.yesterday')
+    if (diffDays < 7) return `${diffDays}${t('time.days_ago')}`
     return formatDate(date)
   }
 
@@ -209,10 +211,10 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
               <X className="w-4 h-4" />
             </Button>
             
-            <CardTitle className="text-white flex items-center text-lg sm:text-xl">
-              <History className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              最新
-            </CardTitle>
+                          <CardTitle className="text-white flex items-center text-lg sm:text-xl">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                {t('quick_start.latest')}
+              </CardTitle>
           </CardHeader>
 
           <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pb-3 sm:pb-6">
@@ -257,10 +259,10 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                           e.stopPropagation()
                           handleViewDetail(sessionItem)
                         }}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        詳細
-                      </Button>
+                                              >
+                          <Eye className="w-3 h-3 mr-1" />
+                          {t('common.details')}
+                        </Button>
                       <Button
                         size="sm"
                         className="bg-green-500 hover:bg-green-600"
@@ -270,7 +272,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                         }}
                       >
                         <Play className="w-3 h-3 mr-1" />
-                        開始
+                        {t('common.start')}
                       </Button>
                     </div>
                     
@@ -283,10 +285,10 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                           e.stopPropagation()
                           handleActivityClick(sessionItem)
                         }}
-                      >
-                        <Play className="w-3 h-3 mr-1" />
-                        開始
-                      </Button>
+                                              >
+                          <Play className="w-3 h-3 mr-1" />
+                          {t('common.start')}
+                        </Button>
                     </div>
                   </div>
                 </div>

@@ -88,7 +88,7 @@ function MonthCalendarSSR({
             {/* 曜日ヘッダー */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {["月", "火", "水", "木", "金", "土", "日"].map((day) => (
-                <div key={day} className="p-2 text-center text-gray-400 font-medium text-sm">
+                <div key={day} className="py-2 px-0 text-center text-gray-400 font-medium text-sm">
                   {day}
                 </div>
               ))}

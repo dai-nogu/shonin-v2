@@ -1,16 +1,18 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Play, MapPin, Target, Plus, Clock } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
+import { Textarea } from "@/components/ui/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
-import type { SessionData } from "./time-tracker"
-import { useActivities, type Activity } from "@/contexts/activities-context"
+import { MapPin, Target, Clock, Plus, Play } from "lucide-react"
+import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
+import { useTranslations } from 'next-intl'
+import type { Activity, SessionData } from "./time-tracker"
 
 interface ActivitySelectorProps {
   onStart: (session: SessionData) => void
@@ -18,6 +20,7 @@ interface ActivitySelectorProps {
 }
 
 export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelectorProps) {
+  const t = useTranslations()
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
   const [targetHours, setTargetHours] = useState("")
@@ -182,9 +185,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader className="pb-4">
         <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-          行動を記録する
+          {t('session_start.title')}
         </CardTitle>
-        <p className="text-gray-400 text-sm">私はすべての努力を記録します</p>
+        <p className="text-gray-400 text-sm">{t('session_start.subtitle')}</p>
       </CardHeader>
 
       <CardContent className="space-y-4 lg:space-y-6">
@@ -192,14 +195,14 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
         {showAddForm && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white text-base">新しい行動を追加</CardTitle>
+              <CardTitle className="text-white text-base">{t('session_start.add_new_activity')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-gray-300">名前</Label>
+                <Label className="text-gray-300">{t('session_start.activity_name')}</Label>
                 <Input
                   ref={activityNameInputRef}
-                  placeholder="行動名"
+                  placeholder={t('session_start.activity_name')}
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -207,7 +210,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300">アイコン</Label>
+                <Label className="text-gray-300">{t('session_start.activity_icon')}</Label>
                 <Input
                   placeholder="📚"
                   value={newActivityIcon}
@@ -218,7 +221,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300">色</Label>
+                <Label className="text-gray-300">{t('session_start.activity_color')}</Label>
                 <div className="grid grid-cols-6 gap-2 relative">
                   {colorOptions.map((color) => (
                     <div key={color.value} className="relative">
@@ -254,7 +257,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   disabled={!newActivityName.trim()}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
                 >
-                  追加
+                  {t('session_start.save')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -267,7 +270,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   variant="outline"
                   className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-sm"
                 >
-                  キャンセル
+                  {t('session_start.cancel')}
                 </Button>
               </div>
             </CardContent>
@@ -279,10 +282,10 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
           <>
             {/* 行動選択 */}
             <div className="space-y-2">
-              <Label className="text-white">行動を選択</Label>
+              <Label className="text-white">{t('session_start.select_activity')}</Label>
               <Select value={selectedActivity} onValueChange={setSelectedActivity}>
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
-                  <SelectValue placeholder="何に取り組みますか？" />
+                  <SelectValue placeholder={t('session_start.activity_placeholder')} />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
                   {allActivities.map((activity) => (
@@ -305,7 +308,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                       className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      新しい行動を追加
+                      {t('session_start.add_new_activity')}
                     </Button>
                   </div>
                 </SelectContent>
@@ -332,10 +335,10 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
             <div className="space-y-2">
               <Label className="text-white flex items-center text-sm">
                 <MapPin className="w-4 h-4 mr-2" />
-                場所
+                {t('session_start.location')}
               </Label>
               <Input
-                placeholder="どこで取り組みますか？"
+                placeholder={t('session_start.location_placeholder')}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm"
@@ -346,15 +349,15 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
             <div className="space-y-2">
               <Label className="text-white flex items-center text-sm">
                 <Target className="w-4 h-4 mr-2" />
-                目標を選択
+                {t('session_start.select_goal')}
               </Label>
               <Select value={selectedGoal} onValueChange={handleGoalSelection}>
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
-                  <SelectValue placeholder="目標を選択してください（任意）" />
+                  <SelectValue placeholder={t('session_start.goal_placeholder')} />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
                   <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2">
-                    目標を選択しない
+                    {t('session_start.no_goal')}
                   </SelectItem>
                   {activeGoals.map((goal) => (
                     <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2">
@@ -372,7 +375,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                         className="w-full text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        目標を設定する
+                        {t('goals.addGoal')}
                       </Button>
                     </div>
                   )}
@@ -384,7 +387,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
             <div className="space-y-2">
               <Label className="text-white flex items-center text-sm">
                 <Clock className="w-4 h-4 mr-2" />
-                目標時間
+                {t('session_start.target_time')}
               </Label>
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
@@ -397,7 +400,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                     max="23"
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-16 lg:w-20 text-center"
                   />
-                  <span className="text-gray-300 text-sm">時間</span>
+                  <span className="text-gray-300 text-sm">{t('session_start.hours')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Input
@@ -409,7 +412,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                     max="59"
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-16 lg:w-20 text-center"
                   />
-                  <span className="text-gray-300 text-sm">分</span>
+                  <span className="text-gray-300 text-sm">{t('session_start.minutes')}</span>
                 </div>
               </div>
             </div>
@@ -423,12 +426,12 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               {isStarting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  記録開始中...
+                  {t('session_start.starting_recording')}
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4 mr-2" />
-                  記録開始
+                  {t('session_start.start_recording')}
                 </>
               )}
             </Button>
