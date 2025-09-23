@@ -3,8 +3,10 @@
 import { Play, Pause, Clock, Target, Square } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import type { SessionData } from "./time-tracker"
+import { Badge } from "@/components/ui/common/badge"
+import { useTranslations } from 'next-intl'
 import { useSessions } from "@/contexts/sessions-context"
+import type { SessionData } from "./time-tracker"
 
 interface ActiveActivitySidebarProps {
   activeSession: SessionData | null
@@ -23,17 +25,18 @@ export function ActiveActivitySidebar({
   onEnd,
   sessionState 
 }: ActiveActivitySidebarProps) {
+  const t = useTranslations()
   // セッションコンテキストから一元化された時間データを取得
   const { elapsedTime, formattedTime } = useSessions()
 
   const getStatusInfo = () => {
     switch (sessionState) {
       case "active":
-        return { color: "bg-green-500", text: "記録中", icon: "🟢" }
+        return { color: "bg-green-500", text: t('active_session.recording'), icon: "🟢" }
       case "paused":
-        return { color: "bg-yellow-500", text: "一時停止中", icon: "⏸️" }
+        return { color: "bg-yellow-500", text: t('active_session.paused'), icon: "⏸️" }
       case "ended":
-        return { color: "bg-blue-500", text: "振り返り中", icon: "✏️" }
+        return { color: "bg-blue-500", text: t('active_session.reflecting'), icon: "✏️" }
     }
   }
 
@@ -86,8 +89,11 @@ export function ActiveActivitySidebar({
         {activeSession.targetTime && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-400">
-              <span>目標</span>
-              <span>{Math.floor(activeSession.targetTime / 60)}h {activeSession.targetTime % 60}m</span>
+              <span>{t('active_session.target')}</span>
+              <span>
+                {Math.floor(activeSession.targetTime / 60)}{t('time.hours_unit')}
+                {activeSession.targetTime % 60 > 0 && ` ${activeSession.targetTime % 60}${t('time.minutes_unit')}`}
+              </span>
             </div>
             <div className="w-full bg-gray-800 rounded-full h-1">
               <div
@@ -130,7 +136,7 @@ export function ActiveActivitySidebar({
                 {sessionState === "paused" ? (
                   <>
                     <Play className="w-3 h-3 mr-1" />
-                    再開
+                    {t('active_session.resume')}
                   </>
                 ) : (
                   <>

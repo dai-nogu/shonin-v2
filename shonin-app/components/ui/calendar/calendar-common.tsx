@@ -11,6 +11,9 @@ import { formatDuration } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import type { CalendarSession } from "@/lib/calendar-utils"
+import { useTranslations, useLocale } from 'next-intl'
+import { formatDateForLocale } from '@/lib/i18n-utils'
+import { X } from "lucide-react"
 
 export type { CalendarSession }
 
@@ -37,6 +40,8 @@ export function CalendarCommon({
 }: CalendarCommonProps) {
   const router = useRouter()
   const { timezone } = useTimezone()
+  const t = useTranslations()
+  const locale = useLocale()
   const [selectedDateSessions, setSelectedDateSessions] = useState<CalendarSession[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")
@@ -160,7 +165,7 @@ export function CalendarCommon({
                   ))}
                   {bottomPanelSessions.length === 0 && (
                     <div className="text-center text-gray-400 py-4">
-                      この日はアクティビティがありません
+                      {t('calendar.no_activities')}
                     </div>
                   )}
                 </div>
@@ -173,9 +178,11 @@ export function CalendarCommon({
       {/* セッション詳細モーダル（PC版） */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="w-[90%] sm:max-w-[500px] bg-gray-900 border-gray-800">
-          <DialogHeader>
-            <DialogTitle className="text-white">{modalDate}の行動</DialogTitle>
-          </DialogHeader>
+                  <DialogHeader>
+          <DialogTitle className="text-white">
+            {t('calendar.activities_on_date', { date: formatDateForLocale(modalDate, locale) })}
+          </DialogTitle>
+        </DialogHeader>
           <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto">
             {selectedDateSessions.map((session) => (
               <div 
@@ -193,7 +200,7 @@ export function CalendarCommon({
             ))}
             {selectedDateSessions.length === 0 && (
               <div className="text-center text-gray-400 py-8">
-                この日はアクティビティがありません
+                {t('calendar.no_activities')}
               </div>
             )}
           </div>
@@ -202,7 +209,7 @@ export function CalendarCommon({
               onClick={() => setIsModalOpen(false)}
               className="bg-gray-700 hover:bg-gray-600 text-white"
             >
-              閉じる
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

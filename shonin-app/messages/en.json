@@ -108,8 +108,22 @@
     "month": "Month",
     "week": "Week",
     "today": "Today",
+    "this_week": "This Week",
     "noEvents": "No events",
-    "sessionDetails": "Session Details"
+    "no_activities": "No activities",
+    "sessionDetails": "Session Details",
+    "activities_on_date": "{date}",
+    "month_view": "Month View",
+    "week_view": "Week View",
+    "others_count": "+{count} more",
+    "month_stats": {
+      "total_time": "Total This Month",
+      "average_time": "Average This Month"
+    },
+    "week_stats": {
+      "total_time": "Total This Week",
+      "average_time": "Average This Week"
+    }
   },
   "goals": {
     "title": "Goals",
@@ -184,8 +198,8 @@
     "target_time": "Target Time",
     "hours": "Hours",
     "minutes": "Minutes",
-    "start_recording": "Start Recording",
-    "starting_recording": "Starting recording...",
+    "start_recording": "Start",
+    "starting_recording": "recording...",
     "add_new_activity": "Add New Activity",
     "activity_name": "Name",
     "activity_description": "Description",
@@ -208,5 +222,34 @@
       "saturday": "Sat",
       "sunday": "Sun"
     }
+  },
+  "active_session": {
+    "recording": "Recording",
+    "reflecting": "Reflecting",
+    "paused": "Paused",
+    "start_time": "Start Time",
+    "target": "Target",
+    "progress": "Progress",
+    "goal_achieved": "🎉 Goal Achieved!",
+    "resume": "Resume",
+    "pause": "Pause",
+    "end": "End",
+    "save": "Save",
+    "saving": "Saving...",
+    "photo_uploading": "Uploading photos...",
+    "paused_message": "⏸ Session is paused. Resume when you're ready.",
+    "completed_message": "Great work!<br />Let's record your reflection and save.",
+    "mood_question": "How are you feeling?",
+    "achievements_label": "What you learned and achieved today",
+    "achievements_placeholder": "What did you learn? What achievements did you make?",
+    "challenges_label": "Challenges and improvements for next time",
+    "challenges_placeholder": "What challenges did you face? How will you improve next time?",
+    "notes_label": "Other notes",
+    "notes_placeholder": "Any other thoughts you'd like to record...",
+    "photos_label": "Photos",
+    "saved_photos": "Saved photos",
+    "waiting_save": "Waiting to save",
+    "reflection_save_error": "Failed to save reflection.",
+    "save_error": "An error occurred during save process."
   }
 } 

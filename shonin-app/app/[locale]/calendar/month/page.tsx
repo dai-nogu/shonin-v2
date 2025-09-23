@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
+import { useTranslations, useLocale } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { 
   convertToCalendarSessions, 
@@ -38,10 +39,16 @@ function MonthCalendarSSR({
   onTodayClick, 
   onDateClick 
 }: MonthCalendarSSRProps) {
+  const t = useTranslations()
+  const locale = useLocale()
   // セッションデータの変換（SSR側で実行）
   const sessions = convertToCalendarSessions(completedSessions)
   const days = getDaysInMonth(currentDate)
-  const monthName = currentDate.toLocaleDateString("ja-JP", { year: "numeric", month: "long" })
+  
+  // ロケールに応じた年月表示
+  const monthName = locale === 'en' 
+    ? currentDate.toLocaleDateString("en-US", { year: "numeric", month: "long" })
+    : currentDate.toLocaleDateString("ja-JP", { year: "numeric", month: "long" })
   
   // 月間統計の計算
   const currentMonthSessions = getCurrentMonthSessions(currentDate, sessions)
@@ -70,7 +77,7 @@ function MonthCalendarSSR({
                   onClick={onTodayClick}
                   className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
                 >
-                  今日
+                  {t('calendar.today')}
                 </Button>
                 <Button
                   variant="outline"
@@ -87,8 +94,16 @@ function MonthCalendarSSR({
           <CardContent className="p-0">
             {/* 曜日ヘッダー */}
             <div className="grid grid-cols-7 gap-1 mb-2">
-              {["月", "火", "水", "木", "金", "土", "日"].map((day) => (
-                <div key={day} className="py-2 px-0 text-center text-gray-400 font-medium text-sm">
+              {[
+                t('weekly_progress.days.monday'),
+                t('weekly_progress.days.tuesday'),
+                t('weekly_progress.days.wednesday'),
+                t('weekly_progress.days.thursday'),
+                t('weekly_progress.days.friday'),
+                t('weekly_progress.days.saturday'),
+                t('weekly_progress.days.sunday')
+              ].map((day, index) => (
+                <div key={index} className="py-2 px-0 text-center text-gray-400 font-medium text-sm">
                   {day}
                 </div>
               ))}
@@ -158,7 +173,7 @@ function MonthCalendarSSR({
                 {formatDuration(totalMonthTime)}
               </div>
               <div className="text-xs md:text-sm text-gray-400">
-                今月の総時間
+                {t('calendar.month_stats.total_time')}
               </div>
             </CardContent>
           </Card>
@@ -169,7 +184,7 @@ function MonthCalendarSSR({
                 {formatDuration(averageMonthTime)}
               </div>
               <div className="text-xs md:text-sm text-gray-400">
-                今月の平均時間
+                {t('calendar.month_stats.average_time')}
               </div>
             </CardContent>
           </Card>

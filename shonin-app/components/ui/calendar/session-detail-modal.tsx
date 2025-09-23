@@ -3,6 +3,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/common/dialog"
 import { Button } from "@/components/ui/common/button"
 import { formatDuration } from "@/lib/format-duration"
+import { useTranslations, useLocale } from 'next-intl'
+import { formatDateForLocale } from '@/lib/i18n-utils'
 import type { CalendarSession } from "@/lib/calendar-utils"
 
 interface SessionDetailModalProps {
@@ -18,11 +20,16 @@ export function SessionDetailModal({
   date, 
   sessions 
 }: SessionDetailModalProps) {
+  const t = useTranslations()
+  const locale = useLocale()
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[90%] sm:max-w-[500px] bg-gray-900 border-gray-800">
         <DialogHeader>
-          <DialogTitle className="text-white">{date}の行動</DialogTitle>
+          <DialogTitle className="text-white">
+            {t('calendar.activities_on_date', { date: formatDateForLocale(date, locale) })}
+          </DialogTitle>
         </DialogHeader>
         <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto">
           {sessions.map((session) => (
@@ -41,7 +48,7 @@ export function SessionDetailModal({
           ))}
           {sessions.length === 0 && (
             <div className="text-center text-gray-400 py-8">
-              この日はアクティビティがありません
+              {t('calendar.no_activities')}
             </div>
           )}
         </div>
@@ -50,7 +57,7 @@ export function SessionDetailModal({
             onClick={onClose}
             className="bg-gray-700 hover:bg-gray-600 text-white"
           >
-            閉じる
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

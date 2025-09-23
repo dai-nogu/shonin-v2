@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
 import { getWeekStartInTimezone } from "@/lib/timezone-utils"
+import { useTranslations } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { 
   convertToCalendarSessions, 
@@ -41,6 +42,7 @@ function WeekCalendarSSR({
   onTodayClick, 
   onDateClick 
 }: WeekCalendarSSRProps) {
+  const t = useTranslations()
   // セッションデータの変換（SSR側で実行）
   const sessions = convertToCalendarSessions(completedSessions, timezone)
   
@@ -85,7 +87,7 @@ function WeekCalendarSSR({
                   onClick={onTodayClick}
                   className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
                 >
-                  今週
+                  {t('calendar.this_week')}
                 </Button>
                 <Button
                   variant="outline"
@@ -104,7 +106,15 @@ function WeekCalendarSSR({
               {weekDays.map((day, index) => {
                 const daySessions = getSessionsForWeekDate(day, sessions)
                 const todayCheck = isTodayWeek(day)
-                const dayNames = ["月", "火", "水", "木", "金", "土", "日"]
+                const dayNames = [
+                  t('weekly_progress.days.monday'),
+                  t('weekly_progress.days.tuesday'),
+                  t('weekly_progress.days.wednesday'),
+                  t('weekly_progress.days.thursday'),
+                  t('weekly_progress.days.friday'),
+                  t('weekly_progress.days.saturday'),
+                  t('weekly_progress.days.sunday')
+                ]
 
                 return (
                   <div
@@ -141,7 +151,7 @@ function WeekCalendarSSR({
                       ))}
                       {daySessions.length > 2 && (
                         <div className={`text-xs text-gray-400 text-center py-[0.1rem] md:py-1 rounded bg-gray-700 bg-opacity-50`}>
-                          その他+{daySessions.length - 2}
+                          {t('calendar.others_count', { count: daySessions.length - 2 })}
                         </div>
                       )}
                     </div>
@@ -160,7 +170,7 @@ function WeekCalendarSSR({
                 {formatDuration(totalWeekTime)}
               </div>
               <div className="text-xs md:text-sm text-gray-400">
-                今週の総時間
+                {t('calendar.week_stats.total_time')}
               </div>
             </CardContent>
           </Card>
@@ -171,7 +181,7 @@ function WeekCalendarSSR({
                 {formatDuration(averageWeekTime)}
               </div>
               <div className="text-xs md:text-sm text-gray-400">
-                今週の平均時間
+                {t('calendar.week_stats.average_time')}
               </div>
             </CardContent>
           </Card>

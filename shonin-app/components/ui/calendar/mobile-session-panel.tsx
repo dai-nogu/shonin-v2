@@ -1,6 +1,8 @@
 "use client"
 
+import { X } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
+import { useTranslations } from 'next-intl'
 import type { CalendarSession } from "@/lib/calendar-utils"
 
 interface MobileSessionPanelProps {
@@ -14,6 +16,8 @@ export function MobileSessionPanel({
   date, 
   sessions 
 }: MobileSessionPanelProps) {
+  const t = useTranslations()
+  
   if (!isVisible) return null
 
   return (
@@ -43,7 +47,7 @@ export function MobileSessionPanel({
             ))}
             {sessions.length === 0 && (
               <div className="text-center text-gray-400 py-4">
-                この日はアクティビティがありません
+                {t('calendar.no_activities')}
               </div>
             )}
           </div>

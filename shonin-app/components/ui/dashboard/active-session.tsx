@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/common/button"
 import { Badge } from "@/components/ui/common/badge"
 import { Textarea } from "@/components/ui/common/textarea"
 import { Label } from "@/components/ui/common/label"
+import { useTranslations } from 'next-intl'
 import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
@@ -27,6 +28,7 @@ interface ActiveSessionProps {
 }
 
 export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
+  const t = useTranslations()
   // 認証フック
   const { user } = useAuth()
   
@@ -217,7 +219,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
         
         if (!reflectionId) {
           // 振り返り保存に失敗した場合でもセッション保存は継続
-          setLocalReflectionError('振り返りの保存に失敗しました。')
+          setLocalReflectionError(t('active_session.reflection_save_error'))
         }
       }
       
@@ -225,7 +227,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
       clearLocalStorage()
       
     } catch (error) {
-      setLocalReflectionError('保存処理でエラーが発生しました。')
+              setLocalReflectionError(t('active_session.save_error'))
     } finally {
       setIsSaving(false)
       saveInProgressRef.current = false // 保存処理完了フラグをリセット
@@ -235,11 +237,11 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
   const getStatusInfo = () => {
     switch (sessionState) {
       case "active":
-        return { color: "bg-green-500", text: "記録中", icon: "🟢" }
+        return { color: "bg-green-500", text: t('active_session.recording'), icon: "🟢" }
       case "paused":
-        return { color: "bg-yellow-500", text: "一時停止中", icon: "⏸️" }
+        return { color: "bg-yellow-500", text: t('active_session.paused'), icon: "⏸️" }
       case "ended":
-        return { color: "bg-blue-500", text: "振り返り中", icon: "✏️" }
+        return { color: "bg-blue-500", text: t('active_session.reflecting'), icon: "✏️" }
     }
   }
 
@@ -269,7 +271,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
               {formattedTime}
             </div>
             <div className="text-gray-400 text-sm">
-              開始時刻:{" "}
+              {t('active_session.start_time')}:{" "}
               {getTimeStringInTimezone(session.startTime, timezone, '24h').substring(0, 5)}
             </div>
             
@@ -277,7 +279,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             {session.targetTime && (
               <div className="space-y-2 mt-4">
                 <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
-                  <span>目標: {Math.floor(session.targetTime / 60)}時間{session.targetTime % 60}分</span>
+                  <span>
+                    {t('active_session.target')}: {Math.floor(session.targetTime / 60)}{t('time.hours_unit')}
+                    {session.targetTime % 60 > 0 && `${session.targetTime % 60}${t('time.minutes_unit')}`}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-800 rounded-full h-2">
                   <div
@@ -294,10 +299,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   />
                 </div>
                 <div className="text-xs text-gray-400">
-                  進捗: {Math.round((elapsedTime / (session.targetTime * 60)) * 100)}%
-                  {elapsedTime >= session.targetTime * 60 && (
-                    <span className="text-green-400 ml-2">🎉 目標達成！</span>
-                  )}
+                                {t('active_session.progress')}: {Math.round((elapsedTime / (session.targetTime * 60)) * 100)}%
+            {elapsedTime >= session.targetTime * 60 && (
+              <span className="text-green-400 ml-2">{t('active_session.goal_achieved')}</span>
+            )}
                 </div>
               </div>
             )}
@@ -315,7 +320,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
-                  再開
+                  {t('active_session.resume')}
                 </Button>
                 <Button 
                   onClick={handleSave} 
@@ -324,7 +329,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   disabled={isSaving || isReflectionLoading || isUploading}
                 >
                   <Save className="w-5 h-5 mr-2" />
-                  {isUploading ? "写真アップロード中..." : (isSaving || isReflectionLoading ? "保存中..." : "保存")}
+                  {isUploading ? t('active_session.photo_uploading') : (isSaving || isReflectionLoading ? t('active_session.saving') : t('active_session.save'))}
                 </Button>
               </>
             ) : (
@@ -339,12 +344,12 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                   {sessionState === "paused" ? (
                     <>
                       <Play className="w-5 h-5 mr-2" />
-                      再開
+                      {t('active_session.resume')}
                     </>
                   ) : (
                     <>
                       <Pause className="w-5 h-5 mr-2" />
-                      一時停止
+                      {t('active_session.pause')}
                     </>
                   )}
                 </Button>
@@ -360,13 +365,13 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           {/* 状態別メッセージ */}
           {sessionState === "paused" && (
             <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 border-opacity-30 rounded-lg p-3">
-              <p className="text-yellow-400 text-sm">⏸一時停止中です。準備ができたら再開してください。</p>
+              <p className="text-yellow-400 text-sm" dangerouslySetInnerHTML={{ __html: t('active_session.paused_message') }} />
             </div>
           )}
 
           {sessionState === "ended" && (
             <div>
-              <p className="text-white text-sm">お疲れさまでした！<br />振り返りを記録して保存しましょう。</p>
+              <p className="text-white text-sm" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
             </div>
           )}
 
@@ -476,7 +481,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                           <X className="w-3 h-3" />
                         </Button>
                         <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
-                          保存待ち
+                          {t('active_session.waiting_save')}
                         </div>
                         <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
                           {photo.name}
@@ -508,7 +513,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
               <div className="space-y-4">
                 {/* 気分評価 */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">今の気分はどうですか？</Label>
+                  <Label className="text-white text-sm font-medium">{t('active_session.mood_question')}</Label>
                   <div className="flex justify-start space-x-3">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <Button
@@ -535,10 +540,10 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 {/* 学びや成果 */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">今日学んだことや成果</Label>
+                  <Label className="text-white text-sm font-medium">{t('active_session.achievements_label')}</Label>
                   <Textarea
                     ref={achievementsRef}
-                    placeholder="どんなことを学びましたか？どんな成果がありましたか？"
+                    placeholder={t('active_session.achievements_placeholder')}
                     value={achievements}
                     onChange={(e) => setAchievements(e.target.value)}
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
@@ -547,9 +552,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 {/* 課題や改善点 */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">課題や次回への改善点</Label>
+                  <Label className="text-white text-sm font-medium">{t('active_session.challenges_label')}</Label>
                   <Textarea
-                    placeholder="どんな課題がありましたか？次回はどう改善しますか？"
+                    placeholder={t('active_session.challenges_placeholder')}
                     value={challenges}
                     onChange={(e) => setChallenges(e.target.value)}
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
@@ -558,9 +563,9 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 {/* 自由記述メモ */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">その他のメモ</Label>
+                  <Label className="text-white text-sm font-medium">{t('active_session.notes_label')}</Label>
                   <Textarea
-                    placeholder="その他、記録しておきたいことがあれば..."
+                    placeholder={t('active_session.notes_placeholder')}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
