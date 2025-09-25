@@ -1,23 +1,25 @@
 "use client"
 
-import { useState } from 'react'
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
-import { createClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/common/button'
-import { Label } from '@/components/ui/common/label'
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from '@/components/ui/settings/alert-dialog'
-import { useToast } from '@/contexts/toast-context'
+import { Trash2 } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { Button } from "@/components/ui/common/button"
+import { Label } from "@/components/ui/common/label"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/settings/alert-dialog"
+import { useToast } from "@/contexts/toast-context"
+import { createClient } from "@/lib/supabase"
+import { useTranslations } from 'next-intl'
 
 export function DeleteAccountSection() {
   const { signOut } = useAuth()
@@ -26,6 +28,7 @@ export function DeleteAccountSection() {
   const [isDeleting, setIsDeleting] = useState(false)
   const { showError, showSuccess, showWarning } = useToast()
   const [supabase] = useState(() => createClient())
+  const t = useTranslations()
 
   // アカウント削除処理
   const handleDeleteAccount = async () => {
@@ -63,7 +66,7 @@ export function DeleteAccountSection() {
         router.push('/login')
       } else {
         const error = await response.json()
-        showError('アカウント削除に失敗しました。再度お試しください。')
+        showError(t('settings.account_deletion_error'))
       }
     } catch (error) {
       // レスポンスのパースに失敗した場合やネットワークエラーの場合
@@ -77,9 +80,7 @@ export function DeleteAccountSection() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <Label className="text-red-400">アカウント削除</Label>
-        <p className="text-sm text-gray-400">⚠️ この操作は取り消しできません</p>
-        <p className="text-sm text-gray-400">すべてのデータが完全に削除されます。</p>
+        <Label className="text-red-400">{t('settings.account_deletion')}</Label>
       </div>
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -89,14 +90,14 @@ export function DeleteAccountSection() {
             className="bg-red-950 border-red-800 text-red-400 hover:bg-red-900 hover:text-red-300"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            アカウント削除
+            {t('settings.account_deletion')}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-400 flex items-center space-x-2">
               <Trash2 className="w-5 h-5" />
-              <span>アカウント削除の確認</span>
+              <span>{t('settings.account_deletion_confirmation')}</span>
             </AlertDialogTitle>
           </AlertDialogHeader>
           

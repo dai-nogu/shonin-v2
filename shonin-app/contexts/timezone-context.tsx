@@ -11,7 +11,7 @@ interface TimezoneContextType {
   loading: boolean
   error: string | null
   detectAndSetTimezone: () => void
-  getTimezoneDisplayName: (timezone: string) => string
+
 }
 
 const TimezoneContext = createContext<TimezoneContextType | undefined>(undefined)
@@ -133,10 +133,7 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
     }
   }
 
-  const getTimezoneDisplayName = (timezone: string): string => {
-    const timezoneInfo = TIMEZONES.find(tz => tz.value === timezone)
-    return timezoneInfo ? timezoneInfo.label : timezone
-  }
+
 
   const value: TimezoneContextType = {
     timezone,
@@ -145,8 +142,7 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
     setIsAutoDetect: setIsAutoDetectWrapper,
     loading,
     error,
-    detectAndSetTimezone,
-    getTimezoneDisplayName
+    detectAndSetTimezone
   }
 
   return (

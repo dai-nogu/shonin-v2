@@ -2,27 +2,27 @@
  * タイムゾーン関連のユーティリティ関数
  */
 
-// 主要なタイムゾーンのリスト（国名ベース）
+// 主要なタイムゾーンのリスト（valueのみ）
 export const TIMEZONES = [
-  { value: 'Asia/Tokyo', label: '日本 (JST)', offset: '+09:00' },
-  { value: 'America/New_York', label: 'アメリカ東部 (EST)', offset: '-05:00' },
-  { value: 'America/Los_Angeles', label: 'アメリカ西部 (PST)', offset: '-08:00' },
-  { value: 'America/Chicago', label: 'アメリカ中部 (CST)', offset: '-06:00' },
-  { value: 'America/Denver', label: 'アメリカ山地 (MST)', offset: '-07:00' },
-  { value: 'Europe/London', label: 'イギリス (GMT)', offset: '+00:00' },
-  { value: 'Europe/Paris', label: 'フランス (CET)', offset: '+01:00' },
-  { value: 'Europe/Berlin', label: 'ドイツ (CET)', offset: '+01:00' },
-  { value: 'Asia/Shanghai', label: '中国 (CST)', offset: '+08:00' },
-  { value: 'Asia/Seoul', label: '韓国 (KST)', offset: '+09:00' },
-  { value: 'Asia/Singapore', label: 'シンガポール (SGT)', offset: '+08:00' },
-  { value: 'Asia/Hong_Kong', label: '香港 (HKT)', offset: '+08:00' },
-  { value: 'Asia/Bangkok', label: 'タイ (ICT)', offset: '+07:00' },
-  { value: 'Asia/Dubai', label: 'UAE (GST)', offset: '+04:00' },
-  { value: 'Asia/Kolkata', label: 'インド (IST)', offset: '+05:30' },
-  { value: 'Australia/Sydney', label: 'オーストラリア東部 (AEST)', offset: '+10:00' },
-  { value: 'Australia/Melbourne', label: 'オーストラリア南東部 (AEST)', offset: '+10:00' },
-  { value: 'Pacific/Auckland', label: 'ニュージーランド (NZST)', offset: '+12:00' },
-  { value: 'UTC', label: '協定世界時 (UTC)', offset: '+00:00' },
+  { value: 'Asia/Tokyo', offset: '+09:00' },
+  { value: 'America/New_York', offset: '-05:00' },
+  { value: 'America/Los_Angeles', offset: '-08:00' },
+  { value: 'America/Chicago', offset: '-06:00' },
+  { value: 'America/Denver', offset: '-07:00' },
+  { value: 'Europe/London', offset: '+00:00' },
+  { value: 'Europe/Paris', offset: '+01:00' },
+  { value: 'Europe/Berlin', offset: '+01:00' },
+  { value: 'Asia/Shanghai', offset: '+08:00' },
+  { value: 'Asia/Seoul', offset: '+09:00' },
+  { value: 'Asia/Singapore', offset: '+08:00' },
+  { value: 'Asia/Hong_Kong', offset: '+08:00' },
+  { value: 'Asia/Bangkok', offset: '+07:00' },
+  { value: 'Asia/Dubai', offset: '+04:00' },
+  { value: 'Asia/Kolkata', offset: '+05:30' },
+  { value: 'Australia/Sydney', offset: '+10:00' },
+  { value: 'Australia/Melbourne', offset: '+10:00' },
+  { value: 'Pacific/Auckland', offset: '+12:00' },
+  { value: 'UTC', offset: '+00:00' },
 ] as const
 
 /**
@@ -255,10 +255,10 @@ export function getWeekSessionsInTimezone<T extends { startTime: Date }>(
 
 /**
  * タイムゾーン情報を表示用文字列に変換
+ * @deprecated 多言語対応のため、コンポーネント側でuseTranslationsを使用してください
  */
 export function getTimezoneDisplayName(timezone: string): string {
-  const timezoneInfo = TIMEZONES.find(tz => tz.value === timezone)
-  return timezoneInfo ? timezoneInfo.label : timezone
+  return timezone
 }
 
 /**

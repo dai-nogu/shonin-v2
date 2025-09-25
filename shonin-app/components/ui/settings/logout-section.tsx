@@ -18,11 +18,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/settings/alert-dialog"
 import { useToast } from "@/contexts/toast-context"
+import { useTranslations } from 'next-intl'
 
 export function LogoutSection() {
   const { signOut } = useAuth()
   const router = useRouter()
   const { showError } = useToast()
+  const t = useTranslations()
   
   // ログアウト確認用の状態
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
@@ -36,7 +38,7 @@ export function LogoutSection() {
       // ログアウト後にログインページにリダイレクト
       router.push('/login')
     } catch (error) {
-      showError("ログアウト中にエラーが発生しました。時間をおいて再度お試しください。")
+      showError(t('settings.logout_error'))
     } finally {
       setIsLoggingOut(false)
       setLogoutDialogOpen(false)
@@ -46,9 +48,7 @@ export function LogoutSection() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <Label className="text-gray-300">ログアウト</Label>
-        <p className="text-sm text-gray-400">アカウントからサインアウトします</p>
-        <p className="text-sm text-gray-400">ログアウト後は、再度ログインが必要になります。</p>
+        <Label className="text-gray-300">{t('settings.logout')}</Label>
       </div>
       
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
@@ -57,26 +57,26 @@ export function LogoutSection() {
             className="bg-red-600 hover:bg-red-700 text-white border-red-600"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            ログアウト
+            {t('settings.logout')}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-yellow-400 flex items-center space-x-2">
               <LogOut className="w-5 h-5" />
-              <span>ログアウトの確認</span>
+              <span>{t('settings.logout_confirmation')}</span>
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-300">
-              本当にログアウトしますか？
+              {t('settings.logout_message')}
               <br />
-              ログアウト後は、再度ログインが必要になります。
+              {t('settings.logout_description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel 
               className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
             >
-              戻る
+              {t('settings.back')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogoutConfirm}
@@ -86,10 +86,10 @@ export function LogoutSection() {
               {isLoggingOut ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>ログアウト中...</span>
+                  <span>{t('settings.logging_out')}</span>
                 </div>
               ) : (
-                "ログアウト"
+                t('settings.logout')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
