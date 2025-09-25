@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
+import { useTranslations } from 'next-intl'
 
 interface GoalDeadlineInputProps {
   value: string
@@ -9,9 +10,11 @@ interface GoalDeadlineInputProps {
 }
 
 export function GoalDeadlineInput({ value, onChange }: GoalDeadlineInputProps) {
+  const t = useTranslations()
+  
   return (
     <div className="space-y-1">
-      <Label className="text-gray-300">期限 *</Label>
+      <Label className="text-gray-300">{t('goals.deadline_label_required')} *</Label>
       <Input
         type="date"
         value={value}

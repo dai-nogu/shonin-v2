@@ -55,4 +55,39 @@ export function formatDateForLocale(date: string, locale: string): string {
       day: 'numeric'
     })
   }
+}
+
+/**
+ * ISO日付形式（YYYY-MM-DD）をロケール別の自然な形式に変換する
+ * @param isoDate - ISO日付文字列（YYYY-MM-DD形式）
+ * @param locale - ロケール（'ja' | 'en'）
+ * @returns フォーマットされた日付文字列
+ */
+export function formatISODateForLocale(isoDate: string, locale: string): string {
+  if (!isoDate) return isoDate
+  
+  try {
+    // ISO形式の日付をパース
+    const dateObj = new Date(isoDate + 'T00:00:00')
+    
+    if (isNaN(dateObj.getTime())) return isoDate
+    
+    if (locale === 'en') {
+      // 英語: September 18, 2025
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    } else {
+      // 日本語: 2025年9月18日
+      return dateObj.toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
+  } catch (error) {
+    return isoDate
+  }
 } 

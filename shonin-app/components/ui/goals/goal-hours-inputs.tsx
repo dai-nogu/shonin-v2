@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
+import { useTranslations } from 'next-intl'
 
 interface ValidationErrors {
   weekdayHours: string
@@ -23,10 +24,12 @@ export function GoalHoursInputs({
   onWeekendHoursChange,
   validationErrors
 }: GoalHoursInputsProps) {
+  const t = useTranslations()
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-1">
-        <Label className="text-gray-300">平日（月〜金）の時間 *</Label>
+        <Label className="text-gray-300">{t('goals.weekday_hours_label')} *</Label>
         <Input
           type="text"
           value={weekdayHours}
@@ -39,7 +42,7 @@ export function GoalHoursInputs({
         )}
       </div>
       <div className="space-y-1">
-        <Label className="text-gray-300">土日の時間 *</Label>
+        <Label className="text-gray-300">{t('goals.weekend_hours_label')} *</Label>
         <Input
           type="text"
           value={weekendHours}

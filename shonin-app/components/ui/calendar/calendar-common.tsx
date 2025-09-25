@@ -72,10 +72,12 @@ export function CalendarCommon({
     let dateStr: string
     if (viewMode === "month" && typeof date === "number") {
       // 月表示の場合
-      dateStr = `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${date}`
+      const slashFormatDate = `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${date}`
+      dateStr = formatDateForLocale(slashFormatDate, locale)
     } else if (viewMode === "week" && date instanceof Date) {
       // 週表示の場合
-      dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+      const slashFormatDate = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+      dateStr = formatDateForLocale(slashFormatDate, locale)
     } else {
       dateStr = "Invalid Date"
     }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useTimezone } from "@/contexts/timezone-context"
+import { useTranslations, useLocale } from 'next-intl'
+import { formatDateForLocale } from '@/lib/i18n-utils'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import type { CalendarSession } from "@/lib/calendar-utils"
 import { CalendarViewToggle } from "./calendar-view-toggle"
@@ -32,6 +34,8 @@ export function CalendarContainer({
   currentDate
 }: CalendarContainerProps) {
   const { timezone } = useTimezone()
+  const t = useTranslations()
+  const locale = useLocale()
   const [selectedDateSessions, setSelectedDateSessions] = useState<CalendarSession[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")
@@ -62,10 +66,12 @@ export function CalendarContainer({
     let dateStr: string
     if (viewMode === "month" && typeof date === "number") {
       // 月表示の場合
-      dateStr = `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${date}`
+      const slashFormatDate = `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${date}`
+      dateStr = formatDateForLocale(slashFormatDate, locale)
     } else if (viewMode === "week" && date instanceof Date) {
       // 週表示の場合
-      dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+      const slashFormatDate = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+      dateStr = formatDateForLocale(slashFormatDate, locale)
     } else {
       dateStr = "Invalid Date"
     }

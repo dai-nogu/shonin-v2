@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Plus, Target, Calendar, Clock, Edit2, Trash2, Calculator } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
+import { useTranslations, useLocale } from 'next-intl'
+import { formatISODateForLocale } from '@/lib/i18n-utils'
 
 interface Goal {
   id: string
@@ -32,7 +34,11 @@ interface GoalsProps {
 
 export function Goals({ onBack }: GoalsProps) {
   const router = useRouter()
+  const params = useParams()
+  const locale = (params?.locale as string) || 'ja'
   const { showError } = useToast()
+  const t = useTranslations()
+  const currentLocale = useLocale()
   
   // データベースフック
   const { 
@@ -102,19 +108,19 @@ export function Goals({ onBack }: GoalsProps) {
   }
 
   const handleAddGoal = () => {
-    router.push("/goals/add")
+    router.push(`/${locale}/goals/add`)
   }
 
   const handleEditGoal = (goalId: string) => {
-    router.push(`/goals/edit/${goalId}`)
+    router.push(`/${locale}/goals/edit/${goalId}`)
   }
 
   const handleDeleteGoal = async (goalId: string) => {
-    const confirmed = confirm("この目標を削除しますか？")
+    const confirmed = confirm(t('goals.delete_confirmation'))
     if (confirmed) {
       const success = await deleteGoalFromDb(goalId)
       if (!success) {
-        showError('目標の削除に失敗しました')
+        showError(t('goals.delete_error'))
       }
     }
   }
@@ -127,7 +133,7 @@ export function Goals({ onBack }: GoalsProps) {
           <div className="text-center py-12">
             <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
             <Button onClick={() => window.location.reload()} className="bg-blue-500 hover:bg-blue-600">
-              再読み込み
+              {t('goals.reload')}
             </Button>
           </div>
         </div>
@@ -195,7 +201,7 @@ export function Goals({ onBack }: GoalsProps) {
                   {/* 進捗表示 */}
                   <div className="space-y-2 mt-6">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-300">進捗状況</span>
+                      <span className="text-sm text-gray-300">{t('goals.progress_status')}</span>
                       <span className="text-sm font-medium text-white">
                         {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
                       </span>
@@ -207,7 +213,7 @@ export function Goals({ onBack }: GoalsProps) {
                   <div className="flex items-center justify-between text-sm mt-6">
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-400">期限: {goal.deadline}</span>
+                      <span className="text-gray-400">{t('goals.deadline_label')}: {formatISODateForLocale(goal.deadline, currentLocale)}</span>
                     </div>
                     <div className={`flex items-center space-x-1 ${
                       isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
@@ -215,8 +221,8 @@ export function Goals({ onBack }: GoalsProps) {
                       <Clock className="w-4 h-4" />
                       <span>
                         {isOverdue 
-                          ? `${Math.abs(remainingDays)}日遅れ` 
-                          : `残り${remainingDays}日`
+                          ? t('goals.days_overdue', { days: Math.abs(remainingDays) })
+                          : t('goals.days_remaining', { days: remainingDays })
                         }
                       </span>
                     </div>
@@ -227,18 +233,18 @@ export function Goals({ onBack }: GoalsProps) {
                     <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
                       <div className="flex items-center justify-center space-x-1">
                         <Clock className="w-4 h-4 text-blue-400" />
-                        <span className="text-gray-400">平日: </span>
-                        <span className="text-white">{goal.weekdayHours}時間</span>
+                        <span className="text-gray-400">{t('goals.weekday')}: </span>
+                        <span className="text-white">{goal.weekdayHours}{t('goals.hours_unit')}</span>
                       </div>
                       <div className="flex items-center justify-center space-x-1">
                         <Clock className="w-4 h-4 text-green-400" />
-                        <span className="text-gray-400">土日: </span>
-                        <span className="text-white">{goal.weekendHours}時間</span>
+                        <span className="text-gray-400">{t('goals.weekend')}: </span>
+                        <span className="text-white">{goal.weekendHours}{t('goals.hours_unit')}</span>
                       </div>
                       <div className="flex items-center justify-center space-x-1">
                         <Clock className="w-4 h-4 text-purple-400" />
-                        <span className="text-gray-400">週間: </span>
-                        <span className="text-white">{weeklyHours}時間</span>
+                        <span className="text-gray-400">{t('goals.weekly')}: </span>
+                        <span className="text-white">{weeklyHours}{t('goals.hours_unit')}</span>
                       </div>
                     </div>
                   </div>
@@ -257,7 +263,7 @@ export function Goals({ onBack }: GoalsProps) {
               size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
-              目標を追加
+              {t('goals.add_goal')}
             </Button>
           </div>
         )}
@@ -265,13 +271,13 @@ export function Goals({ onBack }: GoalsProps) {
         {!loading && goals.length === 0 && (
           <div className="text-center py-12">
             <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-400 mb-2">目標を設定しよう</h3>
+            <h3 className="text-xl font-medium text-gray-400 mb-2">{t('goals.set_goal_message')}</h3>
             <Button
               onClick={handleAddGoal}
               className="bg-green-500 hover:bg-green-600 px-8 md:px-12 py-3"
             >
               <Plus className="w-4 h-4 mr-2" />
-              目標を設定する
+              {t('goals.set_goal')}
             </Button>
           </div>
         )}

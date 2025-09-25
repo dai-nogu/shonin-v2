@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
@@ -11,11 +11,15 @@ import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
 import { useGoalForm } from "@/hooks/use-goal-form"
 import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
+import { useTranslations } from 'next-intl'
 
 export function GoalAddContainer() {
   const router = useRouter()
+  const params = useParams()
+  const locale = (params?.locale as string) || 'ja'
   const { addGoal } = useGoalsDb()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useTranslations()
   
   const {
     formData,
@@ -43,7 +47,7 @@ export function GoalAddContainer() {
       const goalId = await addGoal(goalData)
       
       if (goalId) {
-        router.push("/goals")
+        router.push(`/${locale}/goals`)
       }
       // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない
     } catch (error) {
@@ -54,14 +58,14 @@ export function GoalAddContainer() {
   }
 
   const handleCancel = () => {
-    router.push("/goals")
+    router.push(`/${locale}/goals`)
   }
 
   return (
     <div className="container mx-auto max-w-4xl">
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">目標を追加</CardTitle>
+          <CardTitle className="text-white">{t('goals.addGoal')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <GoalTitleInput

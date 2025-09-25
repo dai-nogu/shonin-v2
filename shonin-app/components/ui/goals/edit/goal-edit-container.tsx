@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState, use } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
@@ -11,6 +11,7 @@ import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
 import { useGoalForm } from "@/hooks/use-goal-form"
 import { useSingleGoal, useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
+import { useTranslations } from 'next-intl'
 
 interface GoalEditContainerProps {
   params: Promise<{
@@ -20,8 +21,11 @@ interface GoalEditContainerProps {
 
 export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const router = useRouter()
+  const routerParams = useParams()
+  const locale = (routerParams?.locale as string) || 'ja'
   const { updateGoal } = useGoalsDb()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useTranslations()
   
   // paramsをunwrap
   const { id } = use(params)
@@ -70,7 +74,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
       const success = await updateGoal(id, goalData)
       
       if (success) {
-        router.push("/goals")
+        router.push(`/${locale}/goals`)
       }
       // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない
     } catch (error) {
@@ -81,7 +85,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   }
 
   const handleCancel = () => {
-    router.push("/goals")
+    router.push(`/${locale}/goals`)
   }
 
   // ローディング中またはエラーの場合
@@ -91,7 +95,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
         <Card className="bg-gray-900 border-gray-800">
           <CardContent className="p-6">
             <div className="text-center text-white">
-              {loading ? "読み込み中..." : error || "目標が見つかりません"}
+              {loading ? t('goals.loading') : error || t('goals.goal_not_found')}
             </div>
           </CardContent>
         </Card>
@@ -103,7 +107,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
     <div className="container mx-auto max-w-4xl">
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">目標を編集</CardTitle>
+          <CardTitle className="text-white">{t('goals.editGoal')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <GoalTitleInput
