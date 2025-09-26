@@ -180,6 +180,8 @@
     "timezone_notice_1": "時間記録、統計、連続日数の計算に影響します",
     "timezone_notice_2": "変更は即座に反映されます",
     "timezone_notice_3": "過去のデータも新しいタイムゾーンで表示されます",
+    "language_settings": "言語",
+    "language_change_notice": "言語を変更すると、アプリケーション全体の表示言語が切り替わり、ダッシュボードに移動します。",
     "activity_management": "アクティビティ管理",
     "activity_management_description": "進行中のアクティビティは削除できません。",
     "loading_activities": "アクティビティを読み込み中...",
@@ -231,6 +233,10 @@
     "Australia/Melbourne": "オーストラリア南東部 (AEST)",
     "Pacific/Auckland": "ニュージーランド (NZST)",
     "UTC": "協定世界時 (UTC)"
+  },
+  "languages": {
+    "ja": "🇯🇵 日本語",
+    "en": "🇺🇸 English"
   },
   "activities": {
     "title": "アクティビティ",
@@ -332,6 +338,10 @@
     "notes_label": "その他のメモ",
     "notes_placeholder": "その他、記録しておきたいことがあれば...",
     "photos_label": "写真",
+    "memo_label": "メモ",
+    "add_photos": "写真を追加",
+    "upload_photos_description": "写真をアップロードして記録を残しましょう",
+    "select_photos": "写真を選択",
     "saved_photos": "保存済みの写真",
     "waiting_save": "保存待ち",
     "reflection_save_error": "振り返りの保存に失敗しました。",

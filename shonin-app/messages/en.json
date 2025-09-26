@@ -180,6 +180,8 @@
     "timezone_notice_1": "Affects time recording, statistics, and consecutive days calculation",
     "timezone_notice_2": "Changes take effect immediately",
     "timezone_notice_3": "Past data will also be displayed in the new timezone",
+    "language_settings": "Language",
+    "language_change_notice": "Changing the language will switch the display language for the entire application and redirect you to the dashboard.",
     "activity_management": "Activity Management",
     "activity_management_description": "Activities in progress cannot be deleted.",
     "loading_activities": "Loading activities...",
@@ -231,6 +233,10 @@
     "Australia/Melbourne": "Southeastern Australia (AEST)",
     "Pacific/Auckland": "New Zealand (NZST)",
     "UTC": "Coordinated Universal Time (UTC)"
+  },
+  "languages": {
+    "ja": "🇯🇵 日本語",
+    "en": "🇺🇸 English"
   },
   "activities": {
     "title": "Activities",
@@ -315,7 +321,7 @@
     "start_time": "Start Time",
     "target": "Target",
     "progress": "Progress",
-    "goal_achieved": "🎉 Goal Achieved!",
+    "goal_achieved": "Goal Achieved!",
     "resume": "Resume",
     "pause": "Pause",
     "end": "End",
@@ -323,7 +329,7 @@
     "saving": "Saving...",
     "photo_uploading": "Uploading photos...",
     "paused_message": "⏸ Session is paused. Resume when you're ready.",
-    "completed_message": "Great work!<br />Let's record your reflection and save.",
+    "completed_message": "Good work!<br />Let's record.",
     "mood_question": "How are you feeling?",
     "achievements_label": "What you learned and achieved today",
     "achievements_placeholder": "What did you learn? What achievements did you make?",
@@ -332,6 +338,10 @@
     "notes_label": "Other notes",
     "notes_placeholder": "Any other thoughts you'd like to record...",
     "photos_label": "Photos",
+    "memo_label": "Memo",
+    "add_photos": "Add Photos",
+    "upload_photos_description": "Upload photos",
+    "select_photos": "Select Photos",
     "saved_photos": "Saved photos",
     "waiting_save": "Waiting to save",
     "reflection_save_error": "Failed to save reflection.",

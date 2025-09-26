@@ -356,7 +356,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
 
                 <Button onClick={handleEnd} variant="destructive" size="lg" className="bg-red-600 hover:bg-red-700">
                   <Square className="w-5 h-5 mr-2" />
-                  終了
+                  {t('active_session.end')}
                 </Button>
               </>
             )}
@@ -402,7 +402,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 }
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
-                メモ
+                {t('active_session.memo_label')}
               </Button>
 
               <Button 
@@ -418,7 +418,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 }
               >
                 <Camera className="w-4 h-4 mr-2" />
-                写真
+                {t('active_session.photos_label')}
                 {(photos.length) > 0 && (
                   <span className="ml-1 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
                     {photos.length}
@@ -442,7 +442,7 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
             {showPhotos && (
               <div className="space-y-4">
                 <div className="mb-4">
-                  <Label className="text-white text-sm font-medium">写真を追加</Label>
+                  <Label className="text-white text-sm font-medium">{t('active_session.add_photos')}</Label>
                 </div>
 
                 {/* アップロードされた写真のプレビュー */}
@@ -494,14 +494,14 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
                 {photos.length === 0 && (
                   <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
                     <Camera className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                    <p className="text-gray-400 text-sm mb-2">写真をアップロードして記録を残しましょう</p>
+                    <p className="text-gray-400 text-sm mb-2">{t('active_session.upload_photos_description')}</p>
                     <Button
                       onClick={handlePhotoButtonClick}
                       variant="outline"
                       size="sm"
                       className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
                     >
-                      写真を選択
+                      {t('active_session.select_photos')}
                     </Button>
                   </div>
                 )}

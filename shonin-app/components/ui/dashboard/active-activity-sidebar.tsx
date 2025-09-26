@@ -15,6 +15,7 @@ interface ActiveActivitySidebarProps {
   onTogglePause: () => void
   onEnd: () => void
   sessionState: "active" | "paused" | "ended"
+  isDashboard?: boolean // ダッシュボード表示モード
 }
 
 export function ActiveActivitySidebar({ 
@@ -23,7 +24,8 @@ export function ActiveActivitySidebar({
   onViewSession, 
   onTogglePause,
   onEnd,
-  sessionState 
+  sessionState,
+  isDashboard = false
 }: ActiveActivitySidebarProps) {
   const t = useTranslations()
   // セッションコンテキストから一元化された時間データを取得
@@ -51,7 +53,7 @@ export function ActiveActivitySidebar({
       <CardHeader className="pb-3">
         <CardTitle className="text-white flex items-center">
           <Clock className="w-4 h-4 mr-2" />
-          進行中...
+          {t('active_session.recording')}...
         </CardTitle>
       </CardHeader>
       
@@ -76,12 +78,6 @@ export function ActiveActivitySidebar({
         <div className="text-center">
           <div className="text-2xl font-mono font-bold text-white">
             {formattedTime}
-          </div>
-          <div className="text-gray-400 text-xs">
-            開始: {activeSession.startTime.toLocaleTimeString("ja-JP", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
           </div>
         </div>
 
@@ -122,10 +118,10 @@ export function ActiveActivitySidebar({
             size="sm"
             className="w-full bg-green-600 hover:bg-green-700 text-white"
           >
-            詳細を見る
+            {t('common.details')}
           </Button>
           
-          {sessionState !== "ended" && (
+          {!isDashboard && sessionState !== "ended" && (
             <div className="flex space-x-2">
               <Button
                 onClick={onTogglePause}
@@ -141,7 +137,7 @@ export function ActiveActivitySidebar({
                 ) : (
                   <>
                     <Pause className="w-3 h-3 mr-1" />
-                    一時停止
+                    {t('active_session.pause')}
                   </>
                 )}
               </Button>
@@ -152,7 +148,7 @@ export function ActiveActivitySidebar({
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white"
               >
                 <Square className="w-3 h-3 mr-1" />
-                終了
+                {t('active_session.end')}
               </Button>
             </div>
           )}
