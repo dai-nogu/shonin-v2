@@ -22,15 +22,12 @@ export default function SessionPage() {
     endSession,
     pauseSession,
     resumeSession,
-    saveSession
+    saveSession,
+    loading
   } = useSessions()
 
-  // セッションが存在しない場合はダッシュボードに戻る
-  useEffect(() => {
-    if (!isSessionActive || !currentSession) {
-      router.push('/dashboard')
-    }
-  }, [isSessionActive, currentSession, router])
+  // 注意: 自動リダイレクトは行わない
+  // セッションが存在しない場合でも、ユーザーが明示的に保存ボタンを押した時のみダッシュボードに戻る
 
   // セッション終了
   const handleEndSession = () => {
@@ -65,9 +62,35 @@ export default function SessionPage() {
     resumeSession()
   }
 
-  // セッションが存在しない場合は何も表示しない（リダイレクト処理中）
-  if (!isSessionActive || !currentSession) {
+  // 復元中は何も表示しない
+  if (loading) {
     return null
+  }
+
+  // セッションが存在しない場合は、セッションが見つからない旨を表示
+  if (!isSessionActive || !currentSession) {
+    return (
+      <>
+        <AppSidebar currentPage="dashboard" />
+        <SidebarInset>
+          <div className="min-h-screen bg-gray-950 text-white pb-20">
+            <div className="container mx-auto px-4 py-4 lg:py-8">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold mb-4">セッションが見つかりません</h1>
+                <p className="text-gray-400 mb-6">アクティブなセッションがありません。</p>
+                <button 
+                  onClick={() => router.push('/dashboard')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                >
+                  ダッシュボードに戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </SidebarInset>
+        <BottomNavigation currentPage="dashboard" />
+      </>
+    )
   }
 
   return (

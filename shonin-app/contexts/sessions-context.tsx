@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from "react"
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
@@ -93,11 +93,59 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const [isRestoring, setIsRestoring] = useState(true)
   const [isRestoredSession, setIsRestoredSession] = useState(false)
 
+
+
   // タイマー関連のref
   const lastActiveTimeRef = useRef<Date>(new Date())
   const pausedTimeRef = useRef<number>(0)
   const previousSessionStateRef = useRef<SessionState>("active")
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // セッション状態をlocalStorageに保存する関数
+  const saveSessionStateToStorage = useCallback((sessionId: string, state: SessionState, pausedTime: number, lastActiveTime: Date) => {
+    if (typeof window === 'undefined') return
+    
+    const sessionStateData = {
+      sessionState: state,
+      pausedTime,
+      lastActiveTime: lastActiveTime.toISOString(),
+      timestamp: Date.now()
+    }
+    
+    localStorage.setItem(`session_state_${sessionId}`, JSON.stringify(sessionStateData))
+  }, [])
+
+  // localStorageからセッション状態を復元する関数
+  const loadSessionStateFromStorage = useCallback((sessionId: string) => {
+    if (typeof window === 'undefined') return null
+    
+    try {
+      const stored = localStorage.getItem(`session_state_${sessionId}`)
+      if (!stored) return null
+      
+      const data = JSON.parse(stored)
+      
+      // 5分以上古いデータは無効とする
+      if (Date.now() - data.timestamp > 5 * 60 * 1000) {
+        localStorage.removeItem(`session_state_${sessionId}`)
+        return null
+      }
+      
+      return {
+        sessionState: data.sessionState as SessionState,
+        pausedTime: data.pausedTime,
+        lastActiveTime: new Date(data.lastActiveTime)
+      }
+    } catch {
+      return null
+    }
+  }, [])
+
+  // セッション状態のlocalStorageをクリアする関数
+  const clearSessionStateFromStorage = useCallback((sessionId: string) => {
+    if (typeof window === 'undefined') return
+    localStorage.removeItem(`session_state_${sessionId}`)
+  }, [])
 
   // セッション保存時に目標の進捗を更新する関数
   const updateSessionGoalProgress = async (sessionData: CompletedSession) => {
@@ -152,26 +200,61 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           goalId: activeSession.goal_id || undefined, // 目標IDを復元
         }
 
-        // 経過時間を計算
+        // localStorageから保存されたセッション状態を復元
+        const sessionId = activeSession.id
+        const savedState = loadSessionStateFromStorage(sessionId)
+        
         const now = new Date()
         const startTime = new Date(activeSession.start_time)
-        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
         
-        // タイマー状態を設定（復元時は元の開始時刻を基準にする）
-        lastActiveTimeRef.current = startTime
-        pausedTimeRef.current = 0
-        setElapsedTime(elapsed)
-        
-        // 復元フラグを設定
-        setIsRestoredSession(true)
-        
-        // 前回の状態を復元時の状態に設定
-        previousSessionStateRef.current = "active"
+        if (savedState) {
+          // 保存された状態から復元
+          const { sessionState: savedSessionState, pausedTime, lastActiveTime } = savedState
+          
+
+          
+          lastActiveTimeRef.current = lastActiveTime
+          pausedTimeRef.current = pausedTime
+          
+          // 復元フラグを設定してからstateを更新
+          setIsRestoredSession(true)
+          
+          if (savedSessionState === "paused") {
+            // 一時停止状態の場合は一時停止時間をそのまま使用
+            setElapsedTime(pausedTime)
+            setSessionState("paused")
+          } else if (savedSessionState === "ended") {
+            // 終了状態の場合は終了時の時間をそのまま使用
+            setElapsedTime(pausedTime)
+            setSessionState("ended")
+          } else {
+            // アクティブ状態の場合は現在時刻から経過時間を再計算
+            const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
+            setElapsedTime(pausedTime + activeElapsed)
+            setSessionState("active")
+          }
+          
+          // 復元後にpreviousSessionStateRefを設定
+          previousSessionStateRef.current = savedSessionState
+        } else {
+          // 保存された状態がない場合は従来通りの処理
+          const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
+          
+          lastActiveTimeRef.current = startTime
+          pausedTimeRef.current = 0
+          setElapsedTime(elapsed)
+          previousSessionStateRef.current = "active"
+          setSessionState("active")
+        }
         
         // セッション状態を復元
         setCurrentSession(sessionData)
         setIsSessionActive(true)
-        setSessionState("active")
+        
+        // 復元完了後にフラグをリセット
+        setTimeout(() => {
+          setIsRestoredSession(false)
+        }, 50)
         
       }
       
@@ -183,18 +266,14 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     }
   }, [sessions, loading])
 
-  // セッションが変わった時の初期化（復元時は除く）
-  useEffect(() => {
-    if (currentSession && !isRestoredSession) {
-      lastActiveTimeRef.current = currentSession.startTime
-      pausedTimeRef.current = 0
-      setElapsedTime(0)
-    }
-    // 復元フラグをリセット
-    if (isRestoredSession) {
-      setIsRestoredSession(false)
-    }
-  }, [currentSession, isRestoredSession])
+  // 新規セッション開始時のみ初期化（復元時は一切実行しない）
+  const initializeNewSession = useCallback((sessionData: SessionData) => {
+    lastActiveTimeRef.current = sessionData.startTime
+    pausedTimeRef.current = 0
+    setElapsedTime(0)
+    previousSessionStateRef.current = "active"
+    setIsRestoredSession(false)
+  }, [])
 
   // リアルタイム時間更新
   useEffect(() => {
@@ -225,10 +304,13 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     const previousState = previousSessionStateRef.current
     
     if (sessionState === "paused") {
-      // 一時停止時：現在の経過時間を累積一時停止時間に保存
-      const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
-      pausedTimeRef.current = pausedTimeRef.current + activeElapsed
-      setElapsedTime(pausedTimeRef.current) // 表示時間も更新
+      // 一時停止時：アクティブ状態からの一時停止の場合のみ時間を加算
+      if (previousState === "active") {
+        const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+        pausedTimeRef.current = pausedTimeRef.current + activeElapsed
+        setElapsedTime(pausedTimeRef.current) // 表示時間も更新
+      }
+      // 復元時やその他の場合は現在のelapsedTimeをそのまま使用
     } else if (sessionState === "ended") {
       // 終了時：一時停止中からの終了の場合は追加計算しない
       if (previousState === "active") {
@@ -244,9 +326,18 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       lastActiveTimeRef.current = now
     }
     
+    // セッション状態をlocalStorageに保存
+    if (sessions.length > 0) {
+      const activeSession = sessions.find(session => !session.end_time)
+      if (activeSession) {
+
+        saveSessionStateToStorage(activeSession.id, sessionState, pausedTimeRef.current, lastActiveTimeRef.current)
+              }
+      }
+    
     // 前回の状態を記録
     previousSessionStateRef.current = sessionState
-  }, [sessionState, currentSession])
+  }, [sessionState, currentSession, sessions, saveSessionStateToStorage])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -274,9 +365,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         session_date: sessionDate, // セッション日付を設定
         location: sessionData.location || null,
         notes: sessionData.notes || null, // セッション開始時のメモを保存
-        mood: null,
-        achievements: null,
-        challenges: null,
         goal_id: sessionData.goalId || null, // 目標IDを保存
       }, true) // refetchをスキップ
       
@@ -289,8 +377,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         startTime: startTimeInTimezone
       }
       
-      // 復元フラグをリセット（新規セッション）
-      setIsRestoredSession(false)
+      // 新規セッションの初期化
+      initializeNewSession(updatedSessionData)
       setCurrentSession(updatedSessionData)
       setIsSessionActive(true)
       setSessionState("active")
@@ -303,7 +391,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         ...sessionData,
         startTime: startTimeInTimezone
       }
-      setIsRestoredSession(false)
+      initializeNewSession(updatedSessionData)
       setCurrentSession(updatedSessionData)
       setIsSessionActive(true)
       setSessionState("active")
@@ -352,7 +440,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         // 同じ日のセッション（従来の処理）
         if (activeSession) {
           // 既存の進行中セッションを更新
-          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timezone: timezone })
+          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
           const success = await updateSession(activeSession.id, {
             end_time: completedSession.endTime.toISOString(),
             duration: completedSession.duration,
@@ -379,7 +467,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             }
         } else {
           // 新規セッションとして保存
-          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timezone: timezone })
+          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
           mainSessionId = await addSession({
             activity_id: completedSession.activityId,
             start_time: completedSession.startTime.toISOString(),
@@ -435,9 +523,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             duration: splitSession.duration,
             session_date: splitSession.date, // 分割時に計算された正しい日付を保存
             notes: isStartSession ? (completedSession.notes || null) : null, // メモは開始日のセッションに
-            mood: isStartSession ? (completedSession.mood || null) : null, // 気分も開始日のセッションに
-            achievements: isStartSession ? (completedSession.achievements || null) : null,
-            challenges: isStartSession ? (completedSession.challenges || null) : null,
             location: completedSession.location || null,
             goal_id: completedSession.goalId || null, // 目標IDを保存
           }, !isLastSession) // 最後のセッション以外はrefetchをスキップ
@@ -446,6 +531,17 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             mainSessionId = sessionId
           }
 
+        }
+        
+        // 分割セッション保存後に振り返りデータがある場合は保存
+        if (mainSessionId && (completedSession.mood || completedSession.achievements || completedSession.challenges)) {
+          const reflectionData = {
+            moodScore: completedSession.mood || 3,
+            achievements: completedSession.achievements || '',
+            challenges: completedSession.challenges || '',
+            additionalNotes: undefined,
+          };
+          await saveReflection(mainSessionId, reflectionData);
         }
       }
 
@@ -458,6 +554,11 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setCurrentSession(null)
       setIsSessionActive(false)
       setSessionState("active")
+      
+      // localStorageからセッション状態を削除
+      if (mainSessionId) {
+        clearSessionStateFromStorage(mainSessionId)
+      }
       
       return mainSessionId
     } catch (error) {
