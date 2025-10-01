@@ -7,6 +7,11 @@ import { usePathname } from "next/navigation"
 export function ConditionalSidebarProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
+  // pathnameがnullの場合は早期リターン
+  if (!pathname) {
+    return <>{children}</>
+  }
+  
   // ロケールを除いたパスを取得
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, '') || '/'
   

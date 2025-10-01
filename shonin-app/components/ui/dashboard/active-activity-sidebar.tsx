@@ -15,7 +15,7 @@ interface ActiveActivitySidebarProps {
   onTogglePause: () => void
   onEnd: () => void
   sessionState: "active" | "paused" | "ended"
-  isDashboard?: boolean // ダッシュボード表示モード
+  isDashboard?: boolean
 }
 
 export function ActiveActivitySidebar({ 

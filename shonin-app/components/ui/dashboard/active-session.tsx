@@ -27,7 +27,14 @@ interface ActiveSessionProps {
   onResume: () => void
 }
 
-export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePause, onResume }: ActiveSessionProps) {
+export function ActiveSession({ 
+  session, 
+  onEnd, 
+  onSave, 
+  sessionState, 
+  onTogglePause, 
+  onResume 
+}: ActiveSessionProps) {
   const t = useTranslations()
   // 認証フック
   const { user } = useAuth()
@@ -210,7 +217,6 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
           achievements: achievements.trim() || '特になし',
           challenges: challenges.trim() || '特になし',
           additionalNotes: notes.trim() || undefined,
-          reflectionDuration: undefined, // 今回は振り返り時間は記録しない
         }
         
   

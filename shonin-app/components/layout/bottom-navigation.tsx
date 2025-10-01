@@ -103,22 +103,16 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
               key={item.id}
               onClick={() => handlePageChange(item.id, item.url)}
               className={cn(
-                "flex flex-col items-center justify-center h-16 w-24 rounded-xl transition-all duration-200",
+                "flex flex-col items-center justify-center h-16 w-16 rounded-xl transition-all duration-200",
                 isActive 
                   ? "text-green-500 bg-gray-800/50" 
                   : "text-gray-400 hover:text-white hover:bg-gray-800/30"
               )}
             >
               <Icon className={cn(
-                "w-7 h-7 mb-1 transition-all duration-200",
+                "w-7 h-7 transition-all duration-200",
                 isActive ? "text-green-500" : "text-gray-400"
               )} />
-              <span className={cn(
-                "text-sm font-medium transition-all duration-200",
-                isActive ? "text-green-500" : "text-gray-400"
-              )}>
-                {item.label}
-              </span>
             </button>
           )
         })}
