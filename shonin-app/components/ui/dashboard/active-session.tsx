@@ -237,11 +237,11 @@ export function ActiveSession({ session, onEnd, onSave, sessionState, onTogglePa
   const getStatusInfo = () => {
     switch (sessionState) {
       case "active":
-        return { color: "bg-green-500", text: t('active_session.recording'), icon: "🟢" }
+        return { color: "bg-green-500", text: t('active_session.recording') }
       case "paused":
-        return { color: "bg-yellow-500", text: t('active_session.paused'), icon: "⏸️" }
+        return { color: "bg-yellow-500", text: t('active_session.paused') }
       case "ended":
-        return { color: "bg-blue-500", text: t('active_session.reflecting'), icon: "✏️" }
+        return { color: "bg-blue-500", text: t('active_session.reflecting') }
     }
   }
 

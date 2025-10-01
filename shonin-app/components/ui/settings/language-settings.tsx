@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { Globe } from "lucide-react"
+import { useSessions } from "@/contexts/sessions-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Label } from "@/components/ui/common/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
@@ -17,10 +18,11 @@ export function LanguageSettings() {
   const pathname = usePathname()
   const params = useParams()
   const currentLocale = (params?.locale as string) || 'ja'
+  const { isSessionActive } = useSessions()
   const t = useTranslations()
 
   const handleLocaleChange = (newLocale: string) => {
-    if (!pathname) return
+    if (!pathname || isSessionActive) return
     // 言語変更後はダッシュボードに遷移
     const newPath = `/${newLocale}/dashboard`
     router.push(newPath)
@@ -36,8 +38,14 @@ export function LanguageSettings() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Select value={currentLocale} onValueChange={handleLocaleChange}>
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+          <Select 
+            value={currentLocale} 
+            onValueChange={handleLocaleChange}
+            disabled={isSessionActive}
+          >
+            <SelectTrigger className={`bg-gray-800 border-gray-700 text-white ${
+              isSessionActive ? 'opacity-50 cursor-not-allowed' : ''
+            }`}>
               <SelectValue>
                 {t(`languages.${currentLocale}`) || currentLocale}
               </SelectValue>
@@ -56,12 +64,25 @@ export function LanguageSettings() {
           </Select>
         </div>
 
-        {/* 注意事項 */}
-        <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
-          <p className="text-sm text-gray-400">
-            {t('settings.language_change_notice')}
-          </p>
-        </div>
+        {/* 進行中セッションがある場合の警告 */}
+        {isSessionActive && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <div>
+                <p className="text-red-200 text-sm mt-1">{t('settings.language_disabled_message')}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 通常の注意事項 */}
+        {!isSessionActive && (
+          <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+            <p className="text-sm text-gray-400">
+              {t('settings.language_change_notice')}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

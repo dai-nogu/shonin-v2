@@ -58,14 +58,6 @@ export function ActiveActivitySidebar({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* ステータス */}
-        <div className="flex items-center space-x-2">
-          <div
-            className={`w-2 h-2 ${statusInfo.color} rounded-full ${sessionState === "active" ? "animate-pulse" : ""}`}
-          />
-          <span className="text-green-400 text-sm font-medium">{statusInfo.text}</span>
-        </div>
-
         {/* 行動名 */}
         <div>
           <h3 className="text-white font-semibold text-lg">{activeSession.activityName}</h3>

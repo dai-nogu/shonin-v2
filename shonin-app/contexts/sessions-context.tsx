@@ -174,7 +174,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     }
   }
 
-  // ページロード時に進行中セッションを復元
+  // ページロード時に進行中セッションを復元 - シンプル版
   useEffect(() => {
     const restoreActiveSession = async () => {
       if (!sessions || sessions.length === 0) {
@@ -186,18 +186,17 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       const activeSession = sessions.find(session => !session.end_time)
       
       if (activeSession && activeSession.activities) {
-        
         // SessionDataに変換
         const sessionData: SessionData = {
           activityId: activeSession.activity_id,
           activityName: activeSession.activities.name,
           startTime: new Date(activeSession.start_time),
           location: activeSession.location || '',
-          targetTime: undefined, // 目標時間は復元時には設定しない
+          targetTime: undefined,
           notes: '',
           activityColor: activeSession.activities.color,
           activityIcon: activeSession.activities.icon || undefined,
-          goalId: activeSession.goal_id || undefined, // 目標IDを復元
+          goalId: activeSession.goal_id || undefined,
         }
 
         // localStorageから保存されたセッション状態を復元
@@ -207,55 +206,26 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         const now = new Date()
         const startTime = new Date(activeSession.start_time)
         
-        if (savedState) {
-          // 保存された状態から復元
-          const { sessionState: savedSessionState, pausedTime, lastActiveTime } = savedState
-          
-
-          
-          lastActiveTimeRef.current = lastActiveTime
-          pausedTimeRef.current = pausedTime
-          
-          // 復元フラグを設定してからstateを更新
-          setIsRestoredSession(true)
-          
-          if (savedSessionState === "paused") {
-            // 一時停止状態の場合は一時停止時間をそのまま使用
-            setElapsedTime(pausedTime)
-            setSessionState("paused")
-          } else if (savedSessionState === "ended") {
-            // 終了状態の場合は終了時の時間をそのまま使用
-            setElapsedTime(pausedTime)
-            setSessionState("ended")
-          } else {
-            // アクティブ状態の場合は現在時刻から経過時間を再計算
-            const activeElapsed = Math.floor((now.getTime() - lastActiveTime.getTime()) / 1000)
-            setElapsedTime(pausedTime + activeElapsed)
-            setSessionState("active")
-          }
-          
-          // 復元後にpreviousSessionStateRefを設定
-          previousSessionStateRef.current = savedSessionState
+        if (savedState && (savedState.sessionState === "paused" || savedState.sessionState === "ended")) {
+          // 一時停止または終了状態の場合は保存された時間を使用
+          setElapsedTime(savedState.pausedTime)
+          setSessionState(savedState.sessionState)
+          pausedTimeRef.current = savedState.pausedTime
+          previousSessionStateRef.current = savedState.sessionState
+          // 一時停止・終了状態では lastActiveTimeRef は使用しない
         } else {
-          // 保存された状態がない場合は従来通りの処理
+          // アクティブ状態または保存データがない場合は開始時刻からの経過時間を計算
           const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
-          
-          lastActiveTimeRef.current = startTime
-          pausedTimeRef.current = 0
           setElapsedTime(elapsed)
-          previousSessionStateRef.current = "active"
           setSessionState("active")
+          pausedTimeRef.current = 0
+          previousSessionStateRef.current = "active"
+          lastActiveTimeRef.current = startTime
         }
         
         // セッション状態を復元
         setCurrentSession(sessionData)
         setIsSessionActive(true)
-        
-        // 復元完了後にフラグをリセット
-        setTimeout(() => {
-          setIsRestoredSession(false)
-        }, 50)
-        
       }
       
       setIsRestoring(false)
@@ -266,26 +236,32 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     }
   }, [sessions, loading])
 
-  // 新規セッション開始時のみ初期化（復元時は一切実行しない）
+  // 新規セッション開始時の初期化 - シンプル版
   const initializeNewSession = useCallback((sessionData: SessionData) => {
-    lastActiveTimeRef.current = sessionData.startTime
-    pausedTimeRef.current = 0
     setElapsedTime(0)
-    previousSessionStateRef.current = "active"
-    setIsRestoredSession(false)
+    pausedTimeRef.current = 0
   }, [])
 
-  // リアルタイム時間更新
+  // リアルタイム時間更新 - 一時停止対応版
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
     }
 
-    if (currentSession && sessionState === "active" && lastActiveTimeRef.current) {
+    // セッションがアクティブで、開始時刻がある場合は常にタイマーを動かす
+    if (currentSession && isSessionActive && sessionState === "active") {
       intervalRef.current = setInterval(() => {
         const now = new Date()
-        const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current!.getTime()) / 1000)
-        setElapsedTime(pausedTimeRef.current + activeElapsed)
+        
+        // 一時停止から再開した場合は、一時停止時点の時間 + 再開時刻からの経過時間
+        if (lastActiveTimeRef.current && pausedTimeRef.current > 0) {
+          const resumeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+          setElapsedTime(pausedTimeRef.current + resumeElapsed)
+        } else {
+          // 新規開始の場合は開始時刻からの経過時間
+          const totalElapsed = Math.floor((now.getTime() - currentSession.startTime.getTime()) / 1000)
+          setElapsedTime(totalElapsed)
+        }
       }, 1000)
     }
 
@@ -294,50 +270,70 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [currentSession, sessionState])
+  }, [currentSession, isSessionActive, sessionState])
 
-  // sessionStateが変わった時の処理
+  // sessionStateが変わった時の処理 - 一時停止・終了時は時間固定版
   useEffect(() => {
-    if (!currentSession || !lastActiveTimeRef.current) return
+    if (!currentSession) return
     
     const now = new Date()
-    const previousState = previousSessionStateRef.current
     
-    if (sessionState === "paused") {
-      // 一時停止時：アクティブ状態からの一時停止の場合のみ時間を加算
-      if (previousState === "active") {
-        const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
-        pausedTimeRef.current = pausedTimeRef.current + activeElapsed
-        setElapsedTime(pausedTimeRef.current) // 表示時間も更新
+    if (sessionState === "active") {
+      // アクティブ状態（再開時）：再開時刻を記録
+      if (previousSessionStateRef.current === "paused") {
+        lastActiveTimeRef.current = now
+      } else if (previousSessionStateRef.current === "active" && !lastActiveTimeRef.current) {
+        // 新規開始の場合
+        lastActiveTimeRef.current = currentSession.startTime
       }
-      // 復元時やその他の場合は現在のelapsedTimeをそのまま使用
+    } else if (sessionState === "paused") {
+      // 一時停止時：現在の経過時間を保存（初回のみ）
+      if (previousSessionStateRef.current === "active") {
+        // 一時停止から再開していた場合は、現在の表示時間を使用
+        if (lastActiveTimeRef.current && pausedTimeRef.current > 0) {
+          const resumeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+          pausedTimeRef.current = pausedTimeRef.current + resumeElapsed
+        } else {
+          // 新規開始からの一時停止の場合
+          const totalElapsed = Math.floor((now.getTime() - currentSession.startTime.getTime()) / 1000)
+          pausedTimeRef.current = totalElapsed
+        }
+        setElapsedTime(pausedTimeRef.current)
+      }
+      // 既に一時停止状態の場合は時間を変更しない
     } else if (sessionState === "ended") {
-      // 終了時：一時停止中からの終了の場合は追加計算しない
-      if (previousState === "active") {
-        // アクティブ状態からの終了の場合のみ時間を追加
-        const activeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
-        pausedTimeRef.current = pausedTimeRef.current + activeElapsed
-        setElapsedTime(pausedTimeRef.current) // 表示時間も更新
-      } else {
-        // 一時停止中からの終了の場合は現在の表示時間をそのまま使用
+      // 終了時：現在の経過時間を保存（初回のみ）
+      if (previousSessionStateRef.current !== "ended") {
+        // 現在の表示時間を使用（一時停止から終了の場合も考慮）
+        if (previousSessionStateRef.current === "paused") {
+          pausedTimeRef.current = elapsedTime
+        } else if (lastActiveTimeRef.current && pausedTimeRef.current > 0) {
+          const resumeElapsed = Math.floor((now.getTime() - lastActiveTimeRef.current.getTime()) / 1000)
+          pausedTimeRef.current = pausedTimeRef.current + resumeElapsed
+        } else {
+          const totalElapsed = Math.floor((now.getTime() - currentSession.startTime.getTime()) / 1000)
+          pausedTimeRef.current = totalElapsed
+        }
+        setElapsedTime(pausedTimeRef.current)
       }
-    } else if (sessionState === "active") {
-      // 再開時：新しい開始時刻を記録
-      lastActiveTimeRef.current = now
+      // 既に終了状態の場合は時間を変更しない
     }
     
-    // セッション状態をlocalStorageに保存
+    // セッション状態をlocalStorageに保存（現在の表示時間を使用）
     if (sessions.length > 0) {
       const activeSession = sessions.find(session => !session.end_time)
       if (activeSession) {
-
-        saveSessionStateToStorage(activeSession.id, sessionState, pausedTimeRef.current, lastActiveTimeRef.current)
-              }
+        // 一時停止・終了状態では現在の表示時間を保存、アクティブ状態では計算
+        let timeToSave = elapsedTime
+        if (sessionState === "active") {
+          timeToSave = Math.floor((now.getTime() - currentSession.startTime.getTime()) / 1000)
+        }
+        saveSessionStateToStorage(activeSession.id, sessionState, timeToSave, now)
       }
+    }
     
-    // 前回の状態を記録
     previousSessionStateRef.current = sessionState
-  }, [sessionState, currentSession, sessions, saveSessionStateToStorage])
+  }, [sessionState, currentSession, sessions, saveSessionStateToStorage, elapsedTime])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -351,6 +347,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   }
 
   const startSession = async (sessionData: SessionData) => {
+    // 既にアクティブなセッションがある場合は新規開始を無視
+    if (isSessionActive && currentSession) {
+      console.warn('既にアクティブなセッションがあるため、新規セッション開始をスキップします')
+      return
+    }
+
     // データベースに進行中セッションを保存
     try {
       // タイムゾーンを考慮した開始時刻を使用
