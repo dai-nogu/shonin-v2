@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
+import * as activitiesActions from '@/app/actions/activities'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 type ActivityInsert = Database['public']['Tables']['activities']['Insert']
@@ -14,7 +14,6 @@ export function useActivitiesDb() {
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [supabase] = useState(() => createClient())
 
   // アクティビティを取得
   const fetchActivities = async () => {
@@ -27,16 +26,7 @@ export function useActivitiesDb() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('activities')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        throw error
-      }
-
+      const data = await activitiesActions.getActivities()
       setActivities(data || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'アクティビティの取得に失敗しました')
@@ -53,21 +43,9 @@ export function useActivitiesDb() {
         return null
       }
 
-      const { data, error } = await supabase
-        .from('activities')
-        .insert({
-          ...activity,
-          user_id: user.id,
-        })
-        .select('id')
-        .single()
-
-      if (error) {
-        throw error
-      }
-
+      const activityId = await activitiesActions.addActivity(activity)
       await fetchActivities() // リストを更新
-      return data.id
+      return activityId
     } catch (err) {
       setError(err instanceof Error ? err.message : 'アクティビティの追加に失敗しました')
       return null
@@ -77,17 +55,11 @@ export function useActivitiesDb() {
   // アクティビティを更新
   const updateActivity = async (id: string, updates: ActivityUpdate): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('activities')
-        .update(updates)
-        .eq('id', id)
-
-      if (error) {
-        throw error
+      const success = await activitiesActions.updateActivity(id, updates)
+      if (success) {
+        await fetchActivities() // リストを更新
       }
-
-      await fetchActivities() // リストを更新
-      return true
+      return success
     } catch (err) {
       setError(err instanceof Error ? err.message : 'アクティビティの更新に失敗しました')
       return false
@@ -97,17 +69,11 @@ export function useActivitiesDb() {
   // アクティビティを削除
   const deleteActivity = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from('activities')
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        throw error
+      const success = await activitiesActions.deleteActivity(id)
+      if (success) {
+        await fetchActivities() // リストを更新
       }
-
-      await fetchActivities() // リストを更新
-      return true
+      return success
     } catch (err) {
       setError(err instanceof Error ? err.message : 'アクティビティの削除に失敗しました')
       return false

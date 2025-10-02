@@ -1,7 +1,9 @@
+"use client"
+
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
+import * as userProfileActions from '@/app/actions/user-profile'
 
 type UserProfile = Database['public']['Tables']['users']['Row']
 type UserProfileUpdate = Database['public']['Tables']['users']['Update']
@@ -11,7 +13,6 @@ export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [supabase] = useState(() => createClient())
 
   // プロフィールを取得
   const fetchProfile = useCallback(async () => {
@@ -26,41 +27,8 @@ export function useUserProfile() {
         return
       }
 
-      const userId = user.id
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        // プロフィールが存在しない場合は新規作成
-        if (error.code === 'PGRST116') {
-          const newProfile: Database['public']['Tables']['users']['Insert'] = {
-            id: userId,
-            email: user.email || '',
-            name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            timezone: 'Asia/Tokyo'
-          }
-
-          const { data: insertData, error: insertError } = await supabase
-            .from('users')
-            .insert(newProfile)
-            .select()
-            .single()
-
-          if (insertError) {
-            throw insertError
-          }
-
-          setProfile(insertData)
-        } else {
-          throw error
-        }
-      } else {
-        setProfile(data)
-      }
+      const data = await userProfileActions.getProfile()
+      setProfile(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'プロフィールの取得に失敗しました')
     } finally {
@@ -79,26 +47,13 @@ export function useUserProfile() {
         return false
       }
 
-      const userId = user.id
-
-      // 更新日時を追加
-      const updateData = {
-        ...updates,
-        updated_at: new Date().toISOString()
-      }
-
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', userId)
-
-      if (error) {
-        throw error
-      }
+      const success = await userProfileActions.updateProfile(updates)
 
       // プロフィールを再取得して状態を更新
-      await fetchProfile()
-      return true
+      if (success) {
+        await fetchProfile()
+      }
+      return success
     } catch (err) {
       setError(err instanceof Error ? err.message : 'プロフィールの更新に失敗しました')
       return false
@@ -114,8 +69,6 @@ export function useUserProfile() {
   const updateTimezone = useCallback(async (timezone: string): Promise<boolean> => {
     return await updateProfile({ timezone })
   }, [updateProfile])
-
-
 
   // 初期化
   useEffect(() => {
