@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, Settings } from "lucide-react"
+import { Home, Calendar, Target, CreditCard, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface BottomNavigationProps {
@@ -41,6 +41,12 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       url: `/${locale}/goals`,
     },
     {
+      id: "plan",
+      label: t('navigation.plan'),
+      icon: CreditCard,
+      url: `/${locale}/plan`,
+    },
+    {
       id: "settings",
       label: t('navigation.settings'),
       icon: Settings,
@@ -60,6 +66,8 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       setActivePage("calendar")
     } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
+    } else if (pathWithoutLocale === "/plan") {
+      setActivePage("plan")
     } else if (pathWithoutLocale === "/settings") {
       setActivePage("settings")
     } else {

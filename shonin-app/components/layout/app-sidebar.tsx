@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, BarChart3, Target, Settings } from "lucide-react"
+import { Home, Calendar, BarChart3, Target, CreditCard, Settings } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -51,6 +51,12 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       id: "goals",
     },
     {
+      title: t('navigation.plan'),
+      url: `/${locale}/plan`,
+      icon: CreditCard,
+      id: "plan",
+    },
+    {
       title: t('navigation.settings'),
       url: `/${locale}/settings`,
       icon: Settings,
@@ -70,6 +76,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       setActivePage("calendar")
     } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
+    } else if (pathWithoutLocale === "/plan") {
+      setActivePage("plan")
     } else if (pathWithoutLocale === "/settings") {
       setActivePage("settings")
     } else {

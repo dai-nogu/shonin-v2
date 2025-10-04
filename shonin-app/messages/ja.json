@@ -26,6 +26,7 @@
     "dashboard": "ダッシュボード",
     "calendar": "カレンダー",
     "goals": "目標",
+    "plan": "プラン",
     "settings": "設定",
     "home": "ホーム"
   },
@@ -355,5 +356,34 @@
     "waiting_save": "保存待ち",
     "reflection_save_error": "振り返りの保存に失敗しました。",
     "save_error": "保存処理でエラーが発生しました。"
+  },
+  "plan": {
+    "title": "プラン",
+    "free": "Free",
+    "standard": "Standard",
+    "popular": "おすすめ",
+    "current_plan": "現在のプラン",
+    "upgrade": "アップグレード",
+    "per_month": "/月",
+    "features": {
+      "activity_limit": "アクティビティ追加3つまで",
+      "unlimited_activities": "アクティビティ追加無制限",
+      "goal_limit": "目標3個追加まで",
+      "no_past_calendar": "過去のカレンダー閲覧不可",
+      "no_ai": "AIによるFB機能なし",
+      "unlimited_goals": "目標追加無制限",
+      "full_calendar": "カレンダー全日表示",
+      "ai_feedback": "AIによるFB機能あり",
+      "activity_label": "アクティビティ追加",
+      "goal_label": "目標",
+      "calendar_label": "カレンダー閲覧",
+      "ai_label": "AI FB機能",
+      "current_month_only": "当月のみ",
+      "all_days": "全日表示",
+      "up_to_3": "3つまで",
+      "up_to_3_goals": "3個まで",
+      "unlimited": "無制限"
+    },
+    "description": "あなたの努力に寄り添うプランを選びましょう"
   }
 } 

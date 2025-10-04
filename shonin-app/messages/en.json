@@ -26,6 +26,7 @@
     "dashboard": "Dashboard",
     "calendar": "Calendar",
     "goals": "Goals",
+    "plan": "Plan",
     "settings": "Settings",
     "home": "Home"
   },
@@ -355,5 +356,34 @@
     "waiting_save": "Waiting to save",
     "reflection_save_error": "Failed to save reflection.",
     "save_error": "An error occurred during save process."
+  },
+  "plan": {
+    "title": "Plan",
+    "free": "Free",
+    "standard": "Standard",
+    "popular": "Recommended",
+    "current_plan": "Current Plan",
+    "upgrade": "Upgrade",
+    "per_month": "/month",
+    "features": {
+      "activity_limit": "Up to 3 activities",
+      "unlimited_activities": "Unlimited activities",
+      "goal_limit": "Up to 3 goals",
+      "no_past_calendar": "No past calendar access",
+      "no_ai": "No AI feedback",
+      "unlimited_goals": "Unlimited goals",
+      "full_calendar": "Full calendar access",
+      "ai_feedback": "AI feedback included",
+      "activity_label": "Activity Addition",
+      "goal_label": "Goals",
+      "calendar_label": "Calendar Access",
+      "ai_label": "AI FB Feature",
+      "current_month_only": "Current month",
+      "all_days": "All days",
+      "up_to_3": "Up to 3",
+      "up_to_3_goals": "Up to 3",
+      "unlimited": "Unlimited"
+    },
+    "description": "Choose a plan that supports your journey"
   }
 } 
