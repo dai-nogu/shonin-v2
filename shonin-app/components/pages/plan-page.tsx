@@ -2,67 +2,26 @@
 
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Minus, Circle } from "lucide-react";
+import { planConfig } from "@/lib/plan-config";
 
 export default function PlanPageClient() {
   const t = useTranslations("plan");
 
-  const plans = [
-    {
-      id: "free",
-      name: t("free"),
-      price: "$0",
-      priceLabel: "",
-      features: [
-        t("features.activity_limit"),
-        t("features.goal_limit"),
-        t("features.no_past_calendar"),
-        t("features.no_ai"),
-      ],
-      isCurrent: true,
-      buttonText: t("current_plan"),
-      buttonVariant: "outline" as const,
-    },
-    {
-      id: "standard",
-      name: t("standard"),
-      price: "$9.99",
-      priceLabel: t("per_month"),
-      features: [
-        t("features.unlimited_activities"),
-        t("features.unlimited_goals"),
-        t("features.full_calendar"),
-        t("features.ai_feedback"),
-      ],
-      isCurrent: false,
-      buttonText: t("upgrade"),
-      buttonVariant: "default" as const,
-      isPopular: true,
-    },
-  ];
+  // 設定ファイルからプランデータを取得し、翻訳を適用
+  const plans = planConfig.plans.map(plan => ({
+    ...plan,
+    name: t(plan.name as any),
+    priceLabel: plan.priceLabel ? t(plan.priceLabel as any) : "",
+    features: plan.features.map(feature => t(feature as any)),
+    buttonText: t(plan.buttonText as any),
+  }));
 
-  // 表形式用の機能リスト
-  const featureComparison = [
-    {
-      label: t("features.activity_label"),
-      free: t("features.up_to_3"),
-      standard: t("features.unlimited"),
-    },
-    {
-      label: t("features.goal_label"),
-      free: t("features.up_to_3_goals"),
-      standard: t("features.unlimited"),
-    },
-    {
-      label: t("features.calendar_label"),
-      free: t("features.current_month_only"),
-      standard: t("features.all_days"),
-    },
-    {
-      label: t("features.ai_label"),
-      free: false,
-      standard: true,
-    },
-  ];
+  // 機能比較データも翻訳を適用
+  const featureComparison = planConfig.featureComparison.map(feature => ({
+    label: t(feature.label as any),
+    free: typeof feature.free === "boolean" ? feature.free : t(feature.free as any),
+    standard: typeof feature.standard === "boolean" ? feature.standard : t(feature.standard as any),
+  }));
 
   return (
     <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
