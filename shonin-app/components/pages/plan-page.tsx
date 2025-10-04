@@ -27,7 +27,7 @@ export default function PlanPageClient() {
     <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
       <main className="container mx-auto px-4 py-4 lg:py-6">
         {/* Header Section */}
-        <div className="py-6 lg:py-8 text-center">
+        <div className="py-6 lg:py-8 text-center mb-8 lg:mb-12">
           <h1 className="text-2xl lg:text-3xl font-bold mb-3">
             {t("title")}
           </h1>
@@ -37,7 +37,7 @@ export default function PlanPageClient() {
         </div>
 
         {/* SP表示：カード型 */}
-        <div className="md:hidden max-w-3xl mx-auto pb-12">
+        <div className="md:hidden max-w-3xl mx-auto pb-12 px-6">
           <div className="flex flex-col gap-5 justify-center">
             {plans.map((plan) => (
               <div
@@ -109,22 +109,22 @@ export default function PlanPageClient() {
         </div>
 
         {/* PC表示：カード型 */}
-        <div className="hidden md:block max-w-4xl mx-auto pb-12">
-          <div className="grid grid-cols-2 gap-5">
+        <div className="hidden md:block mx-auto pb-12 px-8">
+          <div className="flex flex-row justify-center items-start space-x-6">
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                className={`relative bg-gray-800 rounded-xl shadow-xl overflow-visible transition-all duration-300 hover:shadow-2xl flex flex-col border ${
+                className={`relative bg-gray-800 rounded-xl shadow-xl overflow-visible transition-all duration-300 hover:shadow-2xl flex flex-col border w-full max-w-sm ${
                   plan.isPopular
                     ? "border-green-500 transform scale-105"
                     : "border-white/30"
                 }`}
               >
-                {plan.isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-1.5 text-xs font-bold rounded-full shadow-lg z-10">
-                    {t("popular")}
-                  </div>
-                )}
+                  {plan.isPopular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-1.5 text-sm font-bold rounded-full shadow-lg z-10">
+                      {t("popular")}
+                    </div>
+                  )}
 
                 <div className="p-6 flex flex-col flex-1">
                   {/* Plan Header */}
@@ -148,7 +148,7 @@ export default function PlanPageClient() {
                   <div className="space-y-3 mb-6 flex-1">
                     {featureComparison.map((feature, index) => (
                       <div key={index} className="flex items-center justify-between py-2.5 border-b border-white/30">
-                        <span className="text-xs text-gray-300 font-medium">
+                        <span className="text-sm text-white font-medium">
                           {feature.label}
                         </span>
                         <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export default function PlanPageClient() {
                               <Minus className={`${index === 3 ? "w-5 h-5" : "w-4 h-4"} text-gray-300`} />
                             )
                           ) : (
-                            <span className={`text-xs font-semibold ${plan.isPopular ? "text-green-300" : "text-gray-300"}`}>
+                            <span className={`text-sm font-semibold ${plan.isPopular ? "text-green-300" : "text-white"}`}>
                               {plan.id === "free" ? feature.free : feature.standard}
                             </span>
                           )}
@@ -171,7 +171,7 @@ export default function PlanPageClient() {
                   {/* CTA Button */}
                   <button
                     disabled={plan.isCurrent}
-                    className={`w-full py-3 px-5 rounded-lg font-semibold text-sm transition-all duration-200 transform mt-auto ${
+                    className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
                       plan.buttonVariant === "default"
                         ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
                         : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
