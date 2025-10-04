@@ -4,9 +4,10 @@ import { createServerClient } from '@supabase/ssr'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const locale = requestUrl.searchParams.get('locale') || 'ja'
 
   if (code) {
-    let response = NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
+    let response = NextResponse.redirect(new URL(`/${locale}/dashboard`, requestUrl.origin))
     
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,16 +34,16 @@ export async function GET(request: NextRequest) {
       if (error) {
         console.error('OAuth callback error:', error)
         // エラーの場合はログインページにリダイレクト
-        return NextResponse.redirect(new URL('/login?error=auth_error', requestUrl.origin))
+        return NextResponse.redirect(new URL(`/${locale}/login?error=auth_error`, requestUrl.origin))
       }
       
       return response
     } catch (error) {
       console.error('OAuth exchange error:', error)
-      return NextResponse.redirect(new URL('/login?error=exchange_error', requestUrl.origin))
+      return NextResponse.redirect(new URL(`/${locale}/login?error=exchange_error`, requestUrl.origin))
     }
   }
 
   // コードがない場合はログインページにリダイレクト
-  return NextResponse.redirect(new URL('/login?error=no_code', requestUrl.origin))
+  return NextResponse.redirect(new URL(`/${locale}/login?error=no_code`, requestUrl.origin))
 } 

@@ -55,10 +55,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Google OAuth認証
   const signInWithGoogle = async () => {
     try {
+      // 現在のロケールを取得
+      const pathname = window.location.pathname
+      const locale = pathname.split('/')[1] || 'ja'
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/callback`,
+          redirectTo: `${window.location.origin}/callback?locale=${locale}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

@@ -5,18 +5,23 @@ import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/contexts/toast-context'
 import { Button } from '@/components/ui/common/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/common/card'
+import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { signInWithGoogle } = useAuth()
   const { showError } = useToast()
+  const t = useTranslations()
+  const params = useParams()
+  const locale = (params?.locale as string) || 'ja'
 
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true)
       await signInWithGoogle()
     } catch (error) {
-      showError('ログインに失敗しました。再度お試しください')
+      showError(t('login.loginError'))
     } finally {
       setIsLoading(false)
     }
@@ -36,15 +41,14 @@ export function LoginPage() {
             SHONIN
           </CardTitle>
           <CardDescription className="text-gray-400">
-            あなたの成長を見つめ、証明する
+            {t('login.tagline')}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
           <div className="text-center">
             <p className="text-gray-300 text-sm mb-6">
-              努力の伴走者、理解者として<br />
-              あなたの頑張りを記録し、成長を見守ります
+              {t('login.description')}
             </p>
           </div>
 
@@ -57,7 +61,7 @@ export function LoginPage() {
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <div className="w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-2" />
-                認証中...
+                {t('login.authenticating')}
               </div>
             ) : (
               <div className="flex items-center justify-center">
@@ -79,13 +83,13 @@ export function LoginPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Googleでログイン
+                {t('login.loginWithGoogle')}
               </div>
             )}
           </Button>
 
           <div className="text-center text-xs text-gray-500 mt-6">
-            ログインすることで、利用規約とプライバシーポリシーに同意したものとみなされます
+            {t('login.termsAgreement')}
           </div>
         </CardContent>
       </Card>

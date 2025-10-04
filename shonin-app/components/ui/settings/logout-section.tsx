@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/common/button"
@@ -23,6 +23,8 @@ import { useTranslations } from 'next-intl'
 export function LogoutSection() {
   const { signOut } = useAuth()
   const router = useRouter()
+  const params = useParams()
+  const locale = (params?.locale as string) || 'ja'
   const { showError } = useToast()
   const t = useTranslations()
   
@@ -35,8 +37,8 @@ export function LogoutSection() {
     setIsLoggingOut(true)
     try {
       await signOut()
-      // ログアウト後にログインページにリダイレクト
-      router.push('/login')
+      // ログアウト後にログインページにリダイレクト（ロケール対応）
+      router.push(`/${locale}/login`)
     } catch (error) {
       showError(t('settings.logout_error'))
     } finally {

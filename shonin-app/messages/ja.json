@@ -37,8 +37,15 @@
     "signIn": "サインイン",
     "signUp": "サインアップ",
     "forgotPassword": "パスワードを忘れた方",
+    "loginWithGoogle": "Googleでログイン"
+    },
+  "login": {
+    "tagline": "あなたの成長を見つめ、証明する",
+    "description": "努力の伴走者、理解者として\nあなたの頑張りを記録し、成長を見守ります",
     "loginWithGoogle": "Googleでログイン",
-    "loginWithGitHub": "GitHubでログイン"
+    "authenticating": "認証中...",
+    "termsAgreement": "ログインすることで、利用規約とプライバシーポリシーに同意したものとみなされます",
+    "loginError": "ログインに失敗しました。再度お試しください"
   },
   "dashboard": {
     "title": "ダッシュボード",

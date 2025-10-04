@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Trash2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/common/button"
@@ -24,6 +24,8 @@ import { useTranslations } from 'next-intl'
 export function DeleteAccountSection() {
   const { signOut } = useAuth()
   const router = useRouter()
+  const params = useParams()
+  const locale = (params?.locale as string) || 'ja'
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { showError, showSuccess, showWarning } = useToast()
@@ -62,8 +64,8 @@ export function DeleteAccountSection() {
       if (response.ok) {
         await signOut()
         showSuccess('ご利用ありがとうございました。')
-        // アカウント削除後にログインページにリダイレクト
-        router.push('/login')
+        // アカウント削除後にログインページにリダイレクト（ロケール対応）
+        router.push(`/${locale}/login`)
       } else {
         const error = await response.json()
         showError(t('settings.account_deletion_error'))

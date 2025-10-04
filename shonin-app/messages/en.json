@@ -30,15 +30,22 @@
     "home": "Home"
   },
   "auth": {
-    "login": "Login",
+    "login": "SignIn",
     "logout": "Logout",
     "email": "Email",
     "password": "Password",
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "forgotPassword": "Forgot Password",
-    "loginWithGoogle": "Login with Google",
-    "loginWithGitHub": "Login with GitHub"
+    "loginWithGoogle": "SignIn with Google"
+  },
+  "login": {
+    "tagline": "Be a witness to your growth",
+    "description": "As your companion and supporter in your efforts,\nwe record your hard work and witness your growth",
+    "loginWithGoogle": "SignIn with Google",
+    "authenticating": "Authenticating...",
+    "termsAgreement": "By logging in, you agree to our Terms of Service and Privacy Policy",
+    "loginError": "SignIn failed. Please try again"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -151,8 +158,8 @@
     "inProgress": "In Progress",
     "notStarted": "Not Started",
     "add_goal": "Add Goal",
-    "set_goal": "Set Goal",
-    "set_goal_message": "Let's set a goal",
+    "set_goal": "Add Goal",
+    "set_goal_message": "Let's add a goal",
     "delete_confirmation": "Are you sure you want to delete this goal?",
     "delete_error": "Failed to delete goal",
     "reload": "Reload",
