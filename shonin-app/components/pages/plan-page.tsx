@@ -3,9 +3,31 @@
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Minus, Circle } from "lucide-react";
 import { planConfig } from "@/lib/plan-config";
+import { useActionState } from "react";
+import { createStripeSession } from "@/app/actions/stripe";
+
+const initialState = {
+  status: "idle",
+  error: "",
+};
 
 export default function PlanPageClient() {
   const t = useTranslations("plan");
+  
+  const [state, formAction, isPending] = useActionState(async (prevState, formData) => {
+    const result = await createStripeSession(prevState, formData);
+    
+    if (result.status === "error") {
+      return {
+        status: "error",
+        error: result.error,
+      };
+    } else if (result.status === "success" && result.redirectUrl) {
+      window.location.href = result.redirectUrl;
+    }
+    
+    return result;
+  }, initialState);
 
   // 設定ファイルからプランデータを取得し、翻訳を適用
   const plans = planConfig.plans.map(plan => ({
@@ -34,6 +56,13 @@ export default function PlanPageClient() {
           <p className="text-sm lg:text-base text-gray-400">
             {t("description")}
           </p>
+          
+          {/* エラーメッセージ */}
+          {state.status === "error" && state.error && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500 rounded-lg text-red-400 text-sm">
+              {state.error}
+            </div>
+          )}
         </div>
 
         {/* SP表示：カード型 */}
@@ -85,16 +114,20 @@ export default function PlanPageClient() {
                   </ul>
 
                   {/* CTA Button */}
-                  <button
-                    disabled={plan.isCurrent}
-                    className={`w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto ${
-                      plan.buttonVariant === "default"
-                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
-                        : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
-                    }`}
-                  >
-                    {plan.buttonText}
-                  </button>
+                  <form action={formAction}>
+                    <input type="hidden" name="priceId" value={plan.priceId} />
+                    <button
+                      type="submit"
+                      disabled={plan.isCurrent || isPending}
+                      className={`w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto ${
+                        plan.buttonVariant === "default"
+                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                          : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
+                      }`}
+                    >
+                      {isPending ? "処理中..." : plan.buttonText}
+                    </button>
+                  </form>
                 </div>
               </div>
             ))}
@@ -169,16 +202,20 @@ export default function PlanPageClient() {
                   </div>
 
                   {/* CTA Button */}
-                  <button
-                    disabled={plan.isCurrent}
-                    className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
-                      plan.buttonVariant === "default"
-                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
-                        : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
-                    }`}
-                  >
-                    {plan.buttonText}
-                  </button>
+                  <form action={formAction}>
+                    <input type="hidden" name="priceId" value={plan.priceId} />
+                    <button
+                      type="submit"
+                      disabled={plan.isCurrent || isPending}
+                      className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
+                        plan.buttonVariant === "default"
+                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                          : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
+                      }`}
+                    >
+                      {isPending ? "処理中..." : plan.buttonText}
+                    </button>
+                  </form>
                 </div>
               </div>
             ))}

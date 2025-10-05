@@ -5,10 +5,11 @@ import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import PlanPageClient from "@/components/pages/plan-page";
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "plan" });
 
   return {
