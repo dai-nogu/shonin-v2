@@ -16,19 +16,59 @@ export async function createStripeSession(prevState: any, formData: FormData) {
     { cookies: { getAll: () => cookieStore.getAll() } }
   );
 
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    throw new Error("ユーザーが見つかりません");
+  if (authError || !user) {
+    return {
+      status: "error",
+      error: "認証が必要です",
+      redirectUrl: "",
+    };
   }
 
   try {
-    const origin = process.env.BASE_URL; // or headers().get('origin')
+    // DBからユーザー情報を取得
+    const { data: dbUser, error: dbError } = await supabase
+      .from('users')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single();
+
+    if (dbError) {
+      throw new Error('ユーザー情報の取得に失敗しました');
+    }
+
+    let customerId = dbUser?.stripe_customer_id;
+
+    // Stripe顧客IDがなければ作成
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email!,
+        metadata: {
+          supabase_user_id: user.id,
+        },
+      });
+
+      // DBにStripe顧客IDを保存
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ stripe_customer_id: customer.id })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Stripe顧客IDの保存に失敗:', updateError);
+      }
+
+      customerId = customer.id;
+    }
+
+    // Checkoutセッションを作成
+    const origin = process.env.BASE_URL;
     const session = await stripe.checkout.sessions.create({
-      customer_email: user.email, // stripe顧客連携
+      customer: customerId, // 既存または新規作成した顧客ID
       client_reference_id: user.id, // webhookでユーザー特定用
       metadata: {
-        supabase_user_id: user.id, // 追加のユーザー情報
+        supabase_user_id: user.id,
       },
       line_items: [
         {
