@@ -3,7 +3,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { stripe } from "@/lib/stripe";
-import { redirect } from "next/dist/server/api-utils";
 
 export async function createStripeSession(prevState: any, formData: FormData) {
   const priceId = formData.get("priceId") as string;
