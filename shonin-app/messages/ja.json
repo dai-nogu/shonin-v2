@@ -221,7 +221,10 @@
     "back": "戻る",
     "account_deletion": "アカウント削除",
     "account_deletion_confirmation": "アカウント削除の確認",
-    "account_deletion_error": "アカウント削除に失敗しました。再度お試しください。"
+    "account_deletion_error": "アカウント削除に失敗しました。再度お試しください。",
+    "current_plan": "現在のプラン",
+    "next_billing_date": "次回更新日",
+    "upgrade_to_standard": "Standardプランにアップグレードして、さらに多くの機能を利用しましょう"
   },
   "timezones": {
     "Asia/Tokyo": "日本 (JST)",

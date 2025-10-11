@@ -221,7 +221,10 @@
     "back": "Back",
     "account_deletion": "Account Deletion",
     "account_deletion_confirmation": "Account Deletion Confirmation",
-    "account_deletion_error": "Failed to delete account. Please try again."
+    "account_deletion_error": "Failed to delete account. Please try again.",
+    "current_plan": "Current Plan",
+    "next_billing_date": "Next Billing Date",
+    "upgrade_to_standard": "Upgrade to Standard plan to unlock more features"
   },
   "timezones": {
     "Asia/Tokyo": "Japan (JST)",

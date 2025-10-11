@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/common/button"
 import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
 import { useTranslations } from 'next-intl'
+import { getSubscriptionInfo } from "@/app/actions/subscription-info"
 
 export function ProfileSettings() {
   const { user } = useAuth()
@@ -22,6 +23,10 @@ export function ProfileSettings() {
   // ユーザー情報（データベースから取得）
   const [name, setName] = useState("")
   const [email, setEmail] = useState(user?.email || "")
+  
+  // サブスクリプション情報
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'standard'>('free')
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
 
   // ユーザー情報が更新された際に状態を同期
   useEffect(() => {
@@ -36,6 +41,16 @@ export function ProfileSettings() {
       setName(profile.name || "")
     }
   }, [profile])
+
+  // サブスクリプション情報を取得
+  useEffect(() => {
+    const fetchSubscriptionInfo = async () => {
+      const info = await getSubscriptionInfo()
+      setSubscriptionStatus(info.subscriptionStatus)
+      setCurrentPeriodEnd(info.currentPeriodEnd)
+    }
+    fetchSubscriptionInfo()
+  }, [])
 
   // 保存ハンドラー
   const handleSaveProfile = async () => {
@@ -93,6 +108,47 @@ export function ProfileSettings() {
               placeholder={t('settings.email_placeholder')}
             />
           </div>
+        </div>
+
+        {/* サブスクリプション情報 */}
+        <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">
+              {t('settings.current_plan')}
+            </h3>
+            <div className="flex items-center gap-2">
+              {subscriptionStatus === 'standard' ? (
+                <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-full">
+                  Standard
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-gray-700 text-gray-300 text-sm font-semibold rounded-full">
+                  Free
+                </span>
+              )}
+            </div>
+          </div>
+          
+          {subscriptionStatus === 'standard' && currentPeriodEnd && (
+            <div className="text-sm text-gray-400">
+              <p>
+                {t('settings.next_billing_date')}: {' '}
+                <span className="text-white font-medium">
+                  {new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
+              </p>
+            </div>
+          )}
+          
+          {subscriptionStatus === 'free' && (
+            <p className="text-sm text-gray-400">
+              {t('settings.upgrade_to_standard')}
+            </p>
+          )}
         </div>
         
         {/* 編集中のボタン */}

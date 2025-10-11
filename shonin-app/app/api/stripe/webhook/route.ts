@@ -163,12 +163,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     return;
   }
 
-  if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-    await supabaseAdmin
-      .from('users')
-      .update({ subscription_status: 'free' })
-      .eq('id', userId);
-  } else {
+  // アクティブな場合のみ期限を更新
+  if (subscription.status === 'active') {
     const periodEnd = (subscription as any).current_period_end as number;
     await supabaseAdmin
       .from('subscription')
@@ -176,6 +172,13 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
         stripe_current_period_end: new Date(periodEnd * 1000).toISOString(),
       })
       .eq('user_id', userId);
+  } 
+  // それ以外（canceled, unpaid, past_due, incomplete など）は全てfreeに戻す
+  else {
+    await supabaseAdmin
+      .from('users')
+      .update({ subscription_status: 'free' })
+      .eq('id', userId);
   }
 }
 
