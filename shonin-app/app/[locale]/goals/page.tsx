@@ -1,17 +1,12 @@
-"use client"
-
-import { useRouter } from "next/navigation"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Goals } from "@/components/pages/goals"
 import { BottomNavigation } from "@/components/layout/bottom-navigation"
+import { getGoals } from "@/app/actions/goals"
 
-export default function GoalsPage() {
-  const router = useRouter()
-
-  const handleBack = () => {
-    router.push("/dashboard")
-  }
+export default async function GoalsPage() {
+  // サーバーサイドで事前にデータを取得
+  const initialGoals = await getGoals()
 
   return (
     <>
@@ -19,7 +14,7 @@ export default function GoalsPage() {
       <SidebarInset>
         <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
           <main className="container mx-auto px-4 py-4 lg:py-8">
-            <Goals onBack={handleBack} />
+            <Goals initialGoals={initialGoals} />
           </main>
         </div>
       </SidebarInset>

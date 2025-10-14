@@ -1,27 +1,16 @@
-"use client"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Settings } from "@/components/pages/settings"
 import { BottomNavigation } from "@/components/layout/bottom-navigation"
-import { useSessions } from "@/contexts/sessions-context"
+import { getSubscriptionInfo } from "@/app/actions/subscription-info"
+import { getProfile } from "@/app/actions/user-profile"
 
-export default function SettingsPage() {
-  const router = useRouter()
-
-  // セッションコンテキストから状態を取得
-  const {
-    currentSession,
-    isSessionActive
-  } = useSessions()
-
-  const handleBack = () => {
-    router.push("/dashboard")
-  }
-
-
+export default async function SettingsPage() {
+  // サーバーサイドで事前にデータを取得
+  const [subscriptionInfo, userProfile] = await Promise.all([
+    getSubscriptionInfo(),
+    getProfile()
+  ])
 
   return (
     <>
@@ -30,12 +19,8 @@ export default function SettingsPage() {
         <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
           <main className="container mx-auto px-4 py-4 lg:py-8">
             <Settings 
-              onBack={handleBack}
-              currentSession={currentSession ? {
-                activityId: currentSession.activityId,
-                activityName: currentSession.activityName
-              } : null}
-              isSessionActive={isSessionActive}
+              initialSubscriptionInfo={subscriptionInfo}
+              initialUserProfile={userProfile}
             />
           </main>
         </div>

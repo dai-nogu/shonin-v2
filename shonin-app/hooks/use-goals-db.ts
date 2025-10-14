@@ -50,10 +50,10 @@ export function useSingleGoal(goalId: string) {
   return { goal, loading, error }
 }
 
-export function useGoalsDb() {
+export function useGoalsDb(initialGoals?: any[]) {
   const { user } = useAuth()
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [loading, setLoading] = useState(true)
+  const [goals, setGoals] = useState<Goal[]>(initialGoals || [])
+  const [loading, setLoading] = useState(!initialGoals)
   const [error, setError] = useState<string | null>(null)
 
   // 目標を取得
@@ -164,12 +164,12 @@ export function useGoalsDb() {
     return goals.filter(goal => goal.status === 'active')
   }
 
-  // 初回読み込み
+  // 初回読み込み（初期データがない場合のみ）
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !initialGoals) {
       fetchGoals()
     }
-  }, [user?.id])
+  }, [user?.id, initialGoals])
 
   return {
     goals,

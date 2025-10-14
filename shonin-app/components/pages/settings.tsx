@@ -8,20 +8,23 @@ import { TimezoneSettings } from "@/components/ui/settings/timezone-settings"
 import { LanguageSettings } from "@/components/ui/settings/language-settings"
 import { ActivityManagement } from "@/components/ui/settings/activity-management"
 import { AccountManagement } from "@/components/ui/settings/account-management"
+import { useSessions } from "@/contexts/sessions-context"
 import { useTranslations } from 'next-intl'
 
 interface SettingsProps {
-  onBack: () => void
-  currentSession?: {
-    activityId: string
-    activityName: string
-  } | null
-  isSessionActive?: boolean
+  initialSubscriptionInfo?: {
+    subscriptionStatus: 'free' | 'standard'
+    currentPeriodEnd: string | null
+  }
+  initialUserProfile?: any
 }
 
-export function Settings({ onBack, currentSession, isSessionActive }: SettingsProps) {
+export function Settings({ initialSubscriptionInfo, initialUserProfile }: SettingsProps) {
   const isMobile = useIsMobile()
   const t = useTranslations()
+  
+  // セッション情報を取得
+  const { currentSession, isSessionActive } = useSessions()
 
   return (
     <div className="bg-gray-950 text-white">
@@ -48,7 +51,10 @@ export function Settings({ onBack, currentSession, isSessionActive }: SettingsPr
 
           {/* プロフィールタブ */}
           <TabsContent value="profile" className="space-y-6">
-            <ProfileSettings />
+            <ProfileSettings 
+              initialSubscriptionInfo={initialSubscriptionInfo}
+              initialUserProfile={initialUserProfile}
+            />
           </TabsContent>
 
           {/* タイムゾーンタブ */}

@@ -11,7 +11,15 @@ import { Label } from "@/components/ui/common/label"
 import { useTranslations } from 'next-intl'
 import { getSubscriptionInfo } from "@/app/actions/subscription-info"
 
-export function ProfileSettings() {
+interface ProfileSettingsProps {
+  initialSubscriptionInfo?: {
+    subscriptionStatus: 'free' | 'standard'
+    currentPeriodEnd: string | null
+  }
+  initialUserProfile?: any
+}
+
+export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }: ProfileSettingsProps) {
   const { user } = useAuth()
   const { profile, updateUserName } = useUserProfile()
   const t = useTranslations()
@@ -25,8 +33,12 @@ export function ProfileSettings() {
   const [email, setEmail] = useState(user?.email || "")
   
   // サブスクリプション情報
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'standard'>('free')
-  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'standard' | null>(
+    initialSubscriptionInfo?.subscriptionStatus || null
+  )
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(
+    initialSubscriptionInfo?.currentPeriodEnd || null
+  )
 
   // ユーザー情報が更新された際に状態を同期
   useEffect(() => {
@@ -39,18 +51,22 @@ export function ProfileSettings() {
   useEffect(() => {
     if (profile) {
       setName(profile.name || "")
+    } else if (initialUserProfile) {
+      setName(initialUserProfile.name || "")
     }
-  }, [profile])
+  }, [profile, initialUserProfile])
 
-  // サブスクリプション情報を取得
+  // サブスクリプション情報を取得（初期データがない場合のみ）
   useEffect(() => {
-    const fetchSubscriptionInfo = async () => {
-      const info = await getSubscriptionInfo()
-      setSubscriptionStatus(info.subscriptionStatus)
-      setCurrentPeriodEnd(info.currentPeriodEnd)
+    if (!initialSubscriptionInfo) {
+      const fetchSubscriptionInfo = async () => {
+        const info = await getSubscriptionInfo()
+        setSubscriptionStatus(info.subscriptionStatus)
+        setCurrentPeriodEnd(info.currentPeriodEnd)
+      }
+      fetchSubscriptionInfo()
     }
-    fetchSubscriptionInfo()
-  }, [])
+  }, [initialSubscriptionInfo])
 
   // 保存ハンドラー
   const handleSaveProfile = async () => {
@@ -88,68 +104,82 @@ export function ProfileSettings() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-gray-300">{t('settings.name')}</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!isEditingProfile}
-              className="bg-gray-800 border-gray-700 text-white disabled:opacity-50"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-gray-300">{t('settings.email')}</Label>
-            <Input
-              type="email"
-              value={email}
-              disabled={true}
-              className="bg-gray-800 border-gray-700 text-white disabled:opacity-50"
-              placeholder={t('settings.email_placeholder')}
-            />
-          </div>
-        </div>
+        {(profile || initialUserProfile) && subscriptionStatus !== null ? (
+          <>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-gray-300">{t('settings.name')}</Label>
+                {isEditingProfile ? (
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-gray-800 border-gray-700 text-white"
+                  />
+                ) : (
+                  <div className="text-white">{name || t('common.not_set')}</div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-gray-300">{t('settings.email')}</Label>
+                <div className="text-white">{email}</div>
+              </div>
+            </div>
 
-        {/* サブスクリプション情報 */}
-        <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">
-              {t('settings.current_plan')}
-            </h3>
-            <div className="flex items-center gap-2">
-              {subscriptionStatus === 'standard' ? (
-                <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-full">
-                  Standard
-                </span>
-              ) : (
-                <span className="px-3 py-1 bg-gray-700 text-gray-300 text-sm font-semibold rounded-full">
-                  Free
-                </span>
+            {/* サブスクリプション情報 */}
+            <div className="space-y-4 mt-6">
+              <div className="space-y-2">
+                <Label className="text-gray-300">{t('settings.current_plan')}</Label>
+                <div className="flex items-center">
+                  {subscriptionStatus === 'standard' ? (
+                    <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-full">
+                      Standard
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-gray-700 text-gray-300 text-sm font-semibold rounded-full">
+                      Free
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {subscriptionStatus === 'standard' && currentPeriodEnd && (
+                <div className="space-y-2">
+                  <Label className="text-gray-300">{t('settings.next_billing_date')}</Label>
+                  <div className="text-white">
+                    {new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {subscriptionStatus === 'free' && (
+                <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+                  <p className="text-sm text-gray-400">
+                    {t('settings.upgrade_to_standard')}
+                  </p>
+                </div>
               )}
             </div>
-          </div>
-          
-          {subscriptionStatus === 'standard' && currentPeriodEnd && (
-            <div className="text-sm text-gray-400">
-              <p>
-                {t('settings.next_billing_date')}: {' '}
-                <span className="text-white font-medium">
-                  {new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </span>
-              </p>
+          </>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">{t('settings.name')}</Label>
+              <div className="h-6 bg-gray-800 rounded animate-pulse"></div>
             </div>
-          )}
-          
-          {subscriptionStatus === 'free' && (
-            <p className="text-sm text-gray-400">
-              {t('settings.upgrade_to_standard')}
-            </p>
-          )}
-        </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">{t('settings.email')}</Label>
+              <div className="h-6 bg-gray-800 rounded animate-pulse"></div>
+            </div>
+            <div className="space-y-2 mt-6">
+              <Label className="text-gray-300">{t('settings.current_plan')}</Label>
+              <div className="h-8 w-20 bg-gray-800 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        )}
         
         {/* 編集中のボタン */}
         {isEditingProfile && (

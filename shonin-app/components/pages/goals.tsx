@@ -29,10 +29,10 @@ interface Goal {
 }
 
 interface GoalsProps {
-  onBack: () => void
+  initialGoals?: any[]
 }
 
-export function Goals({ onBack }: GoalsProps) {
+export function Goals({ initialGoals }: GoalsProps) {
   const router = useRouter()
   const params = useParams()
   const locale = (params?.locale as string) || 'ja'
@@ -40,13 +40,13 @@ export function Goals({ onBack }: GoalsProps) {
   const t = useTranslations()
   const currentLocale = useLocale()
   
-  // データベースフック
+  // データベースフック（初期データがある場合は初期化）
   const { 
     goals: dbGoals, 
     loading, 
     error, 
     deleteGoal: deleteGoalFromDb 
-  } = useGoalsDb()
+  } = useGoalsDb(initialGoals)
 
   // ローカルステート
   const [goals, setGoals] = useState<Goal[]>([])
