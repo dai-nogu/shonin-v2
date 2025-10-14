@@ -82,6 +82,20 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
     }
   }
 
+  // サブスクリプション管理ハンドラー
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch("/api/create-portal-session", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
+
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
@@ -152,6 +166,18 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                       day: 'numeric',
                     })}
                   </div>
+                </div>
+              )}
+
+              {subscriptionStatus === 'standard' && (
+                <div className="pt-2">
+                  <Button
+                    onClick={handleManageSubscription}
+                    variant="outline"
+                    className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  >
+                    サブスクリプション管理
+                  </Button>
                 </div>
               )}
               
