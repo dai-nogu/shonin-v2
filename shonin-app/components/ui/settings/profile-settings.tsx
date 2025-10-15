@@ -145,7 +145,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                 <Label className="text-gray-300">{t('settings.current_plan')}</Label>
                 <div className="flex items-center">
                   {subscriptionStatus === 'standard' ? (
-                    <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-semibold rounded-full">
+                    <span className="text-white text-sm font-semibold">
                       Standard
                     </span>
                   ) : (
