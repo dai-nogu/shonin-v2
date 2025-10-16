@@ -15,6 +15,8 @@ interface ProfileSettingsProps {
   initialSubscriptionInfo?: {
     subscriptionStatus: 'free' | 'standard'
     currentPeriodEnd: string | null
+    cancelAtPeriodEnd?: boolean
+    canceledAt?: string | null
   }
   initialUserProfile?: any
 }
@@ -38,6 +40,12 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
   )
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(
     initialSubscriptionInfo?.currentPeriodEnd || null
+  )
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(
+    initialSubscriptionInfo?.cancelAtPeriodEnd || false
+  )
+  const [canceledAt, setCanceledAt] = useState<string | null>(
+    initialSubscriptionInfo?.canceledAt || null
   )
 
   // ユーザー情報が更新された際に状態を同期
@@ -63,6 +71,8 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
         const info = await getSubscriptionInfo()
         setSubscriptionStatus(info.subscriptionStatus)
         setCurrentPeriodEnd(info.currentPeriodEnd)
+        setCancelAtPeriodEnd(info.cancelAtPeriodEnd)
+        setCanceledAt(info.canceledAt)
       }
       fetchSubscriptionInfo()
     }
@@ -143,11 +153,21 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
             <div className="space-y-4 mt-6">
               <div className="space-y-2">
                 <Label className="text-gray-300">{t('settings.current_plan')}</Label>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   {subscriptionStatus === 'standard' ? (
-                    <span className="text-white text-sm font-semibold">
-                      Standard
-                    </span>
+                    <>
+                      <span className="text-white text-sm font-semibold">
+                        Standard
+                      </span>
+                      {cancelAtPeriodEnd && currentPeriodEnd && (
+                        <span className="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs font-medium rounded">
+                          {new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
+                            month: 'numeric',
+                            day: 'numeric',
+                          })}にキャンセル予定
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <span className="px-3 py-1 bg-gray-700 text-gray-300 text-sm font-semibold rounded-full">
                       Free
@@ -156,7 +176,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                 </div>
               </div>
               
-              {subscriptionStatus === 'standard' && currentPeriodEnd && (
+              {subscriptionStatus === 'standard' && currentPeriodEnd && !cancelAtPeriodEnd && (
                 <div className="space-y-2">
                   <Label className="text-gray-300">{t('settings.next_billing_date')}</Label>
                   <div className="text-white">
@@ -166,6 +186,18 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                       day: 'numeric',
                     })}
                   </div>
+                </div>
+              )}
+              
+              {subscriptionStatus === 'standard' && cancelAtPeriodEnd && currentPeriodEnd && (
+                <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                  <p className="text-sm text-orange-200">
+                    サブスクリプションは{new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}にキャンセルされます。それまでは引き続きご利用いただけます。
+                  </p>
                 </div>
               )}
 

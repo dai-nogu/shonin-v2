@@ -28,16 +28,21 @@ export async function getSubscriptionInfo() {
     .eq('id', user.id)
     .single();
 
-  // subscriptionテーブルから更新日を取得
+  // subscriptionテーブルから更新日とキャンセル情報を取得
   const { data: subscriptionData } = await supabase
     .from('subscription')
-    .select('stripe_current_period_end')
+    .select('stripe_current_period_end, cancel_at_period_end, canceled_at')
     .eq('user_id', user.id)
     .single();
+
+  // cancel_at_period_endがtrueの場合、キャンセル予定とみなす
+  const isCancelScheduled = subscriptionData?.cancel_at_period_end || false;
 
   return {
     subscriptionStatus: (userData?.subscription_status || 'free') as 'free' | 'standard',
     currentPeriodEnd: subscriptionData?.stripe_current_period_end || null,
+    cancelAtPeriodEnd: isCancelScheduled,
+    canceledAt: subscriptionData?.canceled_at || null,
   };
 }
 

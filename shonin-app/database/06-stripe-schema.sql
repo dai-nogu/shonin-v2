@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS public.subscription (
     stripe_subscription_id TEXT UNIQUE,
     stripe_price_id TEXT,
     stripe_current_period_end TIMESTAMP WITH TIME ZONE,
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    canceled_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -38,6 +40,7 @@ CREATE TABLE IF NOT EXISTS public.subscription (
 CREATE INDEX IF NOT EXISTS idx_subscription_user_id ON public.subscription(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_stripe_subscription_id ON public.subscription(stripe_subscription_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_stripe_current_period_end ON public.subscription(stripe_current_period_end);
+CREATE INDEX IF NOT EXISTS idx_subscription_cancel_at_period_end ON public.subscription(cancel_at_period_end) WHERE cancel_at_period_end = TRUE;
 
 -- ==========================================
 -- 更新日時自動更新トリガー

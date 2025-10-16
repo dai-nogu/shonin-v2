@@ -20,22 +20,6 @@ export interface Plan {
 export const planConfig = {
   plans: [
     {
-      id: "free",
-      name: "free",
-      price: "$0",
-      priceLabel: "",
-      priceId: "price_1SELAcIaAOyL3ERQxdk24Xyu", 
-      features: [
-        "features.activity_limit",
-        "features.goal_limit", 
-        "features.no_past_calendar",
-        "features.no_ai"
-      ],
-      isCurrent: true,
-      buttonText: "current_plan",
-      buttonVariant: "outline" as const,
-    },
-    {
       id: "standard",
       name: "standard", 
       price: "$9.99",

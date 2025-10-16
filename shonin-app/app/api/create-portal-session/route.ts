@@ -36,7 +36,7 @@ export async function POST() {
     // カスタマーポータルセッションを作成
     const session = await stripe.billingPortal.sessions.create({
       customer: dbUser.stripe_customer_id,
-      return_url: `${process.env.BASE_URL}/dashboard/settings`,
+      return_url: `${process.env.BASE_URL}/dashboard`,
     });
 
     return NextResponse.json({ url: session.url });
