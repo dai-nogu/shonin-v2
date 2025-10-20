@@ -1,5 +1,6 @@
 {
   "common": {
+    "locale": "en-US",
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
@@ -224,7 +225,9 @@
     "account_deletion_error": "Failed to delete account. Please try again.",
     "current_plan": "Current Plan",
     "next_billing_date": "Next Billing Date",
-    "upgrade_to_standard": "Upgrade to Standard plan to unlock more features"
+    "upgrade_to_standard": "Upgrade to Standard plan to unlock more features",
+    "cancel_scheduled_badge": "Cancels on {date}",
+    "manage_subscription": "Manage Subscription"
   },
   "timezones": {
     "Asia/Tokyo": "Japan (JST)",

@@ -161,10 +161,12 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                       </span>
                       {cancelAtPeriodEnd && currentPeriodEnd && (
                         <span className="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs font-medium rounded">
-                          {new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
-                            month: 'numeric',
-                            day: 'numeric',
-                          })}にキャンセル予定
+                          {t('settings.cancel_scheduled_badge', {
+                            date: new Date(currentPeriodEnd).toLocaleDateString(t('common.locale') || 'ja-JP', {
+                              month: 'numeric',
+                              day: 'numeric',
+                            })
+                          })}
                         </span>
                       )}
                     </>
@@ -188,18 +190,6 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                   </div>
                 </div>
               )}
-              
-              {subscriptionStatus === 'standard' && cancelAtPeriodEnd && currentPeriodEnd && (
-                <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                  <p className="text-sm text-orange-200">
-                    サブスクリプションは{new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}にキャンセルされます。それまでは引き続きご利用いただけます。
-                  </p>
-                </div>
-              )}
 
               {subscriptionStatus === 'standard' && (
                 <div className="pt-2">
@@ -208,7 +198,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                     variant="outline"
                     className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
                   >
-                    サブスクリプション管理
+                    {t('settings.manage_subscription')}
                   </Button>
                 </div>
               )}

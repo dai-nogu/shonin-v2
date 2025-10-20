@@ -1,5 +1,6 @@
 {
   "common": {
+    "locale": "ja-JP",
     "loading": "読み込み中...",
     "save": "保存",
     "cancel": "キャンセル",
@@ -224,7 +225,9 @@
     "account_deletion_error": "アカウント削除に失敗しました。再度お試しください。",
     "current_plan": "現在のプラン",
     "next_billing_date": "次回更新日",
-    "upgrade_to_standard": "Standardプランにアップグレードして、さらに多くの機能を利用しましょう"
+    "upgrade_to_standard": "Standardプランにアップグレードして、さらに多くの機能を利用しましょう",
+    "cancel_scheduled_badge": "{date}にキャンセル予定",
+    "manage_subscription": "サブスクリプション管理"
   },
   "timezones": {
     "Asia/Tokyo": "日本 (JST)",
