@@ -1,32 +1,92 @@
-import { SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Settings } from "@/components/pages/settings"
-import { BottomNavigation } from "@/components/layout/bottom-navigation"
-import { getSubscriptionInfo } from "@/app/actions/subscription-info"
-import { getProfile } from "@/app/actions/user-profile"
+import { ChevronRight, User, Globe, Languages, Activity, KeyRound } from "lucide-react"
+import Link from "next/link"
+import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 export default async function SettingsPage() {
-  // サーバーサイドで事前にデータを取得
-  const [subscriptionInfo, userProfile] = await Promise.all([
-    getSubscriptionInfo(),
-    getProfile()
-  ])
+  const t = await getTranslations()
+
+  const settingsCategories = [
+    {
+      id: "profile",
+      title: t("settings.categories.profile"),
+      href: "/settings/profile",
+      icon: User
+    },
+    {
+      id: "timezone",
+      title: t("settings.categories.timezone"),
+      href: "/settings/timezone",
+      icon: Globe
+    },
+    {
+      id: "language",
+      title: t("settings.categories.language"),
+      href: "/settings/language",
+      icon: Languages
+    },
+    {
+      id: "activity",
+      title: t("settings.categories.activity"),
+      href: "/settings/activity",
+      icon: Activity
+    },
+    {
+      id: "account",
+      title: t("settings.categories.account"),
+      href: "/settings/account",
+      icon: KeyRound
+    }
+  ]
 
   return (
-    <>
-      <AppSidebar currentPage="settings" />
-      <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
-          <main className="container mx-auto px-4 py-4 lg:py-8">
-            <Settings 
-              initialSubscriptionInfo={subscriptionInfo}
-              initialUserProfile={userProfile}
-            />
-          </main>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+      {/* ヘッダー */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4 flex items-center">
+          <Link href="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">S</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900">SHONIN</span>
+          </Link>
         </div>
-      </SidebarInset>
-      {/* モバイル用下部固定ナビゲーション */}
-      <BottomNavigation currentPage="settings" />
-    </>
+      </header>
+
+      {/* メインコンテンツ */}
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t("settings.title")}
+          </h1>
+          <p className="text-gray-600">
+            {t("settings.description")}
+          </p>
+        </div>
+
+        {/* 設定カテゴリカード */}
+        <div className="space-y-4">
+          {settingsCategories.map((category) => {
+            const Icon = category.icon
+            return (
+              <Link
+                key={category.id}
+                href={category.href}
+                className="block bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200"
+              >
+                <div className="p-6 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {category.title}
+                    </h2>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-gray-400" />
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </main>
+    </div>
   )
-} 
+}

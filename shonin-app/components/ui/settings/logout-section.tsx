@@ -50,7 +50,7 @@ export function LogoutSection() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <Label className="text-gray-300">{t('settings.logout')}</Label>
+        <Label className="text-gray-700">{t('settings.logout')}</Label>
       </div>
       
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
@@ -58,17 +58,15 @@ export function LogoutSection() {
           <Button 
             className="bg-red-600 hover:bg-red-700 text-white border-red-600"
           >
-            <LogOut className="w-4 h-4 mr-2" />
             {t('settings.logout')}
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-yellow-400 flex items-center space-x-2">
-              <LogOut className="w-5 h-5" />
-              <span>{t('settings.logout_confirmation')}</span>
+            <AlertDialogTitle className="text-yellow-600">
+              {t('settings.logout_confirmation')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-300">
+            <AlertDialogDescription className="text-gray-700">
               {t('settings.logout_message')}
               <br />
               {t('settings.logout_description')}
@@ -76,7 +74,7 @@ export function LogoutSection() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               {t('settings.back')}
             </AlertDialogCancel>

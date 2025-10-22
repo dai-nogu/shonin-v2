@@ -175,6 +175,14 @@
   },
   "settings": {
     "title": "設定",
+    "description": "アカウント設定や各種設定を管理できます",
+    "categories": {
+      "profile": "プロフィール",
+      "timezone": "タイムゾーン",
+      "language": "言語",
+      "activity": "アクティビティ管理",
+      "account": "アカウント管理"
+    },
     "profile": "プロフィール",
     "profile_edit": "プロフィールを編集",
     "name": "名前",

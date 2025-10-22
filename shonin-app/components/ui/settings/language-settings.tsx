@@ -29,10 +29,9 @@ export function LanguageSettings() {
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
+    <Card className="bg-white border-0 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
-          <Globe className="w-5 h-5" />
+        <CardTitle className="text-gray-900">
           {t('settings.language_settings')}
         </CardTitle>
       </CardHeader>
@@ -43,19 +42,19 @@ export function LanguageSettings() {
             onValueChange={handleLocaleChange}
             disabled={isSessionActive}
           >
-            <SelectTrigger className={`bg-gray-800 border-gray-700 text-white ${
+            <SelectTrigger className={`bg-white border-gray-300 text-gray-900 focus:ring-0 focus:ring-offset-0 ${
               isSessionActive ? 'opacity-50 cursor-not-allowed' : ''
             }`}>
               <SelectValue>
                 {t(`languages.${currentLocale}`) || currentLocale}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700">
+            <SelectContent className="bg-white border-gray-300">
               {SUPPORTED_LOCALES.map((locale) => (
                 <SelectItem 
                   key={locale.code} 
                   value={locale.code}
-                  className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                  className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100"
                 >
                   {t(`languages.${locale.key}`)}
                 </SelectItem>
@@ -66,10 +65,10 @@ export function LanguageSettings() {
 
         {/* 進行中セッションがある場合の警告 */}
         {isSessionActive && (
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-start space-x-3">
               <div>
-                <p className="text-red-200 text-sm mt-1">{t('settings.language_disabled_message')}</p>
+                <p className="text-red-700 text-sm mt-1">{t('settings.language_disabled_message')}</p>
               </div>
             </div>
           </div>
@@ -77,8 +76,8 @@ export function LanguageSettings() {
 
         {/* 通常の注意事項 */}
         {!isSessionActive && (
-          <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
-            <p className="text-sm text-gray-400">
+          <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+            <p className="text-sm text-gray-700">
               {t('settings.language_change_notice')}
             </p>
           </div>

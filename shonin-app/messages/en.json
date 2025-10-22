@@ -175,6 +175,14 @@
   },
   "settings": {
     "title": "Settings",
+    "description": "Manage your account and preferences",
+    "categories": {
+      "profile": "Profile",
+      "timezone": "Timezone",
+      "language": "Language",
+      "activity": "Activity Management",
+      "account": "Account Management"
+    },
     "profile": "Profile",
     "profile_edit": "Edit Profile",
     "name": "Name",

@@ -18,8 +18,9 @@ export function ConditionalSidebarProvider({ children }: { children: React.React
   const isLoginPage = pathWithoutLocale === '/login'
   const isGoalAddPage = pathWithoutLocale === '/goals/add'
   const isGoalEditPage = pathWithoutLocale.startsWith('/goals/edit/')
+  const isSettingsPage = pathWithoutLocale.startsWith('/settings')
 
-  if (isLoginPage || isGoalAddPage || isGoalEditPage) {
+  if (isLoginPage || isGoalAddPage || isGoalEditPage || isSettingsPage) {
     return <>{children}</>
   }
 

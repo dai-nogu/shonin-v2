@@ -82,45 +82,43 @@ export function DeleteAccountSection() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <Label className="text-red-400">{t('settings.account_deletion')}</Label>
+        <Label className="text-red-600">{t('settings.account_deletion')}</Label>
       </div>
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogTrigger asChild>
           <Button 
             variant="outline"
-            className="bg-red-950 border-red-800 text-red-400 hover:bg-red-900 hover:text-red-300"
+            className="bg-red-50 border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
             {t('settings.account_deletion')}
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent className="bg-gray-900 border-gray-800 text-white">
+        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-400 flex items-center space-x-2">
-              <Trash2 className="w-5 h-5" />
-              <span>{t('settings.account_deletion_confirmation')}</span>
+            <AlertDialogTitle className="text-red-600">
+              {t('settings.account_deletion_confirmation')}
             </AlertDialogTitle>
           </AlertDialogHeader>
           
           <div className="space-y-4">
-            <div className="p-4 bg-red-950/20 border border-red-800/50 rounded-lg">
-              <div className="text-red-300 font-medium mb-2">⚠️ 重要な警告</div>
-              <ul className="text-sm space-y-1 text-gray-300">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="text-red-700 font-medium mb-2">⚠️ 重要な警告</div>
+              <ul className="text-sm space-y-1 text-gray-700">
                 <li>• この操作は取り消すことができません</li>
                 <li>• すべてのアクティビティデータが削除されます</li>
                 <li>• セッション履歴が完全に削除されます</li>
                 <li>• 目標設定とAI分析データも削除されます</li>
               </ul>
             </div>
-            <div className="text-sm text-gray-300">
+            <div className="text-sm text-gray-700">
               本当にアカウントを削除しますか？
             </div>
           </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               いいえ
             </AlertDialogCancel>
