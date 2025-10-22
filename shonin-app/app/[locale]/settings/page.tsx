@@ -3,38 +3,43 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { getTranslations } from "next-intl/server"
 
-export default async function SettingsPage() {
-  const t = await getTranslations()
+export default async function SettingsPage({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const t = await getTranslations({ locale })
 
   const settingsCategories = [
     {
       id: "profile",
       title: t("settings.categories.profile"),
-      href: "/settings/profile",
+      href: `/${locale}/settings/profile`,
       icon: User
     },
     {
       id: "timezone",
       title: t("settings.categories.timezone"),
-      href: "/settings/timezone",
+      href: `/${locale}/settings/timezone`,
       icon: Globe
     },
     {
       id: "language",
       title: t("settings.categories.language"),
-      href: "/settings/language",
+      href: `/${locale}/settings/language`,
       icon: Languages
     },
     {
       id: "activity",
       title: t("settings.categories.activity"),
-      href: "/settings/activity",
+      href: `/${locale}/settings/activity`,
       icon: Activity
     },
     {
       id: "account",
       title: t("settings.categories.account"),
-      href: "/settings/account",
+      href: `/${locale}/settings/account`,
       icon: KeyRound
     }
   ]
@@ -44,7 +49,7 @@ export default async function SettingsPage() {
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4 flex items-center">
-          <Link href="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <Link href={`/${locale}/dashboard`} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">S</span>
             </div>

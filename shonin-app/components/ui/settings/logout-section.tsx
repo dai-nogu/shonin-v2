@@ -63,7 +63,7 @@ export function LogoutSection() {
         </AlertDialogTrigger>
         <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-yellow-600">
+            <AlertDialogTitle className="text-red-600">
               {t('settings.logout_confirmation')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-700">
@@ -74,7 +74,7 @@ export function LogoutSection() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-white hover:border-gray-400"
             >
               {t('settings.back')}
             </AlertDialogCancel>

@@ -5,8 +5,13 @@ import { getSubscriptionInfo } from "@/app/actions/subscription-info"
 import { getProfile } from "@/app/actions/user-profile"
 import { getTranslations } from "next-intl/server"
 
-export default async function ProfilePage() {
-  const t = await getTranslations()
+export default async function ProfilePage({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const t = await getTranslations({ locale })
   const [subscriptionInfo, userProfile] = await Promise.all([
     getSubscriptionInfo(),
     getProfile()
@@ -17,7 +22,7 @@ export default async function ProfilePage() {
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
-          <Link href="/settings" className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
+          <Link href={`/${locale}/settings`} className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
             <ChevronLeft className="w-6 h-6 text-gray-600" />
             <h1 className="text-xl font-bold text-gray-900">
               {t("settings.categories.profile")}

@@ -88,8 +88,7 @@ export function DeleteAccountSection() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogTrigger asChild>
           <Button 
-            variant="outline"
-            className="bg-red-50 border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700"
+            className="bg-red-50 border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700 border"
           >
             {t('settings.account_deletion')}
           </Button>
@@ -118,7 +117,7 @@ export function DeleteAccountSection() {
 
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-white hover:border-gray-400"
             >
               いいえ
             </AlertDialogCancel>
