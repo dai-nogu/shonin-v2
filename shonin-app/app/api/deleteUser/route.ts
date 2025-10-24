@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { stripe } from '@/lib/stripe'
 
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -33,13 +33,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ユーザーが認証されていません' }, { status: 401 })
     }
 
+    console.log('=== ユーザー削除処理開始 ===');
+    console.log('User ID:', user.id);
+
+    // ユーザーのサブスクリプション情報を取得
+    const { data: subscriptionData, error: subscriptionError } = await supabaseServer
+      .from('subscription')
+      .select('stripe_subscription_id, stripe_customer_id')
+      .eq('user_id', user.id)
+      .single();
+
+    // Stripeサブスクリプションのキャンセル処理
+    // 注: アカウント削除時は即座にキャンセルし、課金も停止する
+    // 残り期間は使えなくなるが、削除確認画面で警告表示済み
+    if (subscriptionData?.stripe_subscription_id) {
+      try {
+        console.log('Stripe Subscription ID:', subscriptionData.stripe_subscription_id);
+        
+        // サブスクリプションを即座にキャンセル（課金も即座に停止）
+        await stripe.subscriptions.cancel(subscriptionData.stripe_subscription_id);
+        
+        console.log('✓ Stripeサブスクリプションを即座にキャンセルしました');
+        console.log('  課金も停止されました');
+      } catch (stripeError: any) {
+        // Stripeでサブスクリプションが既に削除されている場合はエラーを無視
+        if (stripeError.code === 'resource_missing') {
+          console.log('Stripeサブスクリプションは既に削除されています');
+        } else {
+          console.error('Stripeサブスクリプションのキャンセルに失敗:', stripeError);
+          // Stripeのキャンセルに失敗してもユーザー削除は続行
+        }
+      }
+    } else {
+      console.log('アクティブなStripeサブスクリプションはありません');
+    }
+
     // Service Role Keyを使用してユーザーを削除
+    // これによりカスケード削除でusers, subscription, activities, sessions等も削除される
     const { data: deletedUser, error } = await supabaseServer.auth.admin.deleteUser(user.id)
 
     if (error) {
-      console.error('アカウント削除に失敗しました')
+      console.error('アカウント削除に失敗しました:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
+
+    console.log('✓ Supabaseアカウントを削除しました');
+    console.log('=== ユーザー削除処理完了 ===');
 
     return NextResponse.json({ message: 'ユーザーが削除されました' }, { status: 200 })
   } catch (error) {

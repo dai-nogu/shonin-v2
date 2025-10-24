@@ -74,7 +74,7 @@ export function LogoutSection() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-white hover:border-gray-400"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
             >
               {t('settings.back')}
             </AlertDialogCancel>
