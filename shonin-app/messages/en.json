@@ -324,7 +324,7 @@
     "location": "Location",
     "location_placeholder": "Where are you working?",
     "select_goal": "Select Goal",
-    "goal_placeholder": "Select a goal (optional)",
+    "goal_placeholder": "Select a goal",
     "no_goal": "No goal selected",
     "target_time": "Target Time",
     "hours": "Hours",

@@ -324,7 +324,7 @@
     "location": "場所",
     "location_placeholder": "どこで取り組みますか？",
     "select_goal": "目標を選択",
-    "goal_placeholder": "目標を選択してください（任意）",
+    "goal_placeholder": "目標を選択してください",
     "no_goal": "目標を選択しない",
     "target_time": "目標時間",
     "hours": "時間",

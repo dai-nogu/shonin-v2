@@ -280,6 +280,42 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
         {/* フォーム表示時以外の通常の内容 */}
         {!showAddForm && (
           <>
+            {/* 目標選択 */}
+            <div className="space-y-2">
+              <Label className="text-white flex items-center text-sm">
+                <Target className="w-4 h-4 mr-2" />
+                {t('session_start.select_goal')}
+              </Label>
+              <Select value={selectedGoal} onValueChange={handleGoalSelection}>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
+                  <SelectValue placeholder={t('session_start.goal_placeholder')} />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2">
+                    {t('session_start.no_goal')}
+                  </SelectItem>
+                  {activeGoals.map((goal) => (
+                    <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2">
+                      <span className="text-sm font-medium">{goal.title}</span>
+                    </SelectItem>
+                  ))}
+                  
+                  {/* 目標設定へのリンク */}
+                  <div className="p-2 border-t border-gray-600">
+                    <Button
+                      onClick={onGoalSettingClick}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t('goals.addGoal')}
+                    </Button>
+                  </div>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* 行動選択 */}
             <div className="space-y-2">
               <Label className="text-white">{t('session_start.select_activity')}</Label>
@@ -343,44 +379,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 onChange={(e) => setLocation(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm"
               />
-            </div>
-
-            {/* 目標選択 */}
-            <div className="space-y-2">
-              <Label className="text-white flex items-center text-sm">
-                <Target className="w-4 h-4 mr-2" />
-                {t('session_start.select_goal')}
-              </Label>
-              <Select value={selectedGoal} onValueChange={handleGoalSelection}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
-                  <SelectValue placeholder={t('session_start.goal_placeholder')} />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
-                  <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2">
-                    {t('session_start.no_goal')}
-                  </SelectItem>
-                  {activeGoals.map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2">
-                      <span className="text-sm font-medium">{goal.title}</span>
-                    </SelectItem>
-                  ))}
-                  
-                  {/* 目標設定へのリンク */}
-                  {activeGoals.length === 0 && (
-                    <div className="p-2">
-                      <Button
-                        onClick={onGoalSettingClick}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {t('goals.addGoal')}
-                      </Button>
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
             </div>
 
             {/* 目標時間設定 */}
