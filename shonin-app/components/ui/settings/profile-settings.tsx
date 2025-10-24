@@ -129,7 +129,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                       )}
                     </>
                   ) : (
-                    <span className="px-3 py-1 bg-gray-200 text-gray-700 text-sm font-semibold rounded-full">
+                    <span className="text-gray-900 text-sm font-semibold">
                       Free
                     </span>
                   )}
@@ -161,8 +161,8 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
               )}
               
               {subscriptionStatus === 'free' && (
-                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="text-sm text-purple-700">
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm text-green-700">
                     {t('settings.upgrade_to_standard')}
                   </p>
                 </div>

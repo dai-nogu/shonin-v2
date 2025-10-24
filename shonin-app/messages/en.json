@@ -394,6 +394,8 @@
     "popular": "Recommended",
     "current_plan": "Current Plan",
     "upgrade": "Upgrade",
+    "downgrade": "Downgrade",
+    "manage_subscription": "Manage Subscription",
     "per_month": "/month",
     "features": {
       "activity_limit": "Up to 3 activities",
@@ -405,11 +407,12 @@
       "full_calendar": "Full calendar access",
       "ai_feedback": "AI feedback included",
       "activity_label": "Activity Addition",
-      "goal_label": "Goals",
+      "goal_label": "Goal Addition",
       "calendar_label": "Calendar Access",
       "ai_label": "AI FB Feature",
       "current_month_only": "Current month",
       "all_days": "All days",
+      "up_to_1": "Up to 1",
       "up_to_3": "Up to 3",
       "up_to_3_goals": "Up to 3",
       "unlimited": "Unlimited"

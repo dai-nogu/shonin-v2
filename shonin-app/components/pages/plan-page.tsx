@@ -2,25 +2,36 @@
 
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Minus, Circle } from "lucide-react";
-import { planConfig } from "@/lib/plan-config";
+import { getPlanConfigs } from "@/lib/plan-config";
 import { useActionState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
 
-const initialState = {
+type ActionState = {
+  status: string;
+  error: string;
+  redirectUrl?: string;
+};
+
+const initialState: ActionState = {
   status: "idle",
   error: "",
 };
 
-export default function PlanPageClient() {
+interface PlanPageClientProps {
+  userPlan: 'free' | 'standard';
+}
+
+export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
   const t = useTranslations("plan");
   
-  const [state, formAction, isPending] = useActionState(async (prevState, formData) => {
+  const [state, formAction, isPending] = useActionState(async (prevState: ActionState, formData: FormData) => {
     const result = await createStripeSession(prevState, formData);
     
     if (result.status === "error") {
       return {
         status: "error",
         error: result.error,
+        redirectUrl: "",
       };
     } else if (result.status === "success" && result.redirectUrl) {
       window.location.href = result.redirectUrl;
@@ -29,8 +40,27 @@ export default function PlanPageClient() {
     return result;
   }, initialState);
 
-  // 設定ファイルからプランデータを取得し、翻訳を適用
-  const plans = planConfig.plans.map(plan => ({
+  // Freeプランのボタンクリック（ポータルに飛ぶ）
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch('/api/create-portal-session', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const { url } = await response.json();
+        window.location.href = url;
+      } else {
+        console.error('Failed to create portal session');
+      }
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+    }
+  };
+
+  // ユーザーのプランに基づいてプランデータを取得し、翻訳を適用
+  const planConfigs = getPlanConfigs(userPlan);
+  const plans = planConfigs.map(plan => ({
     ...plan,
     name: t(plan.name as any),
     priceLabel: plan.priceLabel ? t(plan.priceLabel as any) : "",
@@ -39,7 +69,25 @@ export default function PlanPageClient() {
   }));
 
   // 機能比較データも翻訳を適用
-  const featureComparison = planConfig.featureComparison.map(feature => ({
+  const featureComparisonData = [
+    {
+      label: "features.goal_label", 
+      free: "features.up_to_1",
+      standard: "features.up_to_3",
+    },
+    {
+      label: "features.calendar_label",
+      free: "features.current_month_only",
+      standard: "features.all_days",
+    },
+    {
+      label: "features.ai_label",
+      free: false,
+      standard: true,
+    },
+  ];
+  
+  const featureComparison = featureComparisonData.map(feature => ({
     label: t(feature.label as any),
     free: typeof feature.free === "boolean" ? feature.free : t(feature.free as any),
     standard: typeof feature.standard === "boolean" ? feature.standard : t(feature.standard as any),
@@ -87,7 +135,7 @@ export default function PlanPageClient() {
                   {/* Plan Header */}
                   <div className="text-center mb-5 lg:mb-6">
                     <h2 className="text-lg lg:text-xl font-bold text-white mb-2 lg:mb-3">
-                      {plan.name}
+                      {plan.isCurrent ? t("current_plan") : plan.name}
                     </h2>
                     <div className="flex items-baseline justify-center gap-1 mb-2">
                       <span className="text-3xl lg:text-4xl font-extrabold text-white">
@@ -114,20 +162,37 @@ export default function PlanPageClient() {
                   </ul>
 
                   {/* CTA Button */}
-                  <form action={formAction}>
-                    <input type="hidden" name="priceId" value={plan.priceId} />
+                  {plan.id === "free" ? (
                     <button
-                      type="submit"
-                      disabled={plan.isCurrent || isPending}
+                      type="button"
+                      onClick={plan.isCurrent ? undefined : handleManageSubscription}
+                      disabled={plan.isCurrent}
                       className={`w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto ${
-                        plan.buttonVariant === "default"
-                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
-                          : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
+                        plan.isCurrent 
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
                       }`}
                     >
-                      {isPending ? "処理中..." : plan.buttonText}
+                      {plan.buttonText}
                     </button>
-                  </form>
+                  ) : (
+                    <form action={formAction}>
+                      <input type="hidden" name="priceId" value={plan.priceId} />
+                      <button
+                        type="submit"
+                        disabled={plan.isCurrent || isPending}
+                        className={`w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto ${
+                          plan.isCurrent
+                            ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
+                            : plan.buttonVariant === "default"
+                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                            : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
+                        }`}
+                      >
+                        {isPending ? "処理中..." : plan.buttonText}
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             ))}
@@ -163,7 +228,7 @@ export default function PlanPageClient() {
                   {/* Plan Header */}
                   <div className="text-center mb-6">
                     <h2 className={`text-xl font-bold text-white mb-3 ${plan.isPopular ? "mt-1" : ""}`}>
-                      {plan.name}
+                      {plan.isCurrent ? t("current_plan") : plan.name}
                     </h2>
                     <div className="flex items-baseline justify-center gap-1 mb-4">
                       <span className={`text-4xl font-extrabold ${plan.isPopular ? "text-green-400" : "text-white"}`}>
@@ -202,20 +267,37 @@ export default function PlanPageClient() {
                   </div>
 
                   {/* CTA Button */}
-                  <form action={formAction}>
-                    <input type="hidden" name="priceId" value={plan.priceId} />
+                  {plan.id === "free" ? (
                     <button
-                      type="submit"
-                      disabled={plan.isCurrent || isPending}
+                      type="button"
+                      onClick={plan.isCurrent ? undefined : handleManageSubscription}
+                      disabled={plan.isCurrent}
                       className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
-                        plan.buttonVariant === "default"
-                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
-                          : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
+                        plan.isCurrent 
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
                       }`}
                     >
-                      {isPending ? "処理中..." : plan.buttonText}
+                      {plan.buttonText}
                     </button>
-                  </form>
+                  ) : (
+                    <form action={formAction}>
+                      <input type="hidden" name="priceId" value={plan.priceId} />
+                      <button
+                        type="submit"
+                        disabled={plan.isCurrent || isPending}
+                        className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
+                          plan.isCurrent
+                            ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
+                            : plan.buttonVariant === "default"
+                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                            : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
+                        }`}
+                      >
+                        {isPending ? "処理中..." : plan.buttonText}
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             ))}
@@ -232,4 +314,3 @@ export default function PlanPageClient() {
     </div>
   );
 }
-
