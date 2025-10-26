@@ -5,6 +5,7 @@ import { CheckCircle2, Minus, Circle } from "lucide-react";
 import { getPlanConfigs } from "@/lib/plan-config";
 import { useActionState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type ActionState = {
   status: string;
@@ -163,35 +164,64 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
 
                   {/* CTA Button */}
                   {plan.id === "free" ? (
-                    <button
-                      type="button"
-                      onClick={plan.isCurrent ? undefined : handleManageSubscription}
-                      disabled={plan.isCurrent}
-                      className={`w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto ${
-                        plan.isCurrent 
-                          ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
-                      }`}
-                    >
-                      {plan.buttonText}
-                    </button>
-                  ) : (
-                    <form action={formAction}>
-                      <input type="hidden" name="priceId" value={plan.priceId} />
+                    plan.isCurrent ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              disabled
+                              className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
+                            >
+                              {plan.buttonText}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t("current_plan_tooltip")}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
                       <button
-                        type="submit"
-                        disabled={plan.isCurrent || isPending}
-                        className={`w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto ${
-                          plan.isCurrent
-                            ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
-                            : plan.buttonVariant === "default"
-                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
-                            : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
-                        }`}
+                        type="button"
+                        onClick={handleManageSubscription}
+                        className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
                       >
-                        {isPending ? "処理中..." : plan.buttonText}
+                        {plan.buttonText}
                       </button>
-                    </form>
+                    )
+                  ) : (
+                    plan.isCurrent ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-full">
+                              <button
+                                type="button"
+                                disabled
+                                className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed"
+                              >
+                                {plan.buttonText}
+                              </button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t("current_plan_tooltip")}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <form action={formAction}>
+                        <input type="hidden" name="priceId" value={plan.priceId} />
+                        <button
+                          type="submit"
+                          disabled={isPending}
+                          className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                          {isPending ? "処理中..." : plan.buttonText}
+                        </button>
+                      </form>
+                    )
                   )}
                 </div>
               </div>
@@ -268,35 +298,64 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
 
                   {/* CTA Button */}
                   {plan.id === "free" ? (
-                    <button
-                      type="button"
-                      onClick={plan.isCurrent ? undefined : handleManageSubscription}
-                      disabled={plan.isCurrent}
-                      className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
-                        plan.isCurrent 
-                          ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
-                      }`}
-                    >
-                      {plan.buttonText}
-                    </button>
-                  ) : (
-                    <form action={formAction}>
-                      <input type="hidden" name="priceId" value={plan.priceId} />
+                    plan.isCurrent ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              disabled
+                              className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
+                            >
+                              {plan.buttonText}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t("current_plan_tooltip")}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
                       <button
-                        type="submit"
-                        disabled={plan.isCurrent || isPending}
-                        className={`w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto ${
-                          plan.isCurrent
-                            ? "bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500"
-                            : plan.buttonVariant === "default"
-                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
-                            : "bg-gray-700 text-gray-300 cursor-default border border-gray-600"
-                        }`}
+                        type="button"
+                        onClick={handleManageSubscription}
+                        className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600"
                       >
-                        {isPending ? "処理中..." : plan.buttonText}
+                        {plan.buttonText}
                       </button>
-                    </form>
+                    )
+                  ) : (
+                    plan.isCurrent ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-full">
+                              <button
+                                type="button"
+                                disabled
+                                className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed"
+                              >
+                                {plan.buttonText}
+                              </button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t("current_plan_tooltip")}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <form action={formAction}>
+                        <input type="hidden" name="priceId" value={plan.priceId} />
+                        <button
+                          type="submit"
+                          disabled={isPending}
+                          className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                          {isPending ? "処理中..." : plan.buttonText}
+                        </button>
+                      </form>
+                    )
                   )}
                 </div>
               </div>

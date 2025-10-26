@@ -397,6 +397,7 @@
     "downgrade": "ダウングレード",
     "manage_subscription": "サブスクリプション管理",
     "per_month": "/月",
+    "current_plan_tooltip": "現在ご利用中のプランです",
     "features": {
       "activity_limit": "アクティビティ追加3つまで",
       "unlimited_activities": "アクティビティ追加無制限",

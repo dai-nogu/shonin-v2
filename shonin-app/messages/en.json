@@ -397,6 +397,7 @@
     "downgrade": "Downgrade",
     "manage_subscription": "Manage Subscription",
     "per_month": "/month",
+    "current_plan_tooltip": "This is your current plan",
     "features": {
       "activity_limit": "Up to 3 activities",
       "unlimited_activities": "Unlimited activities",

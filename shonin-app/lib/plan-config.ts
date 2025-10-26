@@ -62,7 +62,7 @@ export function getPlanConfigs(userPlan: 'free' | 'standard' | 'premium' = 'free
         : userPlanLevel > PLAN_HIERARCHY.standard 
           ? 'downgrade' 
           : 'upgrade',
-      buttonVariant: (userPlan === 'standard' ? 'outline' : 'default') as "outline" | "default",
+      buttonVariant: 'default' as "outline" | "default",
       isPopular: true,
     },
     // 将来的にpremiumプランを追加する場合はここに追加
