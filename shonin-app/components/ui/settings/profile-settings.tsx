@@ -8,14 +8,10 @@ import { Button } from "@/components/ui/common/button"
 import { Label } from "@/components/ui/common/label"
 import { useTranslations } from 'next-intl'
 import { getSubscriptionInfo } from "@/app/actions/subscription-info"
+import type { PlanType, SubscriptionInfo } from "@/types/subscription"
 
 interface ProfileSettingsProps {
-  initialSubscriptionInfo?: {
-    subscriptionStatus: 'free' | 'standard'
-    currentPeriodEnd: string | null
-    cancelAtPeriodEnd?: boolean
-    canceledAt?: string | null
-  }
+  initialSubscriptionInfo?: SubscriptionInfo
   initialUserProfile?: any
 }
 
@@ -29,7 +25,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
   const [email, setEmail] = useState(user?.email || "")
   
   // サブスクリプション情報
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'standard' | null>(
+  const [subscriptionStatus, setSubscriptionStatus] = useState<PlanType | null>(
     initialSubscriptionInfo?.subscriptionStatus || null
   )
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(
@@ -65,8 +61,8 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
         const info = await getSubscriptionInfo()
         setSubscriptionStatus(info.subscriptionStatus)
         setCurrentPeriodEnd(info.currentPeriodEnd)
-        setCancelAtPeriodEnd(info.cancelAtPeriodEnd)
-        setCanceledAt(info.canceledAt)
+        setCancelAtPeriodEnd(info.cancelAtPeriodEnd ?? false)
+        setCanceledAt(info.canceledAt ?? null)
       }
       fetchSubscriptionInfo()
     }

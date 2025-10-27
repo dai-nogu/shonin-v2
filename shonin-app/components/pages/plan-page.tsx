@@ -6,6 +6,7 @@ import { getPlanConfigs } from "@/lib/plan-config";
 import { useActionState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import type { PlanType } from "@/types/subscription";
 
 type ActionState = {
   status: string;
@@ -19,7 +20,7 @@ const initialState: ActionState = {
 };
 
 interface PlanPageClientProps {
-  userPlan: 'free' | 'standard';
+  userPlan: PlanType;
 }
 
 export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
@@ -75,16 +76,19 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
       label: "features.goal_label", 
       free: "features.up_to_1",
       standard: "features.up_to_3",
+      premium: "features.unlimited",
     },
     {
       label: "features.calendar_label",
       free: "features.current_month_only",
       standard: "features.all_days",
+      premium: "features.all_days",
     },
     {
       label: "features.ai_label",
       free: false,
       standard: true,
+      premium: true,
     },
   ];
   
@@ -92,6 +96,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
     label: t(feature.label as any),
     free: typeof feature.free === "boolean" ? feature.free : t(feature.free as any),
     standard: typeof feature.standard === "boolean" ? feature.standard : t(feature.standard as any),
+    premium: typeof feature.premium === "boolean" ? feature.premium : t(feature.premium as any),
   }));
 
   return (

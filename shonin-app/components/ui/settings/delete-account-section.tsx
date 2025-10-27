@@ -21,6 +21,7 @@ import { useToast } from "@/contexts/toast-context"
 import { createClient } from "@/lib/supabase"
 import { useTranslations } from 'next-intl'
 import { getSubscriptionInfo } from "@/app/actions/subscription-info"
+import type { PlanType } from "@/types/subscription"
 
 export function DeleteAccountSection() {
   const { signOut } = useAuth()
@@ -34,7 +35,7 @@ export function DeleteAccountSection() {
   const t = useTranslations()
   
   // サブスクリプション情報
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'standard' | null>(null)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<PlanType | null>(null)
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null)
   const [remainingDays, setRemainingDays] = useState<number>(0)
 

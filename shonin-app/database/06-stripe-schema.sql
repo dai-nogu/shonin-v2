@@ -14,7 +14,7 @@ DROP VIEW IF EXISTS public.user_subscription;
 
 ALTER TABLE public.users 
 ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE,
-ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'standard'));
+ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'standard', 'premium'));
 
 -- インデックス作成
 CREATE INDEX IF NOT EXISTS idx_users_stripe_customer_id ON public.users(stripe_customer_id);

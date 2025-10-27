@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
+import { getPlanTypeFromPriceId, type PlanType } from '@/types/subscription';
 
 // ==========================================
 // Stripeイベント処理
@@ -172,14 +173,13 @@ async function handleCheckoutCompleted(
     
     const periodEndDate = new Date(periodEnd * 1000);
     
-    // Price IDからプランを判定（Standardプランのみ）
-    let subscriptionStatus: 'free' | 'standard' = 'standard';
+    // Price IDからプランタイプを判定
+    const subscriptionStatus: PlanType = getPlanTypeFromPriceId(priceId) || 'free';
     
-    if (priceId === 'price_1SELBSIaAOyL3ERQzh3nDxnr') {
-      subscriptionStatus = 'standard';
+    if (!getPlanTypeFromPriceId(priceId)) {
+      console.error('Unknown price_id in checkout:', priceId, '- defaulting to free');
     } else {
-      console.log('Unknown price_id in checkout:', priceId, '- defaulting to standard');
-      subscriptionStatus = 'standard';
+      console.log('Checkout completed for plan:', subscriptionStatus, '- price_id:', priceId);
     }
     
     // DBに保存
@@ -287,14 +287,13 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     console.log('Cancel at:', (fullSubscription as any).cancel_at);
     console.log('Canceled at:', fullSubscription.canceled_at);
     
-    // Price IDからプランを判定（Standardプランのみ）
-    let subscriptionStatus: 'free' | 'standard' = 'standard';
+    // Price IDからプランタイプを判定
+    const subscriptionStatus: PlanType = getPlanTypeFromPriceId(priceId) || 'free';
     
-    if (priceId === 'price_1SELBSIaAOyL3ERQzh3nDxnr') {
-      subscriptionStatus = 'standard';
+    if (!getPlanTypeFromPriceId(priceId)) {
+      console.error('Unknown price_id in subscription update:', priceId, '- defaulting to free');
     } else {
-      console.log('Unknown price_id:', priceId, '- defaulting to standard');
-      subscriptionStatus = 'standard';
+      console.log('Subscription updated for plan:', subscriptionStatus);
     }
     
     // キャンセル予定かどうかをチェック（cancel_at_period_end または cancel_at が設定されている場合）
@@ -456,6 +455,13 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
+  const priceId = subscription.items.data[0]?.price.id;
+  const subscriptionStatus: PlanType = getPlanTypeFromPriceId(priceId) || 'free';
+  
+  if (!getPlanTypeFromPriceId(priceId)) {
+    console.error('Unknown price_id in invoice payment:', priceId);
+  }
+
   const periodEnd = (subscription as any).current_period_end as number;
   await supabaseAdmin
     .from('subscription')
@@ -466,7 +472,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 
   await supabaseAdmin
     .from('users')
-    .update({ subscription_status: 'standard' })
+    .update({ subscription_status: subscriptionStatus })
     .eq('id', userId);
 }
 

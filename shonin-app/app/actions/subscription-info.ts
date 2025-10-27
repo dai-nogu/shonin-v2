@@ -3,8 +3,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
+import type { PlanType, SubscriptionInfo } from "@/types/subscription";
 
-export async function getSubscriptionInfo() {
+export async function getSubscriptionInfo(): Promise<SubscriptionInfo> {
   const cookieStore = await cookies();
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,7 @@ export async function getSubscriptionInfo() {
 
   if (authError || !user) {
     return {
-      subscriptionStatus: 'free' as const,
+      subscriptionStatus: 'free',
       currentPeriodEnd: null,
     };
   }
@@ -39,7 +40,7 @@ export async function getSubscriptionInfo() {
   const isCancelScheduled = subscriptionData?.cancel_at_period_end || false;
 
   return {
-    subscriptionStatus: (userData?.subscription_status || 'free') as 'free' | 'standard',
+    subscriptionStatus: (userData?.subscription_status || 'free') as PlanType,
     currentPeriodEnd: subscriptionData?.stripe_current_period_end || null,
     cancelAtPeriodEnd: isCancelScheduled,
     canceledAt: subscriptionData?.canceled_at || null,

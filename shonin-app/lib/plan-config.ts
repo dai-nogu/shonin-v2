@@ -1,11 +1,14 @@
+import { PlanType, PLAN_HIERARCHY, PLAN_TO_PRICE_ID } from '@/types/subscription';
+
 export interface PlanFeature {
   label: string;
   free: string | boolean;
   standard: string | boolean;
+  premium: string | boolean;
 }
 
 export interface Plan {
-  id: string;
+  id: PlanType;
   name: string;
   price: string;
   priceLabel: string;
@@ -17,22 +20,15 @@ export interface Plan {
   isPopular?: boolean;
 }
 
-// プランの階層を定義（将来のpremiumプラン対応）
-const PLAN_HIERARCHY = {
-  free: 0,
-  standard: 1,
-  premium: 2, // 将来対応
-};
-
 /**
  * ユーザーの現在のプランに基づいて、プランの設定を動的に生成
- * @param userPlan - ユーザーの現在のプラン ('free' | 'standard' | 'premium')
+ * @param userPlan - ユーザーの現在のプラン
  * @returns 各プランの設定（isCurrent, buttonText, buttonVariant を含む）
  */
-export function getPlanConfigs(userPlan: 'free' | 'standard' | 'premium' = 'free') {
+export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
   const userPlanLevel = PLAN_HIERARCHY[userPlan];
 
-  return [
+  const plans: Plan[] = [
     {
       id: "free",
       name: "free",
@@ -46,7 +42,7 @@ export function getPlanConfigs(userPlan: 'free' | 'standard' | 'premium' = 'free
         : userPlanLevel > PLAN_HIERARCHY.free 
           ? 'downgrade' 
           : 'manage_subscription',
-      buttonVariant: 'outline' as "outline" | "default",
+      buttonVariant: 'outline' as const,
       isPopular: false,
     },
     {
@@ -54,7 +50,7 @@ export function getPlanConfigs(userPlan: 'free' | 'standard' | 'premium' = 'free
       name: "standard", 
       price: "$9.99",
       priceLabel: "per_month",
-      priceId: "price_1SELBSIaAOyL3ERQzh3nDxnr",
+      priceId: PLAN_TO_PRICE_ID.standard,
       features: [],
       isCurrent: userPlan === 'standard',
       buttonText: userPlan === 'standard' 
@@ -62,11 +58,29 @@ export function getPlanConfigs(userPlan: 'free' | 'standard' | 'premium' = 'free
         : userPlanLevel > PLAN_HIERARCHY.standard 
           ? 'downgrade' 
           : 'upgrade',
-      buttonVariant: 'default' as "outline" | "default",
+      buttonVariant: 'default' as const,
       isPopular: true,
     },
-    // 将来的にpremiumプランを追加する場合はここに追加
+    // プレミアムプラン（将来リリース予定）
+    // {
+    //   id: "premium",
+    //   name: "premium",
+    //   price: "$19.99",
+    //   priceLabel: "per_month",
+    //   priceId: PLAN_TO_PRICE_ID.premium,
+    //   features: [],
+    //   isCurrent: userPlan === 'premium',
+    //   buttonText: userPlan === 'premium'
+    //     ? 'current_plan'
+    //     : userPlanLevel > PLAN_HIERARCHY.premium
+    //       ? 'downgrade'
+    //       : 'upgrade',
+    //   buttonVariant: 'default' as const,
+    //   isPopular: false,
+    // },
   ];
+
+  return plans;
 }
 
 export const planConfig = {
@@ -77,21 +91,32 @@ export const planConfig = {
       label: "features.activity_label",
       free: "features.up_to_3",
       standard: "features.unlimited",
+      premium: "features.unlimited",
     },
     {
       label: "features.goal_label", 
-      free: "features.up_to_3_goals",
-      standard: "features.unlimited",
+      free: "features.up_to_1",
+      standard: "features.up_to_3",
+      premium: "features.unlimited",
     },
     {
       label: "features.calendar_label",
       free: "features.current_month_only",
       standard: "features.all_days",
+      premium: "features.all_days",
     },
     {
       label: "features.ai_label",
       free: false,
       standard: true,
+      premium: true,
     },
+    // プレミアムプラン専用機能（将来追加予定）
+    // {
+    //   label: "features.advanced_analytics_label",
+    //   free: false,
+    //   standard: false,
+    //   premium: true,
+    // },
   ]
 };

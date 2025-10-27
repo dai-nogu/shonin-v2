@@ -10,12 +10,10 @@ import { ActivityManagement } from "@/components/ui/settings/activity-management
 import { AccountManagement } from "@/components/ui/settings/account-management"
 import { useSessions } from "@/contexts/sessions-context"
 import { useTranslations } from 'next-intl'
+import type { SubscriptionInfo } from "@/types/subscription"
 
 interface SettingsProps {
-  initialSubscriptionInfo?: {
-    subscriptionStatus: 'free' | 'standard'
-    currentPeriodEnd: string | null
-  }
+  initialSubscriptionInfo?: SubscriptionInfo
   initialUserProfile?: any
 }
 
