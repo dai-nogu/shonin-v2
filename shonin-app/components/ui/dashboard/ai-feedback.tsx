@@ -1,6 +1,6 @@
 "use client"
 
-import { Sparkles, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
@@ -33,8 +33,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     getWeeklyFeedback, 
     getMonthlyFeedback,
     getExistingFeedback,
-    generateWeeklyFeedback, 
-    generateMonthlyFeedback,
     getLastWeekRange,
     getLastMonthRange
   } = useAIFeedback()
@@ -213,39 +211,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     }
   }
 
-  const handleForceRegenerate = async () => {
-    try {
-      // 現在表示中のフィードバックタイプに応じて強制再生成
-      const isWeekly = currentFeedback.type === t('ai_feedback.weekly')
-      
-      if (isWeekly) {
-        const weeklyResult = await generateWeeklyFeedback()
-        if (weeklyResult?.feedback) {
-          const updatedFeedbacks = [...feedbacks]
-          updatedFeedbacks[0] = {
-            type: t('ai_feedback.weekly'),
-            date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
-            message: weeklyResult.feedback
-          }
-          setFeedbacks(updatedFeedbacks)
-        }
-      } else {
-        const monthlyResult = await generateMonthlyFeedback()
-        if (monthlyResult?.feedback) {
-          const updatedFeedbacks = [...feedbacks]
-          updatedFeedbacks[1] = {
-            type: t('ai_feedback.monthly'),
-            date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
-            message: monthlyResult.feedback
-          }
-          setFeedbacks(updatedFeedbacks)
-        }
-      }
-    } catch (err) {
-      console.error('フィードバック強制再生成エラー:', err)
-    }
-  }
-
   const currentFeedback = feedbacks[currentIndex]
 
   return (
@@ -258,18 +223,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           
           {/* コントロール */}
           <div className="flex items-center space-x-2">
-            {/* 強制再生成ボタン */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleForceRegenerate}
-              disabled={isLoading}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
-              title="新しいフィードバックを生成"
-            >
-              <Sparkles className={`w-4 h-4 ${isLoading ? 'animate-pulse' : ''}`} />
-            </Button>
-            
             {/* 更新ボタン */}
             <Button
               variant="ghost"
