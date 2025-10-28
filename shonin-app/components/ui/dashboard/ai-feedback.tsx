@@ -75,14 +75,14 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
         <CardContent className="pt-6">
           <div className="text-center py-8 space-y-4">
             <div className="text-gray-400">
-              <p className="mb-2">AIによる週次・月次フィードバック機能は</p>
-              <p className="font-bold text-lg text-white">Standardプランへの登録が必要です。</p>
+              <p className="mb-2">{t('plan.limit_modal.ai_feedback_line1')}</p>
+              <p className="font-bold text-lg text-white">{t('plan.limit_modal.ai_feedback_line2')}</p>
             </div>
             <Button
               onClick={() => router.push('/plan')}
               className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
             >
-              詳しくみる
+              {t('plan.limit_modal.view_plans')}
             </Button>
           </div>
         </CardContent>

@@ -419,6 +419,15 @@
       "up_to_3_goals": "Up to 3",
       "unlimited": "Unlimited"
     },
-    "description": "Choose a plan that supports your journey"
+    "description": "Choose a plan that supports your journey",
+    "limit_modal": {
+      "goal_free": "To add goals, you need to\nupgrade to the Standard plan",
+      "goal_standard": "To add more goals, you need to\nupgrade to the Premium plan",
+      "goal_default": "Limit reached",
+      "calendar_past": "To view past calendars, you need to\nupgrade to the Standard plan",
+      "ai_feedback_line1": "AI weekly and monthly feedback feature",
+      "ai_feedback_line2": "requires a Standard plan subscription.",
+      "view_plans": "View Plans"
+    }
   }
 } 

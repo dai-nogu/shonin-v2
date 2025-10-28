@@ -2,6 +2,7 @@
 
 import { Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ interface PlanLimitModalProps {
 
 export function PlanLimitModal({ isOpen, onClose }: PlanLimitModalProps) {
   const router = useRouter()
+  const t = useTranslations('plan.limit_modal')
 
   const handleViewPlans = () => {
     onClose()
@@ -33,10 +35,8 @@ export function PlanLimitModal({ isOpen, onClose }: PlanLimitModalProps) {
               <Lock className="w-8 h-8 text-gray-500" />
             </div>
           </div>
-          <DialogTitle className="text-center text-xl text-white">
-            過去のカレンダーを見るには
-            <br />
-            Standardプランへの登録が必要です
+          <DialogTitle className="text-center text-xl text-white whitespace-pre-line">
+            {t('calendar_past')}
           </DialogTitle>
         </DialogHeader>
         <DialogFooter className="mt-6">
@@ -44,7 +44,7 @@ export function PlanLimitModal({ isOpen, onClose }: PlanLimitModalProps) {
             onClick={handleViewPlans}
             className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 h-12"
           >
-            詳しくみる
+            {t('view_plans')}
           </Button>
         </DialogFooter>
       </DialogContent>

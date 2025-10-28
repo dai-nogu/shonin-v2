@@ -419,6 +419,15 @@
       "up_to_3_goals": "3つまで",
       "unlimited": "無制限"
     },
-    "description": "あなたの努力に寄り添うプランを選びましょう"
+    "description": "あなたの努力に寄り添うプランを選びましょう",
+    "limit_modal": {
+      "goal_free": "目標を追加するには\nStandardプランへの登録が必要です",
+      "goal_standard": "目標を追加するには\nPremiumプランへの登録が必要です",
+      "goal_default": "制限に達しました",
+      "calendar_past": "過去のカレンダーを見るには\nStandardプランへの登録が必要です",
+      "ai_feedback_line1": "AIによる週次・月次フィードバック機能は",
+      "ai_feedback_line2": "Standardプランへの登録が必要です。",
+      "view_plans": "詳しくみる"
+    }
   }
 } 

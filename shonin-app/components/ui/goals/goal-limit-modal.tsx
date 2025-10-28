@@ -2,6 +2,7 @@
 
 import { Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ interface GoalLimitModalProps {
 
 export function GoalLimitModal({ isOpen, onClose, currentPlan, currentGoalCount }: GoalLimitModalProps) {
   const router = useRouter()
+  const t = useTranslations('plan.limit_modal')
 
   const handleViewPlans = () => {
     onClose()
@@ -29,11 +31,11 @@ export function GoalLimitModal({ isOpen, onClose, currentPlan, currentGoalCount 
 
   const getLimitText = () => {
     if (currentPlan === 'free') {
-      return '目標を追加するには\nStandardプランへの登録が必要です'
+      return t('goal_free')
     } else if (currentPlan === 'standard') {
-      return '目標を追加するには\nPremiumプランへの登録が必要です'
+      return t('goal_standard')
     }
-    return '制限に達しました'
+    return t('goal_default')
   }
 
   const limitText = getLimitText()
@@ -56,7 +58,7 @@ export function GoalLimitModal({ isOpen, onClose, currentPlan, currentGoalCount 
             onClick={handleViewPlans}
             className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 h-12"
           >
-            詳しくみる
+            {t('view_plans')}
           </Button>
         </DialogFooter>
       </DialogContent>
