@@ -30,6 +30,8 @@ interface WeekCalendarSSRProps {
   onNavigate: (direction: "prev" | "next") => void
   onTodayClick: () => void
   onDateClick: (date: Date, sessions: CalendarSession[]) => void
+  userPlan?: 'free' | 'standard' | 'premium'
+  subscriptionLoading?: boolean
 }
 
 // 共通ユーティリティを使用
@@ -40,9 +42,15 @@ function WeekCalendarSSR({
   timezone, 
   onNavigate, 
   onTodayClick, 
-  onDateClick 
+  onDateClick,
+  userPlan = 'free',
+  subscriptionLoading = false
 }: WeekCalendarSSRProps) {
   const t = useTranslations()
+  const today = new Date()
+  const currentMonth = today.getMonth()
+  const currentYear = today.getFullYear()
+  
   // セッションデータの変換（SSR側で実行）
   const sessions = convertToCalendarSessions(completedSessions, timezone)
   
@@ -115,6 +123,32 @@ function WeekCalendarSSR({
                   t('weekly_progress.days.saturday'),
                   t('weekly_progress.days.sunday')
                 ]
+                
+                // 前月の日付かどうかをチェック
+                const isPastMonth = userPlan === 'free' && 
+                  (day.getFullYear() < currentYear || 
+                   (day.getFullYear() === currentYear && day.getMonth() < currentMonth))
+                
+                // スケルトン表示の場合
+                if (isPastMonth) {
+                  return (
+                    <div
+                      key={index}
+                      className="min-h-[150px] p-0 md:p-3 rounded-lg bg-gray-800 opacity-30 cursor-not-allowed"
+                    >
+                      <div className="text-center mb-3">
+                        <div className="text-gray-500 text-sm">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
+                        <div className="text-lg font-medium text-gray-600">
+                          {day.getDate()}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-8 bg-gray-700 rounded animate-pulse"></div>
+                        <div className="h-8 bg-gray-700 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  )
+                }
 
                 return (
                   <div

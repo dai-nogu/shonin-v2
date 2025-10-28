@@ -21,6 +21,8 @@ interface CalendarContainerProps {
   onTodayClick: () => void
   onDateClick?: (date: any, sessions: CalendarSession[]) => void
   currentDate: Date
+  userPlan?: 'free' | 'standard' | 'premium'
+  subscriptionLoading?: boolean
 }
 
 export function CalendarContainer({
@@ -31,7 +33,9 @@ export function CalendarContainer({
   onNavigate,
   onTodayClick,
   onDateClick,
-  currentDate
+  currentDate,
+  userPlan = 'free',
+  subscriptionLoading = false
 }: CalendarContainerProps) {
   const { timezone } = useTimezone()
   const t = useTranslations()
@@ -102,6 +106,8 @@ export function CalendarContainer({
           onNavigate={onNavigate}
           onTodayClick={onTodayClick}
           onDateClick={handleInternalDateClick}
+          userPlan={userPlan}
+          subscriptionLoading={subscriptionLoading}
         />
         
         {/* SP版用：下部パネル */}

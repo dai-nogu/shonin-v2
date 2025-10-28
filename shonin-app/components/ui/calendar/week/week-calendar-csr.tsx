@@ -22,6 +22,7 @@ export function WeekCalendarCSR({ initialDate, CalendarComponent }: WeekCalendar
   } = useCalendarViewMode({
     initialDate,
     userPlan,
+    viewMode: 'week',
   })
   const { completedSessions } = useSessionList()
 
@@ -35,6 +36,8 @@ export function WeekCalendarCSR({ initialDate, CalendarComponent }: WeekCalendar
         onNavigate={onNavigate}
         onTodayClick={onTodayClick}
         currentDate={currentDate}
+        userPlan={userPlan}
+        subscriptionLoading={subscriptionLoading}
       />
       <PlanLimitModal
         isOpen={showPlanLimitModal}

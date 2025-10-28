@@ -7,12 +7,13 @@ import { getPlanLimits, type PlanType } from "@/types/subscription"
 interface UseCalendarViewModeProps {
   initialDate?: Date
   userPlan?: PlanType
+  viewMode?: "month" | "week"
 }
 
 export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
-  const { initialDate, userPlan = 'free' } = props || {}
+  const { initialDate, userPlan = 'free', viewMode } = props || {}
   const searchParams = useSearchParams()
-  const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">("month")
+  const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">(viewMode || "month")
   const [isInitialized, setIsInitialized] = useState(false)
   const [currentDate, setCurrentDate] = useState(initialDate || new Date())
   const [showPlanLimitModal, setShowPlanLimitModal] = useState(false)
@@ -25,16 +26,21 @@ export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
     }
   }, [searchParams])
 
-  // 初期化時にローカルストレージから設定を復元
+  // 初期化時にローカルストレージから設定を復元（propsで指定されていない場合のみ）
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
-      if (savedViewMode === 'month' || savedViewMode === 'week') {
-        setCalendarViewMode(savedViewMode)
+      // propsでviewModeが指定されている場合は、それを優先
+      if (viewMode) {
+        setCalendarViewMode(viewMode)
+      } else {
+        const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
+        if (savedViewMode === 'month' || savedViewMode === 'week') {
+          setCalendarViewMode(savedViewMode)
+        }
       }
       setIsInitialized(true)
     }
-  }, [])
+  }, [viewMode])
 
   // カレンダー表示モードの保存
   useEffect(() => {
@@ -47,8 +53,12 @@ export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
   const onNavigate = useCallback((direction: "prev" | "next") => {
     const planLimits = getPlanLimits(userPlan)
     const today = new Date()
+    today.setHours(0, 0, 0, 0) // 時刻をリセット
     const currentMonth = today.getMonth()
     const currentYear = today.getFullYear()
+    
+    // 今月の1日を取得
+    const currentMonthStart = new Date(currentYear, currentMonth, 1)
     
     setCurrentDate(prevDate => {
       const newDate = new Date(prevDate)
@@ -74,12 +84,29 @@ export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
         if (direction === "prev") {
           newDate.setDate(newDate.getDate() - 7)
           
-          // Freeプランの場合、当月より前の週に移動できない
+          // Freeプランの場合、週の中に今月の日付が1つでも含まれているかチェック
           if (!planLimits.hasPastCalendar) {
-            const newMonth = newDate.getMonth()
-            const newYear = newDate.getFullYear()
+            // 週の開始日（日曜日）を計算
+            const weekStart = new Date(newDate)
+            const dayOfWeek = weekStart.getDay()
+            weekStart.setDate(weekStart.getDate() - dayOfWeek)
             
-            if (newYear < currentYear || (newYear === currentYear && newMonth < currentMonth)) {
+            // 週の7日間をチェック
+            let hasCurrentMonthDate = false
+            for (let i = 0; i < 7; i++) {
+              const checkDate = new Date(weekStart)
+              checkDate.setDate(weekStart.getDate() + i)
+              checkDate.setHours(0, 0, 0, 0)
+              
+              // 今月の1日以降の日付が含まれているかチェック
+              if (checkDate >= currentMonthStart) {
+                hasCurrentMonthDate = true
+                break
+              }
+            }
+            
+            // 週の中に今月の日付が1つもない場合のみブロック
+            if (!hasCurrentMonthDate) {
               setShowPlanLimitModal(true)
               return prevDate // 移動しない
             }

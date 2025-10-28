@@ -22,6 +22,7 @@ export function MonthCalendarCSR({ initialDate, CalendarComponent }: MonthCalend
   } = useCalendarViewMode({
     initialDate,
     userPlan,
+    viewMode: 'month',
   })
   const { completedSessions } = useSessionList()
 
@@ -35,6 +36,8 @@ export function MonthCalendarCSR({ initialDate, CalendarComponent }: MonthCalend
         onNavigate={onNavigate}
         onTodayClick={onTodayClick}
         currentDate={currentDate}
+        userPlan={userPlan}
+        subscriptionLoading={subscriptionLoading}
       />
       <PlanLimitModal
         isOpen={showPlanLimitModal}
