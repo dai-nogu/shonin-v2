@@ -1,11 +1,14 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { ChevronLeft, ChevronRight, RefreshCw, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
 import { useTranslations } from 'next-intl'
+import { useRouter } from "next/navigation"
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
+import { useSubscription } from "@/hooks/use-subscription"
+import { getPlanLimits } from "@/types/subscription"
 import type { CompletedSession } from "./time-tracker"
 
 interface AIFeedbackProps {
@@ -20,6 +23,10 @@ interface FeedbackData {
 
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const t = useTranslations()
+  const router = useRouter()
+  const { userPlan, loading: subscriptionLoading } = useSubscription()
+  const planLimits = getPlanLimits(userPlan)
+  
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
@@ -36,6 +43,40 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     getLastWeekRange,
     getLastMonthRange
   } = useAIFeedback()
+  
+  // Freeプランの場合はアップグレードプロンプトを表示
+  if (!subscriptionLoading && !planLimits.hasAIFeedback) {
+    return (
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            {t('ai_feedback.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 space-y-4">
+            <div className="text-gray-400">
+              <p className="mb-2">AIによる週次・月次フィードバック機能は</p>
+              <p className="font-bold text-lg text-white">Standardプラン以上</p>
+              <p className="mt-2">でご利用いただけます</p>
+            </div>
+            <div className="bg-gray-900 p-4 rounded-lg space-y-2 text-sm text-gray-300">
+              <p>✨ あなたの努力を振り返り</p>
+              <p>✨ 成長のパターンを発見</p>
+              <p>✨ 励ましと具体的なアドバイス</p>
+            </div>
+            <Button
+              onClick={() => router.push('/plan')}
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+            >
+              プランを見る
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   // 日付をフォーマット（月/日形式）
   const formatDate = (date: Date) => {

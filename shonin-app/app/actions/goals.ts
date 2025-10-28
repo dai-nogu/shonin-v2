@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
+import { getPlanLimits, type PlanType } from '@/types/subscription'
+import { getSubscriptionInfo } from './subscription-info'
 
 type Goal = Database['public']['Tables']['goals']['Row']
 type GoalInsert = Database['public']['Tables']['goals']['Insert']
@@ -102,6 +104,30 @@ export async function addGoal(goalData: GoalFormData): Promise<string> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
+
+    // プラン制限をチェック
+    const subscriptionInfo = await getSubscriptionInfo()
+    const planLimits = getPlanLimits(subscriptionInfo.subscriptionStatus)
+    
+    // 現在のアクティブな目標数を取得
+    const { count: currentGoalCount, error: countError } = await supabase
+      .from('goals')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+    
+    if (countError) throw countError
+    
+    // 上限チェック
+    if (currentGoalCount !== null && currentGoalCount >= planLimits.maxGoals) {
+      if (subscriptionInfo.subscriptionStatus === 'free') {
+        throw new Error('Freeプランでは目標を1つまでしか作成できません。Standardプランにアップグレードすると3つまで作成できます。')
+      } else if (subscriptionInfo.subscriptionStatus === 'standard') {
+        throw new Error('Standardプランでは目標を3つまでしか作成できません。')
+      } else {
+        throw new Error('目標数の上限に達しました。')
+      }
+    }
 
     // calculatedHoursを秒に変換（時間 * 3600）
     const targetDurationSeconds = goalData.calculatedHours * 3600

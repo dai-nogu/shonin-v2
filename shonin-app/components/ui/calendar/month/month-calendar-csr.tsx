@@ -3,6 +3,8 @@
 import { CalendarContainer, type CalendarSession } from "@/components/ui/calendar/calendar-container"
 import { useCalendarViewMode } from "@/hooks/useCalendarViewMode"
 import { useSessionList } from "@/hooks/useSessionList"
+import { useSubscription } from "@/hooks/use-subscription"
+import { PlanLimitModal } from "@/components/ui/calendar/plan-limit-modal"
 
 interface MonthCalendarProps {
   initialDate?: Date
@@ -10,18 +12,34 @@ interface MonthCalendarProps {
 }
 
 export function MonthCalendarCSR({ initialDate, CalendarComponent }: MonthCalendarProps) {
-  const { currentDate, onNavigate, onTodayClick } = useCalendarViewMode(initialDate)
+  const { userPlan, loading: subscriptionLoading } = useSubscription()
+  const { 
+    currentDate, 
+    onNavigate, 
+    onTodayClick, 
+    showPlanLimitModal, 
+    setShowPlanLimitModal 
+  } = useCalendarViewMode({
+    initialDate,
+    userPlan,
+  })
   const { completedSessions } = useSessionList()
 
   return (
-    <CalendarContainer
-      completedSessions={completedSessions}
-      initialDate={initialDate}
-      CalendarComponent={CalendarComponent}
-      viewMode="month"
-      onNavigate={onNavigate}
-      onTodayClick={onTodayClick}
-      currentDate={currentDate}
-    />
+    <>
+      <CalendarContainer
+        completedSessions={completedSessions}
+        initialDate={initialDate}
+        CalendarComponent={CalendarComponent}
+        viewMode="month"
+        onNavigate={onNavigate}
+        onTodayClick={onTodayClick}
+        currentDate={currentDate}
+      />
+      <PlanLimitModal
+        isOpen={showPlanLimitModal}
+        onClose={() => setShowPlanLimitModal(false)}
+      />
+    </>
   )
 } 

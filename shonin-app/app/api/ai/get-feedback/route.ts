@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
+import { getSubscriptionInfo } from '@/app/actions/subscription-info';
+import { getPlanLimits } from '@/types/subscription';
 
 interface GetFeedbackRequest {
   feedback_type: 'weekly' | 'monthly';
@@ -11,6 +13,17 @@ interface GetFeedbackRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // プラン制限をチェック
+    const subscriptionInfo = await getSubscriptionInfo();
+    const planLimits = getPlanLimits(subscriptionInfo.subscriptionStatus);
+    
+    if (!planLimits.hasAIFeedback) {
+      return NextResponse.json(
+        { error: 'AI機能はStandardプラン以上でご利用いただけます' },
+        { status: 403 }
+      );
+    }
+    
     const cookieStore = await cookies();
     
     const supabase = createServerClient<Database>(
