@@ -50,7 +50,7 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
       name: "standard", 
       price: "$9.99",
       priceLabel: "per_month",
-      priceId: PLAN_TO_PRICE_ID.standard,
+      priceId: PLAN_TO_PRICE_ID.standard ?? '',
       features: [],
       isCurrent: userPlan === 'standard',
       buttonText: userPlan === 'standard' 
@@ -85,16 +85,10 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
 
 export const planConfig = {
   plans: getPlanConfigs('free'), // デフォルトはfree
-  
+
   featureComparison: [
     {
-      label: "features.activity_label",
-      free: "features.up_to_3",
-      standard: "features.unlimited",
-      premium: "features.unlimited",
-    },
-    {
-      label: "features.goal_label", 
+      label: "features.goal_label",
       free: "features.up_to_1",
       standard: "features.up_to_3",
       premium: "features.unlimited",
