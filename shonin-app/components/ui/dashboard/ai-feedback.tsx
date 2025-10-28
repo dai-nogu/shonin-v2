@@ -49,8 +49,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     return (
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-400" />
+          <CardTitle className="text-white">
             {t('ai_feedback.title')}
           </CardTitle>
         </CardHeader>
@@ -58,19 +57,13 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           <div className="text-center py-8 space-y-4">
             <div className="text-gray-400">
               <p className="mb-2">AIによる週次・月次フィードバック機能は</p>
-              <p className="font-bold text-lg text-white">Standardプラン以上</p>
-              <p className="mt-2">でご利用いただけます</p>
-            </div>
-            <div className="bg-gray-900 p-4 rounded-lg space-y-2 text-sm text-gray-300">
-              <p>✨ あなたの努力を振り返り</p>
-              <p>✨ 成長のパターンを発見</p>
-              <p>✨ 励ましと具体的なアドバイス</p>
+              <p className="font-bold text-lg text-white">Standardプランへの登録が必要です。</p>
             </div>
             <Button
               onClick={() => router.push('/plan')}
               className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
             >
-              プランを見る
+              詳しくみる
             </Button>
           </div>
         </CardContent>

@@ -10,19 +10,33 @@ import {
   DialogTitle,
 } from "@/components/ui/common/dialog"
 import { Button } from "@/components/ui/common/button"
+import { PlanType } from "@/types/subscription"
 
-interface PlanLimitModalProps {
+interface GoalLimitModalProps {
   isOpen: boolean
   onClose: () => void
+  currentPlan: PlanType
+  currentGoalCount: number
 }
 
-export function PlanLimitModal({ isOpen, onClose }: PlanLimitModalProps) {
+export function GoalLimitModal({ isOpen, onClose, currentPlan, currentGoalCount }: GoalLimitModalProps) {
   const router = useRouter()
 
   const handleViewPlans = () => {
     onClose()
     router.push('/plan')
   }
+
+  const getLimitText = () => {
+    if (currentPlan === 'free') {
+      return '目標を追加するには\nStandardプランへの登録が必要です'
+    } else if (currentPlan === 'standard') {
+      return '目標を追加するには\nPremiumプランへの登録が必要です'
+    }
+    return '制限に達しました'
+  }
+
+  const limitText = getLimitText()
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -33,10 +47,8 @@ export function PlanLimitModal({ isOpen, onClose }: PlanLimitModalProps) {
               <Lock className="w-8 h-8 text-gray-500" />
             </div>
           </div>
-          <DialogTitle className="text-center text-xl text-white">
-            過去のカレンダーを見るには
-            <br />
-            Standardプランへの登録が必要です
+          <DialogTitle className="text-center text-xl text-white whitespace-pre-line">
+            {limitText}
           </DialogTitle>
         </DialogHeader>
         <DialogFooter className="mt-6">

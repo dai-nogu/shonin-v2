@@ -10,6 +10,8 @@ import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
 import { useTranslations, useLocale } from 'next-intl'
 import { formatISODateForLocale } from '@/lib/i18n-utils'
+import { useSubscription } from "@/hooks/use-subscription"
+import { GoalLimitModal } from "@/components/ui/goals/goal-limit-modal"
 
 interface Goal {
   id: string
@@ -48,8 +50,12 @@ export function Goals({ initialGoals }: GoalsProps) {
     deleteGoal: deleteGoalFromDb 
   } = useGoalsDb(initialGoals)
 
+  // サブスクリプション情報
+  const { userPlan } = useSubscription()
+
   // ローカルステート
   const [goals, setGoals] = useState<Goal[]>([])
+  const [showLimitModal, setShowLimitModal] = useState(false)
 
   // 週間時間の計算
   const calculateWeeklyHours = (weekdayHours: number, weekendHours: number) => {
@@ -108,6 +114,16 @@ export function Goals({ initialGoals }: GoalsProps) {
   }
 
   const handleAddGoal = () => {
+    // プラン制限をチェック
+    const goalLimit = userPlan === 'free' ? 1 : userPlan === 'standard' ? 3 : Infinity
+    
+    if (goals.length >= goalLimit) {
+      // 制限に達している場合はモーダルを表示
+      setShowLimitModal(true)
+      return
+    }
+    
+    // 制限内の場合は追加ページへ遷移
     router.push(`/${locale}/goals/add`)
   }
 
@@ -143,6 +159,14 @@ export function Goals({ initialGoals }: GoalsProps) {
 
   return (
     <div className="text-white">
+      {/* プラン制限モーダル */}
+      <GoalLimitModal 
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        currentPlan={userPlan}
+        currentGoalCount={goals.length}
+      />
+
       <div className="container mx-auto max-w-4xl">
         {/* 目標追加ボタン - モバイル用右下固定 */}
         {goals.length > 0 && (
