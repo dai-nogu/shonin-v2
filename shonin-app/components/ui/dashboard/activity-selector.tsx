@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
 import { Textarea } from "@/components/ui/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
-import { MapPin, Target, Clock, Plus, Play } from "lucide-react"
+import { Plus, Play } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
@@ -282,8 +282,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
           <>
             {/* 目標選択 */}
             <div className="space-y-2">
-              <Label className="text-white flex items-center text-sm">
-                <Target className="w-4 h-4 mr-2" />
+              <Label className="text-white text-sm">
                 {t('session_start.select_goal')}
               </Label>
               <Select value={selectedGoal} onValueChange={handleGoalSelection}>
@@ -369,8 +368,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 場所設定 */}
             <div className="space-y-2">
-              <Label className="text-white flex items-center text-sm">
-                <MapPin className="w-4 h-4 mr-2" />
+              <Label className="text-white text-sm">
                 {t('session_start.location')}
               </Label>
               <Input
@@ -383,8 +381,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 目標時間設定 */}
             <div className="space-y-2">
-              <Label className="text-white flex items-center text-sm">
-                <Clock className="w-4 h-4 mr-2" />
+              <Label className="text-white text-sm">
                 {t('session_start.target_time')}
               </Label>
               <div className="flex items-center space-x-3">

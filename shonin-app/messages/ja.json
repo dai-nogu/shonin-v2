@@ -319,7 +319,7 @@
   "session_start": {
     "title": "行動を記録する",
     "subtitle": "私はすべての努力を記録します",
-    "select_activity": "行動を選択",
+    "select_activity": "アクティビティを選択",
     "activity_placeholder": "何に取り組みますか？",
     "location": "場所",
     "location_placeholder": "どこで取り組みますか？",
