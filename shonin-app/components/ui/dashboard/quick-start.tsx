@@ -415,9 +415,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-colors group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : ''}`}
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div className={`w-8 h-8 lg:w-10 lg:h-10 ${activity.color} rounded-full flex items-center justify-center text-sm lg:text-lg`}>
-                {activity.icon || ""}
-              </div>
+              <div className={`w-8 h-8 lg:w-10 lg:h-10 ${activity.color} rounded-full`}></div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">

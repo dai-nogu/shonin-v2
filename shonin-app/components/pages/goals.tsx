@@ -12,6 +12,16 @@ import { useTranslations, useLocale } from 'next-intl'
 import { formatISODateForLocale } from '@/lib/i18n-utils'
 import { useSubscription } from "@/hooks/use-subscription"
 import { GoalLimitModal } from "@/components/ui/goals/goal-limit-modal"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/settings/alert-dialog"
 
 interface Goal {
   id: string
@@ -56,6 +66,9 @@ export function Goals({ initialGoals }: GoalsProps) {
   // ローカルステート
   const [goals, setGoals] = useState<Goal[]>([])
   const [showLimitModal, setShowLimitModal] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // 週間時間の計算
   const calculateWeeklyHours = (weekdayHours: number, weekendHours: number) => {
@@ -131,14 +144,22 @@ export function Goals({ initialGoals }: GoalsProps) {
     router.push(`/${locale}/goals/edit/${goalId}`)
   }
 
-  const handleDeleteGoal = async (goalId: string) => {
-    const confirmed = confirm(t('goals.delete_confirmation'))
-    if (confirmed) {
-      const success = await deleteGoalFromDb(goalId)
-      if (!success) {
-        showError(t('goals.delete_error'))
-      }
+  const handleDeleteClick = (goalId: string) => {
+    setSelectedGoalId(goalId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedGoalId) return
+    
+    setIsDeleting(true)
+    const success = await deleteGoalFromDb(selectedGoalId)
+    if (!success) {
+      showError(t('goals.delete_error'))
     }
+    setIsDeleting(false)
+    setDeleteDialogOpen(false)
+    setSelectedGoalId(null)
   }
 
   // エラー状態
@@ -208,7 +229,7 @@ export function Goals({ initialGoals }: GoalsProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteGoal(goal.id)}
+                        onClick={() => handleDeleteClick(goal.id)}
                         className="bg-gray-800 border-gray-700 text-red-400 hover:bg-red-900"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -306,6 +327,41 @@ export function Goals({ initialGoals }: GoalsProps) {
           </div>
         )}
       </div>
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600">
+              {t('goals.delete_confirmation_title')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-700">
+              {t('goals.delete_confirmation')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
+            >
+              {t('goals.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>{t('goals.deleting')}</span>
+                </div>
+              ) : (
+                t('goals.delete')
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

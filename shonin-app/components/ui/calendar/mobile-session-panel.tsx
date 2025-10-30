@@ -34,10 +34,9 @@ export function MobileSessionPanel({
             {sessions.map((session) => (
               <div 
                 key={session.id} 
-                className="flex items-center justify-between py-2 px-3 rounded-lg"
+                className={`flex items-center justify-between py-2 px-3 rounded-lg ${session.color} bg-opacity-20`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${session.color}`} />
                   <div className="text-white font-medium">{session.activity}</div>
                 </div>
                 <div className="text-gray-400 text-sm">

@@ -81,11 +81,9 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
 
         <CardContent className={`space-y-4 ${isMobile ? 'h-[390px] overflow-y-auto' : 'space-y-6'}`}>
           {/* アクティビティ情報 */}
-          <div className={`p-3 rounded-lg ${activity.color} bg-opacity-20 border border-opacity-30`}>
+          <div className="mb-3">
             <div className="flex items-center space-x-3 mb-3">
-              <div className={`w-10 h-10 ${activity.color} rounded-full flex items-center justify-center text-xl`}>
-                {activity.icon}
-              </div>
+              <div className={`w-10 h-10 ${activity.color} rounded-full`}></div>
               <div>
                 <h3 className="text-white font-semibold text-base">{activity.name}</h3>
               </div>

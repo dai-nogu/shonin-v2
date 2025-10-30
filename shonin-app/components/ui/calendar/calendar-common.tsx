@@ -154,10 +154,9 @@ export function CalendarCommon({
                   {bottomPanelSessions.map((session) => (
                     <div 
                       key={session.id} 
-                      className="flex items-center justify-between py-2 px-3 rounded-lg"
+                      className={`flex items-center justify-between py-2 px-3 rounded-lg ${session.color} bg-opacity-20`}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${session.color}`} />
                         <div className="text-white font-medium">{session.activity}</div>
                       </div>
                       <div className="text-gray-400 text-sm">
@@ -189,10 +188,9 @@ export function CalendarCommon({
             {selectedDateSessions.map((session) => (
               <div 
                 key={session.id} 
-                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border-opacity-30`}
+                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30`}
               >
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg">{session.icon}</span>
                   <span className="text-white font-medium">{session.activity}</span>
                 </div>
                 <div className="mt-1 text-gray-400 text-sm">

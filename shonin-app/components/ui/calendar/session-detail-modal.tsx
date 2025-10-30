@@ -35,10 +35,9 @@ export function SessionDetailModal({
           {sessions.map((session) => (
             <div 
               key={session.id} 
-              className={`p-3 rounded-lg ${session.color} bg-opacity-20 border-opacity-30`}
+              className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30`}
             >
               <div className="flex items-center space-x-2">
-                <span className="text-lg">{session.icon}</span>
                 <span className="text-white font-medium">{session.activity}</span>
               </div>
               <div className="mt-1 text-gray-400 text-sm">

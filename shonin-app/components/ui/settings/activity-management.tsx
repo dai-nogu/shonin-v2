@@ -1,11 +1,22 @@
 "use client"
 
+import { useState } from "react"
 import { Activity, Trash2 } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useToast } from "@/contexts/toast-context"
 import { useTranslations } from 'next-intl'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/settings/alert-dialog"
 
 interface ActivityManagementProps {
   currentSession?: {
@@ -19,20 +30,33 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
   const { activities: customActivities, loading: activitiesLoading, deleteActivity } = useActivities()
   const { showWarning } = useToast()
   const t = useTranslations()
+  
+  // 削除確認ダイアログの状態管理
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // アクティビティ削除ハンドラー
-  const handleDeleteActivity = async (activityId: string) => {
+  // 削除ボタンクリック時
+  const handleDeleteClick = (activityId: string) => {
     // 現在進行中のアクティビティかチェック
     if (isSessionActive && currentSession && currentSession.activityId === activityId) {
       showWarning(t('settings.delete_activity_warning'))
       return
     }
 
-    const confirmed = confirm(t('settings.delete_activity_confirmation'))
-    if (confirmed) {
-      await deleteActivity(activityId)
-      // エラーは useActivities hook で既に処理されているので、重複alertは削除
-    }
+    setSelectedActivityId(activityId)
+    setDeleteDialogOpen(true)
+  }
+
+  // 削除確定時
+  const handleDeleteConfirm = async () => {
+    if (!selectedActivityId) return
+    
+    setIsDeleting(true)
+    await deleteActivity(selectedActivityId)
+    setIsDeleting(false)
+    setDeleteDialogOpen(false)
+    setSelectedActivityId(null)
   }
 
   return (
@@ -58,14 +82,10 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
                 key={activity.id}
                 className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2"
               >
-                {/* タイトル行：アイコン・名前・ステータス・削除ボタンを横並び */}
+                {/* タイトル行：色・名前・ステータス・削除ボタンを横並び */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    {activity.icon ? (
-                      <span className="text-lg">{activity.icon}</span>
-                    ) : (
-                      <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
-                    )}
+                    <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
                     <span className="text-gray-900 font-medium">{activity.name}</span>
                     {/* 現在進行中のアクティビティの場合は表示 */}
                     {isSessionActive && currentSession && currentSession.activityId === activity.id && (
@@ -75,7 +95,7 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
                     )}
                   </div>
                   <Button
-                    onClick={() => handleDeleteActivity(activity.id)}
+                    onClick={() => handleDeleteClick(activity.id)}
                     variant="ghost"
                     size="sm"
                     disabled={!!(isSessionActive && currentSession && currentSession.activityId === activity.id)}
@@ -101,6 +121,41 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
           </div>
         )}
       </CardContent>
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600">
+              {t('settings.delete_activity_confirmation_title')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-700">
+              {t('settings.delete_activity_confirmation')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
+            >
+              {t('settings.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>{t('settings.deleting')}</span>
+                </div>
+              ) : (
+                t('settings.delete')
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 } 

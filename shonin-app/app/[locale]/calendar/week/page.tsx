@@ -172,13 +172,6 @@ function WeekCalendarSSR({
                           className={`text-xs p-[0.1rem] md:p-2 rounded ${session.color} bg-opacity-20 border-opacity-30`}
                         >
                           <div className="flex items-center space-x-1">
-                            <div className="hidden md:block">
-                              {session.icon ? (
-                                <span>{session.icon}</span>
-                              ) : (
-                                <div className={`w-3 h-3 rounded-full ${session.color}`}></div>
-                              )}
-                            </div>
                             <span className="text-white truncate">{session.activity}</span>
                           </div>
                         </div>

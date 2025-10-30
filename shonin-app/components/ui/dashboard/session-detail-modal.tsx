@@ -347,11 +347,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           </Button>
           
           {/* アクティビティヘッダー */}
-          <div className={`p-3 rounded-lg ${activityInfo.color} bg-opacity-20 border border-opacity-30 mb-2`}>
+          <div className="mb-2">
             <div className="flex items-center space-x-3">
-              <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full flex items-center justify-center ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
-                {activityInfo.icon}
-              </div>
+              <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full`}></div>
               <div className="flex-1 min-w-0">
                 <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
                   {session.activityName}
@@ -933,11 +931,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           </Button>
           
           {/* アクティビティヘッダー */}
-          <div className={`p-3 rounded-lg ${activityInfo.color} bg-opacity-20 border border-opacity-30 mb-2`}>
+          <div className="mb-2">
             <div className="flex items-center space-x-3">
-              <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full flex items-center justify-center ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
-                {activityInfo.icon}
-              </div>
+              <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full`}></div>
               <div className="flex-1 min-w-0">
                 <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
                   {session.activityName}

@@ -75,7 +75,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const { activities: customActivities, loading: activitiesLoading, addActivity } = useActivities()
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
-  const [newActivityIcon, setNewActivityIcon] = useState("")
   const [newActivityColor, setNewActivityColor] = useState("bg-red-500")
   const [hoveredColor, setHoveredColor] = useState<string | null>(null)
   
@@ -113,7 +112,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
     const activityId = await addActivity({
       name: newActivityName.trim(),
-      icon: newActivityIcon.trim() || null,
+      icon: null,
       color: newActivityColor // 選択された色を使用
     })
 
@@ -123,7 +122,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
       // フォームをリセット
       setNewActivityName("")
-      setNewActivityIcon("")
       setNewActivityColor("bg-red-500")
       setHoveredColor(null)
       setShowAddForm(false)
@@ -210,17 +208,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300">{t('session_start.activity_icon')}</Label>
-                <Input
-                  placeholder="📚"
-                  value={newActivityIcon}
-                  onChange={(e) => setNewActivityIcon(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                  maxLength={2}
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label className="text-gray-300">{t('session_start.activity_color')}</Label>
                 <div className="grid grid-cols-6 gap-2 relative">
                   {colorOptions.map((color) => (
@@ -253,17 +240,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
               <div className="flex space-x-2">
                 <Button
-                  onClick={handleAddActivity}
-                  disabled={!newActivityName.trim()}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
-                >
-                  {t('session_start.save')}
-                </Button>
-                <Button
                   onClick={() => {
                     setShowAddForm(false)
                     setNewActivityName("")
-                    setNewActivityIcon("")
                     setNewActivityColor("bg-red-500")
                     setHoveredColor(null)
                   }}
@@ -271,6 +250,13 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-sm"
                 >
                   {t('session_start.cancel')}
+                </Button>
+                <Button
+                  onClick={handleAddActivity}
+                  disabled={!newActivityName.trim()}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
+                >
+                  {t('session_start.save')}
                 </Button>
               </div>
             </CardContent>
@@ -326,9 +312,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   {allActivities.map((activity) => (
                     <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-6 h-6 ${activity.color} rounded-full flex items-center justify-center text-sm`}>
-                          {activity.icon}
-                        </div>
+                        <div className={`w-6 h-6 ${activity.color} rounded-full`}></div>
                         <span className="text-base">{activity.name}</span>
                       </div>
                     </SelectItem>
@@ -352,13 +336,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 選択された行動のプレビュー */}
             {selectedActivityData && (
-              <div className={`p-3 lg:p-4 rounded-lg ${selectedActivityData.color} bg-opacity-20 border border-opacity-30`}>
+              <div className="mb-3">
                 <div className="flex items-center space-x-3">
-                  <div
-                    className={`w-10 h-10 lg:w-12 lg:h-12 ${selectedActivityData.color} rounded-full flex items-center justify-center text-lg lg:text-2xl`}
-                  >
-                    {selectedActivityData.icon}
-                  </div>
+                  <div className={`w-10 h-10 lg:w-12 lg:h-12 ${selectedActivityData.color} rounded-full`}></div>
                   <div>
                     <h3 className="text-white font-semibold text-sm lg:text-base">{selectedActivityData.name}</h3>
                   </div>

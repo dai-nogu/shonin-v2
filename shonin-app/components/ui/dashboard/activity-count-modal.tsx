@@ -236,9 +236,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <span className="text-gray-400 font-mono text-xs sm:text-sm w-3 sm:w-4 md:w-6 text-right">
                         {startIndex + index + 1}
                       </span>
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${activity.color} rounded-full flex items-center justify-center text-base sm:text-lg md:text-xl`}>
-                        {activity.icon}
-                      </div>
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${activity.color} rounded-full`}></div>
                     </div>
 
                     <div className="flex-1 min-w-0">

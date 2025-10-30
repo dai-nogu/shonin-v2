@@ -139,13 +139,6 @@ function MonthCalendarSSR({
                               className={`text-xs p-[0.1rem] md:p-1 rounded ${session.color} bg-opacity-20 border-opacity-30`}
                             >
                               <div className="flex items-center space-x-1">
-                                <div className="hidden md:block">
-                                  {session.icon ? (
-                                    <span className="text-xs">{session.icon}</span>
-                                  ) : (
-                                    <div className={`w-2 md:w-3 h-2 md:h-3 rounded-full ${session.color}`}></div>
-                                  )}
-                                </div>
                                 <span className="text-white truncate text-xs">{session.activity}</span>
                               </div>
                             </div>
