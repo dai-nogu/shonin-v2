@@ -42,9 +42,9 @@
     "loginWithGoogle": "SignIn with Google"
   },
   "login": {
-    "tagline": "Be a witness to your growth",
-    "description": "As your companion and supporter in your efforts,\nwe record your hard work and witness your growth",
-    "loginWithGoogle": "SignIn with Google",
+    "tagline": "To the lonely efforts, a true witness.",
+    "description": "Your efforts will find a place here.",
+    "loginWithGoogle": "Continue with Google",
     "authenticating": "Authenticating...",
     "termsAgreement": "By logging in, you agree to our Terms of Service and Privacy Policy",
     "loginError": "SignIn failed. Please try again"

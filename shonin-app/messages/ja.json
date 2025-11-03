@@ -42,9 +42,9 @@
     "loginWithGoogle": "Googleでログイン"
     },
   "login": {
-    "tagline": "あなたの成長を見つめ、証明する",
-    "description": "努力の伴走者、理解者として\nあなたの頑張りを記録し、成長を見守ります",
-    "loginWithGoogle": "Googleでログイン",
+    "tagline": "孤独な努力に、確かな証人を",
+    "description": "あなたの努力は、ここで確かに残ります。",
+    "loginWithGoogle": "Googleで続ける",
     "authenticating": "認証中...",
     "termsAgreement": "ログインすることで、利用規約とプライバシーポリシーに同意したものとみなされます",
     "loginError": "ログインに失敗しました。再度お試しください"

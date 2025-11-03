@@ -40,14 +40,14 @@ export function LoginPage() {
           <CardTitle className="text-2xl font-bold text-white">
             SHONIN
           </CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardDescription className="text-gray-200">
             {t('login.tagline')}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
           <div className="text-center">
-            <p className="text-gray-300 text-sm mb-6">
+            <p className="text-gray-200 text-sm">
               {t('login.description')}
             </p>
           </div>
