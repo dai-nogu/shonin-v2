@@ -236,7 +236,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
           {/* Footer Note */}
           <div className="mt-8 text-center space-y-1.5">
             <p className="text-xs text-gray-400">
-              ※ プレミアムプランは近日公開予定です。
+              {t("premium_coming_soon")}
             </p>
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
           {/* Footer Note */}
           <div className="mt-10 text-center space-y-1.5">
             <p className="text-sm text-gray-400">
-              ※ プレミアムプランは近日公開予定です。
+              {t("premium_coming_soon")}
             </p>
           </div>
         </div>

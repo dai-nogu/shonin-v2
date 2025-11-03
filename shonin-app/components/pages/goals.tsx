@@ -277,17 +277,14 @@ export function Goals({ initialGoals }: GoalsProps) {
                   <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
                     <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
                       <div className="flex items-center justify-center space-x-1">
-                        <Clock className="w-4 h-4 text-blue-400" />
                         <span className="text-gray-400">{t('goals.weekday')}: </span>
                         <span className="text-white">{goal.weekdayHours}{t('goals.hours_unit')}</span>
                       </div>
                       <div className="flex items-center justify-center space-x-1">
-                        <Clock className="w-4 h-4 text-green-400" />
                         <span className="text-gray-400">{t('goals.weekend')}: </span>
                         <span className="text-white">{goal.weekendHours}{t('goals.hours_unit')}</span>
                       </div>
                       <div className="flex items-center justify-center space-x-1">
-                        <Clock className="w-4 h-4 text-purple-400" />
                         <span className="text-gray-400">{t('goals.weekly')}: </span>
                         <span className="text-white">{weeklyHours}{t('goals.hours_unit')}</span>
                       </div>

@@ -32,8 +32,8 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
     {
       id: "free",
       name: "free",
-      price: "$0",
-      priceLabel: "per_month",
+      price: "Free",
+      priceLabel: "",
       priceId: "", // Freeプランなので不要
       features: [],
       isCurrent: userPlan === 'free',
