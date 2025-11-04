@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { getDateStringInTimezone } from '@/lib/timezone-utils';
 import { useTimezone } from '@/contexts/timezone-context';
+import { useParams } from 'next/navigation';
 
 interface AIFeedbackResponse {
   feedback: string;
@@ -22,6 +23,8 @@ export function useAIFeedback() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { timezone } = useTimezone();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'ja';
 
   const generateFeedback = useCallback(async (
     periodType: 'weekly' | 'monthly',
@@ -42,6 +45,7 @@ export function useAIFeedback() {
           period_type: periodType,
           period_start: periodStart,
           period_end: periodEnd,
+          locale: locale,
         }),
       });
 
@@ -60,7 +64,7 @@ export function useAIFeedback() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   // 先週の日付範囲を計算（月曜〜日曜）
   const getLastWeekRange = useCallback(() => {
