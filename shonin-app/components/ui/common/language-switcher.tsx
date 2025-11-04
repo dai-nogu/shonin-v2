@@ -13,6 +13,8 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const pathname = usePathname()
 
   const switchLanguage = (locale: string) => {
+    if (!pathname) return;
+    
     // パスの最初のロケール部分を新しいロケールに置き換える
     const segments = pathname.split('/')
     segments[1] = locale
