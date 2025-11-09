@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 import { analyzeSessionData, type RawSessionData } from '@/lib/session-analyzer';
 import { generatePrompts, type PromptGenerationConfig } from '@/lib/prompt-generator';
+import Anthropic from '@anthropic-ai/sdk';
 
 interface SessionData {
   id: string;
@@ -165,8 +166,8 @@ async function generateAIFeedbackWithRetry(
   const maxRetries = 3;
   // 英語は日本語より文字数が多くなる傾向があるため、調整
   const maxChars = locale === 'en' 
-    ? (periodType === 'weekly' ? 400 : 1100) 
-    : (periodType === 'weekly' ? 200 : 550);
+    ? (periodType === 'weekly' ? 640 : 1100) 
+    : (periodType === 'weekly' ? 320 : 550);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -252,47 +253,42 @@ async function generateAIFeedback(
     
     const { systemPrompt, userPrompt, maxTokens } = generatePrompts(analyzedData, promptConfig);
 
-    // OpenAI APIリクエスト
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.7,
-      }),
+    // Claude APIリクエスト
+    // 週次: Sonnet 4（軽量・高速・コスパ重視）月4回 × 約$0.015 = 約$0.06/月
+    // 月次: Opus 4（最高品質・長文推論）月1回 × 約$0.10 = 約$0.10/月
+    // 合計コスト: 約$0.16/月/ユーザー（Standard $9.99の1.6%）
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        console.warn('OpenAI API Rate limit reached. Using fallback message.');
-        return getFallbackMessage('rate_limit', locale, periodType);
-      }
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
+    // 期間タイプに応じてモデルを選択
+    const model = periodType === 'weekly' 
+      ? 'claude-sonnet-4-20250514'  // 週次: 高速・コスパ良し
+      : 'claude-opus-4-20250514';    // 月次: 最高品質・長文推論
 
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content || getFallbackMessage('default', locale, periodType);
+    const message = await anthropic.messages.create({
+      model,
+      max_tokens: maxTokens,
+      temperature: 0.7,
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: userPrompt
+        }
+      ],
+    });
+
+    // Claudeのレスポンスからテキストを取得
+    const content = message.content[0]?.type === 'text' 
+      ? message.content[0].text 
+      : getFallbackMessage('default', locale, periodType);
     
     // レスポンスが途中で切れていないかチェック
     const sentenceEnders = locale === 'en' ? ['.', '!', '?'] : ['。', '！', '？'];
     const isComplete = sentenceEnders.some(ender => content.endsWith(ender));
     
-    if (!isComplete && data.choices[0]?.finish_reason === 'length') {
+    if (!isComplete && message.stop_reason === 'max_tokens') {
       // トークン制限で切れた場合のフォールバック
       return getFallbackMessage('truncated', locale, periodType);
     }
@@ -300,7 +296,14 @@ async function generateAIFeedback(
     return content;
 
   } catch (error) {
-    console.error('OpenAI API エラー:', error);
+    console.error('Claude API エラー:', error);
+    
+    // レート制限エラーの場合
+    if (error instanceof Anthropic.APIError && error.status === 429) {
+      console.warn('Claude API Rate limit reached. Using fallback message.');
+      return getFallbackMessage('rate_limit', locale, periodType);
+    }
+    
     return getFallbackMessage('error', locale, periodType);
   }
 }

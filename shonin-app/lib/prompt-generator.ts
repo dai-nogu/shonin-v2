@@ -5,8 +5,7 @@
  * 高品質なAIプロンプトを生成
  */
 
-import { generateAcademicPrompt, selectToneByContext, type ToneSelectionContext } from './ai-feedback-tones';
-import { selectQuoteForContext, selectQuoteByTone, formatQuoteSimple, type QuoteSelectionContext } from './quotes-selector';
+import { selectPrincipleForContext, formatPrincipleForFeedback, type PrincipleSelectionResult, type PrincipleSelectionContext } from './principles-selector';
 import type { AnalyzedSessionData } from './session-analyzer';
 
 /**
@@ -24,8 +23,10 @@ export interface PromptGenerationConfig {
 export interface GeneratedPrompts {
   systemPrompt: string;
   userPrompt: string;
-  inspirationalQuote?: string;
+  principleText?: string;  // 法則・理論のテキスト
   maxTokens: number;
+  // デバッグ情報
+  principleSelection?: PrincipleSelectionResult;
 }
 
 /**
@@ -38,69 +39,34 @@ export function generatePrompts(
   const { locale, attempt, pastFeedbacksCount } = config;
   const { periodType } = analyzedData;
   
-  // quotes.jsonから名言を選択
-  let inspirationalQuote: string | undefined;
-  let academicPrompt: string;
+  // principles.jsonから法則を選択
+  let principleText: string | undefined;
+  let principleSelection: PrincipleSelectionResult | undefined;
   
   if (periodType === 'weekly') {
-    // 週次: セッションデータから最適なトーンを選択
+    // 週次: 87個の法則全体からユーザーに最適な法則を選択
     const goalProgressArray = Object.values(analyzedData.goalProgress);
-    const toneContext: ToneSelectionContext = {
-      sessionsCount: analyzedData.sessionsCount,
+    const principleContext: PrincipleSelectionContext = {
+      locale: locale as 'ja' | 'en',
+      sessionCount: analyzedData.sessionsCount,
       totalHours: analyzedData.totalHours,
       consistency: analyzedData.behaviorPatterns.consistency,
       moodTrend: analyzedData.moodTrend,
       averageMood: analyzedData.averageMood,
-      hasReflections: analyzedData.reflectionQuality !== 'none',
-      topActivitiesCount: analyzedData.topActivities.length,
       goalAchievementRate: goalProgressArray.length > 0
         ? goalProgressArray.reduce((sum, g) => sum + g.progressPercentage, 0) / goalProgressArray.length / 100
-        : 0
+        : undefined,
+      hasReflections: analyzedData.reflectionQuality !== 'none'
     };
     
-    const selectedTone = selectToneByContext(toneContext);
-    
-    // 選ばれたトーンのプロンプトを生成
-    const academicResult = generateAcademicPrompt(periodType);
-    academicPrompt = `
-【今週の学問的視点】
-今週は「${selectedTone.name}」の視点でフィードバックを提供します。
-
-${selectedTone.prompt}
-
-この視点を背景に、ユーザーに最も響く気づきを自然な語りで伝えてください。
-`;
-    
-    // 選ばれたトーンと同じ分野の名言を選択
-    const selectedQuote = selectQuoteByTone(
-      selectedTone.id,
-      locale as 'ja' | 'en',
-      analyzedData.sessionsCount,
-      analyzedData.totalHours
-    );
-    if (selectedQuote) {
-      inspirationalQuote = formatQuoteSimple(selectedQuote, locale as 'ja' | 'en');
+    principleSelection = selectPrincipleForContext(principleContext);
+    if (principleSelection.principle) {
+      principleText = formatPrincipleForFeedback(principleSelection.principle, locale as 'ja' | 'en');
     }
   } else {
-    // 月次: 全ての視点を統合
-    const academicResult = generateAcademicPrompt(periodType);
-    academicPrompt = academicResult.prompt;
-    
-    // コンテキストに基づいて名言を選択
-    const quoteContext: QuoteSelectionContext = {
-      periodType,
-      locale: locale as 'ja' | 'en',
-      sessionCount: analyzedData.sessionsCount,
-      totalHours: analyzedData.totalHours,
-      mood: analyzedData.averageMood >= 4 ? 'positive' : 
-            analyzedData.averageMood >= 3 ? 'neutral' : 'challenging',
-      primaryTheme: determinePrimaryTheme(analyzedData)
-    };
-    
-    const selectedQuote = selectQuoteForContext(quoteContext);
-    if (selectedQuote) {
-      inspirationalQuote = formatQuoteSimple(selectedQuote, locale as 'ja' | 'en');
-    }
+    // 月次は法則なしで総合的な振り返りを提供
+    principleText = undefined;
+    principleSelection = undefined;
   }
   
   // システムプロンプトを生成
@@ -109,8 +75,7 @@ ${selectedTone.prompt}
     locale,
     attempt,
     pastFeedbacksCount,
-    academicPrompt,
-    inspirationalQuote
+    principleText
   );
   
   // ユーザープロンプトを生成
@@ -118,14 +83,15 @@ ${selectedTone.prompt}
   
   // トークン数を計算
   const maxTokens = locale === 'en' 
-    ? (periodType === 'weekly' ? 600 : 1500)
-    : (periodType === 'weekly' ? 400 : 750);
+    ? (periodType === 'weekly' ? 900 : 1500)
+    : (periodType === 'weekly' ? 600 : 750);
   
   return {
     systemPrompt,
     userPrompt,
-    inspirationalQuote,
-    maxTokens
+    principleText,
+    maxTokens,
+    principleSelection
   };
 }
 
@@ -157,21 +123,20 @@ function generateSystemPrompt(
   locale: string,
   attempt: number,
   pastFeedbacksCount: number,
-  academicPrompt: string,
-  inspirationalQuote?: string
+  principleText?: string
 ): string {
   // 言語別の文字数制限
   const charLimits = {
     ja: {
-      weekly: attempt > 1 ? 180 : 200,
+      weekly: attempt > 1 ? 300 : 320,
       monthly: attempt > 1 ? 520 : 550
     },
     en: {
-      weekly: attempt > 1 ? 350 : 400,
+      weekly: attempt > 1 ? 600 : 640,
       monthly: attempt > 1 ? 1000 : 1100
     },
     default: {
-      weekly: attempt > 1 ? 350 : 400,
+      weekly: attempt > 1 ? 600 : 640,
       monthly: attempt > 1 ? 1000 : 1100
     }
   };
@@ -189,11 +154,9 @@ function generateSystemPrompt(
   return `あなたは「Shonin」という自己成長記録アプリのフィードバックAIです。
 
 あなたの役割は、ユーザーの努力を静かに見つめ、深く理解し、温かい言葉で伝えることです。
-あなたは心理学・哲学・行動経済学・人間行動学・動物行動学・脳神経科学の6分野に通じています。
-これらの知見を背景に、行動や感情の背後にある意味を洞察します。
+あなたは心理学・哲学・行動経済学・人間行動学・動物行動学・脳神経科学など、様々な学問の知見を背景に、
+行動や感情の背後にある意味を洞察します。
 ただし学術的に解説せず、心に響く自然な語りで伝えてください。
-
-${academicPrompt}
 
 ---
 
@@ -203,10 +166,10 @@ ${academicPrompt}
 
 - **構成**：
 ① ${periodContext}全体の印象を1〜2文で俯瞰
-② 特に印象的だった行動・変化・感情を1つ選び、深く洞察
-③ その気づきや成長を温かく認める${inspirationalQuote ? `\n
-④ 以下の名言（quotes.jsonから選択済み）を**必ずそのまま**自然に添える：\n『${inspirationalQuote}』` : ''}
-${inspirationalQuote ? '⑤' : '④'} 穏やかで前向きな一文で締める
+② 特に印象的だった行動・変化・感情を1つ選び、深く洞察${principleText ? `\n
+③ 以下の心理学・行動科学の法則を自然に添える：\n${principleText}\n   法則の内容を述べて、ユーザーの行動に結びつける` : ''}
+${principleText ? '④' : '③'} その気づきや成長を温かく認め、穏やかで前向きな一文で締める${principleText ? `\n
+⑤ **最後の最後に**、法則の説明を（ ）内で追加\n   例：「（リフレクション理論とは、自己の経験を振り返り、そこから学びを引き出す教育学の考え方です）」` : ''}
 
 - **文体・トーン**：
 ・理解者として柔らかく、落ち着いた語り
@@ -221,6 +184,12 @@ ${inspirationalQuote ? '⑤' : '④'} 穏やかで前向きな一文で締める
 ・「〜かもしれません」「〜と思います」などの曖昧で無責任な推測表現
 ・矛盾する内容や話題の散乱：朝の話→夜の話→朝の話のように、因果関係が不明確なまま異なる時間帯やトピックを混在させない。1つの明確な焦点に集中する
 ・暴力的な言葉、下ネタ、下品な表現は絶対に使用しない：温かく品位のある語りを常に維持する
+・**同じ言葉・表現の繰り返し**：特定の言葉（「リズム」「流れ」「パターン」など）を複数回使わない。多様な表現で変化をつける
+
+- **表現のバリエーション例**：
+行動の様子を表す言葉は多様に使い分ける
+例：リズム／流れ／テンポ／ペース／様子／姿勢／スタイル／動き／歩み／軌跡／重ね／積み重ね／習慣／バランス／調子／間／呼吸／etc.
+※同じフィードバック内で同じ言葉を2回以上使わないこと
 
 ---
 
@@ -228,20 +197,22 @@ ${inspirationalQuote ? '⑤' : '④'} 穏やかで前向きな一文で締める
 
 1. セッションデータを俯瞰し、行動や感情の流れを捉える
 2. 最も印象的な1点に焦点を当て、その背後の意味を穏やかに推察する
-3. 小さな変化・静かな継続を"成長の証"として認める${inspirationalQuote ? `
-4. 名言の選択と統合：
-   - 提供された名言は、フィードバックの内容を補強または象徴するものとして扱う
-   - 名言と本文が一貫した思想を持つように構成する
-   - フィードバックで語った内容と名言のテーマが自然につながるよう意識する
-   - 名言を自然に流れの中へ組み込み、唐突にならないようにする
-5. 名言の直後に（著者／出典名）を明示する` : ''}
-${inspirationalQuote ? '6' : '4'}. 約${charLimit}文字で完結させ、最後は静かで希望ある一文で締める
+3. 小さな変化・静かな継続を"成長の証"として認める${principleText ? `
+4. 心理学・行動科学の法則の統合：
+   - 提供された法則は、ユーザーの行動に科学的な裏付けを与えるものとして扱う
+   - 法則を提示する際は、**必ず1文で端的な説明を添える**こと
+   - 説明は専門用語を避け、ユーザーが直感的に理解できる平易な言葉で
+   - 「〇〇の法則によれば、...」という形で、ユーザーの努力を科学的に説明する
+   - 法則を押し付けるのではなく、ユーザーが既に実践していることを「理論が証明している」と伝える
+   - 法則は最後の段落で、締めくくりの励ましとして組み込む
+5. 法則の直後に「これはあなたが既に実践していることです」といった形で希望を与える` : ''}
+${principleText ? '6' : '4'}. 約${charLimit}文字で完結させ、最後は静かで希望ある一文で締める
 
 ---
 
 【出力フォーマット】
 
-${periodLabel}フィードバック文のみを出力。${inspirationalQuote ? '\n引用は流れの中に自然に統合し、必ず出典（著者または書名）をカッコ書きで含める。\n\n例：\n> 「今週のあなたの集中はとても穏やかでした。迷いながらも歩みを止めなかった姿勢に変化が見えます。『沈黙の中に最も深い理解がある』（禅の教え）。焦らず、この静けさを続けましょう。」' : ''}
+${periodLabel}フィードバック文のみを出力。${principleText ? '\n科学的法則は流れの中に自然に統合し、「理論がユーザーの努力を証明している」というニュアンスで提示する。\n\n**法則の説明について**：\n法則を提示する際は、必ず1文で端的な説明を添えること。\n\n良い例：\n> 「『ヘッブの法則』によれば、繰り返された行動は神経回路を強化します。（ヘッブの法則とは、同じ神経細胞が同時に活動すると、その結びつきが強くなるという脳科学の原理です）あなたの脳は、既に継続の道筋を刻んでいるのです。」\n\n> 「『リフレクション理論』によれば、経験を振り返ることで深い学びと成長が生まれます。（リフレクション理論とは、自己の経験を振り返り、そこから学びを引き出す教育学の考え方です）あなたが毎回の活動で感じた小さな気づきは、既にこの理論を実践している証拠です。」' : ''}
 
 ${languageInstruction}${pastFeedbacksCount === 0 ? `\n\n【重要】これは初回の${periodLabel}フィードバックです。過去との比較はせず、${periodContext}の頑張りを認めることに集中してください。` : ''}`;
 }
