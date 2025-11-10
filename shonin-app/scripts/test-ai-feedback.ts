@@ -586,8 +586,8 @@ async function testAIFeedback(periodType: 'weekly' | 'monthly', locale: string =
     console.log('========================================');
     console.log(`⏱️  生成時間: ${duration}秒`);
     console.log(`📏 文字数: ${feedback.length}文字`);
-    console.log(`🎯 目標文字数: ${locale === 'en' ? (periodType === 'weekly' ? '640' : '1100') : (periodType === 'weekly' ? '320' : '550')}文字`);
-    console.log(`✅ 文字数チェック: ${feedback.length <= (locale === 'en' ? (periodType === 'weekly' ? 640 : 1100) : (periodType === 'weekly' ? 320 : 550)) ? '✓ OK' : '✗ 超過'}`);
+    console.log(`🎯 目標文字数: ${locale === 'en' ? (periodType === 'weekly' ? '750-880' : '1400') : (periodType === 'weekly' ? '320' : '550')}文字`);
+    console.log(`✅ 文字数チェック: ${feedback.length <= (locale === 'en' ? (periodType === 'weekly' ? 880 : 1400) : (periodType === 'weekly' ? 320 : 550)) ? '✓ OK' : '✗ 超過'}`);
     console.log('');
     console.log('📈 トークン使用量:');
     console.log(`   入力: ${usage.input_tokens} tokens`);

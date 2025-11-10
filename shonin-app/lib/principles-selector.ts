@@ -205,9 +205,22 @@ export function selectPrincipleForContext(
  * 法則を文章として整形（週次フィードバック用）
  * 例: 「ヘッブの法則によれば、繰り返される行動は神経回路を強化します。」
  */
-export function formatPrincipleForFeedback(principle: Principle, locale: 'ja' | 'en'): string {
+export function formatPrincipleForFeedback(
+  principle: Principle, 
+  locale: 'ja' | 'en', 
+  periodType: 'weekly' | 'monthly' = 'weekly'
+): string {
   const name = locale === 'ja' ? principle.name.ja : principle.name.en;
-  const summary = locale === 'ja' ? principle.summary.ja : principle.summary.en;
+  let summary = locale === 'ja' ? principle.summary.ja : principle.summary.en;
+  
+  // 週次の場合は簡潔に（1~2文、最大80~100文字程度）
+  if (periodType === 'weekly') {
+    // 最初の1文だけを使用（. or 。で区切って最初の文）
+    const firstSentence = summary.match(/^[^.。]+[.。]/)?.[0] || summary;
+    summary = firstSentence.length > 100 
+      ? firstSentence.substring(0, 100) + '...' 
+      : firstSentence;
+  }
   
   if (locale === 'ja') {
     return `『${name}』によれば、${summary}`;
