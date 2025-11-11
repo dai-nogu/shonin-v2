@@ -1,11 +1,14 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from "react"
+import { useLocale } from 'next-intl'
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useTimezone } from "@/contexts/timezone-context"
+import { useToast } from "@/contexts/toast-context"
 import { splitSessionByDateInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
+import { getSessionStartMessage } from "@/lib/encouragement-messages"
 
 export interface SessionData {
   activityId: string
@@ -84,6 +87,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   
   // タイムゾーンフック
   const { timezone } = useTimezone()
+  
+  // トースト通知フック
+  const { showSuccess } = useToast()
+  
+  // 多言語対応フック
+  const locale = useLocale()
 
   // セッション状態管理
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
@@ -359,6 +368,97 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
       const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
       
+      // その日の既存セッション数を取得（進行中のものを除く）
+      const todaysSessions = sessions.filter(session => {
+        if (!session.session_date) return false
+        const sessionDateStr = new Date(session.session_date).toLocaleDateString('sv-SE')
+        return sessionDateStr === sessionDate && session.end_time !== null
+      })
+      
+      // 今回が何回目のセッションか（進行中を含めて+1）
+      const sessionCount = todaysSessions.length + 1
+      
+      // 励ましメッセージを取得（localeに基づいて分岐）
+      const encouragementMessages = locale === 'ja' ? {
+        session_start: {
+          first: [
+            "今日も始められましたね！",
+            "よし、スタートです！",
+            "新しい一日、頑張りましょう！",
+            "今日も一歩前進ですね！",
+            "さあ、始めましょう！"
+          ],
+          second: [
+            "本日2回目の記録です！調子いいですね",
+            "今日も頑張ってますね！",
+            "2回目ですね。素晴らしいです！",
+            "いい調子で継続できてますね！",
+            "2回目の挑戦！その調子です"
+          ],
+          third: [
+            "本日3回目です！素晴らしいペースです",
+            "今日は特に頑張ってますね！",
+            "3回目の記録！集中力が凄いです",
+            "素晴らしい継続力ですね！",
+            "今日も充実してますね！"
+          ],
+          fourth: [
+            "本日4回目！やる気に満ちてますね",
+            "4回目の挑戦！凄いです",
+            "今日の頑張り、すごいですね！",
+            "止まらないですね！素晴らしい",
+            "4回目！その情熱、素敵です"
+          ],
+          fifth_plus: [
+            "本日{count}回目の記録！継続は力なりです",
+            "{count}回目！驚異的な継続力です",
+            "今日{count}回目！その努力、尊敬します",
+            "{count}回目の挑戦！あなたは素晴らしい",
+            "本日{count}回目！誰よりも頑張ってます"
+          ]
+        }
+      } : {
+        session_start: {
+          first: [
+            "Let's get started today!",
+            "Alright, let's begin!",
+            "A new day, let's do this!",
+            "One step forward today!",
+            "Let's start!"
+          ],
+          second: [
+            "2nd session today! Looking good!",
+            "You're doing great today!",
+            "Second time today. Amazing!",
+            "You're keeping up the pace!",
+            "2nd challenge! Keep it up!"
+          ],
+          third: [
+            "3rd session! Excellent pace!",
+            "You're really pushing today!",
+            "3rd time! Your focus is incredible!",
+            "Amazing consistency!",
+            "Today's been productive!"
+          ],
+          fourth: [
+            "4th time today! Full of energy!",
+            "4th session! Incredible!",
+            "Today's effort is remarkable!",
+            "You're unstoppable! Amazing!",
+            "4th time! Love your passion!"
+          ],
+          fifth_plus: [
+            "{count}th session! Consistency is key!",
+            "{count}th time! Phenomenal dedication!",
+            "{count}th today! Your effort is admirable!",
+            "{count}th challenge! You are amazing!",
+            "{count}th session! Going above and beyond!"
+          ]
+        }
+      }
+      
+      const encouragementMessage = getSessionStartMessage(sessionCount, encouragementMessages)
+      
       await addSession({
         activity_id: sessionData.activityId,
         start_time: startTimeInTimezone.toISOString(),
@@ -384,6 +484,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       setCurrentSession(updatedSessionData)
       setIsSessionActive(true)
       setSessionState("active")
+      
+      // 励ましメッセージを表示
+      showSuccess(encouragementMessage, 4000)
       
     } catch (error) {
       // エラーが発生してもセッションは開始する

@@ -18,39 +18,54 @@ interface ToastComponentProps {
 }
 
 const ToastComponent: React.FC<ToastComponentProps> = ({ toast, onRemove }) => {
-  const [isVisible, setIsVisible] = useState(true)
+  const [isVisible, setIsVisible] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // マウント時に少し遅らせて表示アニメーションを発動
+    const showTimer = setTimeout(() => {
+      setIsVisible(true)
+    }, 50)
+
+    // 指定時間後に非表示アニメーションを開始
+    const hideTimer = setTimeout(() => {
+      setIsExiting(true)
       setIsVisible(false)
-      setTimeout(() => onRemove(toast.id), 300)
+      setTimeout(() => onRemove(toast.id), 1000)
     }, toast.duration || 5000)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(showTimer)
+      clearTimeout(hideTimer)
+    }
   }, [toast.id, toast.duration, onRemove])
 
   const getToastStyles = () => {
-    const baseStyles = "flex items-center p-4 mb-3 text-sm rounded-lg shadow-lg transform transition-all duration-300 ease-in-out max-w-md"
+    const baseStyles = "flex items-center p-5 mb-3 text-base rounded-lg shadow-lg transform transition-all duration-1000 ease-in-out max-w-lg min-w-[320px]"
     
+    // 非表示状態（上に消える）
     if (!isVisible) {
-      return `${baseStyles} translate-x-full opacity-0`
+      return `${baseStyles} -translate-y-full opacity-0`
     }
+
+    // 表示状態
+    const visibleStyles = `${baseStyles} translate-y-0 opacity-100`
 
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} bg-green-50 text-green-800 border border-green-200`
+        return `${visibleStyles} bg-green-50 text-green-800 border border-green-200`
       case 'error':
-        return `${baseStyles} bg-red-50 text-red-800 border border-red-200`
+        return `${visibleStyles} bg-red-50 text-red-800 border border-red-200`
       case 'warning':
-        return `${baseStyles} bg-yellow-50 text-yellow-800 border border-yellow-200`
+        return `${visibleStyles} bg-yellow-50 text-yellow-800 border border-yellow-200`
       case 'info':
       default:
-        return `${baseStyles} bg-blue-50 text-blue-800 border border-blue-200`
+        return `${visibleStyles} bg-blue-50 text-blue-800 border border-blue-200`
     }
   }
 
   const getIcon = () => {
-    const iconProps = { className: "w-5 h-5 mr-3 flex-shrink-0" }
+    const iconProps = { className: "w-6 h-6 mr-3 flex-shrink-0" }
     
     switch (toast.type) {
       case 'success':
@@ -71,12 +86,13 @@ const ToastComponent: React.FC<ToastComponentProps> = ({ toast, onRemove }) => {
       <span className="flex-1">{toast.message}</span>
       <button
         onClick={() => {
+          setIsExiting(true)
           setIsVisible(false)
-          setTimeout(() => onRemove(toast.id), 300)
+          setTimeout(() => onRemove(toast.id), 1000)
         }}
         className="ml-3 text-gray-400 hover:text-gray-600 transition-colors"
       >
-        <X className="w-4 h-4" />
+        <X className="w-5 h-5" />
       </button>
     </div>
   )
@@ -91,7 +107,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-50 space-y-3">
       {toasts.map((toast) => (
         <ToastComponent key={toast.id} toast={toast} onRemove={onRemove} />
       ))}

@@ -372,7 +372,7 @@
     "saving": "Saving...",
     "photo_uploading": "Uploading photos...",
     "paused_message": "⏸ Session is paused.",
-    "completed_message": "Good work!<br />Quiet effort",
+    "completed_message": "Good work!",
     "mood_question": "How are you feeling?",
     "achievements_label": "Today's Notes",
     "achievements_placeholder": "How was today?",
@@ -432,5 +432,65 @@
       "view_plans": "View Plans"
     },
     "premium_coming_soon": "※ Premium plan is coming soon."
+  },
+  "encouragement": {
+    "session_start": {
+      "first": [
+        "Let's get started today!",
+        "Alright, let's begin!",
+        "A new day, let's do this!",
+        "One step forward today!",
+        "Let's start!"
+      ],
+      "second": [
+        "2nd session today! Looking good!",
+        "You're doing great today!",
+        "Second time today. Amazing!",
+        "You're keeping up the pace!",
+        "2nd challenge! Keep it up!"
+      ],
+      "third": [
+        "3rd session! Excellent pace!",
+        "You're really pushing today!",
+        "3rd time! Your focus is incredible!",
+        "Amazing consistency!",
+        "Today's been productive!"
+      ],
+      "fourth": [
+        "4th time today! Full of energy!",
+        "4th session! Incredible!",
+        "Today's effort is remarkable!",
+        "You're unstoppable! Amazing!",
+        "4th time! Love your passion!"
+      ],
+      "fifth_plus": [
+        "{count}th session! Consistency is key!",
+        "{count}th time! Phenomenal dedication!",
+        "{count}th today! Your effort is admirable!",
+        "{count}th challenge! You are amazing!",
+        "{count}th session! Going above and beyond!"
+      ]
+    },
+    "fifteen_minutes": [
+      "15 minutes! Great focus!",
+      "You're doing well!",
+      "Excellent concentration!",
+      "You're making progress!",
+      "Love your focus!"
+    ],
+    "goal_achieved": [
+      "🎉 Goal achieved!",
+      "✨ Goal reached! Amazing!",
+      "🌟 You did it! Goal cleared!",
+      "👏 Goal achieved! Well done!",
+      "🎊 Wonderful! Goal completed!"
+    ],
+    "streak": [
+      "🔥 {days} day streak!",
+      "⭐ {days} days! Consistency is key!",
+      "💪 {days} days strong! Amazing!",
+      "🎯 {days} days achieved! Incredible!",
+      "✨ {days} days and counting! Keep going!"
+    ]
   }
 } 
