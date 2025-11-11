@@ -491,6 +491,19 @@
       "💪 {days} days strong! Amazing!",
       "🎯 {days} days achieved! Incredible!",
       "✨ {days} days and counting! Keep going!"
-    ]
+    ],
+    "session_completion": {
+      "range_0_5": "Even {minutes} minutes is real progress. Be proud of yourself for taking that first step.",
+      "range_6_15": "Even within a short time, Those small moments will shape your future.",
+      "range_16_30": "Focusing for {minutes} minutes is truly wonderful.",
+      "range_31_45": "Did you feel your focus deepen? Keep extending your time little by little at this steady pace.",
+      "range_46_60": "Nearly {hours} hour of immersion—amazing work. Take a short break and let your body relax.",
+      "range_61_90": "That was deep focus. Did you feel like you entered the zone for a moment?",
+      "range_91_120": "{hours} hours of immersion. Your concentration is genuine and strong.",
+      "range_121_180": "Before you knew it, hours had passed. You were diving deeply within yourself.",
+      "range_180_360": "An awe-inspiring level of focus. You are transforming—without a doubt.",
+      "range_360_720": "You shut out the world for {hours} hours. That determination is already shaping your future.",
+      "range_720_1440": "You gave everything—body and mind—for {hours} hours. Please rest well."
+    }    
   }
 } 

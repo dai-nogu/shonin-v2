@@ -65,3 +65,43 @@ export const getStreakMessage = (streakDays: number, messages: any): string => {
   return message.replace('{days}', streakDays.toString())
 }
 
+/**
+ * セッション完了時の時間に応じたメッセージを取得
+ * @param durationMinutes 記録時間（分）
+ * @param messages i18nのencouragementメッセージオブジェクト
+ */
+export const getSessionCompletionMessage = (
+  durationMinutes: number,
+  messages: any
+): string => {
+  const completionMessages = messages.session_completion
+
+  // 時間範囲に応じたメッセージを取得
+  if (durationMinutes <= 5) {
+    return completionMessages.range_0_5.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 15) {
+    return completionMessages.range_6_15.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 30) {
+    return completionMessages.range_16_30.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 45) {
+    return completionMessages.range_31_45.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 60) {
+    return completionMessages.range_46_60.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 90) {
+    return completionMessages.range_61_90.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 120) {
+    return completionMessages.range_91_120.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 180) {
+    return completionMessages.range_121_180.replace('{minutes}', Math.floor(durationMinutes).toString())
+  } else if (durationMinutes <= 360) {
+    const hours = Math.floor(durationMinutes / 60)
+    return completionMessages.range_180_360.replace('{hours}', hours.toString())
+  } else if (durationMinutes <= 720) {
+    const hours = Math.floor(durationMinutes / 60)
+    return completionMessages.range_360_720.replace('{hours}', hours.toString())
+  } else {
+    const hours = Math.floor(durationMinutes / 60)
+    return completionMessages.range_720_1440.replace('{hours}', hours.toString())
+  }
+}
+

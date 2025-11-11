@@ -36,6 +36,7 @@ export function ActiveSession({
   onResume 
 }: ActiveSessionProps) {
   const t = useTranslations()
+  const encouragementMessages = useTranslations('encouragement')
   // 認証フック
   const { user } = useAuth()
   
@@ -59,6 +60,7 @@ export function ActiveSession({
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
+  const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
   const achievementsRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -139,6 +141,8 @@ export function ActiveSession({
   }
 
   const handleEnd = () => {
+    // 終了時点の経過時間を分単位で保存
+    setCompletedDurationMinutes(elapsedTime / 60)
     setShowNotes(true) // 終了時に自動でメモ欄を表示
     onEnd() // 外部の終了処理を呼び出し
   }
@@ -146,6 +150,8 @@ export function ActiveSession({
   const handleResume = () => {
     setShowNotes(false)
     setShowPhotos(false)
+    // 完了時間をリセット（再開後に新しい時間で計算し直すため）
+    setCompletedDurationMinutes(0)
     // セッション状態をactiveに戻す
     onResume() // 終了状態からアクティブ状態に戻る
   }
@@ -375,9 +381,40 @@ export function ActiveSession({
             </div>
           )}
 
-          {sessionState === "ended" && (
-            <div>
+          {sessionState === "ended" && completedDurationMinutes > 0 && (
+            <div className="space-y-3">
               <p className="text-white text-sm" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {(() => {
+                  const minutes = Math.floor(completedDurationMinutes)
+                  const hours = Math.floor(completedDurationMinutes / 60)
+                  
+                  // 時間範囲に応じたメッセージを直接取得
+                  if (completedDurationMinutes <= 5) {
+                    return encouragementMessages('session_completion.range_0_5', { minutes })
+                  } else if (completedDurationMinutes <= 15) {
+                    return encouragementMessages('session_completion.range_6_15', { minutes })
+                  } else if (completedDurationMinutes <= 30) {
+                    return encouragementMessages('session_completion.range_16_30', { minutes })
+                  } else if (completedDurationMinutes <= 45) {
+                    return encouragementMessages('session_completion.range_31_45', { minutes })
+                  } else if (completedDurationMinutes <= 60) {
+                    return encouragementMessages('session_completion.range_46_60', { minutes })
+                  } else if (completedDurationMinutes <= 90) {
+                    return encouragementMessages('session_completion.range_61_90', { minutes })
+                  } else if (completedDurationMinutes <= 120) {
+                    return encouragementMessages('session_completion.range_91_120', { minutes })
+                  } else if (completedDurationMinutes <= 180) {
+                    return encouragementMessages('session_completion.range_121_180', { minutes })
+                  } else if (completedDurationMinutes <= 360) {
+                    return encouragementMessages('session_completion.range_180_360', { hours })
+                  } else if (completedDurationMinutes <= 720) {
+                    return encouragementMessages('session_completion.range_360_720', { hours })
+                  } else {
+                    return encouragementMessages('session_completion.range_720_1440', { hours })
+                  }
+                })()}
+              </p>
             </div>
           )}
 

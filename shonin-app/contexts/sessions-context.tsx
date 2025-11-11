@@ -289,7 +289,8 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     
     if (sessionState === "active") {
       // アクティブ状態（再開時）：再開時刻を記録
-      if (previousSessionStateRef.current === "paused") {
+      if (previousSessionStateRef.current === "paused" || previousSessionStateRef.current === "ended") {
+        // 一時停止または終了から再開した場合は現在時刻を記録
         lastActiveTimeRef.current = now
       } else if (previousSessionStateRef.current === "active" && !lastActiveTimeRef.current) {
         // 新規開始の場合
