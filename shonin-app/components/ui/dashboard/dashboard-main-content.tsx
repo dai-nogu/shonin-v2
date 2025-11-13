@@ -1,24 +1,29 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from 'next-intl'
 import { WelcomeCard } from "./welcome-card"
 import { TimeTracker } from "./time-tracker"
 import { ActiveActivitySidebar } from "./active-activity-sidebar"
 import { AIFeedback } from "./ai-feedback"
+import { Button } from "@/components/ui/common/button"
+import { ErrorModal } from "@/components/ui/common/error-modal"
 import { useSessions } from "@/contexts/sessions-context"
 import { useSessionList } from "@/hooks/useSessionList"
 import { useSessionPhotos } from "@/hooks/useSessionPhotos"
-import { useToast } from "@/contexts/toast-context"
 import type { SessionData } from "./time-tracker"
+import type { SessionWithActivity } from "@/hooks/use-sessions-db"
 
 interface DashboardMainContentProps {
-  initialCompletedSessions: any[]
+  initialCompletedSessions?: SessionWithActivity[]
   user: any
 }
 
 export function DashboardMainContent({ initialCompletedSessions, user }: DashboardMainContentProps) {
   const router = useRouter()
-  const { showError } = useToast()
+  const t = useTranslations()
+  const [operationError, setOperationError] = useState<string | null>(null)
   
   // セッション一覧取得フック
   const { user: currentUser, isInitialized, completedSessions, setCompletedSessions } = useSessionList()
@@ -42,7 +47,8 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
       // セッション開始直後に専用ページに遷移
       router.push("/session")
     } catch (error) {
-      showError('セッションの開始に失敗しました')
+
+      setOperationError(t('errors.session_start_failed'))
     }
   }
 
@@ -58,6 +64,16 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
 
   return (
     <>
+      {/* エラーモーダル */}
+      <ErrorModal
+        isOpen={!!operationError}
+        onClose={() => {
+          // エラーステートをクリアしてモーダルを閉じる
+          setOperationError(null)
+        }}
+        message={operationError || ''}
+      />
+
       {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
       <div className="lg:hidden mb-4 lg:mb-6">
         <WelcomeCard completedSessions={completedSessions} />

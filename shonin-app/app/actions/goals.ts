@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 import { getPlanLimits, type PlanType } from '@/types/subscription'
 import { getSubscriptionInfo } from './subscription-info'
+import { AppError, handleServerError, requireAuth, notFound } from '@/lib/server-error'
 
 type Goal = Database['public']['Tables']['goals']['Row']
 type GoalInsert = Database['public']['Tables']['goals']['Insert']
@@ -45,7 +46,10 @@ async function getCurrentUser() {
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error || !user) {
-    throw new Error('ログインが必要です')
+    // サーバーログに詳細を記録
+    console.error('認証エラー:', error)
+    // クライアントには安全なエラーコードのみ
+    throw requireAuth()
   }
   
   return user
@@ -63,12 +67,17 @@ export async function getGoals(): Promise<Goal[]> {
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      // サーバーログに詳細を記録
+      console.error('目標取得エラー:', { error, userId: user.id })
+      // クライアントには安全なエラーコードのみ
+      throw new AppError('GOAL_FETCH_FAILED')
+    }
 
     return data || []
   } catch (error) {
-    console.error('目標の取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標の取得に失敗しました')
+    // AppErrorの場合はそのまま投げる、それ以外は適切なエラーに変換
+    handleServerError(error, 'getGoals', 'GOAL_FETCH_FAILED')
   }
 }
 
@@ -87,15 +96,18 @@ export async function getGoal(goalId: string): Promise<Goal | null> {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return null // データが見つからない場合
+        // データが見つからない場合はnullを返す（エラーではない）
+        return null
       }
-      throw error
+      // サーバーログに詳細を記録
+      console.error('目標取得エラー:', { error, goalId, userId: user.id })
+      // クライアントには安全なエラーコードのみ
+      throw new AppError('GOAL_FETCH_FAILED')
     }
 
     return data
   } catch (error) {
-    console.error('目標の取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標の取得に失敗しました')
+    handleServerError(error, 'getGoal', 'GOAL_FETCH_FAILED')
   }
 }
 
@@ -116,17 +128,22 @@ export async function addGoal(goalData: GoalFormData): Promise<string> {
       .eq('user_id', user.id)
       .eq('status', 'active')
     
-    if (countError) throw countError
+    if (countError) {
+      console.error('目標数取得エラー:', { error: countError, userId: user.id })
+      throw new AppError('GOAL_FETCH_FAILED')
+    }
     
     // 上限チェック
     if (currentGoalCount !== null && currentGoalCount >= planLimits.maxGoals) {
-      if (subscriptionInfo.subscriptionStatus === 'free') {
-        throw new Error('Freeプランでは目標を1つまでしか作成できません。Standardプランにアップグレードすると3つまで作成できます。')
-      } else if (subscriptionInfo.subscriptionStatus === 'standard') {
-        throw new Error('Standardプランでは目標を3つまでしか作成できません。')
-      } else {
-        throw new Error('目標数の上限に達しました。')
-      }
+      // サーバーログに記録
+      console.warn('目標数上限到達:', { 
+        userId: user.id, 
+        currentCount: currentGoalCount, 
+        limit: planLimits.maxGoals,
+        plan: subscriptionInfo.subscriptionStatus 
+      })
+      // クライアントには安全なエラーコードのみ
+      throw new AppError('GOAL_LIMIT_REACHED', 400)
     }
 
     // calculatedHoursを秒に変換（時間 * 3600）
@@ -153,7 +170,10 @@ export async function addGoal(goalData: GoalFormData): Promise<string> {
       .select('id')
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('目標追加エラー:', { error, userId: user.id })
+      throw new AppError('GOAL_ADD_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/goals')
@@ -161,8 +181,7 @@ export async function addGoal(goalData: GoalFormData): Promise<string> {
 
     return data.id
   } catch (error) {
-    console.error('目標の追加に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標の追加に失敗しました')
+    handleServerError(error, 'addGoal', 'GOAL_ADD_FAILED')
   }
 }
 
@@ -196,7 +215,10 @@ export async function updateGoal(id: string, goalData: Partial<GoalFormData>): P
       .eq('id', id)
       .eq('user_id', user.id)
 
-    if (error) throw error
+    if (error) {
+      console.error('目標更新エラー:', { error, goalId: id, userId: user.id })
+      throw new AppError('GOAL_UPDATE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/goals')
@@ -204,8 +226,7 @@ export async function updateGoal(id: string, goalData: Partial<GoalFormData>): P
 
     return true
   } catch (error) {
-    console.error('目標の更新に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標の更新に失敗しました')
+    handleServerError(error, 'updateGoal', 'GOAL_UPDATE_FAILED')
   }
 }
 
@@ -223,8 +244,18 @@ export async function updateGoalProgress(id: string, additionalSeconds: number):
       .eq('user_id', user.id)
       .single()
 
-    if (fetchError || !currentGoal) {
-      throw new Error('目標が見つかりません')
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        console.error('目標が見つかりません:', { goalId: id, userId: user.id })
+        throw new AppError('GOAL_NOT_FOUND', 404)
+      }
+      console.error('目標取得エラー:', { error: fetchError, goalId: id, userId: user.id })
+      throw new AppError('GOAL_FETCH_FAILED')
+    }
+
+    if (!currentGoal) {
+      console.error('目標が見つかりません:', { goalId: id, userId: user.id })
+      throw new AppError('GOAL_NOT_FOUND', 404)
     }
 
     // 新しい進捗値を計算
@@ -239,7 +270,10 @@ export async function updateGoalProgress(id: string, additionalSeconds: number):
       .eq('id', id)
       .eq('user_id', user.id)
 
-    if (error) throw error
+    if (error) {
+      console.error('目標進捗更新エラー:', { error, goalId: id, userId: user.id })
+      throw new AppError('GOAL_UPDATE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/goals')
@@ -247,8 +281,7 @@ export async function updateGoalProgress(id: string, additionalSeconds: number):
 
     return true
   } catch (error) {
-    console.error('目標進捗の更新に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標進捗の更新に失敗しました')
+    handleServerError(error, 'updateGoalProgress', 'GOAL_UPDATE_FAILED')
   }
 }
 
@@ -264,7 +297,10 @@ export async function deleteGoal(id: string): Promise<boolean> {
       .eq('id', id)
       .eq('user_id', user.id)
 
-    if (error) throw error
+    if (error) {
+      console.error('目標削除エラー:', { error, goalId: id, userId: user.id })
+      throw new AppError('GOAL_DELETE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/goals')
@@ -272,8 +308,7 @@ export async function deleteGoal(id: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('目標の削除に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標の削除に失敗しました')
+    handleServerError(error, 'deleteGoal', 'GOAL_DELETE_FAILED')
   }
 }
 
@@ -292,7 +327,10 @@ export async function completeGoal(id: string): Promise<boolean> {
       .eq('id', id)
       .eq('user_id', user.id)
 
-    if (error) throw error
+    if (error) {
+      console.error('目標完了エラー:', { error, goalId: id, userId: user.id })
+      throw new AppError('GOAL_COMPLETE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/goals')
@@ -300,8 +338,7 @@ export async function completeGoal(id: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('目標の完了に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '目標の完了に失敗しました')
+    handleServerError(error, 'completeGoal', 'GOAL_COMPLETE_FAILED')
   }
 }
 
@@ -311,7 +348,6 @@ export async function getActiveGoals(): Promise<Goal[]> {
     const goals = await getGoals()
     return goals.filter(goal => goal.status === 'active')
   } catch (error) {
-    console.error('アクティブな目標の取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'アクティブな目標の取得に失敗しました')
+    handleServerError(error, 'getActiveGoals', 'GOAL_FETCH_FAILED')
   }
 } 

@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from "react"
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
@@ -9,6 +9,7 @@ import { useTimezone } from "@/contexts/timezone-context"
 import { useToast } from "@/contexts/toast-context"
 import { splitSessionByDateInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
 import { getSessionStartMessage } from "@/lib/encouragement-messages"
+import type { ActivityStat } from "@/app/actions/sessions"
 
 export interface SessionData {
   activityId: string
@@ -56,7 +57,7 @@ interface SessionsContextType {
   // データベース操作
   refetch: () => Promise<void>
   getSessionsByDateRange: (startDate: string, endDate: string) => Promise<SessionWithActivity[]>
-  getActivityStats: () => Promise<any[]>
+  getActivityStats: () => Promise<ActivityStat[]>
 }
 
 const SessionsContext = createContext<SessionsContextType | undefined>(undefined)
@@ -93,6 +94,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   
   // 多言語対応フック
   const locale = useLocale()
+  const tEncouragement = useTranslations('encouragement')
 
   // セッション状態管理
   const [currentSession, setCurrentSession] = useState<SessionData | null>(null)
@@ -168,12 +170,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
       // 目標の現在の進捗を更新（秒単位で加算）
       // updateGoal関数は既存の実装を活用し、current_valueを更新
-      const success = await updateGoal(sessionData.goalId, {
+      const result = await updateGoal(sessionData.goalId, {
         // 進捗更新のためのフラグ（新しいフィールド）
         addDuration: sessionDurationSeconds
       } as any)
 
-      if (success) {
+      if (result.success) {
         // 目標進捗更新成功
       } else {
         // 目標進捗の更新が失敗（エラーは上位で処理）
@@ -379,88 +381,12 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       // 今回が何回目のセッションか（進行中を含めて+1）
       const sessionCount = todaysSessions.length + 1
       
-      // 励ましメッセージを取得（localeに基づいて分岐）
-      const encouragementMessages = locale === 'ja' ? {
-        session_start: {
-          first: [
-            "今日も始められましたね！",
-            "よし、スタートです！",
-            "新しい一日、頑張りましょう！",
-            "今日も一歩前進ですね！",
-            "さあ、始めましょう！"
-          ],
-          second: [
-            "本日2回目の記録です！調子いいですね",
-            "今日も頑張ってますね！",
-            "2回目ですね。素晴らしいです！",
-            "いい調子で継続できてますね！",
-            "2回目の挑戦！その調子です"
-          ],
-          third: [
-            "本日3回目です！素晴らしいペースです",
-            "今日は特に頑張ってますね！",
-            "3回目の記録！集中力が凄いです",
-            "素晴らしい継続力ですね！",
-            "今日も充実してますね！"
-          ],
-          fourth: [
-            "本日4回目！やる気に満ちてますね",
-            "4回目の挑戦！凄いです",
-            "今日の頑張り、すごいですね！",
-            "止まらないですね！素晴らしい",
-            "4回目！その情熱、素敵です"
-          ],
-          fifth_plus: [
-            "本日{count}回目の記録！継続は力なりです",
-            "{count}回目！驚異的な継続力です",
-            "今日{count}回目！その努力、尊敬します",
-            "{count}回目の挑戦！あなたは素晴らしい",
-            "本日{count}回目！誰よりも頑張ってます"
-          ]
-        }
-      } : {
-        session_start: {
-          first: [
-            "Let's get started today!",
-            "Alright, let's begin!",
-            "A new day, let's do this!",
-            "One step forward today!",
-            "Let's start!"
-          ],
-          second: [
-            "2nd session today! Looking good!",
-            "You're doing great today!",
-            "Second time today. Amazing!",
-            "You're keeping up the pace!",
-            "2nd challenge! Keep it up!"
-          ],
-          third: [
-            "3rd session! Excellent pace!",
-            "You're really pushing today!",
-            "3rd time! Your focus is incredible!",
-            "Amazing consistency!",
-            "Today's been productive!"
-          ],
-          fourth: [
-            "4th time today! Full of energy!",
-            "4th session! Incredible!",
-            "Today's effort is remarkable!",
-            "You're unstoppable! Amazing!",
-            "4th time! Love your passion!"
-          ],
-          fifth_plus: [
-            "{count}th session! Consistency is key!",
-            "{count}th time! Phenomenal dedication!",
-            "{count}th today! Your effort is admirable!",
-            "{count}th challenge! You are amazing!",
-            "{count}th session! Going above and beyond!"
-          ]
-        }
-      }
+      // 励ましメッセージをi18nから取得
+      const encouragementMessages = tEncouragement.raw('session_start')
       
-      const encouragementMessage = getSessionStartMessage(sessionCount, encouragementMessages)
+      const encouragementMessage = getSessionStartMessage(sessionCount, { session_start: encouragementMessages })
       
-      await addSession({
+      const result = await addSession({
         activity_id: sessionData.activityId,
         start_time: startTimeInTimezone.toISOString(),
         end_time: null, // 進行中なのでend_timeはnull
@@ -470,6 +396,10 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         notes: sessionData.notes || null, // セッション開始時のメモを保存
         goal_id: sessionData.goalId || null, // 目標IDを保存
       }, true) // refetchをスキップ
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
       
       // 手動でrefetch
       await refetch()
@@ -547,7 +477,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         if (activeSession) {
           // 既存の進行中セッションを更新
           const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
-          const success = await updateSession(activeSession.id, {
+          const result = await updateSession(activeSession.id, {
             end_time: completedSession.endTime.toISOString(),
             duration: completedSession.duration,
             session_date: sessionDate, // セッション日付を設定
@@ -555,26 +485,26 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             location: completedSession.location || null,
           }, true) // refetchをスキップ
           
-                      if (success) {
-              mainSessionId = activeSession.id
-              
-              // 振り返りデータがある場合は暗号化して保存
-              if (completedSession.mood || completedSession.achievements || completedSession.challenges) {
-                const reflectionData = {
-                  moodScore: completedSession.mood || 3,
-                  achievements: completedSession.achievements || '',
-                  challenges: completedSession.challenges || '',
-                  additionalNotes: undefined,
-                };
-                await saveReflection(activeSession.id, reflectionData);
-              }
-            } else {
-              throw new Error('セッション更新に失敗しました')
+          if (result.success) {
+            mainSessionId = activeSession.id
+            
+            // 振り返りデータがある場合は暗号化して保存
+            if (completedSession.mood || completedSession.achievements || completedSession.challenges) {
+              const reflectionData = {
+                moodScore: completedSession.mood || 3,
+                achievements: completedSession.achievements || '',
+                challenges: completedSession.challenges || '',
+                additionalNotes: undefined,
+              };
+              await saveReflection(activeSession.id, reflectionData);
             }
+          } else {
+            throw new Error(result.error || 'セッション更新に失敗しました')
+          }
         } else {
           // 新規セッションとして保存
           const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
-          mainSessionId = await addSession({
+          const result = await addSession({
             activity_id: completedSession.activityId,
             start_time: completedSession.startTime.toISOString(),
             end_time: completedSession.endTime.toISOString(),
@@ -585,7 +515,10 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             goal_id: completedSession.goalId || null, // 目標IDを保存
           }, true) // refetchをスキップ
           
-                      // 振り返りデータがある場合は暗号化して保存
+          if (result.success) {
+            mainSessionId = result.data
+            
+            // 振り返りデータがある場合は暗号化して保存
             if (mainSessionId && (completedSession.mood || completedSession.achievements || completedSession.challenges)) {
               const reflectionData = {
                 moodScore: completedSession.mood || 3,
@@ -595,6 +528,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
               };
               await saveReflection(mainSessionId, reflectionData);
             }
+          } else {
+            throw new Error(result.error || 'セッション追加に失敗しました')
+          }
         }
         
         // 通常のセッション保存完了後にrefetch
@@ -610,7 +546,10 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
         // 既存の進行中セッションがあれば削除（分割されたセッションで置き換える）
         if (activeSession) {
-          await deleteSession(activeSession.id)
+          const deleteResult = await deleteSession(activeSession.id)
+          if (!deleteResult.success) {
+            throw new Error(deleteResult.error || '進行中セッションの削除に失敗しました')
+          }
         }
 
         // 分割されたセッションをそれぞれ保存
@@ -622,7 +561,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           const isStartSession = i === 0 // 最初のセッション（開始日）をメインとする
           const isLastSession = i === splitSessions.length - 1 // 最後のセッション
           
-          const sessionId = await addSession({
+          const result = await addSession({
             activity_id: completedSession.activityId,
             start_time: splitSession.startTime.toISOString(),
             end_time: splitSession.endTime.toISOString(),
@@ -633,10 +572,13 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
             goal_id: completedSession.goalId || null, // 目標IDを保存
           }, !isLastSession) // 最後のセッション以外はrefetchをスキップ
 
-          if (isStartSession) {
-            mainSessionId = sessionId
+          if (result.success) {
+            if (isStartSession) {
+              mainSessionId = result.data
+            }
+          } else {
+            throw new Error(result.error || '分割セッションの保存に失敗しました')
           }
-
         }
         
         // 分割セッション保存後に振り返りデータがある場合は保存

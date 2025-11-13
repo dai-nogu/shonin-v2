@@ -30,7 +30,8 @@ export function DeleteAccountSection() {
   const locale = (params?.locale as string) || 'ja'
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const { showError, showSuccess, showWarning } = useToast()
+  const [operationError, setOperationError] = useState<string | null>(null)
+  const { showSuccess, showWarning } = useToast()
   const [supabase] = useState(() => createClient())
   const t = useTranslations()
   
@@ -67,7 +68,7 @@ export function DeleteAccountSection() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {
-        showError('認証が必要です。ログインしてください。')
+        setOperationError(t('errors.authentication_required'))
         return
       }
 
@@ -94,14 +95,16 @@ export function DeleteAccountSection() {
         router.push(`/${locale}/login`)
       } else {
         const error = await response.json()
-        showError(t('settings.account_deletion_error'))
+        setOperationError(t('settings.account_deletion_error'))
       }
     } catch (error) {
       // レスポンスのパースに失敗した場合やネットワークエラーの場合
-      showError('エラーが発生しました。再度お試しください。')
+      setOperationError(t('errors.generic_retry'))
     } finally {
       setIsDeleting(false)
-      setDeleteDialogOpen(false)
+      if (!operationError) {
+        setDeleteDialogOpen(false)
+      }
     }
   }
 
@@ -124,6 +127,16 @@ export function DeleteAccountSection() {
             <AlertDialogTitle className="text-red-600">
               {t('settings.account_deletion_confirmation')}
             </AlertDialogTitle>
+
+            {/* エラー表示 */}
+            {operationError && (
+              <div className="p-4 bg-red-50 border border-red-300 rounded-lg mb-4">
+                <p className="text-red-700 font-semibold text-center mb-2">{operationError}</p>
+                <p className="text-red-600 text-sm text-center">
+                  {t('common.reload_and_retry')}
+                </p>
+              </div>
+            )}
           </AlertDialogHeader>
           
           <div className="space-y-4">

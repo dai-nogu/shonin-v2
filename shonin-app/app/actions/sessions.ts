@@ -4,10 +4,19 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
+import { AppError, handleServerError, requireAuth } from '@/lib/server-error'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionInsert = Database['public']['Tables']['sessions']['Insert']
 type SessionUpdate = Database['public']['Tables']['sessions']['Update']
+
+export interface ActivityStat {
+  totalDuration: number
+  sessionCount: number
+  activityName: string
+  activityIcon: string | null
+  activityColor: string
+}
 
 export interface SessionWithActivity extends Session {
   activities?: {
@@ -40,7 +49,10 @@ async function getCurrentUser() {
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error || !user) {
-    throw new Error('ログインが必要です')
+    // サーバーログに詳細を記録
+    console.error('認証エラー:', error)
+    // クライアントには安全なエラーコードのみ
+    throw requireAuth()
   }
   
   return user
@@ -65,12 +77,14 @@ export async function getSessions(): Promise<SessionWithActivity[]> {
       .eq('user_id', user.id)
       .order('start_time', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('セッション取得エラー:', { error, userId: user.id })
+      throw new AppError('SESSION_FETCH_FAILED')
+    }
 
     return data || []
   } catch (error) {
-    console.error('セッションの取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'セッションの取得に失敗しました')
+    handleServerError(error, 'getSessions', 'SESSION_FETCH_FAILED')
   }
 }
 
@@ -90,7 +104,8 @@ export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promi
       .single()
 
     if (error) {
-      throw new Error(`Session insert failed: ${error.message || 'Unknown error'}`)
+      console.error('セッション追加エラー:', { error, userId: user.id })
+      throw new AppError('SESSION_ADD_FAILED')
     }
 
     // キャッシュを再検証
@@ -100,15 +115,14 @@ export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promi
 
     return data.id
   } catch (error) {
-    console.error('セッションの追加に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'セッションの追加に失敗しました')
+    handleServerError(error, 'addSession', 'SESSION_ADD_FAILED')
   }
 }
 
 // セッションを更新
 export async function updateSession(id: string, updates: SessionUpdate): Promise<boolean> {
   try {
-    await getCurrentUser() // 認証チェック
+    const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
 
     const { error } = await supabase
@@ -116,7 +130,10 @@ export async function updateSession(id: string, updates: SessionUpdate): Promise
       .update(updates)
       .eq('id', id)
 
-    if (error) throw error
+    if (error) {
+      console.error('セッション更新エラー:', { error, sessionId: id, userId: user.id })
+      throw new AppError('SESSION_UPDATE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
@@ -125,15 +142,14 @@ export async function updateSession(id: string, updates: SessionUpdate): Promise
 
     return true
   } catch (error) {
-    console.error('セッションの更新に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'セッションの更新に失敗しました')
+    handleServerError(error, 'updateSession', 'SESSION_UPDATE_FAILED')
   }
 }
 
 // セッションを削除
 export async function deleteSession(id: string): Promise<boolean> {
   try {
-    await getCurrentUser() // 認証チェック
+    const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
 
     const { error } = await supabase
@@ -141,7 +157,10 @@ export async function deleteSession(id: string): Promise<boolean> {
       .delete()
       .eq('id', id)
 
-    if (error) throw error
+    if (error) {
+      console.error('セッション削除エラー:', { error, sessionId: id, userId: user.id })
+      throw new AppError('SESSION_DELETE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
@@ -150,8 +169,7 @@ export async function deleteSession(id: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('セッションの削除に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'セッションの削除に失敗しました')
+    handleServerError(error, 'deleteSession', 'SESSION_DELETE_FAILED')
   }
 }
 
@@ -179,17 +197,19 @@ export async function getSessionsByDateRange(
       .lte('start_time', endDate)
       .order('start_time', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('期間指定セッション取得エラー:', { error, userId: user.id, startDate, endDate })
+      throw new AppError('SESSION_FETCH_FAILED')
+    }
 
     return data || []
   } catch (error) {
-    console.error('期間指定セッションの取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '期間指定セッションの取得に失敗しました')
+    handleServerError(error, 'getSessionsByDateRange', 'SESSION_FETCH_FAILED')
   }
 }
 
 // アクティビティ別の統計を取得
-export async function getActivityStats() {
+export async function getActivityStats(): Promise<ActivityStat[]> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -208,7 +228,10 @@ export async function getActivityStats() {
       .eq('user_id', user.id)
       .not('end_time', 'is', null) // 終了済みのセッションのみ
 
-    if (error) throw error
+    if (error) {
+      console.error('統計取得エラー:', { error, userId: user.id })
+      throw new AppError('SESSION_FETCH_FAILED')
+    }
 
     // アクティビティ別に集計
     const stats = data?.reduce((acc, session) => {
@@ -228,11 +251,10 @@ export async function getActivityStats() {
       acc[activityId].totalDuration += session.duration
       acc[activityId].sessionCount += 1
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, ActivityStat>)
 
     return Object.values(stats || {})
   } catch (error) {
-    console.error('統計の取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : '統計の取得に失敗しました')
+    handleServerError(error, 'getActivityStats', 'SESSION_FETCH_FAILED')
   }
 } 

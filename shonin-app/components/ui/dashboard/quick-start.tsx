@@ -287,14 +287,14 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           activityId = existingActivity.id
         } else {
           // 行動が存在しない場合は新規作成
-          const newActivityId = await addActivity({
+          const result = await addActivity({
             name: activity.name,
             icon: activity.icon || null,
             color: activity.color,
           })
           
-          if (newActivityId) {
-            activityId = newActivityId
+          if (result.success) {
+            activityId = result.data
           } else {
             // アクティビティ作成に失敗した場合は処理を中止
             return

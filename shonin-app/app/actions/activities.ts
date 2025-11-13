@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
+import { AppError, handleServerError, requireAuth } from '@/lib/server-error'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 type ActivityInsert = Database['public']['Tables']['activities']['Insert']
@@ -32,7 +33,10 @@ async function getCurrentUser() {
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error || !user) {
-    throw new Error('ログインが必要です')
+    // サーバーログに詳細を記録
+    console.error('認証エラー:', error)
+    // クライアントには安全なエラーコードのみ
+    throw requireAuth()
   }
   
   return user
@@ -50,12 +54,14 @@ export async function getActivities(): Promise<Activity[]> {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('アクティビティ取得エラー:', { error, userId: user.id })
+      throw new AppError('ACTIVITY_FETCH_FAILED')
+    }
 
     return data || []
   } catch (error) {
-    console.error('アクティビティの取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'アクティビティの取得に失敗しました')
+    handleServerError(error, 'getActivities', 'ACTIVITY_FETCH_FAILED')
   }
 }
 
@@ -74,7 +80,10 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
       .select('id')
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('アクティビティ追加エラー:', { error, userId: user.id })
+      throw new AppError('ACTIVITY_ADD_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
@@ -82,15 +91,14 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
 
     return data.id
   } catch (error) {
-    console.error('アクティビティの追加に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'アクティビティの追加に失敗しました')
+    handleServerError(error, 'addActivity', 'ACTIVITY_ADD_FAILED')
   }
 }
 
 // アクティビティを更新
 export async function updateActivity(id: string, updates: ActivityUpdate): Promise<boolean> {
   try {
-    await getCurrentUser() // 認証チェック
+    const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
 
     const { error } = await supabase
@@ -98,7 +106,10 @@ export async function updateActivity(id: string, updates: ActivityUpdate): Promi
       .update(updates)
       .eq('id', id)
 
-    if (error) throw error
+    if (error) {
+      console.error('アクティビティ更新エラー:', { error, activityId: id, userId: user.id })
+      throw new AppError('ACTIVITY_UPDATE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
@@ -106,15 +117,14 @@ export async function updateActivity(id: string, updates: ActivityUpdate): Promi
 
     return true
   } catch (error) {
-    console.error('アクティビティの更新に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'アクティビティの更新に失敗しました')
+    handleServerError(error, 'updateActivity', 'ACTIVITY_UPDATE_FAILED')
   }
 }
 
 // アクティビティを削除
 export async function deleteActivity(id: string): Promise<boolean> {
   try {
-    await getCurrentUser() // 認証チェック
+    const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
 
     const { error } = await supabase
@@ -122,7 +132,10 @@ export async function deleteActivity(id: string): Promise<boolean> {
       .delete()
       .eq('id', id)
 
-    if (error) throw error
+    if (error) {
+      console.error('アクティビティ削除エラー:', { error, activityId: id, userId: user.id })
+      throw new AppError('ACTIVITY_DELETE_FAILED')
+    }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
@@ -130,7 +143,6 @@ export async function deleteActivity(id: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('アクティビティの削除に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'アクティビティの削除に失敗しました')
+    handleServerError(error, 'deleteActivity', 'ACTIVITY_DELETE_FAILED')
   }
 } 

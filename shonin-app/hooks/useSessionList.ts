@@ -19,22 +19,42 @@ export function useSessionList() {
   // 初期化処理
   useEffect(() => {
     if (!user) return
+    
+    // アンマウント後のsetState防止フラグ
+    let isMounted = true
 
     const initializeApp = async () => {
       try {
         await refetch()
-        setIsInitialized(true)
+        // アンマウント済みの場合はsetStateしない
+        if (isMounted) {
+          setIsInitialized(true)
+        }
       } catch (error) {
-        setIsInitialized(true)
+        // アンマウント済みの場合はsetStateしない
+        if (isMounted) {
+          setIsInitialized(true)
+        }
       }
     }
 
     initializeApp()
+    
+    // クリーンアップ：アンマウント時にフラグを更新
+    return () => {
+      isMounted = false
+    }
   }, [user, refetch])
 
   // セッションデータが更新されたときに基本的な変換処理
   useEffect(() => {
+    // アンマウント後のsetState防止フラグ
+    let isMounted = true
+    
     const updateCompletedSessions = () => {
+      // アンマウント済みの場合は何もしない
+      if (!isMounted) return
+      
       if (!sessions || sessions.length === 0) {
         setCompletedSessions([])
         return
@@ -71,6 +91,11 @@ export function useSessionList() {
     }
 
     updateCompletedSessions()
+    
+    // クリーンアップ：アンマウント時にフラグを更新
+    return () => {
+      isMounted = false
+    }
   }, [sessions])
 
   return {

@@ -6,6 +6,7 @@ import { Plus, Target, Calendar, Clock, Edit2, Trash2, Calculator } from "lucide
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
+import { ErrorModal } from "@/components/ui/common/error-modal"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
 import { useTranslations, useLocale } from 'next-intl'
@@ -41,14 +42,13 @@ interface Goal {
 }
 
 interface GoalsProps {
-  initialGoals?: any[]
+  initialGoals?: Goal[]
 }
 
 export function Goals({ initialGoals }: GoalsProps) {
   const router = useRouter()
   const params = useParams()
   const locale = (params?.locale as string) || 'ja'
-  const { showError } = useToast()
   const t = useTranslations()
   const currentLocale = useLocale()
   
@@ -69,6 +69,8 @@ export function Goals({ initialGoals }: GoalsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [operationError, setOperationError] = useState<string | null>(null) // 操作失敗エラー用
+  const [showErrorModal, setShowErrorModal] = useState(false) // エラーモーダル表示制御
 
   // 週間時間の計算
   const calculateWeeklyHours = (weekdayHours: number, weekendHours: number) => {
@@ -90,6 +92,13 @@ export function Goals({ initialGoals }: GoalsProps) {
     }
     return `${minutes}m`
   }
+
+  // エラーが発生したらモーダルを表示
+  useEffect(() => {
+    if (error || operationError) {
+      setShowErrorModal(true)
+    }
+  }, [error, operationError])
 
   // データベースからの目標を変換
   useEffect(() => {
@@ -155,31 +164,27 @@ export function Goals({ initialGoals }: GoalsProps) {
     setIsDeleting(true)
     const success = await deleteGoalFromDb(selectedGoalId)
     if (!success) {
-      showError(t('goals.delete_error'))
+      // Toast通知ではなく、画面全体のエラー表示に変更
+      setOperationError(t('goals.delete_error'))
     }
     setIsDeleting(false)
     setDeleteDialogOpen(false)
     setSelectedGoalId(null)
   }
 
-  // エラー状態
-  if (error) {
-    return (
-      <div className="text-white">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center py-12">
-            <p className="text-red-400 mb-4">エラーが発生しました: {error}</p>
-            <Button onClick={() => window.location.reload()} className="bg-blue-500 hover:bg-blue-600">
-              {t('goals.reload')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="text-white">
+      {/* エラーモーダル */}
+      <ErrorModal
+        isOpen={showErrorModal && !!(error || operationError)}
+        onClose={() => {
+          // エラーステートとモーダル表示をクリア
+          setOperationError(null)
+          setShowErrorModal(false)
+        }}
+        message={error || operationError || ''}
+      />
+
       {/* プラン制限モーダル */}
       <GoalLimitModal 
         isOpen={showLimitModal}

@@ -13,6 +13,9 @@ export function useSessionPhotos({ completedSessions, setCompletedSessions }: Us
   
   // セッションの写真有無を確認してcompletedSessionsを更新
   useEffect(() => {
+    // アンマウント後のsetState防止フラグ
+    let isMounted = true
+    
     const updateSessionsWithPhotos = async () => {
       if (!completedSessions || completedSessions.length === 0) {
         return
@@ -20,6 +23,9 @@ export function useSessionPhotos({ completedSessions, setCompletedSessions }: Us
 
       const sessionIds = completedSessions.map(session => session.id)
       const photoStatusMap = await hasSessionPhotosMultiple(sessionIds)
+
+      // アンマウント済みの場合はsetStateしない
+      if (!isMounted) return
 
       // 写真情報を更新
       const sessionsWithPhotos: CompletedSession[] = completedSessions.map(session => ({
@@ -35,12 +41,17 @@ export function useSessionPhotos({ completedSessions, setCompletedSessions }: Us
         .slice(0, 5) // 最新5件の写真付きセッションのみプリロード
         .map(session => session.id)
 
-      if (sessionsWithPhotosIds.length > 0) {
+      if (sessionsWithPhotosIds.length > 0 && isMounted) {
         preloadSessionPhotos(sessionsWithPhotosIds)
       }
     }
 
     updateSessionsWithPhotos()
+    
+    // クリーンアップ：アンマウント時にフラグを更新
+    return () => {
+      isMounted = false
+    }
   }, [completedSessions, setCompletedSessions])
 
   // 写真付きセッションの画像を事前にプリロードする関数

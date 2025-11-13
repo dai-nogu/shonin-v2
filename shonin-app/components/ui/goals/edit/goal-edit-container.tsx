@@ -11,6 +11,7 @@ import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
 import { useGoalForm } from "@/hooks/use-goal-form"
 import { useSingleGoal, useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
+import { useAuthRedirect } from "@/hooks/use-auth-redirect"
 import { useTranslations } from 'next-intl'
 
 interface GoalEditContainerProps {
@@ -24,6 +25,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const routerParams = useParams()
   const locale = (routerParams?.locale as string) || 'ja'
   const { updateGoal } = useGoalsDb()
+  const { handleAuthError } = useAuthRedirect()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const t = useTranslations()
   
@@ -71,9 +73,12 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
         calculatedHours: formData.calculatedHours
       }
 
-      const success = await updateGoal(id, goalData)
+      const result = await updateGoal(id, goalData)
       
-      if (success) {
+      // 認証エラーの場合は自動リダイレクト
+      if (handleAuthError(result)) return
+      
+      if (result.success) {
         router.push(`/${locale}/goals`)
       }
       // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { getDateStringInTimezone } from '@/lib/timezone-utils';
 import { useTimezone } from '@/contexts/timezone-context';
 import { useParams } from 'next/navigation';
@@ -22,6 +23,7 @@ interface AIFeedbackError {
 export function useAIFeedback() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations();
   const { timezone } = useTimezone();
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
@@ -58,13 +60,13 @@ export function useAIFeedback() {
       return data;
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'フィードバック生成中にエラーが発生しました';
-      setError(errorMessage);
+      // Server Actionsのエラーメッセージは無視して、常に多言語対応メッセージを表示
+      setError(t('ai_feedback.generate_error'));
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, [locale]);
+  }, [locale, t]);
 
   // 先週の日付範囲を計算（月曜〜日曜）
   const getLastWeekRange = useCallback(() => {
@@ -162,13 +164,13 @@ export function useAIFeedback() {
       };
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'フィードバック取得中にエラーが発生しました';
-      setError(errorMessage);
+      // Server Actionsのエラーメッセージは無視して、常に多言語対応メッセージを表示
+      setError(t('ai_feedback.fetch_error'));
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // 週次フィードバックを取得（既存 or 新規生成）
   const getWeeklyFeedback = useCallback(async () => {

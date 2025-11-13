@@ -21,7 +21,8 @@
     "times": " times",
     "start": "Start",
     "details": "Details",
-    "not_set": "None"
+    "not_set": "None",
+    "reload_and_retry": "Please reload the page and try again."
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -168,6 +169,11 @@
     "deleting": "Deleting...",
     "delete": "Delete",
     "reload": "Reload",
+    "fetch_error": "Failed to fetch goals",
+    "add_error": "Failed to add goal",
+    "update_error": "Failed to update goal",
+    "complete_error": "Failed to complete goal",
+    "fetch_active_error": "Failed to fetch active goals",
     "days_remaining": "{days} days left",
     "days_overdue": "{days} days overdue",
     "weekday": "Weekdays",
@@ -312,13 +318,52 @@
     "authError": "Authentication error occurred",
     "validationError": "Please check your input",
     "notFound": "Page not found",
-    "unauthorized": "Access denied"
+    "unauthorized": "Access denied",
+    "authentication_required": "Authentication required. Please log in.",
+    "generic_retry": "An error occurred. Please try again.",
+    "session_start_failed": "Failed to start recording",
+    "activity_add_failed": "Failed to add activity.",
+    "AUTH_REQUIRED": "Authentication required. Please log in.",
+    "AUTH_FAILED": "Authentication failed",
+    "UNAUTHORIZED": "Access denied",
+    "GOAL_NOT_FOUND": "Goal not found",
+    "GOAL_LIMIT_REACHED": "Goal limit reached. Please upgrade your plan.",
+    "SESSION_NOT_FOUND": "Session not found",
+    "ACTIVITY_NOT_FOUND": "Activity not found",
+    "GENERIC_ERROR": "An error occurred. Please try again.",
+    "NETWORK_ERROR": "Network error occurred",
+    "VALIDATION_ERROR": "Please check your input"
   },
   "success": {
     "saved": "Saved",
     "deleted": "Deleted",
     "updated": "Updated",
     "created": "Created"
+  },
+  "sessions": {
+    "fetch_error": "Failed to fetch sessions",
+    "add_error": "Failed to add session",
+    "update_error": "Failed to update session",
+    "delete_error": "Failed to delete session",
+    "fetch_period_error": "Failed to fetch sessions for period",
+    "fetch_stats_error": "Failed to fetch statistics"
+  },
+  "activities": {
+    "fetch_error": "Failed to fetch activities",
+    "add_error": "Failed to add activity",
+    "update_error": "Failed to update activity",
+    "delete_error": "Failed to delete activity"
+  },
+  "profile": {
+    "fetch_error": "Failed to fetch profile",
+    "update_error": "Failed to update profile"
+  },
+  "ai_feedback": {
+    "generate_error": "Error occurred while generating feedback",
+    "fetch_error": "Error occurred while fetching feedback"
+  },
+  "subscription": {
+    "fetch_error": "Failed to fetch subscription information"
   },
   "session_start": {
     "title": "Log Activity",

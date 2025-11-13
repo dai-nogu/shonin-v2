@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
+import { AppError, handleServerError, requireAuth } from '@/lib/server-error'
 
 type UserProfile = Database['public']['Tables']['users']['Row']
 type UserProfileUpdate = Database['public']['Tables']['users']['Update']
@@ -31,7 +32,10 @@ async function getCurrentUser() {
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error || !user) {
-    throw new Error('ログインが必要です')
+    // サーバーログに詳細を記録
+    console.error('認証エラー:', error)
+    // クライアントには安全なエラーコードのみ
+    throw requireAuth()
   }
   
   return user
@@ -66,19 +70,20 @@ export async function getProfile(): Promise<UserProfile | null> {
           .single()
 
         if (insertError) {
-          throw insertError
+          console.error('プロフィール作成エラー:', { error: insertError, userId: user.id })
+          throw new AppError('PROFILE_UPDATE_FAILED')
         }
 
         return insertData
       } else {
-        throw error
+        console.error('プロフィール取得エラー:', { error, userId: user.id })
+        throw new AppError('PROFILE_FETCH_FAILED')
       }
     }
 
     return data
   } catch (error) {
-    console.error('プロフィールの取得に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'プロフィールの取得に失敗しました')
+    handleServerError(error, 'getProfile', 'PROFILE_FETCH_FAILED')
   }
 }
 
@@ -100,7 +105,8 @@ export async function updateProfile(updates: Partial<UserProfileUpdate>): Promis
       .eq('id', user.id)
 
     if (error) {
-      throw error
+      console.error('プロフィール更新エラー:', { error, userId: user.id })
+      throw new AppError('PROFILE_UPDATE_FAILED')
     }
 
     // キャッシュを再検証
@@ -109,8 +115,7 @@ export async function updateProfile(updates: Partial<UserProfileUpdate>): Promis
 
     return true
   } catch (error) {
-    console.error('プロフィールの更新に失敗:', error)
-    throw new Error(error instanceof Error ? error.message : 'プロフィールの更新に失敗しました')
+    handleServerError(error, 'updateProfile', 'PROFILE_UPDATE_FAILED')
   }
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslations } from 'next-intl'
 import { getSubscriptionInfo } from "@/app/actions/subscription-info"
 import type { PlanType, SubscriptionInfo } from "@/types/subscription"
 
@@ -11,6 +12,7 @@ export function useSubscription() {
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations()
 
   useEffect(() => {
     const fetchSubscriptionInfo = async () => {
@@ -20,14 +22,15 @@ export function useSubscription() {
         setSubscriptionInfo(info)
       } catch (err) {
         console.error('Failed to fetch subscription info:', err)
-        setError(err instanceof Error ? err.message : 'サブスクリプション情報の取得に失敗しました')
+        // Server Actionsのエラーメッセージは無視して、常に多言語対応メッセージを表示
+        setError(t('subscription.fetch_error'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchSubscriptionInfo()
-  }, [])
+  }, [t])
 
   return {
     subscriptionInfo,

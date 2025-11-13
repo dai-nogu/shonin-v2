@@ -6,9 +6,10 @@ import { ActiveActivitySidebar } from "./active-activity-sidebar"
 import { WeeklyProgress } from "./weekly-progress"
 import { useSessions } from "@/contexts/sessions-context"
 import { useSessionList } from "@/hooks/useSessionList"
+import type { SessionWithActivity } from "@/hooks/use-sessions-db"
 
 interface DashboardSidebarContentProps {
-  initialCompletedSessions: any[]
+  initialCompletedSessions?: SessionWithActivity[]
   user: any
 }
 

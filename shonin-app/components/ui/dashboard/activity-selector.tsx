@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
 import { Textarea } from "@/components/ui/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
+import { ErrorModal } from "@/components/ui/common/error-modal"
 import { Plus, Play } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
@@ -27,7 +28,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const [targetMinutes, setTargetMinutes] = useState("")
   const [selectedGoal, setSelectedGoal] = useState("")
   const [isStarting, setIsStarting] = useState(false)
-  const { showError } = useToast()
+  const [operationError, setOperationError] = useState<string | null>(null)
 
   // 今日が平日かどうかを判定
   const isWeekday = () => {
@@ -110,15 +111,15 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const handleAddActivity = async () => {
     if (!newActivityName.trim()) return
 
-    const activityId = await addActivity({
+    const result = await addActivity({
       name: newActivityName.trim(),
       icon: null,
       color: newActivityColor // 選択された色を使用
     })
 
-    if (activityId) {
+    if (result.success) {
       // 追加した行動を自動選択
-      setSelectedActivity(activityId)
+      setSelectedActivity(result.data)
 
       // フォームをリセット
       setNewActivityName("")
@@ -126,7 +127,8 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       setHoveredColor(null)
       setShowAddForm(false)
     } else {
-      showError("行動の追加に失敗しました。")
+      // Toast通知ではなく、エラーステートに設定
+      setOperationError(t('errors.activity_add_failed'))
     }
   }
 
@@ -181,6 +183,16 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
   return (
     <Card className="bg-gray-900 border-gray-800">
+      {/* エラーモーダル */}
+      <ErrorModal
+        isOpen={!!operationError}
+        onClose={() => {
+          // エラーステートをクリアしてモーダルを閉じる
+          setOperationError(null)
+        }}
+        message={operationError || ''}
+      />
+
       <CardHeader className="pb-4">
         <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
           {t('session_start.title')}
