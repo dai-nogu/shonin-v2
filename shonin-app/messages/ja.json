@@ -358,7 +358,7 @@
     }
   },
   "active_session": {
-    "recording": "記録中",
+    "recording": "記録中...",
     "reflecting": "振り返り中",
     "paused": "一時停止中",
     "start_time": "開始時刻",
@@ -389,6 +389,12 @@
     "waiting_save": "保存待ち",
     "reflection_save_error": "振り返りの保存に失敗しました。",
     "save_error": "保存処理でエラーが発生しました。"
+  },
+  "session_page": {
+    "not_found_title": "セッションが見つかりません",
+    "not_found_description": "アクティブなセッションがありません。",
+    "back_to_dashboard": "ダッシュボードに戻る",
+    "save_failed": "保存に失敗しました"
   },
   "plan": {
     "title": "プラン",

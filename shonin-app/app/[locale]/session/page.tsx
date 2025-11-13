@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { BottomNavigation } from "@/components/layout/bottom-navigation"
@@ -13,6 +14,11 @@ import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 export default function SessionPage() {
   const router = useRouter()
   const { showError } = useToast()
+  const [isSaving, setIsSaving] = useState(false)
+  const t = useTranslations()
+  const tCommon = useTranslations("common")
+  const tActiveSession = useTranslations("active_session")
+  const tSessionPage = useTranslations("session_page")
 
   // セッションコンテキストから状態を取得
   const {
@@ -38,12 +44,14 @@ export default function SessionPage() {
   // セッション保存
   const handleSaveSession = async (sessionData: CompletedSession): Promise<string | null> => {
     try {
+      setIsSaving(true)
       const sessionId = await saveSession(sessionData)
       // 保存完了後にダッシュボードに戻る
       router.push('/dashboard')
       return sessionId
     } catch (error) {
-      showError('保存に失敗しました')
+      setIsSaving(false)
+      showError(tSessionPage('save_failed'))
       return null
     }
   }
@@ -62,9 +70,24 @@ export default function SessionPage() {
     resumeSession()
   }
 
-  // 復元中は何も表示しない
-  if (loading) {
-    return null
+  // 復元中または保存中はローディング表示
+  if (loading || isSaving) {
+    return (
+      <>
+        <AppSidebar currentPage="dashboard" />
+        <SidebarInset>
+          <div className="min-h-screen bg-gray-950 text-white pb-20 flex items-center justify-center">
+            <div className="text-center">
+              <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
+              <p className="text-gray-400">
+                {isSaving ? tActiveSession('recording') : tCommon('loading')}
+              </p>
+            </div>
+          </div>
+        </SidebarInset>
+        <BottomNavigation currentPage="dashboard" />
+      </>
+    )
   }
 
   // セッションが存在しない場合は、セッションが見つからない旨を表示
@@ -76,13 +99,13 @@ export default function SessionPage() {
           <div className="min-h-screen bg-gray-950 text-white pb-20">
             <div className="container mx-auto px-4 py-4 lg:py-8">
               <div className="text-center">
-                <h1 className="text-2xl font-bold mb-4">セッションが見つかりません</h1>
-                <p className="text-gray-400 mb-6">アクティブなセッションがありません。</p>
+                <h1 className="text-2xl font-bold mb-4">{tSessionPage('not_found_title')}</h1>
+                <p className="text-gray-400 mb-6">{tSessionPage('not_found_description')}</p>
                 <button 
                   onClick={() => router.push('/dashboard')}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
                 >
-                  ダッシュボードに戻る
+                  {tSessionPage('back_to_dashboard')}
                 </button>
               </div>
             </div>

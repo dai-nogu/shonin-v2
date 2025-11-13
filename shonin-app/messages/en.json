@@ -358,7 +358,7 @@
     }
   },
   "active_session": {
-    "recording": "Recording",
+    "recording": "Recording...",
     "reflecting": "Reflecting",
     "paused": "Paused",
     "start_time": "Start Time",
@@ -389,6 +389,12 @@
     "waiting_save": "Waiting to save",
     "reflection_save_error": "Failed to save reflection.",
     "save_error": "An error occurred during save process."
+  },
+  "session_page": {
+    "not_found_title": "Session Not Found",
+    "not_found_description": "There are no active sessions.",
+    "back_to_dashboard": "Back to Dashboard",
+    "save_failed": "Failed to save"
   },
   "plan": {
     "title": "Plan",
