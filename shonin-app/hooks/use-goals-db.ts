@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/auth-context'
@@ -43,7 +43,9 @@ function useGoalsErrorHandler(setError: (error: string | null) => void) {
     const errorKey = getErrorTranslationKey(err, fallbackKey)
     setError(t(errorKey))
     return false
-  }, [router, pathname, t, setError])
+  // setErrorは安定した参照なので依存配列から除外
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, pathname, t])
 
   return handleError
 }
@@ -51,15 +53,28 @@ function useGoalsErrorHandler(setError: (error: string | null) => void) {
 // 個別の目標を取得するフック
 export function useSingleGoal(goalId: string) {
   const { user } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+  const t = useTranslations()
   const [goal, setGoal] = useState<Goal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // 共通のエラーハンドラーを使用
+  // アンマウント後のsetState防止フラグ（フック全体で使用）
+  const mountedRef = useRef(true)
+  
+  // 共通のエラーハンドラーを使用（例外処理用）
   const handleError = useGoalsErrorHandler(setError)
 
   useEffect(() => {
-    // アンマウント後のsetState防止フラグ
+    // アンマウント時のクリーンアップ
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    // アンマウント後のsetState防止フラグ（ローカル）
     let isMounted = true
     
     const fetchGoal = async () => {
@@ -71,23 +86,29 @@ export function useSingleGoal(goalId: string) {
         return
       }
 
-      try {
-        const data = await goalsActions.getGoal(goalId)
-        // アンマウント済みの場合はsetStateしない
-        if (!isMounted) return
-        setGoal(data)
-      } catch (err) {
-        // アンマウント済みの場合は何もしない
-        if (!isMounted) return
-        
-        // 共通のエラーハンドラーで処理（認証エラー自動リダイレクト + 多言語対応）
-        handleError(err, 'goals.fetch_error')
-        setGoal(null)
-      } finally {
-        // アンマウント済みの場合のみsetLoadingを実行
-        if (isMounted) {
-          setLoading(false)
+      const result = await goalsActions.getGoal(goalId)
+      
+      // アンマウント済みの場合はsetStateしない
+      if (!isMounted) return
+      
+      if (result.success) {
+        setGoal(result.data)
+      } else {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_FETCH_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.fetch_error')
+          setError(t(errorKey))
         }
+        setGoal(null)
+      }
+      
+      // マウント中の場合のみsetLoadingを実行（アンマウント後のsetState防止）
+      if (isMounted) {
+        setLoading(false)
       }
     }
 
@@ -97,7 +118,7 @@ export function useSingleGoal(goalId: string) {
     return () => {
       isMounted = false
     }
-  }, [user?.id, goalId, handleError])
+  }, [user?.id, goalId, router, pathname, t])
 
   return { goal, loading, error }
 }
@@ -105,47 +126,76 @@ export function useSingleGoal(goalId: string) {
 export function useGoalsDb(initialGoals?: Goal[]) {
   const { user } = useAuth()
   const t = useTranslations()
+  const router = useRouter()
+  const pathname = usePathname()
   const [goals, setGoals] = useState<Goal[]>(initialGoals ?? [])
   const [loading, setLoading] = useState(!initialGoals)
   const [error, setError] = useState<string | null>(null)
+  
+  // アンマウント後のsetState防止フラグ（フック全体で使用）
+  const mountedRef = useRef(true)
+  // レースコンディション対策：最新リクエストのみ反映
+  const requestIdRef = useRef(0)
 
-  // 共通のエラーハンドラーを使用
+  // 共通のエラーハンドラーを使用（例外処理用）
   const handleError = useGoalsErrorHandler(setError)
 
   // 目標を取得
   // isRefreshing: true = バックグラウンド更新（ローディング表示なし）
   //               false = 初回読み込み/明示的リロード（ローディング表示あり）
   const fetchGoals = async (isRefreshing: boolean = false) => {
-    try {
-      // 新規操作開始時に古いエラーをクリア
-      setError(null)
-      
-      // リフレッシュ時はローディング表示なし、通常時は表示
-      setLoading(!isRefreshing)
+    // レースコンディション対策：リクエストIDを生成
+    const currentRequestId = ++requestIdRef.current
+    
+    // 新規操作開始時に古いエラーをクリア
+    if (!mountedRef.current) return
+    setError(null)
+    
+    // リフレッシュ時はローディング表示なし、通常時は表示
+    if (!mountedRef.current) return
+    setLoading(!isRefreshing)
 
-      if (!user?.id) {
-        setGoals([])
-        setLoading(false)
-        return
-      }
-
-      const data = await goalsActions.getGoals()
-      setGoals(data || [])
-    } catch (err) {
-      // エラーハンドリング（認証エラーは自動リダイレクト、その他は多言語対応メッセージ）
-      handleError(err, 'goals.fetch_error')
-    } finally {
+    if (!user?.id) {
+      if (!mountedRef.current) return
+      setGoals([])
+      if (!mountedRef.current) return
       setLoading(false)
+      return
     }
+
+    const result = await goalsActions.getGoals()
+    
+    // 古いリクエストの結果は無視（レースコンディション対策）
+    if (currentRequestId !== requestIdRef.current) return
+    if (!mountedRef.current) return
+    
+    if (result.success) {
+      setGoals(result.data)
+    } else {
+      // 認証エラーの場合はリダイレクト
+      const code = result.code || 'GOAL_FETCH_FAILED'
+      if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+        redirectToLogin(router, pathname)
+      } else {
+        // その他のエラーは setError で表示
+        const errorKey = getErrorTranslationKey(code, 'goals.fetch_error')
+        setError(t(errorKey))
+      }
+    }
+    
+    if (!mountedRef.current) return
+    setLoading(false)
   }
 
   // 目標を追加
   const addGoal = async (goalData: GoalFormData): Promise<Result<string>> => {
     try {
       // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
       setError(null)
       
       if (!user?.id) {
+        redirectToLogin(router, pathname)
         const errorMsg = t('errors.AUTH_REQUIRED')
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
@@ -154,9 +204,15 @@ export function useGoalsDb(initialGoals?: Goal[]) {
       await fetchGoals(true) // リストを更新（バックグラウンド）
       return success(goalId)
     } catch (err) {
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.add_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
       const errorKey = getErrorTranslationKey(err, 'goals.add_error')
       const errorMsg = t(errorKey)
-      handleError(err, 'goals.add_error')
       return failure(errorMsg)
     }
   }
@@ -165,9 +221,11 @@ export function useGoalsDb(initialGoals?: Goal[]) {
   const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<Result<void>> => {
     try {
       // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
       setError(null)
       
       if (!user?.id) {
+        redirectToLogin(router, pathname)
         const errorMsg = t('errors.AUTH_REQUIRED')
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
@@ -175,12 +233,19 @@ export function useGoalsDb(initialGoals?: Goal[]) {
       const updated = await goalsActions.updateGoal(id, goalData)
       if (updated) {
         await fetchGoals(true) // リストを更新（バックグラウンド）
+        return success(undefined)
       }
-      return success(undefined)
+      return failure(t('goals.update_error'))
     } catch (err) {
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.update_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
       const errorKey = getErrorTranslationKey(err, 'goals.update_error')
       const errorMsg = t(errorKey)
-      handleError(err, 'goals.update_error')
       return failure(errorMsg)
     }
   }
@@ -189,9 +254,11 @@ export function useGoalsDb(initialGoals?: Goal[]) {
   const deleteGoal = async (id: string): Promise<Result<void>> => {
     try {
       // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
       setError(null)
       
       if (!user?.id) {
+        redirectToLogin(router, pathname)
         const errorMsg = t('errors.AUTH_REQUIRED')
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
@@ -199,12 +266,19 @@ export function useGoalsDb(initialGoals?: Goal[]) {
       const deleted = await goalsActions.deleteGoal(id)
       if (deleted) {
         await fetchGoals(true) // リストを更新（バックグラウンド）
+        return success(undefined)
       }
-      return success(undefined)
+      return failure(t('goals.delete_error'))
     } catch (err) {
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.delete_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
       const errorKey = getErrorTranslationKey(err, 'goals.delete_error')
       const errorMsg = t(errorKey)
-      handleError(err, 'goals.delete_error')
       return failure(errorMsg)
     }
   }
@@ -213,9 +287,11 @@ export function useGoalsDb(initialGoals?: Goal[]) {
   const completeGoal = async (id: string): Promise<Result<void>> => {
     try {
       // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
       setError(null)
       
       if (!user?.id) {
+        redirectToLogin(router, pathname)
         const errorMsg = t('errors.AUTH_REQUIRED')
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
@@ -223,12 +299,19 @@ export function useGoalsDb(initialGoals?: Goal[]) {
       const completed = await goalsActions.completeGoal(id)
       if (completed) {
         await fetchGoals(true) // リストを更新（バックグラウンド）
+        return success(undefined)
       }
-      return success(undefined)
+      return failure(t('goals.complete_error'))
     } catch (err) {
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.complete_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
       const errorKey = getErrorTranslationKey(err, 'goals.complete_error')
       const errorMsg = t(errorKey)
-      handleError(err, 'goals.complete_error')
       return failure(errorMsg)
     }
   }
@@ -238,10 +321,17 @@ export function useGoalsDb(initialGoals?: Goal[]) {
     return goals.find(goal => goal.id === id)
   }
 
-  // アクティブな目標を取得
-  const getActiveGoals = (): Goal[] => {
+  // アクティブな目標を取得（パフォーマンス最適化のためuseMemo化）
+  const getActiveGoals = useMemo((): Goal[] => {
     return goals.filter(goal => goal.status === 'active')
-  }
+  }, [goals])
+
+  // アンマウント時のクリーンアップ
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   // 初回読み込み（初期データがない場合のみ）
   useEffect(() => {
@@ -251,27 +341,37 @@ export function useGoalsDb(initialGoals?: Goal[]) {
     const loadInitialGoals = async () => {
       if (!user?.id || initialGoals) return
       
-      try {
-        if (isMounted) {
-          setLoading(true)
+      // レースコンディション対策：リクエストIDを生成
+      const currentRequestId = ++requestIdRef.current
+      
+      if (isMounted && mountedRef.current) {
+        setLoading(true)
+      }
+      
+      const result = await goalsActions.getGoals()
+      
+      // 古いリクエストの結果は無視（レースコンディション対策）
+      if (currentRequestId !== requestIdRef.current) return
+      // アンマウント済みの場合はsetStateしない
+      if (!isMounted || !mountedRef.current) return
+      
+      if (result.success) {
+        setGoals(result.data)
+      } else {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_FETCH_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.fetch_error')
+          setError(t(errorKey))
         }
-        
-        const data = await goalsActions.getGoals()
-        
-        // アンマウント済みの場合はsetStateしない
-        if (!isMounted) return
-        
-        setGoals(data || [])
-      } catch (err) {
-        // アンマウント済みの場合は何もしない
-        if (!isMounted) return
-        
-        handleError(err, 'goals.fetch_error')
-      } finally {
-        // アンマウント済みの場合のみsetLoadingを実行
-        if (isMounted) {
-          setLoading(false)
-        }
+      }
+      
+      // マウント中の場合のみsetLoadingを実行（アンマウント後のsetState防止）
+      if (isMounted && mountedRef.current) {
+        setLoading(false)
       }
     }
     
@@ -281,7 +381,7 @@ export function useGoalsDb(initialGoals?: Goal[]) {
     return () => {
       isMounted = false
     }
-  }, [user?.id, initialGoals])
+  }, [user?.id, initialGoals, handleError])
 
   return {
     goals,

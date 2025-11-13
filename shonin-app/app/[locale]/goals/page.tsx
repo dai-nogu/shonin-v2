@@ -6,7 +6,8 @@ import { getGoals } from "@/app/actions/goals"
 
 export default async function GoalsPage() {
   // サーバーサイドで事前にデータを取得
-  const initialGoals = await getGoals()
+  const result = await getGoals()
+  const initialGoals = result.success ? result.data : []
 
   return (
     <>

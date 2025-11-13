@@ -98,7 +98,9 @@
     "next_weekly_feedback": "次回の週次フィードバック",
     "next_monthly_feedback": "次回の月次フィードバック",
     "scheduled": "予定",
-    "generating": "フィードバックを生成中..."
+    "generating": "フィードバックを生成中...",
+    "generate_error": "フィードバック生成中にエラーが発生しました",
+    "fetch_error": "フィードバック取得中にエラーが発生しました"
   },
   "quick_start": {
     "start_activity": "開始する",
@@ -295,7 +297,11 @@
     "name": "名前",
     "color": "色",
     "tags": "タグ",
-    "location": "場所"
+    "location": "場所",
+    "fetch_error": "アクティビティの取得に失敗しました",
+    "add_error": "アクティビティの追加に失敗しました",
+    "update_error": "アクティビティの更新に失敗しました",
+    "delete_error": "アクティビティの削除に失敗しました"
   },
   "time": {
     "hours": "時間",
@@ -348,19 +354,9 @@
     "fetch_period_error": "期間指定セッションの取得に失敗しました",
     "fetch_stats_error": "統計の取得に失敗しました"
   },
-  "activities": {
-    "fetch_error": "アクティビティの取得に失敗しました",
-    "add_error": "アクティビティの追加に失敗しました",
-    "update_error": "アクティビティの更新に失敗しました",
-    "delete_error": "アクティビティの削除に失敗しました"
-  },
   "profile": {
     "fetch_error": "プロフィールの取得に失敗しました",
     "update_error": "プロフィールの更新に失敗しました"
-  },
-  "ai_feedback": {
-    "generate_error": "フィードバック生成中にエラーが発生しました",
-    "fetch_error": "フィードバック取得中にエラーが発生しました"
   },
   "subscription": {
     "fetch_error": "サブスクリプション情報の取得に失敗しました"
@@ -555,6 +551,42 @@
       "range_180_360": "圧巻の集中力。あなたは必ず変われる。",
       "range_360_720": "世界を遮断して{hours}時間。その覚悟が未来をつくります。",
       "range_720_1440": "体も心も限界まで使い{hours}時間頑張りましたね。どうかゆっくり休んでください。"
+    }
+  },
+  "validation": {
+    "title": {
+      "too_small": "タイトルを入力してください",
+      "too_big": "タイトルは100文字以内で入力してください",
+      "invalid_type": "タイトルは文字列で入力してください"
+    },
+    "email": {
+      "invalid_string": "正しいメールアドレスを入力してください",
+      "too_small": "メールアドレスを入力してください"
+    },
+    "motivation": {
+      "too_small": "モチベーションを入力してください",
+      "too_big": "モチベーションは500文字以内で入力してください"
+    },
+    "deadline": {
+      "invalid_date": "正しい日付を入力してください",
+      "too_small": "期限を入力してください"
+    },
+    "weekdayHours": {
+      "too_small": "0以上の数値を入力してください",
+      "too_big": "24以下の数値を入力してください",
+      "invalid_type": "数値を入力してください"
+    },
+    "weekendHours": {
+      "too_small": "0以上の数値を入力してください",
+      "too_big": "24以下の数値を入力してください",
+      "invalid_type": "数値を入力してください"
+    },
+    "name": {
+      "too_small": "名前を入力してください",
+      "too_big": "名前は50文字以内で入力してください"
+    },
+    "description": {
+      "too_big": "説明は1000文字以内で入力してください"
     }
   }
 } 

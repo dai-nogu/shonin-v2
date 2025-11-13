@@ -19,7 +19,7 @@ export interface Success<T> {
 export interface Failure {
   success: false
   error: string
-  errorCode?: string
+  code?: string
 }
 
 /**
@@ -39,12 +39,14 @@ export function success<T>(data: T): Success<T> {
 
 /**
  * ヘルパー関数：失敗結果を作成
+ * @param error - エラーメッセージ
+ * @param code - エラーコード（オプション）
  */
-export function failure(error: string, errorCode?: string): Failure {
+export function failure(error: string, code?: string): Failure {
   return {
     success: false,
     error,
-    errorCode,
+    code,
   }
 }
 

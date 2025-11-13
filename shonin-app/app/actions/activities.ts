@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
-import { AppError, handleServerError, requireAuth } from '@/lib/server-error'
+import type { Result } from '@/types/result'
+import { success, failure } from '@/types/result'
+import { AppError, handleServerError, requireAuth, getErrorCode } from '@/lib/server-error'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 type ActivityInsert = Database['public']['Tables']['activities']['Insert']
@@ -43,7 +45,7 @@ async function getCurrentUser() {
 }
 
 // アクティビティを取得
-export async function getActivities(): Promise<Activity[]> {
+export async function getActivities(): Promise<Result<Activity[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -56,17 +58,18 @@ export async function getActivities(): Promise<Activity[]> {
 
     if (error) {
       console.error('アクティビティ取得エラー:', { error, userId: user.id })
-      throw new AppError('ACTIVITY_FETCH_FAILED')
+      return failure('Failed to fetch activities', 'ACTIVITY_FETCH_FAILED')
     }
 
-    return data || []
+    return success(data || [])
   } catch (error) {
-    handleServerError(error, 'getActivities', 'ACTIVITY_FETCH_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to fetch activities', code || 'ACTIVITY_FETCH_FAILED')
   }
 }
 
 // アクティビティを追加
-export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Promise<string> {
+export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Promise<Result<string>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -82,21 +85,22 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
 
     if (error) {
       console.error('アクティビティ追加エラー:', { error, userId: user.id })
-      throw new AppError('ACTIVITY_ADD_FAILED')
+      return failure('Failed to add activity', 'ACTIVITY_ADD_FAILED')
     }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
     revalidatePath('/settings')
 
-    return data.id
+    return success(data.id)
   } catch (error) {
-    handleServerError(error, 'addActivity', 'ACTIVITY_ADD_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to add activity', code || 'ACTIVITY_ADD_FAILED')
   }
 }
 
 // アクティビティを更新
-export async function updateActivity(id: string, updates: ActivityUpdate): Promise<boolean> {
+export async function updateActivity(id: string, updates: ActivityUpdate): Promise<Result<boolean>> {
   try {
     const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
@@ -108,21 +112,22 @@ export async function updateActivity(id: string, updates: ActivityUpdate): Promi
 
     if (error) {
       console.error('アクティビティ更新エラー:', { error, activityId: id, userId: user.id })
-      throw new AppError('ACTIVITY_UPDATE_FAILED')
+      return failure('Failed to update activity', 'ACTIVITY_UPDATE_FAILED')
     }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
     revalidatePath('/settings')
 
-    return true
+    return success(true)
   } catch (error) {
-    handleServerError(error, 'updateActivity', 'ACTIVITY_UPDATE_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to update activity', code || 'ACTIVITY_UPDATE_FAILED')
   }
 }
 
 // アクティビティを削除
-export async function deleteActivity(id: string): Promise<boolean> {
+export async function deleteActivity(id: string): Promise<Result<boolean>> {
   try {
     const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
@@ -134,15 +139,16 @@ export async function deleteActivity(id: string): Promise<boolean> {
 
     if (error) {
       console.error('アクティビティ削除エラー:', { error, activityId: id, userId: user.id })
-      throw new AppError('ACTIVITY_DELETE_FAILED')
+      return failure('Failed to delete activity', 'ACTIVITY_DELETE_FAILED')
     }
 
     // キャッシュを再検証
     revalidatePath('/dashboard')
     revalidatePath('/settings')
 
-    return true
+    return success(true)
   } catch (error) {
-    handleServerError(error, 'deleteActivity', 'ACTIVITY_DELETE_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to delete activity', code || 'ACTIVITY_DELETE_FAILED')
   }
 } 

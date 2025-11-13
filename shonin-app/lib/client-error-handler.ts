@@ -1,5 +1,53 @@
 /**
  * クライアント側のエラーハンドリングヘルパー
+ * 
+ * ## 使用例
+ * 
+ * ### 基本的なエラーハンドリング
+ * ```typescript
+ * import { getErrorTranslationKey } from '@/lib/client-error-handler'
+ * import { useTranslations } from 'next-intl'
+ * 
+ * const t = useTranslations()
+ * 
+ * try {
+ *   await someAction()
+ * } catch (err) {
+ *   const errorKey = getErrorTranslationKey(err, 'goals.add_error')
+ *   const errorMsg = t(errorKey)
+ *   setError(errorMsg)
+ * }
+ * ```
+ * 
+ * ### Zodバリデーションエラー（単一エラーメッセージ）
+ * ```typescript
+ * import { goalSchema } from '@/lib/validations'
+ * 
+ * const result = goalSchema.safeParse(formData)
+ * if (!result.success) {
+ *   // 最初のエラーのみ表示
+ *   const errorKey = getErrorTranslationKey(result.error)
+ *   const errorMsg = t(errorKey) // "タイトルを入力してください" など
+ *   setError(errorMsg)
+ * }
+ * ```
+ * 
+ * ### Zodバリデーションエラー（フィールド別エラー表示）
+ * ```typescript
+ * import { getFieldErrorsFromZod } from '@/lib/client-error-handler'
+ * 
+ * const result = goalSchema.safeParse(formData)
+ * if (!result.success) {
+ *   // 全フィールドのエラーを取得
+ *   const fieldErrors = getFieldErrorsFromZod(result.error)
+ *   // { title: 'validation.title.too_small', deadline: 'validation.deadline.invalid_date' }
+ *   
+ *   // React Hook Form などでフィールドごとにエラーを表示
+ *   for (const [field, key] of Object.entries(fieldErrors)) {
+ *     setError(field as any, { message: t(key) })
+ *   }
+ * }
+ * ```
  */
 
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
@@ -54,14 +102,58 @@ export function getErrorCode(err: unknown): ErrorCode | null {
 }
 
 /**
+ * Zodバリデーションエラーの型定義
+ */
+interface ZodIssue {
+  path: (string | number)[]
+  message: string
+  code: string
+}
+
+interface ZodError {
+  issues: ZodIssue[]
+}
+
+/**
+ * Zodバリデーションエラーかどうかを判定
+ */
+function isZodError(err: unknown): err is ZodError {
+  return (
+    err !== null &&
+    typeof err === 'object' &&
+    'issues' in err &&
+    Array.isArray((err as ZodError).issues)
+  )
+}
+
+/**
  * エラーコードから多言語対応の翻訳キーを取得
  * 
  * 優先順位:
- * 1. エラーコード自体 (例: 'AUTH_REQUIRED' -> 'errors.AUTH_REQUIRED')
- * 2. カテゴリー別のエラーキー (例: 'GOAL_FETCH_FAILED' -> 'goals.fetch_error')
- * 3. 汎用エラー ('errors.generic_retry')
+ * 1. Zodバリデーションエラーの場合：フィールド別キー (例: 'validation.title.required')
+ * 2. エラーコード自体 (例: 'AUTH_REQUIRED' -> 'errors.AUTH_REQUIRED')
+ * 3. カテゴリー別のエラーキー (例: 'GOAL_FETCH_FAILED' -> 'goals.fetch_error')
+ * 4. 汎用エラー ('errors.generic_retry')
+ * 
+ * @param err - エラーオブジェクト
+ * @param fallbackKey - フォールバックキー
+ * @returns 翻訳キー、またはフィールド別エラーの場合はMap<フィールド名, 翻訳キー>
  */
 export function getErrorTranslationKey(err: unknown, fallbackKey?: string): string {
+  // Zodバリデーションエラーの場合
+  if (isZodError(err)) {
+    // 最初のエラーのフィールド名とエラーコードから翻訳キーを生成
+    const firstIssue = err.issues[0]
+    if (firstIssue && firstIssue.path.length > 0) {
+      const fieldName = firstIssue.path[0]
+      const zodCode = firstIssue.code.toLowerCase()
+      // 例: validation.title.required, validation.email.invalid など
+      return `validation.${fieldName}.${zodCode}`
+    }
+    // パスがない場合は汎用バリデーションエラー
+    return 'errors.VALIDATION_ERROR'
+  }
+  
   const errorCode = getErrorCode(err)
   
   if (errorCode) {
@@ -117,5 +209,35 @@ export function getErrorTranslationKey(err: unknown, fallbackKey?: string): stri
   
   // フォールバックキーまたはデフォルト
   return fallbackKey || 'errors.generic_retry'
+}
+
+/**
+ * Zodバリデーションエラーから全フィールドのエラーマップを取得
+ * フォーム全体のバリデーションエラーを表示する場合に使用
+ * 
+ * @param err - Zodエラーオブジェクト
+ * @returns フィールド名をキーとする翻訳キーのMap
+ * 
+ * @example
+ * const errors = getFieldErrorsFromZod(zodError)
+ * // { title: 'validation.title.required', email: 'validation.email.invalid' }
+ */
+export function getFieldErrorsFromZod(err: unknown): Record<string, string> {
+  if (!isZodError(err)) {
+    return {}
+  }
+  
+  const fieldErrors: Record<string, string> = {}
+  
+  for (const issue of err.issues) {
+    if (issue.path.length > 0) {
+      const fieldName = issue.path[0].toString()
+      const zodCode = issue.code.toLowerCase()
+      // 例: validation.title.required, validation.email.invalid など
+      fieldErrors[fieldName] = `validation.${fieldName}.${zodCode}`
+    }
+  }
+  
+  return fieldErrors
 }
 

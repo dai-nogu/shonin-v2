@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
-import { AppError, handleServerError, requireAuth } from '@/lib/server-error'
+import type { Result } from '@/types/result'
+import { success, failure } from '@/types/result'
+import { AppError, handleServerError, requireAuth, getErrorCode } from '@/lib/server-error'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionInsert = Database['public']['Tables']['sessions']['Insert']
@@ -59,7 +61,7 @@ async function getCurrentUser() {
 }
 
 // セッションを取得（アクティビティ情報も含む）- 復号化ビューを使用
-export async function getSessions(): Promise<SessionWithActivity[]> {
+export async function getSessions(): Promise<Result<SessionWithActivity[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -79,17 +81,18 @@ export async function getSessions(): Promise<SessionWithActivity[]> {
 
     if (error) {
       console.error('セッション取得エラー:', { error, userId: user.id })
-      throw new AppError('SESSION_FETCH_FAILED')
+      return failure('Failed to fetch sessions', 'SESSION_FETCH_FAILED')
     }
 
-    return data || []
+    return success(data || [])
   } catch (error) {
-    handleServerError(error, 'getSessions', 'SESSION_FETCH_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to fetch sessions', code || 'SESSION_FETCH_FAILED')
   }
 }
 
 // セッションを追加
-export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promise<string> {
+export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promise<Result<string>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -105,7 +108,7 @@ export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promi
 
     if (error) {
       console.error('セッション追加エラー:', { error, userId: user.id })
-      throw new AppError('SESSION_ADD_FAILED')
+      return failure('Failed to add session', 'SESSION_ADD_FAILED')
     }
 
     // キャッシュを再検証
@@ -113,14 +116,15 @@ export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promi
     revalidatePath('/calendar')
     revalidatePath('/session')
 
-    return data.id
+    return success(data.id)
   } catch (error) {
-    handleServerError(error, 'addSession', 'SESSION_ADD_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to add session', code || 'SESSION_ADD_FAILED')
   }
 }
 
 // セッションを更新
-export async function updateSession(id: string, updates: SessionUpdate): Promise<boolean> {
+export async function updateSession(id: string, updates: SessionUpdate): Promise<Result<boolean>> {
   try {
     const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
@@ -132,7 +136,7 @@ export async function updateSession(id: string, updates: SessionUpdate): Promise
 
     if (error) {
       console.error('セッション更新エラー:', { error, sessionId: id, userId: user.id })
-      throw new AppError('SESSION_UPDATE_FAILED')
+      return failure('Failed to update session', 'SESSION_UPDATE_FAILED')
     }
 
     // キャッシュを再検証
@@ -140,14 +144,15 @@ export async function updateSession(id: string, updates: SessionUpdate): Promise
     revalidatePath('/calendar')
     revalidatePath('/session')
 
-    return true
+    return success(true)
   } catch (error) {
-    handleServerError(error, 'updateSession', 'SESSION_UPDATE_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to update session', code || 'SESSION_UPDATE_FAILED')
   }
 }
 
 // セッションを削除
-export async function deleteSession(id: string): Promise<boolean> {
+export async function deleteSession(id: string): Promise<Result<boolean>> {
   try {
     const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
@@ -159,7 +164,7 @@ export async function deleteSession(id: string): Promise<boolean> {
 
     if (error) {
       console.error('セッション削除エラー:', { error, sessionId: id, userId: user.id })
-      throw new AppError('SESSION_DELETE_FAILED')
+      return failure('Failed to delete session', 'SESSION_DELETE_FAILED')
     }
 
     // キャッシュを再検証
@@ -167,9 +172,10 @@ export async function deleteSession(id: string): Promise<boolean> {
     revalidatePath('/calendar')
     revalidatePath('/session')
 
-    return true
+    return success(true)
   } catch (error) {
-    handleServerError(error, 'deleteSession', 'SESSION_DELETE_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to delete session', code || 'SESSION_DELETE_FAILED')
   }
 }
 
@@ -177,7 +183,7 @@ export async function deleteSession(id: string): Promise<boolean> {
 export async function getSessionsByDateRange(
   startDate: string,
   endDate: string
-): Promise<SessionWithActivity[]> {
+): Promise<Result<SessionWithActivity[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -199,17 +205,18 @@ export async function getSessionsByDateRange(
 
     if (error) {
       console.error('期間指定セッション取得エラー:', { error, userId: user.id, startDate, endDate })
-      throw new AppError('SESSION_FETCH_FAILED')
+      return failure('Failed to fetch sessions by date range', 'SESSION_FETCH_FAILED')
     }
 
-    return data || []
+    return success(data || [])
   } catch (error) {
-    handleServerError(error, 'getSessionsByDateRange', 'SESSION_FETCH_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to fetch sessions by date range', code || 'SESSION_FETCH_FAILED')
   }
 }
 
 // アクティビティ別の統計を取得
-export async function getActivityStats(): Promise<ActivityStat[]> {
+export async function getActivityStats(): Promise<Result<ActivityStat[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -230,7 +237,7 @@ export async function getActivityStats(): Promise<ActivityStat[]> {
 
     if (error) {
       console.error('統計取得エラー:', { error, userId: user.id })
-      throw new AppError('SESSION_FETCH_FAILED')
+      return failure('Failed to fetch activity stats', 'SESSION_FETCH_FAILED')
     }
 
     // アクティビティ別に集計
@@ -253,8 +260,9 @@ export async function getActivityStats(): Promise<ActivityStat[]> {
       return acc
     }, {} as Record<string, ActivityStat>)
 
-    return Object.values(stats || {})
+    return success(Object.values(stats || {}))
   } catch (error) {
-    handleServerError(error, 'getActivityStats', 'SESSION_FETCH_FAILED')
+    const code = getErrorCode(error)
+    return failure('Failed to fetch activity stats', code || 'SESSION_FETCH_FAILED')
   }
 } 

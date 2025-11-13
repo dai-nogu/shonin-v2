@@ -137,3 +137,13 @@ export function validationError(message?: string): AppError {
   return new AppError('VALIDATION_ERROR', 400, message)
 }
 
+/**
+ * エラーからErrorCodeを抽出するヘルパー
+ * AppErrorの場合はそのコードを返し、それ以外の場合はundefinedを返す
+ */
+export function getErrorCode(error: unknown): ErrorCode | undefined {
+  if (error instanceof AppError) {
+    return error.code
+  }
+  return undefined
+}

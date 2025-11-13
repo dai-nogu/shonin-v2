@@ -4,9 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
+import type { Result } from '@/types/result'
+import { success, failure } from '@/types/result'
 import { getPlanLimits, type PlanType } from '@/types/subscription'
 import { getSubscriptionInfo } from './subscription-info'
-import { AppError, handleServerError, requireAuth, notFound } from '@/lib/server-error'
+import { AppError, handleServerError, requireAuth, notFound, getErrorCode } from '@/lib/server-error'
 
 type Goal = Database['public']['Tables']['goals']['Row']
 type GoalInsert = Database['public']['Tables']['goals']['Insert']
@@ -56,7 +58,7 @@ async function getCurrentUser() {
 }
 
 // 目標を取得
-export async function getGoals(): Promise<Goal[]> {
+export async function getGoals(): Promise<Result<Goal[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -71,18 +73,19 @@ export async function getGoals(): Promise<Goal[]> {
       // サーバーログに詳細を記録
       console.error('目標取得エラー:', { error, userId: user.id })
       // クライアントには安全なエラーコードのみ
-      throw new AppError('GOAL_FETCH_FAILED')
+      return failure('Failed to fetch goals', 'GOAL_FETCH_FAILED')
     }
 
-    return data || []
+    return success(data || [])
   } catch (error) {
-    // AppErrorの場合はそのまま投げる、それ以外は適切なエラーに変換
-    handleServerError(error, 'getGoals', 'GOAL_FETCH_FAILED')
+    // エラーコードを取得して返す
+    const code = getErrorCode(error)
+    return failure('Failed to fetch goals', code || 'GOAL_FETCH_FAILED')
   }
 }
 
 // 単一の目標を取得
-export async function getGoal(goalId: string): Promise<Goal | null> {
+export async function getGoal(goalId: string): Promise<Result<Goal | null>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
@@ -97,17 +100,19 @@ export async function getGoal(goalId: string): Promise<Goal | null> {
     if (error) {
       if (error.code === 'PGRST116') {
         // データが見つからない場合はnullを返す（エラーではない）
-        return null
+        return success(null)
       }
       // サーバーログに詳細を記録
       console.error('目標取得エラー:', { error, goalId, userId: user.id })
       // クライアントには安全なエラーコードのみ
-      throw new AppError('GOAL_FETCH_FAILED')
+      return failure('Failed to fetch goal', 'GOAL_FETCH_FAILED')
     }
 
-    return data
+    return success(data)
   } catch (error) {
-    handleServerError(error, 'getGoal', 'GOAL_FETCH_FAILED')
+    // エラーコードを取得して返す
+    const code = getErrorCode(error)
+    return failure('Failed to fetch goal', code || 'GOAL_FETCH_FAILED')
   }
 }
 
