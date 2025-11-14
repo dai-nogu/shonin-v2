@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase'
+import { safeError } from '@/lib/safe-logger'
 
 export interface UploadedPhoto {
   id: string
@@ -128,7 +129,7 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       .createSignedUrl(filePath, 3600) // 1時間有効
 
     if (signedUrlError) {
-      console.error('署名付きURL生成エラー:', signedUrlError)
+      safeError('署名付きURL生成エラー', signedUrlError)
       // エラーでも続行（URLなしで返す）
     }
 

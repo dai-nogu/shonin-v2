@@ -2,6 +2,7 @@ import { stripe } from "@/lib/stripe";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { safeError } from "@/lib/safe-logger";
 
 export async function POST() {
   try {
@@ -41,7 +42,7 @@ export async function POST() {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Error:", error);
+    safeError("Error", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }

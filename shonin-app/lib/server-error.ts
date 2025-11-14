@@ -6,6 +6,8 @@
  * - 多言語対応メッセージはクライアント側で解決
  */
 
+import { safeError } from '@/lib/safe-logger'
+
 // エラータイプの定義
 export type ErrorCode =
   // 認証関連
@@ -88,7 +90,7 @@ export function handleServerError(
   fallbackCode: ErrorCode = 'GENERIC_ERROR'
 ): never {
   // サーバーログに詳細を記録
-  console.error(`[${context}] エラーが発生しました:`, {
+  safeError(`[${context}] エラーが発生しました`, {
     error: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : undefined,
     code: error instanceof AppError ? error.code : undefined,

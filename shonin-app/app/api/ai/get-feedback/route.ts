@@ -5,6 +5,7 @@ import type { Database } from '@/types/database';
 import { getSubscriptionInfo } from '@/app/actions/subscription-info';
 import { getPlanLimits } from '@/types/subscription';
 import { validateOrigin } from '@/lib/csrf-protection';
+import { safeWarn, safeError } from '@/lib/safe-logger';
 
 interface GetFeedbackRequest {
   feedback_type: 'weekly' | 'monthly';
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     // CSRF保護: Origin/Refererチェック
     if (!validateOrigin(request)) {
-      console.warn('CSRF attempt detected: Invalid origin', {
+      safeWarn('CSRF attempt detected: Invalid origin', {
         origin: request.headers.get('origin'),
         referer: request.headers.get('referer'),
       });
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
         // データが見つからない場合
         return NextResponse.json({ feedback: null }, { status: 200 });
       }
-      console.error('フィードバック取得エラー:', fetchError);
+      safeError('フィードバック取得エラー', fetchError);
       return NextResponse.json({ error: 'Failed to fetch feedback' }, { status: 500 });
     }
 
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('フィードバック取得エラー:', error);
+    safeError('フィードバック取得エラー', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

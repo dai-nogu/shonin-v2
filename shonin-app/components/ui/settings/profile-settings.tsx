@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/common/label"
 import { useTranslations } from 'next-intl'
 import { getSubscriptionInfo } from "@/app/actions/subscription-info"
 import type { PlanType, SubscriptionInfo } from "@/types/subscription"
+import { safeError } from "@/lib/safe-logger"
 
 interface ProfileSettingsProps {
   initialSubscriptionInfo?: SubscriptionInfo
@@ -78,7 +79,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
       const data = await response.json();
       window.location.href = data.url;
     } catch (error) {
-      console.error("Error:", error);
+      safeError("Error", error);
     }
   }
 

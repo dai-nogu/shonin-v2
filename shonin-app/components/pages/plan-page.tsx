@@ -7,6 +7,7 @@ import { useActionState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { PlanType } from "@/types/subscription";
+import { safeError } from "@/lib/safe-logger";
 
 type ActionState = {
   status: string;
@@ -53,10 +54,10 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
         const { url } = await response.json();
         window.location.href = url;
       } else {
-        console.error('Failed to create portal session');
+        safeError('Failed to create portal session');
       }
     } catch (error) {
-      console.error('Error creating portal session:', error);
+      safeError('Error creating portal session', error);
     }
   };
 

@@ -86,45 +86,76 @@ function maskSensitiveData(data: any): any {
 
 /**
  * 安全な console.log
+ * 開発環境ではマスクなし、本番環境ではマスクあり
  */
 export function safeLog(message: string, data?: any) {
-  if (data) {
-    console.log(message, maskSensitiveData(data))
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    // 開発環境: マスクなし（デバッグしやすい）
+    console.log(`[DEV] ${message}`, data)
   } else {
-    console.log(message)
+    // 本番環境: マスクあり（セキュリティ優先）
+    if (data) {
+      console.log(message, maskSensitiveData(data))
+    } else {
+      console.log(message)
+    }
   }
 }
 
 /**
  * 安全な console.warn
+ * 開発環境ではマスクなし、本番環境ではマスクあり
  */
 export function safeWarn(message: string, data?: any) {
-  if (data) {
-    console.warn(message, maskSensitiveData(data))
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    console.warn(`[DEV] ${message}`, data)
   } else {
-    console.warn(message)
+    if (data) {
+      console.warn(message, maskSensitiveData(data))
+    } else {
+      console.warn(message)
+    }
   }
 }
 
 /**
  * 安全な console.error
+ * 開発環境ではマスクなし、本番環境ではマスクあり
  */
 export function safeError(message: string, error?: any) {
-  if (error) {
-    // エラーオブジェクトの場合、スタックトレースは保持
-    if (error instanceof Error) {
-      console.error(message, {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        // その他のプロパティはマスク
-        ...maskSensitiveData(error),
-      })
-    } else {
-      console.error(message, maskSensitiveData(error))
-    }
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    console.error(`[DEV] ${message}`, error)
   } else {
-    console.error(message)
+    if (error) {
+      // エラーオブジェクトの場合、スタックトレースは保持
+      if (error instanceof Error) {
+        // Error をプレーンオブジェクトに落としてからマスク
+        // （循環参照を避けるため）
+        const plainError: Record<string, unknown> = {}
+        // enumerable な独自プロパティだけコピー
+        for (const [key, value] of Object.entries(error as any)) {
+          plainError[key] = value
+        }
+        const maskedExtra = maskSensitiveData(plainError)
+        
+        console.error(message, {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          ...maskedExtra,
+        })
+      } else {
+        console.error(message, maskSensitiveData(error))
+      }
+    } else {
+      console.error(message)
+    }
   }
 }
 
@@ -139,28 +170,42 @@ export function debugLog(message: string, data?: any) {
 
 /**
  * Stripe関連のログ（price_idなどは表示、customer_idは部分マスク）
+ * 開発環境ではマスクなし、本番環境ではマスクあり
+ * 
+ * maskSensitiveData を再利用することで、
+ * Stripeオブジェクトのネストした中に email や card_number が入ってきても自動的にマスク
  */
 export function stripeLog(message: string, data?: any) {
-  if (data) {
-    const safeData = {
-      ...data,
-      // customer_id は部分マスク
-      customer_id: data.customer_id 
-        ? `${data.customer_id.substring(0, 8)}...${data.customer_id.substring(data.customer_id.length - 4)}`
-        : undefined,
-      // subscription_id は部分マスク
-      subscription_id: data.subscription_id
-        ? `${data.subscription_id.substring(0, 8)}...${data.subscription_id.substring(data.subscription_id.length - 4)}`
-        : undefined,
-      // user_id は部分マスク
-      user_id: data.user_id
-        ? `${data.user_id.substring(0, 8)}...${data.user_id.substring(data.user_id.length - 4)}`
-        : undefined,
-      // price_id, plan, amount などは表示OK
-    }
-    console.log(message, safeData)
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    console.log(`[DEV STRIPE] ${message}`, data)
   } else {
-    console.log(message)
+    if (data) {
+      // まず全体をマスク（email, card_number などが自動的にマスクされる）
+      const base = maskSensitiveData(data)
+      
+      // Stripe IDは部分マスクに上書き（完全マスクより情報量が多い）
+      const safeData = {
+        ...base,
+        // customer_id は部分マスク（cus_1234...5678）
+        customer_id: data.customer_id && typeof data.customer_id === 'string'
+          ? `${data.customer_id.substring(0, 8)}...${data.customer_id.substring(data.customer_id.length - 4)}`
+          : base.customer_id,
+        // subscription_id は部分マスク（sub_1234...5678）
+        subscription_id: data.subscription_id && typeof data.subscription_id === 'string'
+          ? `${data.subscription_id.substring(0, 8)}...${data.subscription_id.substring(data.subscription_id.length - 4)}`
+          : base.subscription_id,
+        // user_id は部分マスク（uuid-123...5678）
+        user_id: data.user_id && typeof data.user_id === 'string'
+          ? `${data.user_id.substring(0, 8)}...${data.user_id.substring(data.user_id.length - 4)}`
+          : base.user_id,
+        // price_id, plan, amount, status などは maskSensitiveData で既に処理済み
+      }
+      console.log(message, safeData)
+    } else {
+      console.log(message)
+    }
   }
 }
 

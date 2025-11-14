@@ -7,6 +7,7 @@ import type { Database } from '@/types/database'
 import type { Result } from '@/types/result'
 import { success, failure } from '@/types/result'
 import { AppError, handleServerError, requireAuth, getErrorCode } from '@/lib/server-error'
+import { safeError } from '@/lib/safe-logger'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionInsert = Database['public']['Tables']['sessions']['Insert']
@@ -52,7 +53,7 @@ async function getCurrentUser() {
   
   if (error || !user) {
     // サーバーログに詳細を記録
-    console.error('認証エラー:', error)
+    safeError('認証エラー', error)
     // クライアントには安全なエラーコードのみ
     throw requireAuth()
   }
@@ -80,7 +81,7 @@ export async function getSessions(): Promise<Result<SessionWithActivity[]>> {
       .order('start_time', { ascending: false })
 
     if (error) {
-      console.error('セッション取得エラー:', { error, userId: user.id })
+      safeError('セッション取得エラー', { error, userId: user.id })
       return failure('Failed to fetch sessions', 'SESSION_FETCH_FAILED')
     }
 
@@ -107,7 +108,7 @@ export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promi
       .single()
 
     if (error) {
-      console.error('セッション追加エラー:', { error, userId: user.id })
+      safeError('セッション追加エラー', { error, userId: user.id })
       return failure('Failed to add session', 'SESSION_ADD_FAILED')
     }
 
@@ -135,7 +136,7 @@ export async function updateSession(id: string, updates: SessionUpdate): Promise
       .eq('id', id)
 
     if (error) {
-      console.error('セッション更新エラー:', { error, sessionId: id, userId: user.id })
+      safeError('セッション更新エラー', { error, sessionId: id, userId: user.id })
       return failure('Failed to update session', 'SESSION_UPDATE_FAILED')
     }
 
@@ -163,7 +164,7 @@ export async function deleteSession(id: string): Promise<Result<boolean>> {
       .eq('id', id)
 
     if (error) {
-      console.error('セッション削除エラー:', { error, sessionId: id, userId: user.id })
+      safeError('セッション削除エラー', { error, sessionId: id, userId: user.id })
       return failure('Failed to delete session', 'SESSION_DELETE_FAILED')
     }
 
@@ -204,7 +205,7 @@ export async function getSessionsByDateRange(
       .order('start_time', { ascending: false })
 
     if (error) {
-      console.error('期間指定セッション取得エラー:', { error, userId: user.id, startDate, endDate })
+      safeError('期間指定セッション取得エラー', { error, userId: user.id, startDate, endDate })
       return failure('Failed to fetch sessions by date range', 'SESSION_FETCH_FAILED')
     }
 
@@ -236,7 +237,7 @@ export async function getActivityStats(): Promise<Result<ActivityStat[]>> {
       .not('end_time', 'is', null) // 終了済みのセッションのみ
 
     if (error) {
-      console.error('統計取得エラー:', { error, userId: user.id })
+      safeError('統計取得エラー', { error, userId: user.id })
       return failure('Failed to fetch activity stats', 'SESSION_FETCH_FAILED')
     }
 

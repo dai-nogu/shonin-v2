@@ -52,6 +52,7 @@
 
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import type { AppError, ErrorCode } from './server-error'
+import { safeWarn } from '@/lib/safe-logger'
 
 /**
  * エラーが認証エラーかどうかを判定（型安全）
@@ -81,7 +82,7 @@ export function redirectToLogin(router: AppRouterInstance, currentPath?: string 
   if (currentPath) {
     // /login、/ja/login、/en/loginなどを検出
     if (currentPath.includes('/login')) {
-      console.warn('Already on login page, skipping redirect')
+      safeWarn('Already on login page, skipping redirect')
       return
     }
   }

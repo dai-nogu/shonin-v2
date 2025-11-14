@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { safeLog, safeError } from '@/lib/safe-logger'
 
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -33,8 +34,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ユーザーが認証されていません' }, { status: 401 })
     }
 
-    console.log('=== ユーザー削除処理開始 ===');
-    console.log('User ID:', user.id);
+    safeLog('=== ユーザー削除処理開始 ===');
+    safeLog('User ID:', user.id);
 
     // ユーザーのサブスクリプション情報を取得
     const { data: subscriptionData, error: subscriptionError } = await supabaseServer
@@ -48,24 +49,24 @@ export async function POST(request: NextRequest) {
     // 残り期間は使えなくなるが、削除確認画面で警告表示済み
     if (subscriptionData?.stripe_subscription_id) {
       try {
-        console.log('Stripe Subscription ID:', subscriptionData.stripe_subscription_id);
+        safeLog('Stripe Subscription ID:', subscriptionData.stripe_subscription_id);
         
         // サブスクリプションを即座にキャンセル（課金も即座に停止）
         await stripe.subscriptions.cancel(subscriptionData.stripe_subscription_id);
         
-        console.log('✓ Stripeサブスクリプションを即座にキャンセルしました');
-        console.log('  課金も停止されました');
+        safeLog('✓ Stripeサブスクリプションを即座にキャンセルしました');
+        safeLog('  課金も停止されました');
       } catch (stripeError: any) {
         // Stripeでサブスクリプションが既に削除されている場合はエラーを無視
         if (stripeError.code === 'resource_missing') {
-          console.log('Stripeサブスクリプションは既に削除されています');
+          safeLog('Stripeサブスクリプションは既に削除されています');
         } else {
-          console.error('Stripeサブスクリプションのキャンセルに失敗:', stripeError);
+          safeError('Stripeサブスクリプションのキャンセルに失敗', stripeError);
           // Stripeのキャンセルに失敗してもユーザー削除は続行
         }
       }
     } else {
-      console.log('アクティブなStripeサブスクリプションはありません');
+      safeLog('アクティブなStripeサブスクリプションはありません');
     }
 
     // Service Role Keyを使用してユーザーを削除
@@ -73,16 +74,16 @@ export async function POST(request: NextRequest) {
     const { data: deletedUser, error } = await supabaseServer.auth.admin.deleteUser(user.id)
 
     if (error) {
-      console.error('アカウント削除に失敗しました:', error)
+      safeError('アカウント削除に失敗しました', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    console.log('✓ Supabaseアカウントを削除しました');
-    console.log('=== ユーザー削除処理完了 ===');
+    safeLog('✓ Supabaseアカウントを削除しました');
+    safeLog('=== ユーザー削除処理完了 ===');
 
     return NextResponse.json({ message: 'ユーザーが削除されました' }, { status: 200 })
   } catch (error) {
-    console.error('予期しないエラー:', error)
+    safeError('予期しないエラー', error)
     return NextResponse.json({ error: '内部サーバーエラー' }, { status: 500 })
   }
 } 

@@ -9,6 +9,7 @@ import { success, failure } from '@/types/result'
 import { getPlanLimits, type PlanType } from '@/types/subscription'
 import { getSubscriptionInfo } from './subscription-info'
 import { AppError, handleServerError, requireAuth, notFound, getErrorCode } from '@/lib/server-error'
+import { safeError } from '@/lib/safe-logger'
 
 type Goal = Database['public']['Tables']['goals']['Row']
 type GoalInsert = Database['public']['Tables']['goals']['Insert']
@@ -49,7 +50,7 @@ async function getCurrentUser() {
   
   if (error || !user) {
     // サーバーログに詳細を記録
-    console.error('認証エラー:', error)
+    safeError('認証エラー', error)
     // クライアントには安全なエラーコードのみ
     throw requireAuth()
   }
@@ -71,7 +72,7 @@ export async function getGoals(): Promise<Result<Goal[]>> {
 
     if (error) {
       // サーバーログに詳細を記録
-      console.error('目標取得エラー:', { error, userId: user.id })
+      safeError('目標取得エラー', { error, userId: user.id })
       // クライアントには安全なエラーコードのみ
       return failure('Failed to fetch goals', 'GOAL_FETCH_FAILED')
     }
@@ -103,7 +104,7 @@ export async function getGoal(goalId: string): Promise<Result<Goal | null>> {
         return success(null)
       }
       // サーバーログに詳細を記録
-      console.error('目標取得エラー:', { error, goalId, userId: user.id })
+      safeError('目標取得エラー', { error, goalId, userId: user.id })
       // クライアントには安全なエラーコードのみ
       return failure('Failed to fetch goal', 'GOAL_FETCH_FAILED')
     }
@@ -134,14 +135,14 @@ export async function addGoal(goalData: GoalFormData): Promise<string> {
       .eq('status', 'active')
     
     if (countError) {
-      console.error('目標数取得エラー:', { error: countError, userId: user.id })
+      safeError('目標数取得エラー', { error: countError, userId: user.id })
       throw new AppError('GOAL_FETCH_FAILED')
     }
     
     // 上限チェック
     if (currentGoalCount !== null && currentGoalCount >= planLimits.maxGoals) {
       // サーバーログに記録
-      console.warn('目標数上限到達:', { 
+      safeError('目標数上限到達', { 
         userId: user.id, 
         currentCount: currentGoalCount, 
         limit: planLimits.maxGoals,
@@ -176,7 +177,7 @@ export async function addGoal(goalData: GoalFormData): Promise<string> {
       .single()
 
     if (error) {
-      console.error('目標追加エラー:', { error, userId: user.id })
+      safeError('目標追加エラー', { error, userId: user.id })
       throw new AppError('GOAL_ADD_FAILED')
     }
 
@@ -221,7 +222,7 @@ export async function updateGoal(id: string, goalData: Partial<GoalFormData>): P
       .eq('user_id', user.id)
 
     if (error) {
-      console.error('目標更新エラー:', { error, goalId: id, userId: user.id })
+      safeError('目標更新エラー', { error, goalId: id, userId: user.id })
       throw new AppError('GOAL_UPDATE_FAILED')
     }
 
@@ -251,15 +252,15 @@ export async function updateGoalProgress(id: string, additionalSeconds: number):
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        console.error('目標が見つかりません:', { goalId: id, userId: user.id })
+        safeError('目標が見つかりません', { goalId: id, userId: user.id })
         throw new AppError('GOAL_NOT_FOUND', 404)
       }
-      console.error('目標取得エラー:', { error: fetchError, goalId: id, userId: user.id })
+      safeError('目標取得エラー', { error: fetchError, goalId: id, userId: user.id })
       throw new AppError('GOAL_FETCH_FAILED')
     }
 
     if (!currentGoal) {
-      console.error('目標が見つかりません:', { goalId: id, userId: user.id })
+      safeError('目標が見つかりません', { goalId: id, userId: user.id })
       throw new AppError('GOAL_NOT_FOUND', 404)
     }
 
@@ -276,7 +277,7 @@ export async function updateGoalProgress(id: string, additionalSeconds: number):
       .eq('user_id', user.id)
 
     if (error) {
-      console.error('目標進捗更新エラー:', { error, goalId: id, userId: user.id })
+      safeError('目標進捗更新エラー', { error, goalId: id, userId: user.id })
       throw new AppError('GOAL_UPDATE_FAILED')
     }
 
@@ -303,7 +304,7 @@ export async function deleteGoal(id: string): Promise<boolean> {
       .eq('user_id', user.id)
 
     if (error) {
-      console.error('目標削除エラー:', { error, goalId: id, userId: user.id })
+      safeError('目標削除エラー', { error, goalId: id, userId: user.id })
       throw new AppError('GOAL_DELETE_FAILED')
     }
 
@@ -333,7 +334,7 @@ export async function completeGoal(id: string): Promise<boolean> {
       .eq('user_id', user.id)
 
     if (error) {
-      console.error('目標完了エラー:', { error, goalId: id, userId: user.id })
+      safeError('目標完了エラー', { error, goalId: id, userId: user.id })
       throw new AppError('GOAL_COMPLETE_FAILED')
     }
 

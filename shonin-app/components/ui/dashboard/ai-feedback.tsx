@@ -10,6 +10,7 @@ import { useAIFeedback } from "@/hooks/use-ai-feedback"
 import { useSubscription } from "@/hooks/use-subscription"
 import { getPlanLimits } from "@/types/subscription"
 import type { CompletedSession } from "./time-tracker"
+import { safeError } from "@/lib/safe-logger"
 
 interface AIFeedbackProps {
   completedSessions: CompletedSession[]
@@ -165,7 +166,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
       setFeedbacks(newFeedbacks)
     } catch (err) {
-      console.error('フィードバック読み込みエラー:', err)
+      safeError('フィードバック読み込みエラー', err)
       setFeedbacks([
         { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_no_data_message') },
         { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_no_data_message') }
@@ -256,7 +257,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
       setFeedbacks(newFeedbacks)
     } catch (err) {
-      console.error('フィードバック再読み込みエラー:', err)
+      safeError('フィードバック再読み込みエラー', err)
       setFeedbacks([
         { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_no_data_message') },
         { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_no_data_message') }

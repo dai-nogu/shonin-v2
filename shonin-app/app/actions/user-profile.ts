@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 import { AppError, handleServerError, requireAuth } from '@/lib/server-error'
+import { safeError } from '@/lib/safe-logger'
 
 type UserProfile = Database['public']['Tables']['users']['Row']
 type UserProfileUpdate = Database['public']['Tables']['users']['Update']
@@ -33,7 +34,7 @@ async function getCurrentUser() {
   
   if (error || !user) {
     // サーバーログに詳細を記録
-    console.error('認証エラー:', error)
+    safeError('認証エラー', error)
     // クライアントには安全なエラーコードのみ
     throw requireAuth()
   }
@@ -70,13 +71,13 @@ export async function getProfile(): Promise<UserProfile | null> {
           .single()
 
         if (insertError) {
-          console.error('プロフィール作成エラー:', { error: insertError, userId: user.id })
+          safeError('プロフィール作成エラー', { error: insertError, userId: user.id })
           throw new AppError('PROFILE_UPDATE_FAILED')
         }
 
         return insertData
       } else {
-        console.error('プロフィール取得エラー:', { error, userId: user.id })
+        safeError('プロフィール取得エラー', { error, userId: user.id })
         throw new AppError('PROFILE_FETCH_FAILED')
       }
     }
@@ -105,7 +106,7 @@ export async function updateProfile(updates: Partial<UserProfileUpdate>): Promis
       .eq('id', user.id)
 
     if (error) {
-      console.error('プロフィール更新エラー:', { error, userId: user.id })
+      safeError('プロフィール更新エラー', { error, userId: user.id })
       throw new AppError('PROFILE_UPDATE_FAILED')
     }
 

@@ -7,6 +7,7 @@ import type { Database } from '@/types/database'
 import type { Result } from '@/types/result'
 import { success, failure } from '@/types/result'
 import { AppError, handleServerError, requireAuth, getErrorCode } from '@/lib/server-error'
+import { safeError } from '@/lib/safe-logger'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 type ActivityInsert = Database['public']['Tables']['activities']['Insert']
@@ -36,7 +37,7 @@ async function getCurrentUser() {
   
   if (error || !user) {
     // サーバーログに詳細を記録
-    console.error('認証エラー:', error)
+    safeError('認証エラー', error)
     // クライアントには安全なエラーコードのみ
     throw requireAuth()
   }
@@ -57,7 +58,7 @@ export async function getActivities(): Promise<Result<Activity[]>> {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('アクティビティ取得エラー:', { error, userId: user.id })
+      safeError('アクティビティ取得エラー', { error, userId: user.id })
       return failure('Failed to fetch activities', 'ACTIVITY_FETCH_FAILED')
     }
 
@@ -84,7 +85,7 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
       .single()
 
     if (error) {
-      console.error('アクティビティ追加エラー:', { error, userId: user.id })
+      safeError('アクティビティ追加エラー', { error, userId: user.id })
       return failure('Failed to add activity', 'ACTIVITY_ADD_FAILED')
     }
 
@@ -111,7 +112,7 @@ export async function updateActivity(id: string, updates: ActivityUpdate): Promi
       .eq('id', id)
 
     if (error) {
-      console.error('アクティビティ更新エラー:', { error, activityId: id, userId: user.id })
+      safeError('アクティビティ更新エラー', { error, activityId: id, userId: user.id })
       return failure('Failed to update activity', 'ACTIVITY_UPDATE_FAILED')
     }
 
@@ -138,7 +139,7 @@ export async function deleteActivity(id: string): Promise<Result<boolean>> {
       .eq('id', id)
 
     if (error) {
-      console.error('アクティビティ削除エラー:', { error, activityId: id, userId: user.id })
+      safeError('アクティビティ削除エラー', { error, activityId: id, userId: user.id })
       return failure('Failed to delete activity', 'ACTIVITY_DELETE_FAILED')
     }
 

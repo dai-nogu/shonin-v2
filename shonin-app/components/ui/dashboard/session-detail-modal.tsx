@@ -10,6 +10,7 @@ import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } fro
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
 import type { CompletedSession } from "./time-tracker"
+import { safeWarn } from "@/lib/safe-logger"
 
 interface SessionDetailModalProps {
   isOpen: boolean
@@ -553,7 +554,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             await result.preloadPromise
             setPreloadCompleted(true)
           } catch (preloadError) {
-            console.warn('一部の画像のプリロードに失敗しました:', preloadError)
+            safeWarn('一部の画像のプリロードに失敗しました', preloadError)
           }
         } catch (error) {
           // エラー時は空配列を設定

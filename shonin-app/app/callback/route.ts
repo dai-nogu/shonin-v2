@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { safeError } from '@/lib/safe-logger'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -32,14 +33,14 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (error) {
-        console.error('OAuth callback error:', error)
+        safeError('OAuth callback error', error)
         // エラーの場合はログインページにリダイレクト
         return NextResponse.redirect(new URL(`/${locale}/login?error=auth_error`, requestUrl.origin))
       }
       
       return response
     } catch (error) {
-      console.error('OAuth exchange error:', error)
+      safeError('OAuth exchange error', error)
       return NextResponse.redirect(new URL(`/${locale}/login?error=exchange_error`, requestUrl.origin))
     }
   }

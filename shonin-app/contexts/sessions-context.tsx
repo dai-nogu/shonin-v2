@@ -10,6 +10,7 @@ import { useToast } from "@/contexts/toast-context"
 import { splitSessionByDateInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
 import { getSessionStartMessage } from "@/lib/encouragement-messages"
 import type { ActivityStat } from "@/app/actions/sessions"
+import { safeWarn } from "@/lib/safe-logger"
 
 export interface SessionData {
   activityId: string
@@ -361,7 +362,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const startSession = async (sessionData: SessionData) => {
     // 既にアクティブなセッションがある場合は新規開始を無視
     if (isSessionActive && currentSession) {
-      console.warn('既にアクティブなセッションがあるため、新規セッション開始をスキップします')
+      safeWarn('既にアクティブなセッションがあるため、新規セッション開始をスキップします')
       return
     }
 

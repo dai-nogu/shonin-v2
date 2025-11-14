@@ -6,6 +6,7 @@ import { analyzeSessionData, type RawSessionData } from '@/lib/session-analyzer'
 import { generatePrompts, type PromptGenerationConfig } from '@/lib/prompt-generator';
 import Anthropic from '@anthropic-ai/sdk';
 import { validateOrigin } from '@/lib/csrf-protection';
+import { safeWarn, safeError, safeLog } from '@/lib/safe-logger';
 
 interface SessionData {
   id: string;
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
   try {
     // CSRF保護: Origin/Refererチェック
     if (!validateOrigin(request)) {
-      console.warn('CSRF attempt detected: Invalid origin', {
+      safeWarn('CSRF attempt detected: Invalid origin', {
         origin: request.headers.get('origin'),
         referer: request.headers.get('referer'),
       });
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       .order('session_date', { ascending: false });
 
     if (sessionsError) {
-      console.error('セッション取得エラー:', sessionsError);
+      safeError('セッション取得エラー', sessionsError);
       return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
     }
 
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (saveError) {
-      console.error('フィードバック保存エラー:', saveError);
+      safeError('フィードバック保存エラー', saveError);
       // 保存に失敗してもフィードバックは返す
     }
 
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('AI分析エラー:', error);
+    safeError('AI分析エラー', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -187,7 +188,7 @@ async function generateAIFeedbackWithRetry(
       const feedback = await generateAIFeedback(sessions, periodType, periodStart, periodEnd, pastFeedbacks, attempt, locale);
       const charCount = feedback.length;
       
-      console.log(`Attempt ${attempt}: Generated ${charCount} characters (max: ${maxChars})`);
+      safeLog(`Attempt ${attempt}: Generated ${charCount} characters (max: ${maxChars})`);
       
       if (charCount <= maxChars) {
         return feedback;
@@ -195,7 +196,7 @@ async function generateAIFeedbackWithRetry(
       
       if (attempt === maxRetries) {
         // 最後の試行で文字数超過の場合、強制的に調整
-        console.log(`Max retries reached. Truncating to ${maxChars} characters.`);
+        safeLog(`Max retries reached. Truncating to ${maxChars} characters.`);
         const truncated = feedback.substring(0, maxChars - 50);
         const sentenceEnders = locale === 'en' 
           ? ['.', '!', '?']
@@ -210,10 +211,10 @@ async function generateAIFeedbackWithRetry(
         return truncated;
       }
       
-      console.log(`Attempt ${attempt} exceeded ${maxChars} characters (${charCount}). Retrying...`);
+      safeLog(`Attempt ${attempt} exceeded ${maxChars} characters (${charCount}). Retrying...`);
       
     } catch (error) {
-      console.error(`Attempt ${attempt} failed:`, error);
+      safeError(`Attempt ${attempt} failed`, error);
       if (attempt === maxRetries) {
         throw error;
       }
@@ -309,11 +310,11 @@ async function generateAIFeedback(
     return content;
 
   } catch (error) {
-    console.error('Claude API エラー:', error);
+    safeError('Claude API エラー', error);
     
     // レート制限エラーの場合
     if (error instanceof Anthropic.APIError && error.status === 429) {
-      console.warn('Claude API Rate limit reached. Using fallback message.');
+      safeWarn('Claude API Rate limit reached. Using fallback message.');
       return getFallbackMessage('rate_limit', locale, periodType);
     }
     

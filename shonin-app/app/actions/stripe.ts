@@ -3,6 +3,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { stripe } from "@/lib/stripe";
+import { safeError } from "@/lib/safe-logger";
 
 export async function createStripeSession(prevState: any, formData: FormData) {
   const priceId = formData.get("priceId") as string;
@@ -55,7 +56,7 @@ export async function createStripeSession(prevState: any, formData: FormData) {
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('Stripe顧客IDの保存に失敗:', updateError);
+        safeError('Stripe顧客IDの保存に失敗', updateError);
       }
 
       customerId = customer.id;
@@ -92,7 +93,7 @@ export async function createStripeSession(prevState: any, formData: FormData) {
 
     
   } catch (error) {
-    console.error("Stripe Session Creation Error", error);
+    safeError("Stripe Session Creation Error", error);
     return {
       status: "error",
       error: "決済処理中にエラーが発生しました",
