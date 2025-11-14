@@ -87,10 +87,9 @@
     "close": "Close"
   },
   "ai_feedback": {
-    "title": "Weekly Feedback",
-    "feedback": " Feedback",
-    "weekly": "Weekly",
-    "monthly": "Monthly",
+    "feedback": "Feedback",
+    "weekly": "Weekly ",
+    "monthly": "Monthly ",
     "weekly_default_message": "Keep logging your activities to receive weekly feedback.",
     "monthly_default_message": "Stay consistent to unlock your monthly feedback.",
     "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly feedback.",
@@ -98,7 +97,9 @@
     "next_weekly_feedback": "Next weekly feedback",
     "next_monthly_feedback": "Next monthly feedback",
     "scheduled": "scheduled",
-    "generating": "Generating feedback..."
+    "generating": "Generating feedback...",
+    "generate_error": "An error occurred while generating feedback",
+    "fetch_error": "An error occurred while fetching feedback"
   },
   "quick_start": {
     "start_activity": "Quick Start",
@@ -295,7 +296,11 @@
     "name": "Name",
     "color": "Color",
     "tags": "Tags",
-    "location": "Location"
+    "location": "Location",
+    "fetch_error": "Failed to fetch activities",
+    "add_error": "Failed to add activity",
+    "update_error": "Failed to update activity",
+    "delete_error": "Failed to delete activity"
   },
   "time": {
     "hours": "Hours",
@@ -348,19 +353,9 @@
     "fetch_period_error": "Failed to fetch sessions for period",
     "fetch_stats_error": "Failed to fetch statistics"
   },
-  "activities": {
-    "fetch_error": "Failed to fetch activities",
-    "add_error": "Failed to add activity",
-    "update_error": "Failed to update activity",
-    "delete_error": "Failed to delete activity"
-  },
   "profile": {
     "fetch_error": "Failed to fetch profile",
     "update_error": "Failed to update profile"
-  },
-  "ai_feedback": {
-    "generate_error": "Error occurred while generating feedback",
-    "fetch_error": "Error occurred while fetching feedback"
   },
   "subscription": {
     "fetch_error": "Failed to fetch subscription information"
