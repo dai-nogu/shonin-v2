@@ -75,4 +75,4 @@ COMMENT ON COLUMN public.session_media.file_size IS 'ファイルサイズ（バ
 COMMENT ON COLUMN public.session_media.mime_type IS 'MIMEタイプ';
 COMMENT ON COLUMN public.session_media.caption IS 'メディアのキャプション・説明';
 COMMENT ON COLUMN public.session_media.is_main_image IS 'セッションのメイン画像かどうか';
-COMMENT ON COLUMN public.session_media.public_url IS 'パブリックアクセス用URL'; 
+COMMENT ON COLUMN public.session_media.public_url IS '【非推奨】署名付きURL方式のため使用しない。取得時に動的生成する。'; 

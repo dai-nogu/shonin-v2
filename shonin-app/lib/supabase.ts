@@ -22,11 +22,28 @@ export const createServerComponentClient = () => {
   })
 }
 
-// Route Handler用のクライアント
+// Route Handler用のクライアント（非推奨: cookies() を直接使用することを推奨）
+// 
+// 【推奨される使い方】
+// import { cookies } from 'next/headers'
+// import { createServerClient } from '@supabase/ssr'
+// 
+// const cookieStore = await cookies()
+// const supabase = createServerClient(url, key, {
+//   cookies: {
+//     get(name) { return cookieStore.get(name)?.value }
+//   }
+// })
+//
+// この関数は後方互換性のために残していますが、新しいコードでは使用しないでください。
 export const createRouteHandlerClient = (request: Request) => {
+  console.warn('createRouteHandlerClient is deprecated. Use cookies() from next/headers instead.')
+  
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
+        // 手書きのCookie解析（エッジケースに弱い）
+        // 例: Cookie値に"="が含まれる場合、正しく解析できない
         return request.headers.get('cookie')
           ?.split(';')
           ?.find(c => c.trim().startsWith(`${name}=`))

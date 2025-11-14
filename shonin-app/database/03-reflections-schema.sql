@@ -212,7 +212,9 @@ BEGIN
     
     RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql 
+SECURITY DEFINER 
+SET search_path = public, pg_temp;
 
 -- ==========================================
 -- 振り返り用インデックス

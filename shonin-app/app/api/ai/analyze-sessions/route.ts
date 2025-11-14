@@ -5,6 +5,7 @@ import type { Database } from '@/types/database';
 import { analyzeSessionData, type RawSessionData } from '@/lib/session-analyzer';
 import { generatePrompts, type PromptGenerationConfig } from '@/lib/prompt-generator';
 import Anthropic from '@anthropic-ai/sdk';
+import { validateOrigin } from '@/lib/csrf-protection';
 
 interface SessionData {
   id: string;
@@ -37,6 +38,18 @@ import { getPlanLimits } from '@/types/subscription';
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF保護: Origin/Refererチェック
+    if (!validateOrigin(request)) {
+      console.warn('CSRF attempt detected: Invalid origin', {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      });
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
     // プラン制限をチェック
     const subscriptionInfo = await getSubscriptionInfo();
     const planLimits = getPlanLimits(subscriptionInfo.subscriptionStatus);

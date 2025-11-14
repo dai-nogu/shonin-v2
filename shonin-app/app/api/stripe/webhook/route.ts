@@ -3,6 +3,7 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { getPlanTypeFromPriceId, type PlanType } from '@/types/subscription';
+import { safeError, stripeLog } from '@/lib/safe-logger';
 
 // ==========================================
 // Stripeイベント処理
@@ -177,9 +178,9 @@ async function handleCheckoutCompleted(
     const subscriptionStatus: PlanType = getPlanTypeFromPriceId(priceId) || 'free';
     
     if (!getPlanTypeFromPriceId(priceId)) {
-      console.error('Unknown price_id in checkout:', priceId, '- defaulting to free');
+      safeError('Unknown price_id in checkout', { priceId, defaulting: 'free' });
     } else {
-      console.log('Checkout completed for plan:', subscriptionStatus, '- price_id:', priceId);
+      stripeLog('Checkout completed', { plan: subscriptionStatus, priceId, user_id: userId });
     }
     
     // DBに保存
@@ -278,14 +279,15 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     const priceId = fullSubscription.items.data[0]?.price.id;
     const periodEnd = (fullSubscription as any).current_period_end as number | undefined;
     
-    console.log('=== Subscription Update ===');
-    console.log('User ID:', userId);
-    console.log('Price ID:', priceId);
-    console.log('Subscription Status:', fullSubscription.status);
-    console.log('Period End:', periodEnd);
-    console.log('Cancel at period end:', fullSubscription.cancel_at_period_end);
-    console.log('Cancel at:', (fullSubscription as any).cancel_at);
-    console.log('Canceled at:', fullSubscription.canceled_at);
+    stripeLog('Subscription Update', {
+      user_id: userId,
+      priceId,
+      status: fullSubscription.status,
+      periodEnd,
+      cancelAtPeriodEnd: fullSubscription.cancel_at_period_end,
+      cancelAt: (fullSubscription as any).cancel_at,
+      canceledAt: fullSubscription.canceled_at,
+    });
     
     // Price IDからプランタイプを判定
     const subscriptionStatus: PlanType = getPlanTypeFromPriceId(priceId) || 'free';

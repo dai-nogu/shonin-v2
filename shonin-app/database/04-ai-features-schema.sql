@@ -118,7 +118,9 @@ BEGIN
     
     RETURN feedback_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql 
+SECURITY DEFINER 
+SET search_path = public, pg_temp;
 
 -- ==========================================
 -- AI機能用インデックス
@@ -131,48 +133,55 @@ CREATE INDEX IF NOT EXISTS idx_ai_feedback_type ON public.ai_feedback(feedback_t
 CREATE INDEX IF NOT EXISTS idx_ai_feedback_period ON public.ai_feedback(period_start, period_end);
 
 -- ==========================================
--- AI分析用ビュー
+-- AI分析用ビュー（復号化ビューを使用）
 -- ==========================================
+-- 注: このビューは sessions_reflections_decrypted ビューを使用するため、
+--     03-reflections-schema.sql を先に実行する必要があります
 CREATE OR REPLACE VIEW public.sessions_for_ai_analysis 
 WITH (security_invoker = on) AS
 SELECT 
-    id,
-    user_id,
-    activity_id,
-    goal_id,
-    start_time,
-    end_time,
-    duration,
-    session_date,
-    location,
-    notes,
+    s.id,
+    s.user_id,
+    s.activity_id,
+    s.goal_id,
+    s.start_time,
+    s.end_time,
+    s.duration,
+    s.session_date,
+    s.location,
+    s.notes,
     
-    -- 振り返りデータ
-    mood_score,
-    detailed_achievements,
-    detailed_challenges,
-    reflection_notes,
+    -- 振り返りデータ（復号化ビューから取得）
+    srd.mood,
+    s.mood_score,  -- mood_score は暗号化されていないので sessions テーブルから直接取得
+    srd.achievements,
+    srd.challenges,
+    srd.detailed_achievements,
+    srd.detailed_challenges,
+    srd.reflection_notes,
     
     -- AI分析結果
-    ai_sentiment_score,
-    ai_positive_keywords,
-    ai_negative_keywords,
-    ai_improvement_keywords,
-    ai_effort_level,
-    ai_focus_level,
-    ai_satisfaction_level,
-    ai_analyzed_at,
+    s.ai_sentiment_score,
+    s.ai_positive_keywords,
+    s.ai_negative_keywords,
+    s.ai_improvement_keywords,
+    s.ai_effort_level,
+    s.ai_focus_level,
+    s.ai_satisfaction_level,
+    s.ai_analyzed_at,
     
-    created_at,
-    updated_at
-FROM public.sessions
+    s.created_at,
+    s.updated_at
+FROM public.sessions s
+LEFT JOIN public.sessions_reflections_decrypted srd ON s.id = srd.id
 WHERE 
     -- 振り返りデータまたはAI分析データがあるセッション
-    (mood_score IS NOT NULL 
-     OR detailed_achievements IS NOT NULL 
-     OR detailed_challenges IS NOT NULL
-     OR ai_analyzed_at IS NOT NULL)
-ORDER BY created_at DESC;
+    (s.mood_score IS NOT NULL 
+     OR s.mood_encrypted IS NOT NULL
+     OR s.detailed_achievements_encrypted IS NOT NULL 
+     OR s.detailed_challenges_encrypted IS NOT NULL
+     OR s.ai_analyzed_at IS NOT NULL)
+    AND s.user_id = auth.uid(); -- RLS適用
 
 -- ==========================================
 -- RLS設定（暗号化対応）
@@ -204,5 +213,6 @@ COMMENT ON TABLE public.ai_feedback IS 'AI生成の週次・月次フィード�
 COMMENT ON COLUMN public.ai_feedback.feedback_type IS 'フィードバックタイプ（weekly: 週次, monthly: 月次）';
 COMMENT ON COLUMN public.ai_feedback.content_encrypted IS 'pgcryptoで暗号化されたAI生成フィードバック内容';
 COMMENT ON VIEW public.ai_feedback_decrypted IS 'pgcryptoで復号化されたAIフィードバックビュー（RLS適用）';
+COMMENT ON VIEW public.sessions_for_ai_analysis IS 'AI分析用のセッションビュー（復号化データ含む、RLS適用）';
 COMMENT ON COLUMN public.ai_feedback.period_start IS 'フィードバック対象期間開始日';
 COMMENT ON COLUMN public.ai_feedback.period_end IS 'フィードバック対象期間終了日'; 

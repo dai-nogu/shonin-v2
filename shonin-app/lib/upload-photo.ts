@@ -83,12 +83,8 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       throw new Error(`ストレージへのアップロードに失敗しました: ${error.message}`)
     }
 
-    // パブリックURLを取得
-    const { data: { publicUrl } } = supabase.storage
-      .from('session-media')
-      .getPublicUrl(filePath)
-
     // session_mediaテーブルに写真情報を保存
+    // 注: public_urlは保存せず、取得時に署名付きURLを生成する
     const mediaData = {
       session_id: sessionId,
       media_type: 'image' as const,
@@ -96,7 +92,7 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       file_name: file.name,
       file_size: file.size,
       mime_type: file.type,
-      public_url: publicUrl,
+      public_url: null, // 署名付きURL方式のためnull
       is_main_image: false,
       caption: null
     }
@@ -126,9 +122,19 @@ export async function uploadPhoto(file: File, sessionId: string, userId: string)
       }
     }
 
+    // 署名付きURL（1時間有効）を生成
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('session-media')
+      .createSignedUrl(filePath, 3600) // 1時間有効
+
+    if (signedUrlError) {
+      console.error('署名付きURL生成エラー:', signedUrlError)
+      // エラーでも続行（URLなしで返す）
+    }
+
     return {
       id: dbData.id,
-      url: publicUrl,
+      url: signedUrlData?.signedUrl || '', // 署名付きURLを返す
       fileName: file.name,
       fileSize: file.size,
       uploadedAt: dbData.created_at
@@ -158,7 +164,7 @@ export async function uploadPhotos(files: File[], sessionId: string, userId: str
 /**
  * セッションの写真をsession_mediaテーブルから取得する
  * @param sessionId - セッションID
- * @returns 写真の配列
+ * @returns 写真の配列（署名付きURL付き）
  */
 export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto[]> {
   const supabase = createClient()
@@ -175,13 +181,25 @@ export async function getSessionPhotos(sessionId: string): Promise<UploadedPhoto
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
-    return data.map(media => ({
-      id: media.id,
-      url: media.public_url || '', // public_urlがnullの場合は空文字列
-      fileName: media.file_name,
-      fileSize: media.file_size || 0,
-      uploadedAt: media.created_at
-    }))
+    // 各写真に対して署名付きURLを生成
+    const photosWithSignedUrls = await Promise.all(
+      data.map(async (media) => {
+        // 署名付きURL（1時間有効）を生成
+        const { data: signedUrlData } = await supabase.storage
+          .from('session-media')
+          .createSignedUrl(media.file_path, 3600)
+
+        return {
+          id: media.id,
+          url: signedUrlData?.signedUrl || '', // 署名付きURLを使用
+          fileName: media.file_name,
+          fileSize: media.file_size || 0,
+          uploadedAt: media.created_at
+        }
+      })
+    )
+
+    return photosWithSignedUrls
   } catch (error) {
     throw error
   }
@@ -286,7 +304,7 @@ export function checkPreloadedImages(urls: string[]): Record<string, boolean> {
 }
 
 /**
- * セッションの写真を取得してプリロードする（改良版）
+ * セッションの写真を取得してプリロードする（改良版・署名付きURL対応）
  * @param sessionId - セッションID
  * @returns 写真の配列、プリロード完了のPromise、プリロード済み状態
  */
@@ -309,13 +327,23 @@ export async function getSessionPhotosWithPreload(sessionId: string): Promise<{
       throw new Error(`写真の取得に失敗しました: ${error.message}`)
     }
 
-    const photos = data.map((media: any) => ({
-      id: media.id,
-      url: media.public_url || '',
-      fileName: media.file_name,
-      fileSize: media.file_size || 0,
-      uploadedAt: media.created_at
-    }))
+    // 各写真に対して署名付きURLを生成
+    const photos = await Promise.all(
+      data.map(async (media: any) => {
+        // 署名付きURL（1時間有効）を生成
+        const { data: signedUrlData } = await supabase.storage
+          .from('session-media')
+          .createSignedUrl(media.file_path, 3600)
+
+        return {
+          id: media.id,
+          url: signedUrlData?.signedUrl || '',
+          fileName: media.file_name,
+          fileSize: media.file_size || 0,
+          uploadedAt: media.created_at
+        }
+      })
+    )
 
     // 画像URLを抽出
     const imageUrls = photos.map((photo: UploadedPhoto) => photo.url).filter((url: string) => url !== '')

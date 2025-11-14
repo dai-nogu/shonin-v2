@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 import { getSubscriptionInfo } from '@/app/actions/subscription-info';
 import { getPlanLimits } from '@/types/subscription';
+import { validateOrigin } from '@/lib/csrf-protection';
 
 interface GetFeedbackRequest {
   feedback_type: 'weekly' | 'monthly';
@@ -13,6 +14,18 @@ interface GetFeedbackRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF保護: Origin/Refererチェック
+    if (!validateOrigin(request)) {
+      console.warn('CSRF attempt detected: Invalid origin', {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      });
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
     // プラン制限をチェック
     const subscriptionInfo = await getSubscriptionInfo();
     const planLimits = getPlanLimits(subscriptionInfo.subscriptionStatus);
