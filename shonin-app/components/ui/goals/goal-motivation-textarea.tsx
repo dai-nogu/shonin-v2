@@ -13,7 +13,7 @@ interface GoalMotivationTextareaProps {
 export function GoalMotivationTextarea({ 
   value, 
   onChange, 
-  placeholder = "転職を成功させて年収を100万円アップさせる" 
+  placeholder
 }: GoalMotivationTextareaProps) {
   const t = useTranslations()
   
@@ -23,7 +23,7 @@ export function GoalMotivationTextarea({
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder || t('goals.motivation_placeholder')}
         className="bg-gray-800 border-gray-700 text-white"
       />
     </div>

@@ -13,7 +13,7 @@ interface GoalTitleInputProps {
 export function GoalTitleInput({ 
   value, 
   onChange, 
-  placeholder = "〇〇までに転職を成功させる" 
+  placeholder
 }: GoalTitleInputProps) {
   const t = useTranslations()
   
@@ -23,7 +23,7 @@ export function GoalTitleInput({
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder || t('goals.goal_placeholder')}
         className="bg-gray-800 border-gray-700 text-white"
       />
     </div>
