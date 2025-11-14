@@ -27,6 +27,7 @@ CREATE INDEX IF NOT EXISTS idx_users_subscription_status ON public.users(subscri
 CREATE TABLE IF NOT EXISTS public.subscription (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+    stripe_customer_id TEXT,
     stripe_subscription_id TEXT UNIQUE,
     stripe_price_id TEXT,
     stripe_current_period_end TIMESTAMP WITH TIME ZONE,
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS public.subscription (
 
 -- インデックス作成
 CREATE INDEX IF NOT EXISTS idx_subscription_user_id ON public.subscription(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscription_stripe_customer_id ON public.subscription(stripe_customer_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_stripe_subscription_id ON public.subscription(stripe_subscription_id);
 CREATE INDEX IF NOT EXISTS idx_subscription_stripe_current_period_end ON public.subscription(stripe_current_period_end);
 CREATE INDEX IF NOT EXISTS idx_subscription_cancel_at_period_end ON public.subscription(cancel_at_period_end) WHERE cancel_at_period_end = TRUE;

@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { getPlanTypeFromPriceId, type PlanType } from '@/types/subscription';
 import { safeError, stripeLog } from '@/lib/safe-logger';
+import { sendShoninMail } from '@/lib/resend';
 
 // ==========================================
 // Stripeイベント処理
@@ -61,6 +62,9 @@ const supabaseAdmin = createClient(
   process.env.SERVICE_ROLE_KEY!
 );
 
+// ランタイム指定（App RouterだとedgeになってStripe SDKが動かない可能性があるため）
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature') as string;
@@ -85,13 +89,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // TODO: 将来的な改善 - Webhook二重送信対策
+  // stripe_event_logsテーブルを作成し、event.idを保存
+  // 同じIDが来たらスキップすることでメール二重送信を防ぐ
+  // 現時点では実装不要（Stripeは基本的に重複を避ける仕組みを持っているため）
+
   // Handle the event
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
-        if (!session.client_reference_id || !session.subscription) {
+        if (!session.client_reference_id || !session.subscription || !session.customer) {
           return NextResponse.json(
             { error: 'Session Error' },
             { status: 500 }
@@ -165,10 +174,20 @@ async function handleCheckoutCompleted(
 ) {
   try {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    const priceId = (subscription.items.data[0]?.price as any)?.id as string;
-    const periodEnd = (subscription.items.data[0] as any)?.current_period_end as number;
+    
+    // デバッグ: subscriptionオブジェクトの内容を確認
+    console.log('=== Subscription Object Debug ===');
+    console.log('Subscription ID:', subscription.id);
+    console.log('Status:', subscription.status);
+    console.log('Current Period End:', (subscription as any).current_period_end);
+    console.log('Items:', JSON.stringify(subscription.items.data[0], null, 2));
+    
+    const priceId = subscription.items.data[0]?.price?.id as string;
+    const periodEnd = (subscription as any).current_period_end as number;
     
     if (!periodEnd || isNaN(periodEnd)) {
+      console.error('Invalid periodEnd:', periodEnd);
+      console.error('Full subscription object:', JSON.stringify(subscription, null, 2));
       throw new Error('Invalid period end timestamp');
     }
     
@@ -189,6 +208,7 @@ async function handleCheckoutCompleted(
       .upsert(
         {
           user_id: userId,
+          stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           stripe_price_id: priceId,
           stripe_current_period_end: periodEndDate.toISOString(),
@@ -203,15 +223,38 @@ async function handleCheckoutCompleted(
       throw subError;
     }
 
-    // usersテーブルのステータスを更新
+    // usersテーブルのステータスとstripe_customer_idを更新
     const { error: userError } = await supabaseAdmin
       .from('users')
-      .update({ subscription_status: subscriptionStatus })
+      .update({ 
+        subscription_status: subscriptionStatus,
+        stripe_customer_id: customerId,
+      })
       .eq('id', userId);
     
     if (userError) {
       console.error('Failed to update users table:', userError);
       throw userError;
+    }
+
+    // メール送信: サブスク作成通知
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      if (!customer.deleted && customer.email) {
+        // subscriptionは最初に取得したものをそのまま使う
+        await sendShoninMail({
+          to: customer.email,
+          subject: 'Shoninへのご登録ありがとうございます',
+          html: `
+            <p>Shoninにご登録いただきありがとうございます。</p>
+            <p>現在のプラン: ${subscription.items.data[0]?.price.nickname ?? 'N/A'}</p>
+            <p>誰にも見せず結果でみんなを驚かせよう！</p>
+          `,
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // メール送信失敗はエラーとして扱わない
     }
   } catch (error) {
     console.error('Error in handleCheckoutCompleted:', error);
@@ -334,6 +377,44 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
           .eq('id', userId);
       }
         
+      // メール送信: プラン変更 or キャンセル予約
+      try {
+        const customerId = typeof fullSubscription.customer === 'string' 
+          ? fullSubscription.customer 
+          : fullSubscription.customer.id;
+        const customer = await stripe.customers.retrieve(customerId);
+        
+        if (!customer.deleted && customer.email) {
+          if (cancelAtPeriodEnd) {
+            // 期末解約予約
+            const endDate = cancelAt
+              ? new Date(cancelAt * 1000).toLocaleDateString('ja-JP')
+              : '今期末';
+
+            await sendShoninMail({
+              to: customer.email,
+              subject: 'Shonin サブスクリプション解約の予約を受け付けました',
+              html: `
+                <p>サブスクリプションは ${endDate} に終了する予定です。</p>
+              `,
+            });
+          } else {
+            // プラン変更
+            await sendShoninMail({
+              to: customer.email,
+              subject: 'ご利用プランが変更されました',
+              html: `
+                <p>ご利用プランが更新されました。</p>
+                <p>現在のプラン: ${fullSubscription.items.data[0]?.price.nickname ?? 'N/A'}</p>
+              `,
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+        // メール送信失敗はエラーとして扱わない
+      }
+
       if (cancelAtPeriodEnd) {
         console.log(`Subscription will be canceled at period end for user ${userId}. Status remains '${subscriptionStatus}' until ${periodEnd ? new Date(periodEnd * 1000).toISOString() : 'period end'}.`);
       } else {
@@ -411,12 +492,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.log('User ID:', userId);
     console.log('Subscription ID:', subscription.id);
     
-    // subscriptionテーブルのcancel_at_period_endをfalseに、canceled_atを現在時刻に設定
+    // subscriptionテーブルのcancel_at_period_endをfalseに、canceled_atをStripeから届いた時刻に設定
+    const canceledAt = subscription.canceled_at
+      ? new Date(subscription.canceled_at * 1000).toISOString()
+      : new Date().toISOString();
+    
     await supabaseAdmin
       .from('subscription')
       .update({
         cancel_at_period_end: false,
-        canceled_at: new Date().toISOString(),
+        canceled_at: canceledAt,
       })
       .eq('user_id', userId);
     
@@ -427,6 +512,29 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       .eq('id', userId);
       
     console.log(`Subscription deleted for user ${userId}. Status set to 'free'. cancel_at_period_end set to false.`);
+
+    // メール送信: 解約完了通知
+    try {
+      const customerId = typeof subscription.customer === 'string' 
+        ? subscription.customer 
+        : subscription.customer.id;
+      const customer = await stripe.customers.retrieve(customerId);
+
+      if (!customer.deleted && customer.email) {
+        await sendShoninMail({
+          to: customer.email,
+          subject: 'サブスクリプションが解約されました。',
+          html: `
+            <p>サブスクリプションの解約が完了しました。</p>
+            <p>独り立ちの時ですね。</p>
+            <p>また必要になったときは、いつでも戻ってきてください。</p>
+          `,
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // メール送信失敗はエラーとして扱わない
+    }
   } catch (error) {
     console.error('Error in handleSubscriptionDeleted:', error);
   }
