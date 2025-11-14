@@ -193,8 +193,6 @@ async function handleCheckoutCompleted(
     
     if (!getPlanTypeFromPriceId(priceId)) {
       safeError('Unknown price_id in checkout', { priceId, defaulting: 'free' });
-    } else {
-      stripeLog('Checkout completed', { plan: subscriptionStatus, priceId, user_id: userId });
     }
     
     // DBに保存
