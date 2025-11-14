@@ -173,21 +173,16 @@ async function handleCheckoutCompleted(
   customerId: string
 ) {
   try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    
-    // デバッグ: subscriptionオブジェクトの内容を確認
-    console.log('=== Subscription Object Debug ===');
-    console.log('Subscription ID:', subscription.id);
-    console.log('Status:', subscription.status);
-    console.log('Current Period End:', (subscription as any).current_period_end);
-    console.log('Items:', JSON.stringify(subscription.items.data[0], null, 2));
+    const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
+    // Stripe APIの型定義の問題を回避するため、anyを使用
+    const subscription = subscriptionResponse as any;
     
     const priceId = subscription.items.data[0]?.price?.id as string;
-    const periodEnd = (subscription as any).current_period_end as number;
+    // 新しいStripe APIでは、current_period_endがitems.data[0]に移動
+    const periodEnd = (subscription.current_period_end || subscription.items.data[0]?.current_period_end) as number;
     
     if (!periodEnd || isNaN(periodEnd)) {
       console.error('Invalid periodEnd:', periodEnd);
-      console.error('Full subscription object:', JSON.stringify(subscription, null, 2));
       throw new Error('Invalid period end timestamp');
     }
     
@@ -284,10 +279,12 @@ async function handleCheckoutCompleted(
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   try {
     // Stripeから最新のサブスクリプション情報を取得（webhookのデータは不完全な場合がある）
-    const fullSubscription = await stripe.subscriptions.retrieve(subscription.id);
+    const subscriptionResponse = await stripe.subscriptions.retrieve(subscription.id);
+    // Stripe APIの型定義の問題を回避するため、anyを使用
+    const fullSubscription = subscriptionResponse as any;
     
     // metadataからuser_idを取得
-    let userId = (fullSubscription.metadata as any)?.supabase_user_id as string;
+    let userId = fullSubscription.metadata?.supabase_user_id as string;
 
     // metadataにない場合、customerからuser_idを取得
     if (!userId) {
@@ -320,7 +317,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     }
 
     const priceId = fullSubscription.items.data[0]?.price.id;
-    const periodEnd = (fullSubscription as any).current_period_end as number | undefined;
+    // 新しいStripe APIでは、current_period_endがitems.data[0]に移動
+    const periodEnd = (fullSubscription.current_period_end || fullSubscription.items.data[0]?.current_period_end) as number | undefined;
     
     stripeLog('Subscription Update', {
       user_id: userId,
@@ -328,7 +326,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       status: fullSubscription.status,
       periodEnd,
       cancelAtPeriodEnd: fullSubscription.cancel_at_period_end,
-      cancelAt: (fullSubscription as any).cancel_at,
+      cancelAt: fullSubscription.cancel_at,
       canceledAt: fullSubscription.canceled_at,
     });
     
@@ -342,7 +340,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     }
     
     // キャンセル予定かどうかをチェック（cancel_at_period_end または cancel_at が設定されている場合）
-    const cancelAt = (fullSubscription as any).cancel_at as number | null;
+    const cancelAt = fullSubscription.cancel_at;
     const cancelAtPeriodEnd = fullSubscription.cancel_at_period_end || (cancelAt ? true : false);
     // canceled_atはキャンセル予定の場合はnull、実際にキャンセルされた時のみ設定
     const canceledAt = fullSubscription.canceled_at
@@ -557,8 +555,10 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     return;
   }
 
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const userId = (subscription.metadata as any)?.supabase_user_id as string;
+  const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
+  // Stripe APIの型定義の問題を回避するため、anyを使用
+  const subscription = subscriptionResponse as any;
+  const userId = subscription.metadata?.supabase_user_id as string;
 
   if (!userId) {
     console.error('No user_id in subscription metadata');
@@ -572,7 +572,8 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     console.error('Unknown price_id in invoice payment:', priceId);
   }
 
-  const periodEnd = (subscription as any).current_period_end as number;
+  // 新しいStripe APIでは、current_period_endがitems.data[0]に移動
+  const periodEnd = (subscription.current_period_end || subscription.items.data[0]?.current_period_end) as number;
   await supabaseAdmin
     .from('subscription')
     .update({

@@ -77,8 +77,8 @@ export async function createStripeSession(prevState: any, formData: FormData) {
         },
       ],
       mode: "subscription",
-      success_url: `${process.env.BASE_URL}/dashboard?success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.BASE_URL}/dashboard?canceled=true`,
+      success_url: `${process.env.BASE_URL}/dashboard`,
+      cancel_url: `${process.env.BASE_URL}/dashboard`,
       // automatic_tax: { enabled: true },
     });
     
