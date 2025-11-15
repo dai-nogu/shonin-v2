@@ -30,12 +30,37 @@ export async function GET(request: NextRequest) {
     
     try {
       // 認証コードをセッション情報に交換
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (error) {
         safeError('OAuth callback error', error)
         // エラーの場合はログインページにリダイレクト
         return NextResponse.redirect(new URL(`/${locale}/login?error=auth_error`, requestUrl.origin))
+      }
+      
+      // 新規ユーザーかどうかを確認（profilesテーブルにレコードがあるかチェック）
+      if (user) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single()
+        
+        // profilesテーブルにレコードがない = 新規ユーザー
+        if (!existingProfile) {
+          try {
+            // ウェルカムメール送信APIを呼び出し
+            await fetch(`${requestUrl.origin}/api/send`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            })
+          } catch (emailError) {
+            // メール送信エラーはログのみ（ユーザー登録は継続）
+            safeError('Welcome email send error', emailError)
+          }
+        }
       }
       
       return response

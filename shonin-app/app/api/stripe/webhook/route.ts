@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { getPlanTypeFromPriceId, type PlanType } from '@/types/subscription';
 import { safeError, stripeLog } from '@/lib/safe-logger';
-import { sendShoninMail } from '@/lib/resend';
 
 // ==========================================
 // Stripeイベント処理
@@ -229,26 +228,6 @@ async function handleCheckoutCompleted(
       console.error('Failed to update users table:', userError);
       throw userError;
     }
-
-    // メール送信: サブスク作成通知
-    try {
-      const customer = await stripe.customers.retrieve(customerId);
-      if (!customer.deleted && customer.email) {
-        // subscriptionは最初に取得したものをそのまま使う
-        await sendShoninMail({
-          to: customer.email,
-          subject: 'Shoninへのご登録ありがとうございます',
-          html: `
-            <p>Shoninにご登録いただきありがとうございます。</p>
-            <p>現在のプラン: ${subscription.items.data[0]?.price.nickname ?? 'N/A'}</p>
-            <p>誰にも見せず結果でみんなを驚かせよう！</p>
-          `,
-        });
-      }
-    } catch (emailError) {
-      console.error('Failed to send email:', emailError);
-      // メール送信失敗はエラーとして扱わない
-    }
   } catch (error) {
     console.error('Error in handleCheckoutCompleted:', error);
     throw error;
@@ -372,44 +351,6 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
           .update({ subscription_status: subscriptionStatus })
           .eq('id', userId);
       }
-        
-      // メール送信: プラン変更 or キャンセル予約
-      try {
-        const customerId = typeof fullSubscription.customer === 'string' 
-          ? fullSubscription.customer 
-          : fullSubscription.customer.id;
-        const customer = await stripe.customers.retrieve(customerId);
-        
-        if (!customer.deleted && customer.email) {
-          if (cancelAtPeriodEnd) {
-            // 期末解約予約
-            const endDate = cancelAt
-              ? new Date(cancelAt * 1000).toLocaleDateString('ja-JP')
-              : '今期末';
-
-            await sendShoninMail({
-              to: customer.email,
-              subject: 'Shonin サブスクリプション解約の予約を受け付けました',
-              html: `
-                <p>サブスクリプションは ${endDate} に終了する予定です。</p>
-              `,
-            });
-          } else {
-            // プラン変更
-            await sendShoninMail({
-              to: customer.email,
-              subject: 'ご利用プランが変更されました',
-              html: `
-                <p>ご利用プランが更新されました。</p>
-                <p>現在のプラン: ${fullSubscription.items.data[0]?.price.nickname ?? 'N/A'}</p>
-              `,
-            });
-          }
-        }
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-        // メール送信失敗はエラーとして扱わない
-      }
 
       if (cancelAtPeriodEnd) {
         console.log(`Subscription will be canceled at period end for user ${userId}. Status remains '${subscriptionStatus}' until ${periodEnd ? new Date(periodEnd * 1000).toISOString() : 'period end'}.`);
@@ -508,29 +449,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       .eq('id', userId);
       
     console.log(`Subscription deleted for user ${userId}. Status set to 'free'. cancel_at_period_end set to false.`);
-
-    // メール送信: 解約完了通知
-    try {
-      const customerId = typeof subscription.customer === 'string' 
-        ? subscription.customer 
-        : subscription.customer.id;
-      const customer = await stripe.customers.retrieve(customerId);
-
-      if (!customer.deleted && customer.email) {
-        await sendShoninMail({
-          to: customer.email,
-          subject: 'サブスクリプションが解約されました。',
-          html: `
-            <p>サブスクリプションの解約が完了しました。</p>
-            <p>独り立ちの時ですね。</p>
-            <p>また必要になったときは、いつでも戻ってきてください。</p>
-          `,
-        });
-      }
-    } catch (emailError) {
-      console.error('Failed to send email:', emailError);
-      // メール送信失敗はエラーとして扱わない
-    }
   } catch (error) {
     console.error('Error in handleSubscriptionDeleted:', error);
   }
