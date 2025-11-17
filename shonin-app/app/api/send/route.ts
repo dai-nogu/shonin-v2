@@ -9,26 +9,43 @@ export async function POST(request: NextRequest) {
   try {
     // リクエストボディからユーザー情報を取得
     const body = await request.json();
-    const { email, firstName } = body;
+    const { email, firstName, isNewUser = true } = body;
+
+    console.log('=== メール送信API呼び出し ===');
+    console.log('リクエストbody:', JSON.stringify(body, null, 2));
+    console.log('email:', email);
+    console.log('firstName:', firstName);
+    console.log('isNewUser:', isNewUser);
 
     // メールアドレスが提供されているか確認
     if (!email) {
+      console.error('エラー: メールアドレスが提供されていません');
       return Response.json({ error: 'Email address is required' }, { status: 400 });
     }
+
+    // 新規ユーザーか既存ユーザーかで件名を変更
+    const subject = isNewUser ? 'Shoninへようこそ！' : 'おかえりなさい！';
+    console.log('件名:', subject);
 
     const { data, error } = await resend.emails.send({
       from: 'Shonin <no-reply@account-shonin.com>', // 認証済みドメインを使用
       to: [email], // 登録したユーザーのメールアドレスを使用
-      subject: 'Shoninへようこそ！',
-      react: EmailTemplate({ firstName: firstName || 'ユーザー' }), // ユーザーの名前を渡す
+      subject: subject,
+      react: EmailTemplate({ 
+        firstName: firstName || 'ユーザー',
+        isNewUser: isNewUser
+      }), // ユーザーの名前とステータスを渡す
     });
 
     if (error) {
+      console.error('Resendエラー:', error);
       return Response.json({ error }, { status: 400 });
     }
 
+    console.log('メール送信成功:', data);
     return Response.json(data);
   } catch (error) {
+    console.error('予期しないエラー:', error);
     return Response.json({ error }, { status: 500 });
   }
 }

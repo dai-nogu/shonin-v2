@@ -38,43 +38,65 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(new URL(`/${locale}/login?error=auth_error`, requestUrl.origin))
       }
       
-      // 新規ユーザーかどうかを確認（profilesテーブルにレコードがあるかチェック）
+      // 新規ユーザーかどうかを確認
+      // handle_new_userトリガーで既にusersテーブルにレコードが作成されているため、
+      // アカウント作成時刻で判定する（作成から30秒以内なら新規ユーザー）
       if (user) {
-        const { data: existingProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle()
+        // ユーザーの名前を取得（user_metadataから取得、なければメールアドレスの@前を使用）
+        const firstName = user.user_metadata?.full_name || 
+                        user.user_metadata?.name || 
+                        user.email?.split('@')[0] || 
+                        'ユーザー';
         
-        // profilesテーブルにレコードがない = 新規ユーザー
-        // profileErrorがなく、existingProfileがnullの場合のみ新規ユーザーとして扱う
-        if (!profileError && !existingProfile) {
-          try {
-            // ユーザーの名前を取得（user_metadataから取得、なければメールアドレスの@前を使用）
-            const firstName = user.user_metadata?.full_name || 
-                            user.user_metadata?.name || 
-                            user.email?.split('@')[0] || 
-                            'ユーザー';
-            
+        // ユーザーの作成時刻を取得
+        const userCreatedAt = new Date(user.created_at)
+        const now = new Date()
+        const timeDifferenceInSeconds = (now.getTime() - userCreatedAt.getTime()) / 1000
+        
+        // アカウント作成から30秒以内なら新規ユーザーとみなす
+        const isNewUser = timeDifferenceInSeconds <= 30
+        
+        console.log('ユーザー情報:', {
+          created_at: user.created_at,
+          time_difference_seconds: timeDifferenceInSeconds,
+          is_new_user: isNewUser
+        });
+        
+        // メール送信
+        try {
+          if (isNewUser) {
             console.log('新規ユーザー登録: ウェルカムメールを送信します', user.email);
-            
-            // ウェルカムメール送信APIを呼び出し
-            await fetch(`${requestUrl.origin}/api/send`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: user.email,
-                firstName: firstName,
-              }),
-            })
-          } catch (emailError) {
-            // メール送信エラーはログのみ（ユーザー登録は継続）
-            safeError('Welcome email send error', emailError)
+          } else {
+            console.log('既存ユーザーのログイン: おかえりなさいメールを送信します', user.email);
           }
-        } else if (existingProfile) {
-          console.log('既存ユーザーのログイン: ウェルカムメールは送信しません', user.email);
+          
+          const emailPayload = {
+            email: user.email,
+            firstName: firstName,
+            isNewUser: isNewUser,
+          };
+          console.log('メール送信ペイロード:', JSON.stringify(emailPayload, null, 2));
+          
+          // メール送信APIを呼び出し
+          const emailResponse = await fetch(`${requestUrl.origin}/api/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailPayload),
+          })
+          
+          const emailResult = await emailResponse.json();
+          console.log('メール送信APIのレスポンス:', JSON.stringify(emailResult, null, 2));
+          console.log('ステータスコード:', emailResponse.status);
+          
+          if (!emailResponse.ok) {
+            console.error('メール送信APIがエラーを返しました:', emailResult);
+          }
+        } catch (emailError) {
+          // メール送信エラーはログのみ（ユーザー登録は継続）
+          console.error('メール送信中にエラーが発生:', emailError);
+          safeError('Email send error', emailError)
         }
       }
       

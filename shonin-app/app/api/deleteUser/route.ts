@@ -35,7 +35,11 @@ export async function POST(request: NextRequest) {
     }
 
     safeLog('=== ユーザー削除処理開始 ===');
-    safeLog('User ID:', user.id);
+    safeLog('削除対象ユーザー情報:', {
+      user_id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+    });
 
     // ユーザーのサブスクリプション情報を取得
     const { data: subscriptionData, error: subscriptionError } = await supabaseServer
@@ -80,6 +84,10 @@ export async function POST(request: NextRequest) {
 
     safeLog('✓ Supabaseアカウントを削除しました');
     safeLog('=== ユーザー削除処理完了 ===');
+    safeLog('削除完了:', {
+      user_id: user.id,
+      email: user.email,
+    });
 
     return NextResponse.json({ message: 'ユーザーが削除されました' }, { status: 200 })
   } catch (error) {

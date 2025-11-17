@@ -93,10 +93,14 @@ export function safeLog(message: string, data?: any) {
   
   if (isDevelopment) {
     // 開発環境: マスクなし（デバッグしやすい）
-    console.log(`[DEV] ${message}`, data)
+    if (data !== undefined) {
+      console.log(`[DEV] ${message}`, data)
+    } else {
+      console.log(`[DEV] ${message}`)
+    }
   } else {
     // 本番環境: マスクあり（セキュリティ優先）
-    if (data) {
+    if (data !== undefined) {
       console.log(message, maskSensitiveData(data))
     } else {
       console.log(message)
@@ -112,9 +116,13 @@ export function safeWarn(message: string, data?: any) {
   const isDevelopment = process.env.NODE_ENV === 'development'
   
   if (isDevelopment) {
-    console.warn(`[DEV] ${message}`, data)
+    if (data !== undefined) {
+      console.warn(`[DEV] ${message}`, data)
+    } else {
+      console.warn(`[DEV] ${message}`)
+    }
   } else {
-    if (data) {
+    if (data !== undefined) {
       console.warn(message, maskSensitiveData(data))
     } else {
       console.warn(message)
@@ -130,9 +138,13 @@ export function safeError(message: string, error?: any) {
   const isDevelopment = process.env.NODE_ENV === 'development'
   
   if (isDevelopment) {
-    console.error(`[DEV] ${message}`, error)
+    if (error !== undefined) {
+      console.error(`[DEV] ${message}`, error)
+    } else {
+      console.error(`[DEV] ${message}`)
+    }
   } else {
-    if (error) {
+    if (error !== undefined) {
       // エラーオブジェクトの場合、スタックトレースは保持
       if (error instanceof Error) {
         // Error をプレーンオブジェクトに落としてからマスク
@@ -179,9 +191,13 @@ export function stripeLog(message: string, data?: any) {
   const isDevelopment = process.env.NODE_ENV === 'development'
   
   if (isDevelopment) {
-    console.log(`[DEV STRIPE] ${message}`, data)
+    if (data !== undefined) {
+      console.log(`[DEV STRIPE] ${message}`, data)
+    } else {
+      console.log(`[DEV STRIPE] ${message}`)
+    }
   } else {
-    if (data) {
+    if (data !== undefined) {
       // まず全体をマスク（email, card_number などが自動的にマスクされる）
       const base = maskSensitiveData(data)
       
