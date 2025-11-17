@@ -1,18 +1,26 @@
 import { EmailTemplate } from '../../../components/email-template'; // 必要に応じてパスを調整
 import { Resend } from 'resend';
+import { NextRequest } from 'next/server';
 
 // .env.localにRESEND_API_KEYが設定されていることを確認
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // リクエストボディからユーザー情報を取得
+    const body = await request.json();
+    const { email, firstName } = body;
+
+    // メールアドレスが提供されているか確認
+    if (!email) {
+      return Response.json({ error: 'Email address is required' }, { status: 400 });
+    }
+
     const { data, error } = await resend.emails.send({
-      from: 'no-reply@account-shonin.com', // 認証済みドメインを使用
-      to: ['noguchi.daisukeeee@gmail.com'], // 受信者またはテストアドレスに置き換え
-      subject: 'Hello from Resend and Next.js!',
-      react: EmailTemplate({ firstName: 'Test' }), // テンプレートにpropsを渡す
-      // または、`html`を使用:
-      // html: '<strong>It works!</strong>'
+      from: 'Shonin <no-reply@account-shonin.com>', // 認証済みドメインを使用
+      to: [email], // 登録したユーザーのメールアドレスを使用
+      subject: 'Shoninへようこそ！',
+      react: EmailTemplate({ firstName: firstName || 'ユーザー' }), // ユーザーの名前を渡す
     });
 
     if (error) {

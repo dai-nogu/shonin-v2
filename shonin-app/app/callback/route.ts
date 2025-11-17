@@ -40,26 +40,41 @@ export async function GET(request: NextRequest) {
       
       // 新規ユーザーかどうかを確認（profilesテーブルにレコードがあるかチェック）
       if (user) {
-        const { data: existingProfile } = await supabase
+        const { data: existingProfile, error: profileError } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
         
         // profilesテーブルにレコードがない = 新規ユーザー
-        if (!existingProfile) {
+        // profileErrorがなく、existingProfileがnullの場合のみ新規ユーザーとして扱う
+        if (!profileError && !existingProfile) {
           try {
+            // ユーザーの名前を取得（user_metadataから取得、なければメールアドレスの@前を使用）
+            const firstName = user.user_metadata?.full_name || 
+                            user.user_metadata?.name || 
+                            user.email?.split('@')[0] || 
+                            'ユーザー';
+            
+            console.log('新規ユーザー登録: ウェルカムメールを送信します', user.email);
+            
             // ウェルカムメール送信APIを呼び出し
             await fetch(`${requestUrl.origin}/api/send`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
+              body: JSON.stringify({
+                email: user.email,
+                firstName: firstName,
+              }),
             })
           } catch (emailError) {
             // メール送信エラーはログのみ（ユーザー登録は継続）
             safeError('Welcome email send error', emailError)
           }
+        } else if (existingProfile) {
+          console.log('既存ユーザーのログイン: ウェルカムメールは送信しません', user.email);
         }
       }
       
