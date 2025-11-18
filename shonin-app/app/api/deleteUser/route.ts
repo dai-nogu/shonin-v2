@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
       created_at: user.created_at,
     });
 
+    // ユーザーの名前を取得（user_metadataから取得、なければメールアドレスの@前を使用）
+    const firstName = user.user_metadata?.full_name || 
+                     user.user_metadata?.name || 
+                     user.email?.split('@')[0] || 
+                     'ユーザー';
+
     // ユーザーのサブスクリプション情報を取得
     const { data: subscriptionData, error: subscriptionError } = await supabaseServer
       .from('subscription')
@@ -83,6 +89,34 @@ export async function POST(request: NextRequest) {
     }
 
     safeLog('✓ Supabaseアカウントを削除しました');
+    
+    // 退会メールを送信
+    try {
+      safeLog('退会メールを送信します', user.email);
+      
+      const emailResponse = await fetch(`${request.url.split('/api')[0]}/api/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+          firstName: firstName,
+          emailType: 'goodbye',
+        }),
+      });
+
+      if (emailResponse.ok) {
+        safeLog('✓ 退会メールを送信しました');
+      } else {
+        const emailError = await emailResponse.json();
+        safeError('退会メールの送信に失敗しました', emailError);
+      }
+    } catch (emailError) {
+      // メール送信エラーはログのみ（アカウント削除は完了しているため継続）
+      safeError('退会メール送信中にエラーが発生', emailError);
+    }
+    
     safeLog('=== ユーザー削除処理完了 ===');
     safeLog('削除完了:', {
       user_id: user.id,

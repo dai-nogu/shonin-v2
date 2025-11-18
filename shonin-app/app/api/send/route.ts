@@ -9,12 +9,13 @@ export async function POST(request: NextRequest) {
   try {
     // リクエストボディからユーザー情報を取得
     const body = await request.json();
-    const { email, firstName, isNewUser = true } = body;
+    const { email, firstName, isNewUser = true, emailType } = body;
 
     console.log('=== メール送信API呼び出し ===');
     console.log('リクエストbody:', JSON.stringify(body, null, 2));
     console.log('email:', email);
     console.log('firstName:', firstName);
+    console.log('emailType:', emailType);
     console.log('isNewUser:', isNewUser);
 
     // メールアドレスが提供されているか確認
@@ -23,8 +24,19 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Email address is required' }, { status: 400 });
     }
 
-    // 新規ユーザーか既存ユーザーかで件名を変更
-    const subject = isNewUser ? 'Shoninへようこそ！' : 'おかえりなさい！';
+    // メールタイプに応じて件名を決定
+    let subject: string;
+    if (emailType === 'goodbye') {
+      subject = 'ご利用ありがとうございました';
+    } else if (emailType === 'welcome') {
+      subject = 'Shoninへようこそ！';
+    } else if (emailType === 'welcome_back') {
+      subject = 'おかえりなさい！';
+    } else {
+      // 後方互換性: emailTypeが指定されていない場合はisNewUserで判定
+      subject = isNewUser ? 'Shoninへようこそ！' : 'おかえりなさい！';
+    }
+    
     console.log('件名:', subject);
 
     const { data, error } = await resend.emails.send({
@@ -33,7 +45,8 @@ export async function POST(request: NextRequest) {
       subject: subject,
       react: EmailTemplate({ 
         firstName: firstName || 'ユーザー',
-        isNewUser: isNewUser
+        isNewUser: isNewUser,
+        emailType: emailType
       }), // ユーザーの名前とステータスを渡す
     });
 
