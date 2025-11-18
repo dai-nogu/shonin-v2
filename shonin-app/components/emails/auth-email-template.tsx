@@ -1,22 +1,18 @@
 import * as React from 'react';
 
-interface EmailTemplateProps {
+interface AuthEmailTemplateProps {
   firstName: string;
-  isNewUser?: boolean;
-  emailType?: 'welcome' | 'welcome_back' | 'goodbye';
+  emailType: 'welcome' | 'welcome_back' | 'goodbye';
 }
 
-export function EmailTemplate({ firstName, isNewUser, emailType }: EmailTemplateProps) {
-  // emailTypeが指定されていない場合は、isNewUserで判定（後方互換性）
-  const type = emailType || (isNewUser ? 'welcome' : 'welcome_back');
-
+export function AuthEmailTemplate({ firstName, emailType }: AuthEmailTemplateProps) {
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      {type === 'welcome' && (
+      {emailType === 'welcome' && (
         <>
           <h1 style={{ color: '#333' }}>{firstName}さん！、ようこそ</h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            ご登録ありがとうございます。
+            Shoninへのご登録ありがとうございます。
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
             あなたの成長を見つめ、証明する旅が始まります。
@@ -27,7 +23,7 @@ export function EmailTemplate({ firstName, isNewUser, emailType }: EmailTemplate
         </>
       )}
       
-      {type === 'welcome_back' && (
+      {emailType === 'welcome_back' && (
         <>
           <h1 style={{ color: '#333' }}>{firstName}さん、おかえりなさい！</h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
@@ -42,7 +38,7 @@ export function EmailTemplate({ firstName, isNewUser, emailType }: EmailTemplate
         </>
       )}
       
-      {type === 'goodbye' && (
+      {emailType === 'goodbye' && (
         <>
           <h1 style={{ color: '#333' }}>ご利用ありがとうございました、{firstName}さん</h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
@@ -65,8 +61,9 @@ export function EmailTemplate({ firstName, isNewUser, emailType }: EmailTemplate
       
       <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #eee' }} />
       <p style={{ fontSize: '14px', color: '#888', textAlign: 'center' }}>
-        See the Unseen.
+        Be a witness to your growth.
       </p>
     </div>
   );
 }
+

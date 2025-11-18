@@ -16,6 +16,13 @@ const intlMiddleware = createMiddleware({
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
+  // ルートパスへのアクセスは /ja/ にリダイレクト
+  if (pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/ja/'
+    return NextResponse.redirect(url)
+  }
+  
   // 静的ファイルやAPIルート、callbackはスキップ（認証チェックなし）
   if (
     pathname.startsWith('/_next') ||
@@ -66,7 +73,8 @@ export async function middleware(request: NextRequest) {
   
   // 認証が必要なパスで、セッションがない場合はログインページにリダイレクト
   if (!session) {
-    const loginUrl = new URL(`/${locale}/login`, request.url)
+    // BASE_URLを使用してリダイレクトURLを構築
+    const loginUrl = `${process.env.BASE_URL}/${locale}/login`
     return NextResponse.redirect(loginUrl)
   }
   

@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     try {
       safeLog('退会メールを送信します', user.email);
       
-      const emailResponse = await fetch(`${request.url.split('/api')[0]}/api/send`, {
+      const emailResponse = await fetch(`${process.env.BASE_URL}/api/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           email: user.email,
           firstName: firstName,
+          emailCategory: 'auth',
           emailType: 'goodbye',
         }),
       });

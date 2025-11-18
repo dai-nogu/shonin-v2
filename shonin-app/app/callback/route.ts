@@ -70,15 +70,16 @@ export async function GET(request: NextRequest) {
             console.log('既存ユーザーのログイン: おかえりなさいメールを送信します', user.email);
           }
           
-          const emailPayload = {
-            email: user.email,
-            firstName: firstName,
-            isNewUser: isNewUser,
-          };
-          console.log('メール送信ペイロード:', JSON.stringify(emailPayload, null, 2));
+            const emailPayload = {
+              email: user.email,
+              firstName: firstName,
+              emailCategory: 'auth' as const,
+              emailType: isNewUser ? ('welcome' as const) : ('welcome_back' as const),
+            };
+            console.log('メール送信ペイロード:', JSON.stringify(emailPayload, null, 2));
           
           // メール送信APIを呼び出し
-          const emailResponse = await fetch(`${requestUrl.origin}/api/send`, {
+          const emailResponse = await fetch(`${process.env.BASE_URL}/api/send`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
