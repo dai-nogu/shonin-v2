@@ -182,10 +182,11 @@ export function DeleteAccountSection() {
           <AlertDialogFooter>
             <AlertDialogCancel 
               className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
+              disabled={isDeleting}
             >
               {t('settings.no')}
             </AlertDialogCancel>
-            <AlertDialogAction
+            <Button
               onClick={handleDeleteAccount}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
@@ -198,7 +199,7 @@ export function DeleteAccountSection() {
               ) : (
                 t('settings.delete')
               )}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

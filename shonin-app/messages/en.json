@@ -102,10 +102,8 @@
     "fetch_error": "An error occurred while fetching feedback"
   },
   "quick_start": {
-    "start_activity": "Quick Start",
-    "start_from_recent": "Recent activities",
-    "no_activity_yet": "No activities yet",
-    "complete_first_session": "Once you complete your first session, it'll appear here.",
+    "start_activity": "Recent activities",
+    "complete_first_session": "Once you complete your first record, it'll appear here.",
     "latest": "Latest",
     "most_recorded": "Most Recorded",
     "yesterday": "Yesterday",
@@ -363,8 +361,7 @@
     "fetch_error": "Failed to fetch subscription information"
   },
   "session_start": {
-    "title": "Log Activity",
-    "subtitle": "Record your efforts",
+    "title": "Start Recording",
     "select_activity": "Choose an Activity",
     "activity_placeholder": "No activity yet",
     "location": "Location",
@@ -376,7 +373,7 @@
     "hours": "hours",
     "minutes": "minutes",
     "start_recording": "Start",
-    "starting_recording": "recording...",
+    "starting_recording": "Starting...",
     "add_new_activity": "Add New Activity",
     "activity_name": "Name",
     "activity_description": "Description",
@@ -417,7 +414,7 @@
     "completed_message": "Good work!",
     "mood_question": "How are you feeling?",
     "achievements_label": "Today's Notes",
-    "achievements_placeholder": "How was today?",
+    "achievements_placeholder": "How was your activity?",
     "challenges_label": "Tomorrow's Plan",
     "challenges_placeholder": "What will you do tomorrow?",
     "notes_label": "Other",

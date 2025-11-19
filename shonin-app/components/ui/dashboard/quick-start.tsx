@@ -495,11 +495,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
             {t('quick_start.start_activity')}
           </CardTitle>
-          <p className="text-gray-400 text-sm">{t('quick_start.start_from_recent')}</p>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-gray-400">{t('quick_start.no_activity_yet')}</p>
             <p className="text-gray-500 text-sm mt-2">{t('quick_start.complete_first_session')}</p>
           </div>
         </CardContent>
@@ -514,7 +512,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
             {t('quick_start.start_activity')}
           </CardTitle>
-          <p className="text-gray-400 text-sm">{t('quick_start.start_from_recent')}</p>
         </CardHeader>
 
         <CardContent>

@@ -29,12 +29,10 @@ export function LogoutSection() {
   
   // ログアウト確認用の状態
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
   // ログアウト確認ダイアログの処理
   const handleLogoutConfirm = async () => {
-    setIsLoggingOut(true)
     setOperationError(null) // エラーをリセット
     try {
       await signOut()
@@ -43,12 +41,6 @@ export function LogoutSection() {
     } catch (error) {
       // Toast通知ではなく、エラーステートに設定
       setOperationError(t('settings.logout_error'))
-    } finally {
-      setIsLoggingOut(false)
-      // エラーがある場合はダイアログを閉じない
-      if (!operationError) {
-        setLogoutDialogOpen(false)
-      }
     }
   }
 
@@ -97,17 +89,9 @@ export function LogoutSection() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogoutConfirm}
-              disabled={isLoggingOut}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {isLoggingOut ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{t('settings.logging_out')}</span>
-                </div>
-              ) : (
-                t('settings.logout')
-              )}
+              {t('settings.logout')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -197,7 +197,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
         <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
           {t('session_start.title')}
         </CardTitle>
-        <p className="text-gray-400 text-sm">{t('session_start.subtitle')}</p>
       </CardHeader>
 
       <CardContent className="space-y-4 lg:space-y-6">
