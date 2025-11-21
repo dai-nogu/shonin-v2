@@ -86,12 +86,6 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
           
           <p className="text-green-100 opacity-90 text-sm mt-3">{t('dashboard.encouragement')}</p>
         </div>
-
-        <div className="text-center">
-          <div className="font-bold leading-tight" style={{ fontSize: '1.5rem' }}>
-            {formatTime(totalHours, totalMinutes)}
-          </div>
-        </div>
       </CardContent>
     </Card>
   )

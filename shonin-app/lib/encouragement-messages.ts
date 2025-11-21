@@ -60,7 +60,7 @@ export const getGoalAchievedMessage = (messages: any): string => {
  * @param streakDays 連続日数
  */
 export const getStreakMessage = (streakDays: number, messages: any): string => {
-  const message = getRandomElement(messages.streak)
+  const message = getRandomElement(messages.streak as string[])
   // {days}プレースホルダーを置換
   return message.replace('{days}', streakDays.toString())
 }

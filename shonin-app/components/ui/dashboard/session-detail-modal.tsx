@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Clock, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image } from "lucide-react"
+import { X, Clock, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
@@ -459,8 +459,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               {/* スタートボタン */}
               <Button
                 onClick={handleStartSimilar}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full bg-green-600 hover:bg-green-700 text-black"
               >
+                <Play className="w-4 h-4" />
                 {t('session_detail.start_session')}
               </Button>
             </div>
@@ -479,8 +480,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               {onStartSimilar && (
                 <Button
                   onClick={handleStartSimilar}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-black"
                 >
+                  <Play className="w-4 h-4" />
                   {t('session_detail.start_session')}
                 </Button>
               )}
@@ -1053,8 +1055,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               {/* スタートボタン */}
               <Button
                 onClick={handleStartSimilar}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full bg-green-600 hover:bg-green-700 text-black"
               >
+                <Play className="w-4 h-4" />
                 {t('session_detail.start_session')}
               </Button>
             </div>
@@ -1073,9 +1076,10 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               {onStartSimilar && (
                 <Button
                   onClick={handleStartSimilar}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-black"
                 >
-                                      {t('session_detail.start_session')}
+                  <Play className="w-4 h-4" />
+                  {t('session_detail.start_session')}
                 </Button>
               )}
             </div>

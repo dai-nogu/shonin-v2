@@ -442,18 +442,32 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
             {/* SP版とPC版で構造を分ける */}
             {isMobile ? (
-              // SP版: 開始ボタンのみ
-              <Button
-                size="sm"
-                className="bg-green-500 hover:bg-green-600 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleActivityClick(activity)
-                }}
-              >
-                <Play className="w-3 h-3 mr-1" />
-                {t('common.start')}
-              </Button>
+              // SP版: 詳細ボタン + 開始ボタン
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleViewDetail(activity)
+                  }}
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  {t('common.details')}
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-green-500 hover:bg-green-600 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleActivityClick(activity)
+                  }}
+                >
+                  <Play className="w-3 h-3 mr-1" />
+                  {t('common.start')}
+                </Button>
+              </div>
             ) : (
               // PC版: 詳細ボタン + 開始ボタン
               <div className="flex items-center space-x-2">

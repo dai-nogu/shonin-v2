@@ -19,7 +19,7 @@
     "no": "いいえ",
     "seeMore": "もっと見る",
     "times": "回",
-    "start": "開始",
+    "start": "記録",
     "details": "詳細",
     "not_set": "なし",
     "reload_and_retry": "画面をリロードしてもう一度やり直してください。"
@@ -67,7 +67,7 @@
       "evening": "こんばんは",
       "userSuffix": "さん"
     },
-    "encouragement": "今日も努力を積み重ねましょう",
+    "encouragement": "今日も軌跡を刻めそうですか？",
     "quickStart": {
       "description": "最近の軌跡から素早く開始",
       "noRecentActivities": "最近の軌跡がありません",
@@ -83,7 +83,7 @@
     "achievements": "今日のメモ",
     "improvements": "明日の予定",
     "no_content": "特になし",
-    "start_session": "開始",
+    "start_session": "記録",
     "close": "閉じる"
   },
   "ai_feedback": {
@@ -361,7 +361,7 @@
     "fetch_error": "サブスクリプション情報の取得に失敗しました"
   },
   "session_start": {
-    "title": "軌跡を開始する",
+    "title": "軌跡を記録する",
     "select_activity": "取り組む内容を選ぶ",
     "activity_placeholder": "何に取り組みますか？",
     "location": "場所",
@@ -372,8 +372,8 @@
     "target_time": "目標時間",
     "hours": "時間",
     "minutes": "分",
-    "start_recording": "開始",
-    "starting_recording": "開始...",
+    "start_recording": "記録",
+    "starting_recording": "記録開始...",
     "add_new_activity": "新しい内容を追加",
     "activity_name": "名前",
     "activity_description": "説明",
@@ -413,7 +413,7 @@
     "paused_message": "⏸一時停止中です。",
     "completed_message": "お疲れさまでした！",
     "mood_question": "今の気分はどうですか？",
-    "achievements_label": "今の振り返り",
+    "achievements_label": "振り返り",
     "achievements_placeholder": "成果や学びは何でしたか？",
     "challenges_label": "明日の予定",
     "challenges_placeholder": "明日は何しますか？",

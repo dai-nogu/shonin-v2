@@ -88,6 +88,7 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
           onTogglePause={() => {}} // 暫定：セッションページで処理
           onEnd={() => {}} // 暫定：セッションページで処理
           sessionState="active" // 暫定：実際の値は不要
+          isDashboard={true} // ダッシュボード表示モード
         />
       </div>
       

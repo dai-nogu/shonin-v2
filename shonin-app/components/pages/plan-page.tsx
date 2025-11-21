@@ -104,7 +104,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
     <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
       <main className="container mx-auto px-4 py-4 lg:py-6">
         {/* Header Section */}
-        <div className="py-6 lg:py-8 text-center mb-8 lg:mb-12">
+        <div className="py-6 lg:py-8 text-center lg:mb-12">
           <h1 className="text-2xl lg:text-3xl font-bold mb-3">
             {t("title")}
           </h1>
