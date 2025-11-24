@@ -1,11 +1,24 @@
 import { stripe } from "@/lib/stripe";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import { safeError } from "@/lib/safe-logger";
+import { NextRequest, NextResponse } from "next/server";
+import { safeError, safeWarn } from "@/lib/safe-logger";
+import { validateOrigin } from "@/lib/csrf-protection";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // CSRF保護: Origin/Refererチェック
+    if (!validateOrigin(request)) {
+      safeWarn('CSRF attempt detected: Invalid origin', {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      });
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
     // Supabase セッションからユーザーを取得
     const cookieStore = await cookies();
     const supabase = createServerClient(

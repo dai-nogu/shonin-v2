@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import { safeLog, safeError } from '@/lib/safe-logger'
+import { safeLog, safeError, safeWarn } from '@/lib/safe-logger'
+import { validateOrigin } from '@/lib/csrf-protection'
 
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -10,6 +11,18 @@ const supabaseServer = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF保護: Origin/Refererチェック
+    if (!validateOrigin(request)) {
+      safeWarn('CSRF attempt detected: Invalid origin', {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      });
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
     // レート制限チェック（簡易版）
     const userAgent = request.headers.get('user-agent')
     const xForwardedFor = request.headers.get('x-forwarded-for')

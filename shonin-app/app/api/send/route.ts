@@ -3,6 +3,7 @@ import { SubscriptionEmailTemplate } from '../../../components/emails/subscripti
 import { Resend } from 'resend';
 import { NextRequest } from 'next/server';
 import React from 'react';
+import { validateOrigin } from '@/lib/csrf-protection';
 
 // .env.localにRESEND_API_KEYが設定されていることを確認
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -24,6 +25,19 @@ interface EmailRequestBody {
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF保護: Origin/Refererチェック
+    // ただし、内部APIからの呼び出し（BASE_URLから）は許可
+    if (!validateOrigin(request)) {
+      console.warn('CSRF attempt detected: Invalid origin', {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      });
+      return Response.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
     // リクエストボディからユーザー情報を取得
     const body = await request.json() as EmailRequestBody;
     const { 
