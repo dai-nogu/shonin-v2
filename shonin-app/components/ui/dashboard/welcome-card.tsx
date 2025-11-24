@@ -84,7 +84,6 @@ export function WelcomeCard({ completedSessions }: WelcomeCardProps) {
             <h2 className="text-xl lg:text-2xl font-bold mb-1">{getGreeting().greeting}</h2>
           </div>
           
-          <p className="text-green-100 opacity-90 text-sm mt-3">{t('dashboard.encouragement')}</p>
         </div>
       </CardContent>
     </Card>
