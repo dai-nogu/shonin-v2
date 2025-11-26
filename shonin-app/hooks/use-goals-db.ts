@@ -67,7 +67,8 @@ export function useSingleGoal(goalId: string) {
   const handleError = useGoalsErrorHandler(setError)
 
   useEffect(() => {
-    // アンマウント時のクリーンアップ
+    // マウント時に初期化、アンマウント時のクリーンアップ
+    mountedRef.current = true
     return () => {
       mountedRef.current = false
     }
@@ -200,9 +201,23 @@ export function useGoalsDb(initialGoals?: Goal[]) {
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const goalId = await goalsActions.addGoal(goalData)
+      const result = await goalsActions.addGoal(goalData)
+      
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_ADD_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.add_error')
+          setError(t(errorKey))
+        }
+        return result
+      }
+      
       await fetchGoals(true) // リストを更新（バックグラウンド）
-      return success(goalId)
+      return result
     } catch (err) {
       // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
       const isAuthErr = handleError(err, 'goals.add_error')
@@ -230,12 +245,22 @@ export function useGoalsDb(initialGoals?: Goal[]) {
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const updated = await goalsActions.updateGoal(id, goalData)
-      if (updated) {
-        await fetchGoals(true) // リストを更新（バックグラウンド）
-        return success(undefined)
+      const result = await goalsActions.updateGoal(id, goalData)
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_UPDATE_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.update_error')
+          setError(t(errorKey))
+        }
+        return result
       }
-      return failure(t('goals.update_error'))
+      
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
     } catch (err) {
       // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
       const isAuthErr = handleError(err, 'goals.update_error')
@@ -263,12 +288,23 @@ export function useGoalsDb(initialGoals?: Goal[]) {
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const deleted = await goalsActions.deleteGoal(id)
-      if (deleted) {
-        await fetchGoals(true) // リストを更新（バックグラウンド）
-        return success(undefined)
+      const result = await goalsActions.deleteGoal(id)
+      
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_DELETE_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.delete_error')
+          setError(t(errorKey))
+        }
+        return result
       }
-      return failure(t('goals.delete_error'))
+      
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
     } catch (err) {
       // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
       const isAuthErr = handleError(err, 'goals.delete_error')
@@ -296,12 +332,22 @@ export function useGoalsDb(initialGoals?: Goal[]) {
         return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const completed = await goalsActions.completeGoal(id)
-      if (completed) {
-        await fetchGoals(true) // リストを更新（バックグラウンド）
-        return success(undefined)
+      const result = await goalsActions.completeGoal(id)
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_COMPLETE_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.complete_error')
+          setError(t(errorKey))
+        }
+        return result
       }
-      return failure(t('goals.complete_error'))
+      
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
     } catch (err) {
       // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
       const isAuthErr = handleError(err, 'goals.complete_error')
@@ -326,8 +372,9 @@ export function useGoalsDb(initialGoals?: Goal[]) {
     return goals.filter(goal => goal.status === 'active')
   }, [goals])
 
-  // アンマウント時のクリーンアップ
+  // マウント時に初期化、アンマウント時のクリーンアップ
   useEffect(() => {
+    mountedRef.current = true // マウント時に必ずtrueにする
     return () => {
       mountedRef.current = false
     }

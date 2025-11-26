@@ -13,6 +13,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { formatISODateForLocale } from '@/lib/i18n-utils'
 import { useSubscription } from "@/hooks/use-subscription"
 import { GoalLimitModal } from "@/components/ui/goals/goal-limit-modal"
+import type { Database } from '@/types/database'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/settings/alert-dialog"
 
+// データベースから取得する Goal 型
+type DbGoal = Database['public']['Tables']['goals']['Row']
+
+// UI表示用の Goal インターフェース
 interface Goal {
   id: string
   title: string
@@ -42,7 +47,7 @@ interface Goal {
 }
 
 interface GoalsProps {
-  initialGoals?: Goal[]
+  initialGoals?: DbGoal[]
 }
 
 export function Goals({ initialGoals }: GoalsProps) {
@@ -162,14 +167,19 @@ export function Goals({ initialGoals }: GoalsProps) {
     if (!selectedGoalId) return
     
     setIsDeleting(true)
-    const success = await deleteGoalFromDb(selectedGoalId)
-    if (!success) {
-      // Toast通知ではなく、画面全体のエラー表示に変更
-      setOperationError(t('goals.delete_error'))
-    }
+    const result = await deleteGoalFromDb(selectedGoalId)
     setIsDeleting(false)
-    setDeleteDialogOpen(false)
-    setSelectedGoalId(null)
+    
+    if (result.success) {
+      // 削除成功時のみダイアログを閉じる
+      setDeleteDialogOpen(false)
+      setSelectedGoalId(null)
+    } else {
+      // エラー時はダイアログを閉じてからエラーを表示
+      setDeleteDialogOpen(false)
+      setSelectedGoalId(null)
+      setOperationError(result.error || t('goals.delete_error'))
+    }
   }
 
   return (
