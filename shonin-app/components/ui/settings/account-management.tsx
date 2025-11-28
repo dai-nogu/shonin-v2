@@ -10,16 +10,16 @@ export function AccountManagement() {
   const t = useTranslations()
   
   return (
-    <Card className="bg-white border-0 shadow-sm">
+    <Card className="bg-gray-800 border-gray-700 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-gray-900">
+        <CardTitle className="text-white">
           {t('settings.account_management')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <LogoutSection />
 
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-4 border-t border-gray-700">
           <DeleteAccountSection />
         </div>
       </CardContent>

@@ -9,7 +9,7 @@ import { MonthCalendarCSR } from "@/components/ui/calendar/month/month-calendar-
 import { useSessionList } from "@/hooks/useSessionList"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
 import { useTranslations, useLocale } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
@@ -162,23 +162,45 @@ function MonthCalendarSSR({
         <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-6 mb-2 md:mb-0">
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-2 md:p-4 text-center">
-              <div className="text-lg md:text-2xl font-bold text-green-400">
-                {formatDuration(totalMonthTime)}
-              </div>
-              <div className="text-xs md:text-sm text-gray-400">
-                {t('calendar.month_stats.total_time')}
-              </div>
+              {totalMonthTime === 0 ? (
+                <>
+                  <div className="flex justify-center mb-1 md:mb-2">
+                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-500">まだ軌跡がありません</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg md:text-2xl font-bold text-green-400">
+                    {formatDuration(totalMonthTime)}
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-400">
+                    {t('calendar.month_stats.total_time')}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
           <Card className="bg-gray-900 border-gray-800">
             <CardContent className="p-2 md:p-4 text-center">
-              <div className="text-lg md:text-2xl font-bold text-purple-400">
-                {formatDuration(averageMonthTime)}
-              </div>
-              <div className="text-xs md:text-sm text-gray-400">
-                {t('calendar.month_stats.average_time')}
-              </div>
+              {averageMonthTime === 0 ? (
+                <>
+                  <div className="flex justify-center mb-1 md:mb-2">
+                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-500">まだ軌跡がありません</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg md:text-2xl font-bold text-purple-400">
+                    {formatDuration(averageMonthTime)}
+                  </div>
+                  <div className="text-xs md:text-sm text-gray-400">
+                    {t('calendar.month_stats.average_time')}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

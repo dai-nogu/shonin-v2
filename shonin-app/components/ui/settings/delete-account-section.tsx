@@ -111,28 +111,28 @@ export function DeleteAccountSection() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <Label className="text-red-600">{t('settings.account_deletion')}</Label>
+        <Label className="text-red-400">{t('settings.account_deletion')}</Label>
       </div>
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogTrigger asChild>
           <Button 
-            className="bg-red-50 border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700 border"
+            className="bg-red-900 border-red-700 text-red-300 hover:bg-red-800 hover:text-red-200 border"
           >
             {t('settings.account_deletion')}
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
+        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-600">
+            <AlertDialogTitle className="text-red-400">
               {t('settings.account_deletion_confirmation')}
             </AlertDialogTitle>
 
             {/* エラー表示 */}
             {operationError && (
-              <div className="p-4 bg-red-50 border border-red-300 rounded-lg mb-4">
-                <p className="text-red-700 font-semibold text-center mb-2">{operationError}</p>
-                <p className="text-red-600 text-sm text-center">
+              <div className="p-4 bg-red-900 border border-red-700 rounded-lg mb-4">
+                <p className="text-red-300 font-semibold text-center mb-2">{operationError}</p>
+                <p className="text-red-400 text-sm text-center">
                   {t('common.reload_and_retry')}
                 </p>
               </div>
@@ -142,20 +142,20 @@ export function DeleteAccountSection() {
           <div className="space-y-4">
             {/* 有料プランの残り日数警告 */}
             {subscriptionStatus === 'standard' && remainingDays > 0 && (
-              <div className="p-4 bg-orange-50 border border-orange-300 rounded-lg">
-                <div className="text-orange-800 font-bold mb-2 text-lg">
+              <div className="p-4 bg-orange-900 border border-orange-700 rounded-lg">
+                <div className="text-orange-200 font-bold mb-2 text-lg">
                   {t('settings.subscription_warning_title')}
                 </div>
-                <div className="text-orange-900 font-semibold mb-1">
+                <div className="text-orange-100 font-semibold mb-1">
                   {t('settings.remaining_days_warning', { days: remainingDays })}
                 </div>
-                <p className="text-sm text-orange-700">
+                <p className="text-sm text-orange-300">
                   {t('settings.deletion_immediate_effect')}
                 </p>
-                <p className="text-sm text-orange-700 mt-1 font-semibold">
+                <p className="text-sm text-orange-300 mt-1 font-semibold">
                   {t('settings.subscription_will_be_cancelled')}
                 </p>
-                <p className="text-sm text-orange-700 mt-2">
+                <p className="text-sm text-orange-300 mt-2">
                   {t('settings.cancel_plan_only_hint_prefix')}
                   <strong>{t('settings.cancel_plan_only_hint_bold')}</strong>
                   {t('settings.cancel_plan_only_hint_suffix')}
@@ -163,25 +163,25 @@ export function DeleteAccountSection() {
               </div>
             )}
             
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="text-red-700 font-medium mb-2">
+            <div className="p-4 bg-red-900 border border-red-700 rounded-lg">
+              <div className="text-red-300 font-medium mb-2">
                 {t('settings.important_warning')}
               </div>
-              <ul className="text-sm space-y-1 text-gray-700">
+              <ul className="text-sm space-y-1 text-gray-300">
                 <li>{t('settings.warning_irreversible')}</li>
                 <li>{t('settings.warning_activity_data')}</li>
                 <li>{t('settings.warning_session_history')}</li>
                 <li>{t('settings.warning_goals_ai')}</li>
               </ul>
             </div>
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-gray-300">
               {t('settings.confirm_deletion')}
             </div>
           </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
+              className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500 hover:text-white"
               disabled={isDeleting}
             >
               {t('settings.no')}

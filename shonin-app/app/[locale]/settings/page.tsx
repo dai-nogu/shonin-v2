@@ -45,15 +45,15 @@ export default async function SettingsPage({
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4 flex items-center">
           <Link href={`/${locale}/dashboard`} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">S</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">SHONIN</span>
+            <span className="text-xl font-bold text-white">SHONIN</span>
           </Link>
         </div>
       </header>
@@ -61,10 +61,10 @@ export default async function SettingsPage({
       {/* メインコンテンツ */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             {t("settings.title")}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             {t("settings.description")}
           </p>
         </div>
@@ -77,11 +77,11 @@ export default async function SettingsPage({
               <Link
                 key={category.id}
                 href={category.href}
-                className="block bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200"
+                className="block bg-gray-800 rounded-xl border border-gray-700 hover:border-green-500 hover:shadow-md transition-all duration-200"
               >
                 <div className="p-6 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-white">
                       {category.title}
                     </h2>
                   </div>

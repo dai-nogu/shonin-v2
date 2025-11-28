@@ -18,13 +18,13 @@ export default async function ProfilePage({
   ])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <Link href={`/${locale}/settings`} className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
-            <ChevronLeft className="w-6 h-6 text-gray-600" />
-            <h1 className="text-xl font-bold text-gray-900">
+            <ChevronLeft className="w-6 h-6 text-gray-300" />
+            <h1 className="text-xl font-bold text-white">
               {t("settings.categories.profile")}
             </h1>
           </Link>

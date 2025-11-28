@@ -84,9 +84,9 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
   }
 
   return (
-    <Card className="bg-white border-0 shadow-sm">
+    <Card className="bg-gray-800 border-gray-700 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-gray-900">
+        <CardTitle className="text-white">
           {t('settings.profile')}
         </CardTitle>
       </CardHeader>
@@ -95,27 +95,27 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
           <>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-gray-700">{t('settings.name')}</Label>
-                <div className="text-gray-900">{name || t('common.not_set')}</div>
+                <Label className="text-gray-300">{t('settings.name')}</Label>
+                <div className="text-white">{name || t('common.not_set')}</div>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700">{t('settings.email')}</Label>
-                <div className="text-gray-900">{email}</div>
+                <Label className="text-gray-300">{t('settings.email')}</Label>
+                <div className="text-white">{email}</div>
               </div>
             </div>
 
             {/* サブスクリプション情報 */}
             <div className="space-y-4 mt-6">
               <div className="space-y-2">
-                <Label className="text-gray-700">{t('settings.current_plan')}</Label>
+                <Label className="text-gray-300">{t('settings.current_plan')}</Label>
                 <div className="flex items-center gap-2">
                   {subscriptionStatus === 'standard' ? (
                     <>
-                      <span className="text-gray-900 text-sm font-semibold">
+                      <span className="text-white text-sm font-semibold">
                         Standard
                       </span>
                       {cancelAtPeriodEnd && currentPeriodEnd && (
-                        <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded">
+                        <span className="px-2 py-1 bg-orange-900 text-orange-300 text-xs font-medium rounded">
                           {t('settings.cancel_scheduled_badge', {
                             date: new Date(currentPeriodEnd).toLocaleDateString(t('common.locale') || 'ja-JP', {
                               month: 'numeric',
@@ -126,7 +126,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                       )}
                     </>
                   ) : (
-                    <span className="text-gray-900 text-sm font-semibold">
+                    <span className="text-white text-sm font-semibold">
                       Free
                     </span>
                   )}
@@ -135,8 +135,8 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
               
               {subscriptionStatus === 'standard' && currentPeriodEnd && !cancelAtPeriodEnd && (
                 <div className="space-y-2">
-                  <Label className="text-gray-700">{t('settings.next_billing_date')}</Label>
-                  <div className="text-gray-900">
+                  <Label className="text-gray-300">{t('settings.next_billing_date')}</Label>
+                  <div className="text-white">
                     {new Date(currentPeriodEnd).toLocaleDateString('ja-JP', {
                       year: 'numeric',
                       month: 'long',
@@ -150,7 +150,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                 <div className="pt-2">
                   <Button
                     onClick={handleManageSubscription}
-                    className="bg-gray-900 text-white hover:bg-gray-800"
+                    className="bg-green-600 text-white hover:bg-green-700"
                   >
                     {t('settings.manage_subscription')}
                   </Button>
@@ -158,8 +158,8 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
               )}
               
               {subscriptionStatus === 'free' && (
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="text-sm text-green-700">
+                <div className="p-3 bg-green-900 rounded-lg border border-green-700">
+                  <p className="text-sm text-green-300">
                     {t('settings.upgrade_to_standard')}
                   </p>
                 </div>
@@ -169,16 +169,16 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-gray-700">{t('settings.name')}</Label>
-              <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+              <Label className="text-gray-300">{t('settings.name')}</Label>
+              <div className="h-6 bg-gray-700 rounded animate-pulse"></div>
             </div>
             <div className="space-y-2">
-              <Label className="text-gray-700">{t('settings.email')}</Label>
-              <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+              <Label className="text-gray-300">{t('settings.email')}</Label>
+              <div className="h-6 bg-gray-700 rounded animate-pulse"></div>
             </div>
             <div className="space-y-2 mt-6">
-              <Label className="text-gray-700">{t('settings.current_plan')}</Label>
-              <div className="h-8 w-20 bg-gray-200 rounded-full animate-pulse"></div>
+              <Label className="text-gray-300">{t('settings.current_plan')}</Label>
+              <div className="h-8 w-20 bg-gray-700 rounded-full animate-pulse"></div>
             </div>
           </div>
         )}

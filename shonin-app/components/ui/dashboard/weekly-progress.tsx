@@ -94,10 +94,21 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
 
         <div className="pt-3 lg:pt-4 border-t border-gray-800">
           <div className="text-center">
-            <div className="text-xl lg:text-2xl font-bold text-green-400">
-              {formatDuration(totalWeekSeconds)}
-            </div>
-            <div className="text-xs lg:text-sm text-gray-400">{t('weekly_progress.total_this_week')}</div>
+            {totalWeekSeconds === 0 ? (
+              <>
+                <div className="flex justify-center mb-2">
+                  <BarChart3 className="w-8 h-8 lg:w-10 lg:h-10 text-gray-600" />
+                </div>
+                <div className="text-xs lg:text-sm text-gray-500">まだ軌跡がありません</div>
+              </>
+            ) : (
+              <>
+                <div className="text-xl lg:text-2xl font-bold text-green-400">
+                  {formatDuration(totalWeekSeconds)}
+                </div>
+                <div className="text-xs lg:text-sm text-gray-400">{t('weekly_progress.total_this_week')}</div>
+              </>
+            )}
           </div>
         </div>
       </CardContent>

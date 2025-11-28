@@ -60,18 +60,18 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
   }
 
   return (
-    <Card className="bg-white border-0 shadow-sm">
+    <Card className="bg-gray-800 border-gray-700 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-gray-900">
+        <CardTitle className="text-white">
           {t('settings.activity_management')}
         </CardTitle>
-        <p className="text-gray-600 text-sm">
+        <p className="text-gray-300 text-sm">
           {t('settings.activity_management_description')}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {activitiesLoading ? (
-          <div className="text-center py-8 text-gray-600">
+          <div className="text-center py-8 text-gray-300">
             <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p>{t('settings.loading_activities')}</p>
           </div>
@@ -80,16 +80,16 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
             {customActivities.map((activity) => (
               <div
                 key={activity.id}
-                className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2"
+                className="p-3 bg-gray-700 rounded-lg border border-gray-600 space-y-2"
               >
                 {/* タイトル行：色・名前・ステータス・削除ボタンを横並び */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-5 h-5 rounded-full ${activity.color}`}></div>
-                    <span className="text-gray-900 font-medium">{activity.name}</span>
+                    <span className="text-white font-medium">{activity.name}</span>
                     {/* 現在進行中のアクティビティの場合は表示 */}
                     {isSessionActive && currentSession && currentSession.activityId === activity.id && (
-                      <span className="text-green-700 text-xs bg-green-100 px-2 py-1 rounded-full">
+                      <span className="text-green-300 text-xs bg-green-900 px-2 py-1 rounded-full">
                         {t('settings.in_progress')}
                       </span>
                     )}
@@ -101,8 +101,8 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
                     disabled={!!(isSessionActive && currentSession && currentSession.activityId === activity.id)}
                     className={`p-2 ${
                       isSessionActive && currentSession && currentSession.activityId === activity.id
-                        ? "text-gray-400 cursor-not-allowed opacity-50"
-                        : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                        ? "text-gray-500 cursor-not-allowed opacity-50"
+                        : "text-red-400 hover:text-red-300 hover:bg-red-900"
                     }`}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -112,7 +112,7 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
             ))}
             
             {customActivities.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-400">
                 <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>{t('settings.no_custom_activities')}</p>
                 <p className="text-sm">{t('settings.add_activities_hint')}</p>
@@ -124,18 +124,18 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
 
       {/* 削除確認ダイアログ */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
+        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-600">
+            <AlertDialogTitle className="text-red-400">
               {t('settings.delete_activity_confirmation_title')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-700">
+            <AlertDialogDescription className="text-gray-300">
               {t('settings.delete_activity_confirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
+              className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500 hover:text-white"
             >
               {t('settings.cancel')}
             </AlertDialogCancel>

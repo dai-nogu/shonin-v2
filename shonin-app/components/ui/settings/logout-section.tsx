@@ -47,7 +47,7 @@ export function LogoutSection() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <Label className="text-gray-700">{t('settings.logout')}</Label>
+        <Label className="text-gray-300">{t('settings.logout')}</Label>
       </div>
       
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
@@ -58,23 +58,23 @@ export function LogoutSection() {
             {t('settings.logout')}
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
+        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-600">
+            <AlertDialogTitle className="text-red-400">
               {t('settings.logout_confirmation')}
             </AlertDialogTitle>
 
             {/* エラー表示 */}
             {operationError && (
-              <div className="p-4 bg-red-50 border border-red-300 rounded-lg mb-4">
-                <p className="text-red-700 font-semibold text-center mb-2">{operationError}</p>
-                <p className="text-red-600 text-sm text-center">
+              <div className="p-4 bg-red-900 border border-red-700 rounded-lg mb-4">
+                <p className="text-red-300 font-semibold text-center mb-2">{operationError}</p>
+                <p className="text-red-400 text-sm text-center">
                   {t('common.reload_and_retry')}
                 </p>
               </div>
             )}
             
-            <AlertDialogDescription className="text-gray-700">
+            <AlertDialogDescription className="text-gray-300">
               {t('settings.logout_message')}
               <br />
               {t('settings.logout_description')}
@@ -83,7 +83,7 @@ export function LogoutSection() {
           
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
+              className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500 hover:text-white"
             >
               {t('settings.no')}
             </AlertDialogCancel>
