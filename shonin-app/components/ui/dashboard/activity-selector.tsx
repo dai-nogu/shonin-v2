@@ -24,31 +24,9 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   const t = useTranslations()
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
-  const [targetHours, setTargetHours] = useState("")
-  const [targetMinutes, setTargetMinutes] = useState("")
   const [selectedGoal, setSelectedGoal] = useState("")
   const [isStarting, setIsStarting] = useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
-
-  // 今日が平日かどうかを判定
-  const isWeekday = () => {
-    const today = new Date().getDay() // 0=日曜, 1=月曜, ..., 6=土曜
-    return today >= 1 && today <= 5 // 月曜〜金曜
-  }
-
-  // 目標選択時に目標時間を自動設定
-  const handleGoalSelection = (goalId: string) => {
-    setSelectedGoal(goalId)
-    
-    if (goalId && goalId !== "none") {
-      const selectedGoalData = availableGoals.find(goal => goal.id === goalId)
-      if (selectedGoalData) {
-        const targetHours = isWeekday() ? (selectedGoalData.weekday_hours || 0) : (selectedGoalData.weekend_hours || 0)
-        setTargetHours((targetHours || 0).toString())
-        setTargetMinutes("0") // 分はデフォルトで0
-      }
-    }
-  }
 
   // 目標データを取得
   const { goals } = useGoalsDb()
@@ -144,10 +122,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
     const activity = allActivities.find((a) => a.id === selectedActivity)
     if (!activity) return
-
-    // 目標時間を分に変換
-    const targetTimeInMinutes = 
-      (parseInt(targetHours) || 0) * 60 + (parseInt(targetMinutes) || 0)
 
     const sessionData: SessionData = {
       activityId: selectedActivity,
@@ -282,7 +256,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               <Label className="text-white text-sm">
                 {t('session_start.select_goal')}
               </Label>
-              <Select value={selectedGoal} onValueChange={handleGoalSelection}>
+              <Select value={selectedGoal} onValueChange={setSelectedGoal}>
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
                   <SelectValue placeholder={t('session_start.goal_placeholder')} />
                 </SelectTrigger>
@@ -368,39 +342,6 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                 onChange={(e) => setLocation(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm"
               />
-            </div>
-
-            {/* 目標時間設定 */}
-            <div className="space-y-2">
-              <Label className="text-white text-sm">
-                {t('session_start.target_time')}
-              </Label>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={targetHours}
-                    onChange={(e) => setTargetHours(e.target.value)}
-                    min="0"
-                    max="23"
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-16 lg:w-20 text-center"
-                  />
-                  <span className="text-gray-300 text-sm">{t('session_start.hours')}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={targetMinutes}
-                    onChange={(e) => setTargetMinutes(e.target.value)}
-                    min="0"
-                    max="59"
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 w-16 lg:w-20 text-center"
-                  />
-                  <span className="text-gray-300 text-sm">{t('session_start.minutes')}</span>
-                </div>
-              </div>
             </div>
 
             {/* 開始ボタン */}

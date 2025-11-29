@@ -126,7 +126,7 @@ export function useGoalForm(initialData?: Partial<GoalFormData>) {
     })
     
     return weekdayValidation.isValid && weekendValidation.isValid && 
-           formData.title.trim() !== "" && formData.deadline !== "" && formData.calculatedHours > 0
+           formData.title.trim() !== ""
   }
 
   const weekdayHours = parseInt(formData.weekdayHours) || 0

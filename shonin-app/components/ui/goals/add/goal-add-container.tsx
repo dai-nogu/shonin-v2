@@ -5,7 +5,6 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
 import { GoalMotivationTextarea } from "../goal-motivation-textarea"
-import { GoalDeadlineInput } from "../goal-deadline-input"
 import { GoalHoursInputs } from "../goal-hours-inputs"
 import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
@@ -83,22 +82,15 @@ export function GoalAddContainer() {
             onChange={(value) => updateField("motivation", value)}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <GoalDeadlineInput
-              value={formData.deadline}
-              onChange={(value) => updateField("deadline", value)}
-            />
-            
-            <div className="md:col-span-2">
-              <GoalHoursInputs
-                weekdayHours={formData.weekdayHours}
-                weekendHours={formData.weekendHours}
-                onWeekdayHoursChange={(value) => updateField("weekdayHours", value)}
-                onWeekendHoursChange={(value) => updateField("weekendHours", value)}
-                validationErrors={validationErrors}
-              />
-            </div>
-          </div>
+          <GoalHoursInputs
+            deadline={formData.deadline}
+            onDeadlineChange={(value) => updateField("deadline", value)}
+            weekdayHours={formData.weekdayHours}
+            weekendHours={formData.weekendHours}
+            onWeekdayHoursChange={(value) => updateField("weekdayHours", value)}
+            onWeekendHoursChange={(value) => updateField("weekendHours", value)}
+            validationErrors={validationErrors}
+          />
 
           <GoalCalculationDisplay
             weeklyHours={weeklyHours}
@@ -111,7 +103,7 @@ export function GoalAddContainer() {
             onSubmit={handleAddGoal}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
-            isValid={formData.title.trim() !== "" && formData.deadline !== "" && formData.calculatedHours > 0}
+            isValid={formData.title.trim() !== ""}
           />
         </CardContent>
       </Card>

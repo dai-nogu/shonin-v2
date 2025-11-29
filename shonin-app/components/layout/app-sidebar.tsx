@@ -70,7 +70,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     
     const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
     
-    if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session") {
+    if (pathWithoutLocale === "/session") {
+      // セッション中はどのメニューもアクティブにしない
+      setActivePage("")
+    } else if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/") {
       setActivePage("dashboard")
     } else if (pathWithoutLocale === "/calendar" || pathWithoutLocale.startsWith("/calendar/")) {
       setActivePage("calendar")

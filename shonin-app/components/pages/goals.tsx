@@ -258,53 +258,64 @@ export function Goals({ initialGoals }: GoalsProps) {
                     <p className="text-sm text-white">{goal.motivation}</p>
                   </div>
                   
-                  {/* 進捗表示 */}
-                  <div className="space-y-2 mt-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-300">{t('goals.progress_status')}</span>
-                      <span className="text-sm font-medium text-white">
-                        {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
-                      </span>
-                    </div>
-                    <Progress value={progressPercentage} className="h-2" />
-                  </div>
+                  {/* 期限と時間設定がある場合のみ表示 */}
+                  {((goal.deadline && goal.deadline !== '') || (goal.weekdayHours && goal.weekdayHours > 0) || (goal.weekendHours && goal.weekendHours > 0)) ? (
+                    <>
+                      {/* 進捗表示 */}
+                      {(goal.targetDurationSeconds && goal.targetDurationSeconds > 0) && (
+                        <div className="space-y-2 mt-6">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">{t('goals.progress_status')}</span>
+                            <span className="text-sm font-medium text-white">
+                              {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
+                            </span>
+                          </div>
+                          <Progress value={progressPercentage} className="h-2" />
+                        </div>
+                      )}
 
-                  {/* 期限と残り日数 */}
-                  <div className="flex items-center justify-between text-sm mt-6">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-400">{t('goals.deadline_label')}: {formatISODateForLocale(goal.deadline, currentLocale)}</span>
-                    </div>
-                    <div className={`flex items-center space-x-1 ${
-                      isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
-                    }`}>
-                      <Clock className="w-4 h-4" />
-                      <span>
-                        {isOverdue 
-                          ? t('goals.days_overdue', { days: Math.abs(remainingDays) })
-                          : t('goals.days_remaining', { days: remainingDays })
-                        }
-                      </span>
-                    </div>
-                  </div>
+                      {/* 期限と残り日数 */}
+                      {goal.deadline && (
+                        <div className="flex items-center justify-between text-sm mt-6">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-400">{t('goals.deadline_label')}: {formatISODateForLocale(goal.deadline, currentLocale)}</span>
+                          </div>
+                          <div className={`flex items-center space-x-1 ${
+                            isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
+                          }`}>
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              {isOverdue 
+                                ? t('goals.days_overdue', { days: Math.abs(remainingDays) })
+                                : t('goals.days_remaining', { days: remainingDays })
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
-                  {/* 取り組み時間の詳細 */}
-                  <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
-                    <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
-                      <div className="flex items-center justify-center space-x-1">
-                        <span className="text-gray-400">{t('goals.weekday')}: </span>
-                        <span className="text-white">{goal.weekdayHours}{t('goals.hours_unit')}</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-1">
-                        <span className="text-gray-400">{t('goals.weekend')}: </span>
-                        <span className="text-white">{goal.weekendHours}{t('goals.hours_unit')}</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-1">
-                        <span className="text-gray-400">{t('goals.weekly')}: </span>
-                        <span className="text-white">{weeklyHours}{t('goals.hours_unit')}</span>
-                      </div>
-                    </div>
-                  </div>
+                      {/* 取り組み時間の詳細 */}
+                      {((goal.weekdayHours && goal.weekdayHours > 0) || (goal.weekendHours && goal.weekendHours > 0)) && (
+                        <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
+                          <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
+                            <div className="flex items-center justify-center space-x-1">
+                              <span className="text-gray-400">{t('goals.weekday')}: </span>
+                              <span className="text-white">{goal.weekdayHours}{t('goals.hours_unit')}</span>
+                            </div>
+                            <div className="flex items-center justify-center space-x-1">
+                              <span className="text-gray-400">{t('goals.weekend')}: </span>
+                              <span className="text-white">{goal.weekendHours}{t('goals.hours_unit')}</span>
+                            </div>
+                            <div className="flex items-center justify-center space-x-1">
+                              <span className="text-gray-400">{t('goals.weekly')}: </span>
+                              <span className="text-white">{weeklyHours}{t('goals.hours_unit')}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : null}
                 </CardContent>
               </Card>
             )
