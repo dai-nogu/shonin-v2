@@ -608,6 +608,11 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       if (mainSessionId) {
         clearSessionStateFromStorage(mainSessionId)
       }
+
+      // セッション終了時にアプリ起動フラグをクリア（次回起動時に自動遷移を有効にする）
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('shonin-app-started')
+      }
       
       return mainSessionId
     } catch (error) {

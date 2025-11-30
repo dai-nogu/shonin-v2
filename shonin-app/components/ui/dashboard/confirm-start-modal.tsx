@@ -147,7 +147,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
               size={isMobile ? "sm" : "default"}
             >
               <Play className="w-4 h-4 mr-2" />
-              はい、開始する
+              開始
             </Button>
           </div>
 

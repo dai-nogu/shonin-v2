@@ -462,8 +462,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 className="w-full bg-green-600 hover:bg-green-700 text-black"
               >
                 <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}
-              </Button>
+                {t('session_detail.start_session')}              </Button>
             </div>
           )}
 
@@ -482,9 +481,8 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-black"
                 >
-                  <Play className="w-4 h-4" />
-                  {t('session_detail.start_session')}
-                </Button>
+                <Play className="w-4 h-4" />
+                {t('session_detail.start_session')}                </Button>
               )}
             </div>
           )}
@@ -1058,8 +1056,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 className="w-full bg-green-600 hover:bg-green-700 text-black"
               >
                 <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}
-              </Button>
+                {t('session_detail.start_session')}              </Button>
             </div>
           )}
 
@@ -1078,9 +1075,8 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   onClick={handleStartSimilar}
                   className="bg-green-600 hover:bg-green-700 text-black"
                 >
-                  <Play className="w-4 h-4" />
-                  {t('session_detail.start_session')}
-                </Button>
+                <Play className="w-4 h-4" />
+                {t('session_detail.start_session')}                </Button>
               )}
             </div>
           )}
