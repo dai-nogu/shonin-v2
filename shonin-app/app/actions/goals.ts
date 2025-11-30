@@ -10,6 +10,7 @@ import { getPlanLimits, type PlanType } from '@/types/subscription'
 import { getSubscriptionInfo } from './subscription-info'
 import { AppError, handleServerError, requireAuth, notFound, getErrorCode } from '@/lib/server-error'
 import { safeError } from '@/lib/safe-logger'
+import { JA_INPUT_LIMITS, truncateForDb, truncateRequiredForDb } from '@/lib/input-limits'
 
 type Goal = Database['public']['Tables']['goals']['Row']
 type GoalInsert = Database['public']['Tables']['goals']['Insert']
@@ -155,9 +156,10 @@ export async function addGoal(goalData: GoalFormData): Promise<Result<string>> {
     // calculatedHoursを秒に変換（時間 * 3600）
     const targetDurationSeconds = goalData.calculatedHours * 3600
 
+    // サーバー側で文字数制限を適用（UIバイパス対策）
     const goalInsert: Omit<GoalInsert, 'user_id'> = {
-      title: goalData.title,
-      description: goalData.motivation || null, // motivationをdescriptionにマッピング
+      title: truncateRequiredForDb(goalData.title, JA_INPUT_LIMITS.goalTitle),
+      description: truncateForDb(goalData.motivation, JA_INPUT_LIMITS.goalMotivation),
       target_duration: targetDurationSeconds, // 秒単位で保存
       current_value: 0, // 初期値は0
       unit: '時間', // 固定値
@@ -205,11 +207,11 @@ export async function updateGoal(id: string, goalData: Partial<GoalFormData>): P
       return result
     }
 
-    // 通常の目標更新処理
+    // 通常の目標更新処理（サーバー側で文字数制限を適用）
     const updateData: Partial<GoalUpdate> = {}
     
-    if (goalData.title !== undefined) updateData.title = goalData.title
-    if (goalData.motivation !== undefined) updateData.description = goalData.motivation // motivationをdescriptionにマッピング
+    if (goalData.title !== undefined) updateData.title = truncateRequiredForDb(goalData.title, JA_INPUT_LIMITS.goalTitle)
+    if (goalData.motivation !== undefined) updateData.description = truncateForDb(goalData.motivation, JA_INPUT_LIMITS.goalMotivation)
     if (goalData.calculatedHours !== undefined) updateData.target_duration = goalData.calculatedHours * 3600 // 時間を秒に変換
     if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline
     if (goalData.weekdayHours !== undefined) updateData.weekday_hours = goalData.weekdayHours

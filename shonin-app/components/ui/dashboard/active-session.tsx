@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/common/button"
 import { Badge } from "@/components/ui/common/badge"
 import { Textarea } from "@/components/ui/common/textarea"
 import { Label } from "@/components/ui/common/label"
-import { useTranslations } from 'next-intl'
+import { CharacterCounter } from "@/components/ui/common/character-counter"
+import { useTranslations, useLocale } from 'next-intl'
 import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
@@ -16,6 +17,7 @@ import { useTimezone } from "@/contexts/timezone-context"
 import { useAuth } from "@/contexts/auth-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
 import { getTimeStringInTimezone } from "@/lib/timezone-utils"
+import { getInputLimits } from "@/lib/input-limits"
 import { cn } from "@/lib/utils"
 
 interface ActiveSessionProps {
@@ -36,6 +38,8 @@ export function ActiveSession({
   onResume 
 }: ActiveSessionProps) {
   const t = useTranslations()
+  const locale = useLocale()
+  const limits = getInputLimits(locale)
   const encouragementMessages = useTranslations('encouragement')
   // 認証フック
   const { user } = useAuth()
@@ -581,36 +585,48 @@ export function ActiveSession({
                   </div>
                 </div>
 
-                {/* 学びや成果 */}
+                {/* 学びや成果（振り返り） */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">{t('active_session.achievements_label')}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-white text-sm font-medium">{t('active_session.achievements_label')}</Label>
+                    <CharacterCounter current={achievements.length} max={limits.sessionAchievements} />
+                  </div>
                   <Textarea
                     ref={achievementsRef}
                     placeholder={t('active_session.achievements_placeholder')}
                     value={achievements}
-                    onChange={(e) => setAchievements(e.target.value)}
+                    onChange={(e) => setAchievements(e.target.value.slice(0, limits.sessionAchievements))}
+                    maxLength={limits.sessionAchievements}
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
                   />
                 </div>
 
-                {/* 課題や改善点 */}
+                {/* 課題や改善点（明日の予定） */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">{t('active_session.challenges_label')}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-white text-sm font-medium">{t('active_session.challenges_label')}</Label>
+                    <CharacterCounter current={challenges.length} max={limits.sessionChallenges} />
+                  </div>
                   <Textarea
                     placeholder={t('active_session.challenges_placeholder')}
                     value={challenges}
-                    onChange={(e) => setChallenges(e.target.value)}
+                    onChange={(e) => setChallenges(e.target.value.slice(0, limits.sessionChallenges))}
+                    maxLength={limits.sessionChallenges}
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
                   />
                 </div>
 
-                {/* 自由記述メモ */}
+                {/* 自由記述メモ（その他） */}
                 <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">{t('active_session.notes_label')}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-white text-sm font-medium">{t('active_session.notes_label')}</Label>
+                    <CharacterCounter current={notes.length} max={limits.sessionNotes} />
+                  </div>
                   <Textarea
                     placeholder={t('active_session.notes_placeholder')}
                     value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
+                    maxLength={limits.sessionNotes}
                     className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
                   />
                 </div>

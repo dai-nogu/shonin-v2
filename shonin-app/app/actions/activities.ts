@@ -8,6 +8,7 @@ import type { Result } from '@/types/result'
 import { success, failure } from '@/types/result'
 import { AppError, handleServerError, requireAuth, getErrorCode } from '@/lib/server-error'
 import { safeError } from '@/lib/safe-logger'
+import { JA_INPUT_LIMITS, truncateRequiredForDb } from '@/lib/input-limits'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 type ActivityInsert = Database['public']['Tables']['activities']['Insert']
@@ -75,12 +76,16 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
 
+    // サーバー側で文字数制限を適用（UIバイパス対策）
+    const sanitizedActivity = {
+      ...activity,
+      name: truncateRequiredForDb(activity.name, JA_INPUT_LIMITS.activityName),
+      user_id: user.id,
+    }
+
     const { data, error } = await supabase
       .from('activities')
-      .insert({
-        ...activity,
-        user_id: user.id,
-      })
+      .insert(sanitizedActivity)
       .select('id')
       .single()
 

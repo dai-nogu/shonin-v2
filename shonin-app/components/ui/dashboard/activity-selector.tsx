@@ -8,11 +8,13 @@ import { Label } from "@/components/ui/common/label"
 import { Textarea } from "@/components/ui/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
 import { ErrorModal } from "@/components/ui/common/error-modal"
+import { CharacterCounter } from "@/components/ui/common/character-counter"
 import { Plus, Play } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { getInputLimits } from "@/lib/input-limits"
 import type { Activity, SessionData } from "./time-tracker"
 
 interface ActivitySelectorProps {
@@ -22,6 +24,8 @@ interface ActivitySelectorProps {
 
 export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelectorProps) {
   const t = useTranslations()
+  const locale = useLocale()
+  const limits = getInputLimits(locale)
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
   const [selectedGoal, setSelectedGoal] = useState("")
@@ -182,12 +186,16 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-gray-300">{t('session_start.activity_name')}</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-gray-300">{t('session_start.activity_name')}</Label>
+                  <CharacterCounter current={newActivityName.length} max={limits.activityName} />
+                </div>
                 <Input
                   ref={activityNameInputRef}
                   placeholder={t('session_start.activity_name')}
                   value={newActivityName}
-                  onChange={(e) => setNewActivityName(e.target.value)}
+                  onChange={(e) => setNewActivityName(e.target.value.slice(0, limits.activityName))}
+                  maxLength={limits.activityName}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
@@ -333,13 +341,17 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
             {/* 場所設定 */}
             <div className="space-y-2">
-              <Label className="text-white text-sm">
-                {t('session_start.location')}
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-white text-sm">
+                  {t('session_start.location')}
+                </Label>
+                <CharacterCounter current={location.length} max={limits.location} />
+              </div>
               <Input
                 placeholder={t('session_start.location_placeholder')}
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) => setLocation(e.target.value.slice(0, limits.location))}
+                maxLength={limits.location}
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm"
               />
             </div>

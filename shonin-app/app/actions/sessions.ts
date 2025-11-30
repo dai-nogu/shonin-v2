@@ -8,6 +8,7 @@ import type { Result } from '@/types/result'
 import { success, failure } from '@/types/result'
 import { AppError, handleServerError, requireAuth, getErrorCode } from '@/lib/server-error'
 import { safeError } from '@/lib/safe-logger'
+import { JA_INPUT_LIMITS, truncateForDb } from '@/lib/input-limits'
 
 type Session = Database['public']['Tables']['sessions']['Row']
 type SessionInsert = Database['public']['Tables']['sessions']['Insert']
@@ -98,12 +99,16 @@ export async function addSession(session: Omit<SessionInsert, 'user_id'>): Promi
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
 
+    // サーバー側で文字数制限を適用（UIバイパス対策）
+    const sanitizedSession = {
+      ...session,
+      location: truncateForDb(session.location, JA_INPUT_LIMITS.location),
+      user_id: user.id,
+    }
+
     const { data, error } = await supabase
       .from('sessions')
-      .insert({
-        ...session,
-        user_id: user.id,
-      })
+      .insert(sanitizedSession)
       .select('id')
       .single()
 
@@ -130,9 +135,17 @@ export async function updateSession(id: string, updates: SessionUpdate): Promise
     const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
 
+    // サーバー側で文字数制限を適用（UIバイパス対策）
+    const sanitizedUpdates = {
+      ...updates,
+      location: updates.location !== undefined 
+        ? truncateForDb(updates.location, JA_INPUT_LIMITS.location) 
+        : undefined,
+    }
+
     const { error } = await supabase
       .from('sessions')
-      .update(updates)
+      .update(sanitizedUpdates)
       .eq('id', id)
 
     if (error) {

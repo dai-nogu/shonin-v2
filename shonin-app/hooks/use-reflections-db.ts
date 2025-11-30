@@ -7,6 +7,7 @@ import {
   SessionMedia, 
   SessionMediaDatabase
 } from '@/types/database';
+import { JA_INPUT_LIMITS, truncateForDb } from '@/lib/input-limits';
 
 export function useReflectionsDb() {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,16 +20,21 @@ export function useReflectionsDb() {
     setError(null);
 
     try {
+      // サーバー側で文字数制限を適用（UIバイパス対策）
+      const sanitizedAchievements = truncateForDb(reflection.achievements, JA_INPUT_LIMITS.sessionAchievements);
+      const sanitizedChallenges = truncateForDb(reflection.challenges, JA_INPUT_LIMITS.sessionChallenges);
+      const sanitizedNotes = truncateForDb(reflection.additionalNotes, JA_INPUT_LIMITS.sessionNotes);
+
       // 暗号化関数を使用して振り返りデータを保存（基本データも含む）
       const { data, error } = await supabase.rpc('update_session_reflections_encrypted', {
         p_session_id: sessionId,
         p_mood: reflection.moodScore || null,
-        p_achievements: reflection.achievements || null,
-        p_challenges: reflection.challenges || null,
+        p_achievements: sanitizedAchievements,
+        p_challenges: sanitizedChallenges,
         p_mood_score: reflection.moodScore || null,
-        p_detailed_achievements: reflection.achievements || null,
-        p_detailed_challenges: reflection.challenges || null,
-        p_reflection_notes: reflection.additionalNotes || null,
+        p_detailed_achievements: sanitizedAchievements,
+        p_detailed_challenges: sanitizedChallenges,
+        p_reflection_notes: sanitizedNotes,
       });
 
       if (error) {

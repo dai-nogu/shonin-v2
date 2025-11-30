@@ -3,7 +3,43 @@
  * 
  * Supabaseから取得したセッションデータを構造化されたデータに変換
  * プロンプト生成層に渡すための中間データ形式を生成
+ * 
+ * 【セキュリティ対策】
+ * - 個別セッションの入力フィールドに文字数制限を適用
+ * - プロンプトインジェクション攻撃のリスクを低減
  */
+
+import { JA_INPUT_LIMITS } from './input-limits';
+
+// =========================================
+// 入力制限設定
+// =========================================
+
+/**
+ * 個別セッションフィールドの文字数制限
+ * 日本語基準（1000文字）を適用
+ * フロントエンドで制限されているので、ここではそれに準拠
+ */
+const PER_SESSION_FIELD_LIMIT = JA_INPUT_LIMITS.sessionAchievements;
+
+/**
+ * 文字数制限を適用
+ */
+function truncateField(input: string | undefined, maxLength: number = PER_SESSION_FIELD_LIMIT): string {
+  if (!input) return '';
+  if (input.length <= maxLength) return input;
+  
+  // 句読点で区切れるか試みる
+  const lastPeriodJa = input.lastIndexOf('。', maxLength);
+  const lastPeriodEn = input.lastIndexOf('.', maxLength);
+  const lastComma = input.lastIndexOf('、', maxLength);
+  const lastSpace = input.lastIndexOf(' ', maxLength);
+  
+  const breakPoints = [lastPeriodJa, lastPeriodEn, lastComma, lastSpace].filter(p => p > maxLength * 0.7);
+  const bestBreak = breakPoints.length > 0 ? Math.max(...breakPoints) : maxLength;
+  
+  return input.substring(0, bestBreak) + '...';
+}
 
 /**
  * 分析対象のセッションデータ（Supabaseから取得）
@@ -147,15 +183,15 @@ export function analyzeSessionData(
       percentage: data.percentage
     }));
   
-  // 振り返り分析
+  // 振り返り分析（個別セッションの文字数制限を適用）
   const achievements = sessions
     .filter(s => s.achievements)
-    .map(s => s.achievements)
+    .map(s => truncateField(s.achievements))
     .join('\n');
   
   const challenges = sessions
     .filter(s => s.challenges)
-    .map(s => s.challenges)
+    .map(s => truncateField(s.challenges))
     .join('\n');
   
   const reflectionQuality = calculateReflectionQuality(sessions);

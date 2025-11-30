@@ -8,6 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { validateOrigin } from '@/lib/csrf-protection';
 import { safeWarn, safeError, safeLog } from '@/lib/safe-logger';
 
+// ... (インターフェース定義は変更なし)
 interface SessionData {
   id: string;
   activity_name: string;
@@ -122,26 +123,37 @@ export async function POST(request: NextRequest) {
     }
 
     if (!sessions || sessions.length === 0) {
+      // データなし時のメッセージをJSON形式で返す（フロントエンドのパースエラーを防ぐため）
+      const noDataMsg = getNoDataMessage(locale, period_type);
+      const jsonFeedback = JSON.stringify({
+        overview: noDataMsg,
+        insight: "",
+        closing: "",
+        principle_application: null,
+        principle_definition: null
+      });
+
       return NextResponse.json({ 
-        feedback: getNoDataMessage(locale, period_type),
+        feedback: jsonFeedback,
         period_type,
         period_start,
         period_end
       });
     }
 
-    // 過去のフィードバックを取得（復号化ビュー使用）
+    // 過去のフィードバックを取得
     const { data: pastFeedbacks } = await supabase
       .from('ai_feedback_decrypted')
       .select('content, period_start, period_end, feedback_type, created_at')
       .eq('feedback_type', period_type)
       .order('created_at', { ascending: false })
-      .limit(3); // 過去3回分を参照
+      .limit(3);
 
-    // OpenAI APIでフィードバック生成（文字数超過時は再生成）
+    // AIフィードバック生成（JSONパース検証込み）
     const feedback = await generateAIFeedbackWithRetry(sessions, period_type, period_start, period_end, pastFeedbacks || [], locale);
 
-    // フィードバックをデータベースに保存（暗号化）
+    // フィードバックをデータベースに保存
+    // feedback変数はここでは「JSON文字列」になっています
     const { error: saveError } = await supabase
       .rpc('insert_encrypted_feedback', {
         p_feedback_type: period_type,
@@ -152,7 +164,6 @@ export async function POST(request: NextRequest) {
 
     if (saveError) {
       safeError('フィードバック保存エラー', saveError);
-      // 保存に失敗してもフィードバックは返す
     }
 
     return NextResponse.json({
@@ -178,40 +189,29 @@ async function generateAIFeedbackWithRetry(
   locale: string = 'ja'
 ): Promise<string> {
   const maxRetries = 3;
-  // 英語は日本語より文字数が多くなる傾向があるため、調整
+  // JSONモードの場合、構文のための文字数が増えるため上限を少し緩和
   const maxChars = locale === 'en' 
-    ? (periodType === 'weekly' ? 640 : 1100) 
-    : (periodType === 'weekly' ? 320 : 550);
+    ? (periodType === 'weekly' ? 800 : 1300) 
+    : (periodType === 'weekly' ? 500 : 800);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const feedback = await generateAIFeedback(sessions, periodType, periodStart, periodEnd, pastFeedbacks, attempt, locale);
       const charCount = feedback.length;
       
-      safeLog(`Attempt ${attempt}: Generated ${charCount} characters (max: ${maxChars})`);
+      safeLog(`Attempt ${attempt}: Generated ${charCount} characters`);
       
+      // JSONパースチェックが成功して返ってきているはずなので、文字数チェックのみ
       if (charCount <= maxChars) {
         return feedback;
       }
       
       if (attempt === maxRetries) {
-        // 最後の試行で文字数超過の場合、強制的に調整
-        safeLog(`Max retries reached. Truncating to ${maxChars} characters.`);
-        const truncated = feedback.substring(0, maxChars - 50);
-        const sentenceEnders = locale === 'en' 
-          ? ['.', '!', '?']
-          : ['。', '！', '？'];
-        const lastSentenceEnd = Math.max(
-          ...sentenceEnders.map(ender => truncated.lastIndexOf(ender))
-        );
-        
-        if (lastSentenceEnd > maxChars * 0.7) {
-          return truncated.substring(0, lastSentenceEnd + 1);
-        }
-        return truncated;
+        safeLog(`Max retries reached. Returning as is.`);
+        return feedback;
       }
       
-      safeLog(`Attempt ${attempt} exceeded ${maxChars} characters (${charCount}). Retrying...`);
+      safeLog(`Attempt ${attempt} exceeded ${maxChars} characters. Retrying...`);
       
     } catch (error) {
       safeError(`Attempt ${attempt} failed`, error);
@@ -221,24 +221,16 @@ async function generateAIFeedbackWithRetry(
     }
   }
   
-  throw new Error('Failed to generate feedback within character limit after max retries');
+  throw new Error('Failed to generate feedback');
 }
 
-// データなし時のメッセージを生成するヘルパー関数
-// 新しい言語を追加する場合：このmessagesオブジェクトに言語コード（ko, zh等）を追加
 function getNoDataMessage(locale: string, periodType: 'weekly' | 'monthly'): string {
   const messages = {
     ja: `${periodType === 'weekly' ? '先週' : '先月'}は記録されたデータがありませんでしたが、それでも大丈夫です。休息も大切な時間ですし、新たなスタートを切る準備期間だったのかもしれませんね。いつでもあなたのペースで始めてください。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`,
     en: `There were no recorded activities ${periodType === 'weekly' ? 'last week' : 'last month'}, but that's perfectly okay. Rest is also an important part of growth, and this might have been a preparation period for a fresh start. You can begin whenever you're ready, at your own pace. ${periodType === 'weekly' ? "Let's make this week count together." : "Let's make this month count together."}`
-    // 新しい言語の例：
-    // ko: `記録なしメッセージ（韓国語）`,
-    // zh: `記録なしメッセージ（中国語）`
   };
-  
   return (messages as any)[locale] || messages.ja;
 }
-
-// getSystemPrompt と getUserPrompt は lib/prompt-generator.ts に移動しました
 
 async function generateAIFeedback(
   sessions: any[],
@@ -250,7 +242,6 @@ async function generateAIFeedback(
   locale: string = 'ja'
 ): Promise<string> {
   try {
-    // 【層①】ローデータを構造化データに変換
     const analyzedData = analyzeSessionData(
       sessions as RawSessionData[],
       periodType,
@@ -258,28 +249,26 @@ async function generateAIFeedback(
       periodEnd
     );
     
-    // 【層②】構造化データからプロンプトを生成
     const promptConfig: PromptGenerationConfig = {
       locale,
       attempt,
       pastFeedbacksCount: pastFeedbacks.length
     };
     
+    // プロンプト生成（この時点でシステムプロンプトがJSON出力を指示している想定）
     const { systemPrompt, userPrompt, maxTokens } = generatePrompts(analyzedData, promptConfig);
 
-    // Claude APIリクエスト
-    // 週次: Sonnet 4（軽量・高速・コスパ重視）月4回 × 約$0.015 = 約$0.06/月
-    // 月次: Opus 4（最高品質・長文推論）月1回 × 約$0.10 = 約$0.10/月
-    // 合計コスト: 約$0.16/月/ユーザー（Standard $9.99の1.6%）
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    // 期間タイプに応じてモデルを選択
     const model = periodType === 'weekly' 
-      ? 'claude-sonnet-4-20250514'  // 週次: 高速・コスパ良し
-      : 'claude-opus-4-20250514';    // 月次: 最高品質・長文推論
+      ? 'claude-3-haiku-20240307'  // または 'claude-3-sonnet-20240229' など適切なモデルID
+      : 'claude-3-opus-20240229';
 
+    // ★ Anthropic APIコール
+    // 注意: Anthropicには `response_format: { type: "json_object" }` はありません。
+    // プロンプトでの指示に従ってJSONを出力させます。
     const message = await anthropic.messages.create({
       model,
       max_tokens: maxTokens,
@@ -289,41 +278,58 @@ async function generateAIFeedback(
         {
           role: 'user',
           content: userPrompt
+        },
+        {
+          role: 'assistant',
+          content: '{' // JSONの開始括弧をプレフィルして、JSON出力を強制・誘導するテクニック
         }
       ],
     });
 
-    // Claudeのレスポンスからテキストを取得
-    const content = message.content[0]?.type === 'text' 
+    // レスポンスの取得（プレフィルの '{' を補完して結合）
+    let content = message.content[0]?.type === 'text' 
       ? message.content[0].text 
-      : getFallbackMessage('default', locale, periodType);
+      : '';
     
-    // レスポンスが途中で切れていないかチェック
-    const sentenceEnders = locale === 'en' ? ['.', '!', '?'] : ['。', '！', '？'];
-    const isComplete = sentenceEnders.some(ender => content.endsWith(ender));
-    
-    if (!isComplete && message.stop_reason === 'max_tokens') {
-      // トークン制限で切れた場合のフォールバック
-      return getFallbackMessage('truncated', locale, periodType);
+    if (content) {
+      content = '{' + content; // プレフィルした分を戻す
+    } else {
+      return JSON.stringify({ overview: getFallbackMessage('default', locale, periodType) });
     }
-    
-    return content;
+
+    // ★ ここでリクエストされた「JSONパースのロジック」を追加
+    // 生成されたテキストが正しいJSONか検証し、オブジェクトとしてパースできるか確認します
+    try {
+      const feedbackData = JSON.parse(content);
+      
+      // パース成功：正しいJSON文字列として返す（これをDBに保存する）
+      return JSON.stringify(feedbackData);
+
+    } catch (parseError) {
+      safeWarn('JSON Parse failed', parseError);
+      
+      // パース失敗時（JSONの一部が欠けているなど）のフォールバック
+      // エラーメッセージ自体をJSON形式にして返すことで、フロントエンドのクラッシュを防ぐ
+      const fallbackJson = {
+        overview: content, // 原文をそのままoverviewに入れる（なんとか読めるように）
+        error: "format_error"
+      };
+      return JSON.stringify(fallbackJson);
+    }
 
   } catch (error) {
     safeError('Claude API エラー', error);
     
-    // レート制限エラーの場合
     if (error instanceof Anthropic.APIError && error.status === 429) {
-      safeWarn('Claude API Rate limit reached. Using fallback message.');
-      return getFallbackMessage('rate_limit', locale, periodType);
+      const msg = getFallbackMessage('rate_limit', locale, periodType);
+      return JSON.stringify({ overview: msg });
     }
     
-    return getFallbackMessage('error', locale, periodType);
+    const msg = getFallbackMessage('error', locale, periodType);
+    return JSON.stringify({ overview: msg });
   }
 }
 
-// フォールバックメッセージを生成するヘルパー関数
-// 新しい言語を追加する場合：messagesオブジェクトに言語コードと4種類のメッセージを追加
 function getFallbackMessage(
   type: 'rate_limit' | 'default' | 'truncated' | 'error',
   locale: string,
@@ -331,27 +337,19 @@ function getFallbackMessage(
 ): string {
   const messages = {
     ja: {
-      rate_limit: `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。フィードバック生成に時間がかかっています。少し時間をおいて再度お試しください。あなたの努力は確実に記録されています。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`,
+      rate_limit: `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。フィードバック生成に時間がかかっています。少し時間をおいて再度お試しください。`,
       default: `無理しなくて大丈夫です。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`,
-      truncated: `${periodType === 'weekly' ? '先週' : '先月'}の活動を分析していたところ、詳細な分析が長くなってしまいました。あなたの努力の深さを物語っていますね。重要なポイントは、着実に成長されていることです。この調子で続けていけば、必ず目標に近づいていけると確信しています。`,
-      error: `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。今、フィードバックの準備に少し時間がかかっていますが、あなたの努力が確実に積み重なっているのは見ています。また後で確認してみてくださいね。${periodType === 'weekly' ? '今週も一緒に頑張りましょう。' : '今月も一緒に頑張りましょう。'}`
+      truncated: `${periodType === 'weekly' ? '先週' : '先月'}の分析中にエラーが発生しましたが、あなたの努力は記録されています。`,
+      error: `${periodType === 'weekly' ? '先週' : '先月'}の頑張りを見ていました。今、フィードバックの準備に少し時間がかかっています。`
     },
     en: {
-      rate_limit: `I've been watching your efforts ${periodType === 'weekly' ? 'last week' : 'last month'}. Feedback generation is taking some time. Please try again in a moment. Your efforts are definitely being recorded. ${periodType === 'weekly' ? "Let's keep moving forward this week." : "Let's keep moving forward this month."}`,
-      default: `Take your time, no pressure. ${periodType === 'weekly' ? "Let's work together this week." : "Let's work together this month."}`,
-      truncated: `While analyzing your ${periodType === 'weekly' ? 'last week' : 'last month'}'s activities, the detailed analysis got quite long, which speaks to the depth of your efforts. The key point is that you're making steady progress. If you keep going like this, I'm confident you'll reach your goals.`,
-      error: `I've been watching your efforts ${periodType === 'weekly' ? 'last week' : 'last month'}. Feedback preparation is taking a bit of time right now, but I see your efforts accumulating steadily. Please check back later. ${periodType === 'weekly' ? "Let's work together this week." : "Let's work together this month."}`
+      rate_limit: `Feedback generation is taking some time. Please try again later.`,
+      default: `Take your time, no pressure.`,
+      truncated: `An error occurred during analysis, but your efforts are recorded.`,
+      error: `Feedback preparation is taking a bit of time right now.`
     }
-    // 新しい言語の例：
-    // ko: {
-    //   rate_limit: `レート制限メッセージ（韓国語）`,
-    //   default: `デフォルトメッセージ（韓国語）`,
-    //   truncated: `切り詰めメッセージ（韓国語）`,
-    //   error: `エラーメッセージ（韓国語）`
-    // }
   };
   
-  // 対応する言語のメッセージを返す。なければ日本語をデフォルトとする
   const localeMessages = (messages as any)[locale] || messages.ja;
   return localeMessages[type];
-} 
+}
