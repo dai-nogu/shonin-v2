@@ -1,0 +1,1098 @@
+{
+  "meta": {
+    "title": "Shonin Principles Collection - Psychological & Behavioral Science Laws",
+    "version": "2.1.0",
+    "categories": [
+      "psychology",
+      "behavioral_economics",
+      "neuroscience",
+      "social_psychology",
+      "behavioral_science",
+      "philosophy",
+      "ethology",
+      "cognitive_science",
+      "education"
+    ],
+    "count": 87,
+    "description_ja": "心理学・行動経済学・脳神経科学などの法則・理論を、ユーザーの行動データに基づいてフィードバックに組み込むためのコレクション（小学4年生でもわかる平易な説明）",
+    "description_en": "A collection of psychological, behavioral economics, and neuroscience principles to integrate into feedback based on user behavior data"
+  },
+  "principles": [
+    {
+      "id": "psych_001",
+      "name": { "ja": "自己決定理論", "en": "Self-Determination Theory" },
+      "field": "psychology",
+      "summary": {
+        "ja": "自分で決めた目標に向かって頑張ると、やる気が続きやすくなる",
+        "en": "Working toward self-chosen goals sustains motivation"
+      },
+      "application": "継続的な活動をしているユーザーに「自分で選択している実感」を強調",
+      "tags": ["motivation", "autonomy", "growth"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_002",
+      "name": { "ja": "自己効力感理論", "en": "Self-Efficacy Theory" },
+      "field": "psychology",
+      "summary": {
+        "ja": "「自分ならできる」と信じることで、本当にできるようになる",
+        "en": "Believing 'I can do this' helps you actually do it"
+      },
+      "application": "小さな成功体験を積み重ねているユーザーに「できる」という実感を強化",
+      "tags": ["confidence", "success", "growth"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_003",
+      "name": { "ja": "ツァイガルニク効果", "en": "Zeigarnik Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "途中でやめたことは、最後までやったことよりも心に残る",
+        "en": "Unfinished tasks stick in your mind more than completed ones"
+      },
+      "application": "進行中の目標があるユーザーに「続きが気になる心理」を活用",
+      "tags": ["memory", "motivation", "continuity"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_004",
+      "name": { "ja": "ヤーキーズ・ドットソンの法則", "en": "Yerkes-Dodson Law" },
+      "field": "psychology",
+      "summary": {
+        "ja": "ほどよい緊張感があると力を発揮できるが、がんばりすぎると逆に失敗しやすくなる",
+        "en": "Moderate pressure helps performance, but too much hurts it"
+      },
+      "application": "活動量が多すぎるユーザーに休息の重要性を伝える",
+      "tags": ["stress", "balance", "performance"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_005",
+      "name": { "ja": "認知的不協和理論", "en": "Cognitive Dissonance Theory" },
+      "field": "psychology",
+      "summary": {
+        "ja": "「本当はこうしたい」と思っていることと、実際の行動が違うと、もやもやした気持ちになる",
+        "en": "When your actions don't match your beliefs, you feel uncomfortable"
+      },
+      "application": "目標と行動が一致していないユーザーに気づきを促す",
+      "tags": ["consistency", "awareness", "change"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_006",
+      "name": { "ja": "コンフォートゾーン理論", "en": "Comfort Zone Theory" },
+      "field": "psychology",
+      "summary": {
+        "ja": "いつもの安全な場所からちょっとだけ外に出ると成長できるが、遠すぎると怖くて動けなくなる",
+        "en": "Stepping a little outside your comfort zone helps growth, but too far causes fear"
+      },
+      "application": "新しい挑戦を始めたユーザーに適切な負荷を認識させる",
+      "tags": ["growth", "challenge", "balance"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_007",
+      "name": { "ja": "フロー理論", "en": "Flow Theory" },
+      "field": "psychology",
+      "summary": {
+        "ja": "自分の力と課題の難しさがちょうど良い時、時間を忘れるほど集中できる",
+        "en": "When your skill matches the challenge, you enter deep focus"
+      },
+      "application": "集中して活動しているユーザーに「没入の価値」を伝える",
+      "tags": ["focus", "flow", "balance"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_008",
+      "name": { "ja": "プライミング効果", "en": "Priming Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "さっき見たものや聞いたことが、自分でも気づかないうちに次の行動に影響する",
+        "en": "What you just saw or heard unconsciously affects your next actions"
+      },
+      "application": "環境設定を工夫しているユーザーに環境の力を強調",
+      "tags": ["environment", "unconscious", "influence"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_009",
+      "name": { "ja": "アンカリング効果", "en": "Anchoring Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "最初に見た数字や情報が、その後の判断のものさしになる",
+        "en": "The first number you see becomes your reference point"
+      },
+      "application": "最初の目標設定が重要であることを伝える",
+      "tags": ["decision", "reference", "goal"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_010",
+      "name": { "ja": "フット・イン・ザ・ドア効果", "en": "Foot-in-the-door Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "小さなお願いを聞いてあげると、次の大きなお願いも聞きやすくなる",
+        "en": "Saying yes to small requests makes it easier to say yes to bigger ones"
+      },
+      "application": "小さな習慣から始めているユーザーに段階的成長を示す",
+      "tags": ["habit", "small_steps", "progression"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_011",
+      "name": { "ja": "ドア・イン・ザ・フェイス効果", "en": "Door-in-the-face Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "大きなお願いを断った後だと、小さなお願いは受け入れやすくなる",
+        "en": "After rejecting a big request, smaller requests feel more acceptable"
+      },
+      "application": "目標を下方修正したユーザーに柔軟性の価値を伝える",
+      "tags": ["flexibility", "adjustment", "acceptance"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_012",
+      "name": { "ja": "自己知覚理論", "en": "Self-Perception Theory" },
+      "field": "psychology",
+      "summary": {
+        "ja": "自分がどんな人間かは、自分の行動を見て分かってくる",
+        "en": "You learn who you are by watching what you do"
+      },
+      "application": "継続記録を見返すユーザーに「行動が自己認識を作る」ことを伝える",
+      "tags": ["identity", "awareness", "behavior"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_013",
+      "name": { "ja": "バンドワゴン効果", "en": "Bandwagon Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "みんながやっていることは、もっと人気になりやすい",
+        "en": "Popular things become even more popular"
+      },
+      "application": "コミュニティ機能で他者の活動を見せるときに活用",
+      "tags": ["social", "influence", "popularity"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_014",
+      "name": { "ja": "スリーパー効果", "en": "Sleeper Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "時間が経つと、誰が言ったかは忘れるけど、言葉の内容は心に残る",
+        "en": "Over time, you forget who said it but remember what was said"
+      },
+      "application": "過去のフィードバックを振り返る機能で活用",
+      "tags": ["memory", "time", "influence"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_015",
+      "name": { "ja": "内的動機づけ理論", "en": "Intrinsic Motivation" },
+      "field": "psychology",
+      "summary": {
+        "ja": "ご褒美のためじゃなく、やること自体が楽しいから続けられる",
+        "en": "You keep going because the activity itself is fun"
+      },
+      "application": "楽しんで活動しているユーザーに内発的価値を強調",
+      "tags": ["motivation", "joy", "meaning"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_016",
+      "name": { "ja": "外的動機づけ理論", "en": "Extrinsic Motivation" },
+      "field": "psychology",
+      "summary": {
+        "ja": "ご褒美や褒められることで、やる気が出てくる",
+        "en": "Rewards and praise motivate you to keep going"
+      },
+      "application": "目標達成報酬を設定しているユーザーに外発的動機の活用法を伝える",
+      "tags": ["motivation", "reward", "recognition"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_017",
+      "name": { "ja": "習慣ループ理論", "en": "Habit Loop / Cue-Routine-Reward" },
+      "field": "psychology",
+      "summary": {
+        "ja": "きっかけ→行動→ご褒美の流れを繰り返すと、習慣になる",
+        "en": "Repeating cue → action → reward creates a habit"
+      },
+      "application": "同じ時間・場所で活動しているユーザーにループの強化を示す",
+      "tags": ["habit", "loop", "structure"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_018",
+      "name": { "ja": "実行意図", "en": "Implementation Intention" },
+      "field": "psychology",
+      "summary": {
+        "ja": "「いつ・どこで・何をするか」を前もって決めておくと、実際にやれる確率が上がる",
+        "en": "Deciding when, where, and what to do in advance makes you more likely to do it"
+      },
+      "application": "計画的に活動しているユーザーに実行意図の効果を伝える",
+      "tags": ["planning", "execution", "habit"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_019",
+      "name": { "ja": "計画錯誤", "en": "Planning Fallacy" },
+      "field": "psychology",
+      "summary": {
+        "ja": "人はつい「すぐ終わる」と思いがちだが、実際はもっと時間がかかる",
+        "en": "People tend to think tasks will finish quickly, but they usually take longer"
+      },
+      "application": "目標未達のユーザーに「計画の甘さ」を優しく指摘",
+      "tags": ["planning", "bias", "time"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_020",
+      "name": { "ja": "自我消耗理論", "en": "Ego Depletion" },
+      "field": "psychology",
+      "summary": {
+        "ja": "がまんする力は使うと減っていく。休むと回復する",
+        "en": "Willpower depletes when used and recovers with rest"
+      },
+      "application": "疲労を感じているユーザーに休息の必要性を科学的に説明",
+      "tags": ["willpower", "rest", "energy"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_021",
+      "name": { "ja": "投影効果", "en": "Projection Effect" },
+      "field": "psychology",
+      "summary": {
+        "ja": "今の気持ちがずっと続くと思いがちだが、実際には変わっていく",
+        "en": "You think current feelings will last forever, but they actually change"
+      },
+      "application": "気分の波があるユーザーに「今の気持ちは永遠ではない」と伝える",
+      "tags": ["emotion", "bias", "time"],
+      "tone": "psychology"
+    },
+    {
+      "id": "psych_022",
+      "name": { "ja": "感情伝染理論", "en": "Emotional Contagion" },
+      "field": "psychology",
+      "summary": {
+        "ja": "周りの人の元気や落ち込みは、自分にもうつっていく",
+        "en": "Other people's emotions spread to you"
+      },
+      "application": "コミュニティ機能でポジティブな雰囲気の重要性を伝える",
+      "tags": ["emotion", "social", "influence"],
+      "tone": "psychology"
+    },
+
+    {
+      "id": "behav_001",
+      "name": { "ja": "ナッジ理論", "en": "Nudge Theory" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "環境をちょっと工夫するだけで、人は自然と良い行動を選びやすくなる",
+        "en": "Small changes in environment naturally guide better choices"
+      },
+      "application": "環境を工夫して習慣化しているユーザーにナッジの効果を認識させる",
+      "tags": ["environment", "choice", "design"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_002",
+      "name": { "ja": "損失回避バイアス", "en": "Loss Aversion" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "人は得することよりも、失うことの方を2倍嫌がる",
+        "en": "People hate losing twice as much as they enjoy gaining"
+      },
+      "application": "連続記録が途切れそうなユーザーに「失いたくない」心理を活用",
+      "tags": ["loss", "motivation", "continuity"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_003",
+      "name": { "ja": "現状維持バイアス", "en": "Status Quo Bias" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "人は新しいことより、今のままでいることを好む",
+        "en": "People prefer to keep things as they are"
+      },
+      "application": "習慣が定着したユーザーに「継続の心地よさ」を強調",
+      "tags": ["habit", "stability", "continuity"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_004",
+      "name": { "ja": "プロスペクト理論", "en": "Prospect Theory" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "同じ100円でも、もらう嬉しさより失う悲しさの方が強く感じる",
+        "en": "Losing feels stronger than gaining, even for the same amount"
+      },
+      "application": "目標設定時に「失敗の痛み」と「成功の喜び」のバランスを考慮",
+      "tags": ["decision", "risk", "evaluation"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_005",
+      "name": { "ja": "確証バイアス", "en": "Confirmation Bias" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "自分の考えに合う情報ばかり集めて、都合の悪い情報は見ないようにしがち",
+        "en": "You tend to notice information that matches your beliefs and ignore what doesn't"
+      },
+      "application": "振り返り機能で客観的なデータを見せることの重要性",
+      "tags": ["bias", "awareness", "objectivity"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_006",
+      "name": { "ja": "サンクコスト効果", "en": "Sunk Cost Fallacy" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "もったいないからと、うまくいってないことを続けてしまう",
+        "en": "You keep doing something that isn't working because you already invested in it"
+      },
+      "application": "方向転換を考えているユーザーに「過去より未来」を伝える",
+      "tags": ["decision", "past", "flexibility"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_007",
+      "name": { "ja": "アンカリング効果", "en": "Anchoring Effect" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "最初に見た数字が基準になって、判断に影響する",
+        "en": "The first number you see becomes your reference"
+      },
+      "application": "目標設定の重要性を強調",
+      "tags": ["decision", "reference", "bias"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_008",
+      "name": { "ja": "フレーミング効果", "en": "Framing Effect" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "同じことでも、言い方を変えると受け取り方が変わる",
+        "en": "The same thing feels different depending on how it's presented"
+      },
+      "application": "ポジティブなフレーミングでFBを提供する根拠",
+      "tags": ["perception", "presentation", "influence"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_009",
+      "name": { "ja": "メンタルアカウンティング", "en": "Mental Accounting" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "心の中で「これは勉強の時間」「これは遊びの時間」と分けて考える",
+        "en": "You mentally divide time and money into separate 'accounts'"
+      },
+      "application": "複数の目標を持つユーザーに時間配分の意識化を促す",
+      "tags": ["resource", "management", "awareness"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_010",
+      "name": { "ja": "双曲割引", "en": "Hyperbolic Discounting" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "遠い将来の大きなご褒美より、今すぐもらえる小さなご褒美の方が魅力的に感じる",
+        "en": "You value immediate small rewards more than larger future ones"
+      },
+      "application": "即時のフィードバックや小さな報酬の重要性を説明",
+      "tags": ["reward", "time", "bias"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_011",
+      "name": { "ja": "デフォルト効果", "en": "Default Effect" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "最初から設定されている選択肢を、そのまま選びがち",
+        "en": "People tend to stick with whatever is set as default"
+      },
+      "application": "良い習慣をデフォルト化する環境設計の重要性",
+      "tags": ["choice", "design", "habit"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_012",
+      "name": { "ja": "エンダウメント効果", "en": "Endowment Effect" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "自分が持っているものは、実際より価値があると感じる",
+        "en": "You value things you own more highly"
+      },
+      "application": "継続記録を「自分の資産」として認識させる",
+      "tags": ["ownership", "value", "motivation"],
+      "tone": "behavioral_economics"
+    },
+    {
+      "id": "behav_013",
+      "name": { "ja": "ピークエンドの法則", "en": "Peak-End Rule" },
+      "field": "behavioral_economics",
+      "summary": {
+        "ja": "体験の思い出は、一番盛り上がった瞬間と最後の気持ちで決まる",
+        "en": "Memories are shaped by the peak moment and how things ended"
+      },
+      "application": "週次FBの最後をポジティブに締めくくる重要性",
+      "tags": ["memory", "experience", "emotion"],
+      "tone": "behavioral_economics"
+    },
+
+    {
+      "id": "neuro_001",
+      "name": { "ja": "ヘッブの法則", "en": "Hebbian Learning" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "同じことを繰り返すと、脳の回路がどんどん強くなる",
+        "en": "Repeating the same thing makes brain connections stronger"
+      },
+      "application": "繰り返し活動しているユーザーに神経レベルでの変化を伝える",
+      "tags": ["habit", "neuroplasticity", "repetition"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_002",
+      "name": { "ja": "ドーパミン報酬予測誤差理論", "en": "Reward Prediction Error" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "思った以上にうまくいくと、脳から「やった！」という嬉しい物質が出る",
+        "en": "When results exceed expectations, your brain releases a feel-good chemical"
+      },
+      "application": "予想を超える成果を出したユーザーに脳の報酬系の働きを説明",
+      "tags": ["reward", "dopamine", "learning"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_003",
+      "name": { "ja": "神経可塑性", "en": "Neuroplasticity" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "脳は何歳になっても、経験によって変わり続けることができる",
+        "en": "Your brain can keep changing through experience at any age"
+      },
+      "application": "継続的に学習しているユーザーに脳の変化を科学的に説明",
+      "tags": ["learning", "brain", "adaptation"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_004",
+      "name": { "ja": "プレフロンタルコントロール", "en": "Prefrontal Regulation" },
+      "field": "psychology",
+      "summary": {
+        "ja": "おでこの裏側にある脳の部分が、「今はがまん」と自分をコントロールしてくれる",
+        "en": "The front part of your brain helps you resist temptation"
+      },
+      "application": "誘惑に打ち勝っているユーザーに前頭前野の働きを伝える",
+      "tags": ["selfcontrol", "brain", "regulation"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_005",
+      "name": { "ja": "オキシトシンと社会的絆", "en": "Social Bond Hormones" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "誰かと一緒にいると、安心する気持ちを作る物質が脳から出る",
+        "en": "Being with others releases a chemical that makes you feel safe and connected"
+      },
+      "application": "コミュニティで活動しているユーザーに社会的絆の科学を伝える",
+      "tags": ["social", "connection", "trust"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_006",
+      "name": { "ja": "予測符号化", "en": "Predictive Coding" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "脳はいつも「次はこうなるかな」と予想して、間違えたら学び直す",
+        "en": "Your brain constantly predicts what's next and learns from mistakes"
+      },
+      "application": "失敗から学んでいるユーザーに脳の学習メカニズムを説明",
+      "tags": ["learning", "prediction", "adaptation"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_007",
+      "name": { "ja": "ストレス閾値理論", "en": "Stress Threshold Theory" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "ちょっとしたストレスは力になるが、限界を超えると体が壊れる",
+        "en": "A little stress helps you grow, but too much can harm you"
+      },
+      "application": "過度な活動をしているユーザーに休息の重要性を科学的に説明",
+      "tags": ["stress", "balance", "health"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_008",
+      "name": { "ja": "セロトニン仮説", "en": "Serotonin Hypothesis" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "規則正しい生活をすると、心を落ち着かせる物質が脳から出る",
+        "en": "Regular routines help your brain make chemicals that calm you down"
+      },
+      "application": "規則正しい生活をしているユーザーにセロトニンの働きを伝える",
+      "tags": ["mood", "stability", "wellbeing"],
+      "tone": "neuroscience"
+    },
+    {
+      "id": "neuro_009",
+      "name": { "ja": "スリープサイクル理論", "en": "Sleep & Consolidation Theory" },
+      "field": "neuroscience",
+      "summary": {
+        "ja": "寝ている間に、脳は昼間に学んだことを整理して記憶に残す",
+        "en": "While you sleep, your brain organizes and saves what you learned"
+      },
+      "application": "休息を取っているユーザーに睡眠の学習効果を伝える",
+      "tags": ["sleep", "memory", "restoration"],
+      "tone": "neuroscience"
+    },
+
+    {
+      "id": "social_001",
+      "name": { "ja": "ピグマリオン効果", "en": "Pygmalion Effect" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "「きみならできる」と期待されると、本当にできるようになる",
+        "en": "When people expect you to succeed, you're more likely to succeed"
+      },
+      "application": "ポジティブなFBで期待を伝え、パフォーマンスを引き出す",
+      "tags": ["expectation", "performance", "social"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_002",
+      "name": { "ja": "ホーソン効果", "en": "Hawthorne Effect" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "誰かに見られていると意識するだけで、行動が良くなる",
+        "en": "Just knowing someone is watching makes you behave better"
+      },
+      "application": "記録機能の効果を「観察の力」として説明",
+      "tags": ["observation", "awareness", "improvement"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_003",
+      "name": { "ja": "社会的証明", "en": "Social Proof" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "みんながやっていることを見ると、それが正しいと思いやすい",
+        "en": "You assume what many people do is the right thing to do"
+      },
+      "application": "コミュニティの活動事例を見せることの効果を説明",
+      "tags": ["social", "influence", "behavior"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_004",
+      "name": { "ja": "社会的比較理論", "en": "Social Comparison Theory" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "人は他の人と自分を比べて、自分のことを評価する",
+        "en": "You judge yourself by comparing with others"
+      },
+      "application": "他者との比較機能を使う際の心理的影響を考慮",
+      "tags": ["comparison", "social", "self"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_005",
+      "name": { "ja": "ミラーニューロン理論", "en": "Mirror Neuron System" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "人がやっているのを見ると、自分もやりたくなる",
+        "en": "Watching others do something makes you want to do it too"
+      },
+      "application": "ロールモデルの行動を見せることの効果を説明",
+      "tags": ["observation", "learning", "imitation"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_006",
+      "name": { "ja": "観察学習理論", "en": "Observational Learning Theory" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "人は他の人のやり方を見て学ぶことができる",
+        "en": "You can learn by watching what others do"
+      },
+      "application": "成功事例を共有することの学習効果を説明",
+      "tags": ["learning", "observation", "social"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_007",
+      "name": { "ja": "ノーム理論", "en": "Social Norm Theory" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "グループの「当たり前」が、一人ひとりの行動に強く影響する",
+        "en": "Group norms strongly influence individual behavior"
+      },
+      "application": "コミュニティ内の「良い習慣」を規範化することの効果",
+      "tags": ["norm", "social", "influence"],
+      "tone": "social_psychology"
+    },
+    {
+      "id": "social_008",
+      "name": { "ja": "同調効果", "en": "Conformity Effect" },
+      "field": "social_psychology",
+      "summary": {
+        "ja": "人は周りの人たちの意見や行動に合わせようとする",
+        "en": "People tend to match the opinions and actions of those around them"
+      },
+      "application": "ポジティブな集団規範の力を活用",
+      "tags": ["conformity", "social", "group"],
+      "tone": "social_psychology"
+    },
+
+    {
+      "id": "behav_sci_001",
+      "name": { "ja": "オペラント条件づけ", "en": "Operant Conditioning" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "良いことをしたらご褒美、悪いことをしたら罰があると、行動が変わる",
+        "en": "Behavior changes based on rewards and punishments"
+      },
+      "application": "報酬設計の科学的根拠を説明",
+      "tags": ["reward", "learning", "conditioning"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_002",
+      "name": { "ja": "古典的条件づけ", "en": "Classical Conditioning" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "ベルの音を聞くたびにご飯がもらえると、ベルの音だけでお腹が空くようになる",
+        "en": "When two things happen together often, one starts triggering the reaction to the other"
+      },
+      "application": "環境のきっかけと行動の結びつきを説明",
+      "tags": ["conditioning", "stimulus", "learning"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_003",
+      "name": { "ja": "フォッグ行動モデル", "en": "Fogg Behavior Model" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "やる気×できる力×きっかけの3つが揃うと、行動が起きる",
+        "en": "Behavior happens when motivation, ability, and trigger come together"
+      },
+      "application": "習慣化の3要素を科学的に説明",
+      "tags": ["habit", "motivation", "trigger"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_004",
+      "name": { "ja": "スモールステップ原理", "en": "Small-Step Principle" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "大きな目標を小さく分けると、達成しやすくなる",
+        "en": "Breaking big goals into small steps makes them easier to achieve"
+      },
+      "application": "小さな習慣から始めているユーザーに科学的根拠を提供",
+      "tags": ["goal", "small_steps", "success"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_005",
+      "name": { "ja": "トリガー理論", "en": "Trigger Theory" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "特定のきっかけがあると、自動的に行動が始まる",
+        "en": "Specific triggers automatically start your behavior"
+      },
+      "application": "同じきっかけで活動しているユーザーにトリガーの効果を伝える",
+      "tags": ["trigger", "habit", "automation"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_006",
+      "name": { "ja": "習慣の自動化理論", "en": "Automaticity Theory" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "何度も繰り返すと、考えなくても自動的にできるようになる",
+        "en": "Repeated actions become automatic and require less thinking"
+      },
+      "application": "長期継続ユーザーに「自動化」の達成を認識させる",
+      "tags": ["habit", "automaticity", "unconscious"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_007",
+      "name": { "ja": "正の強化／負の強化", "en": "Positive/Negative Reinforcement" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "ご褒美をあげたり、嫌なことをなくしたりして、行動を増やす",
+        "en": "Adding rewards or removing discomfort makes behavior more likely"
+      },
+      "application": "報酬設計の多様性を説明",
+      "tags": ["reinforcement", "reward", "motivation"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_008",
+      "name": { "ja": "プレマックの原理", "en": "Premack Principle" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "好きなことをご褒美にすると、嫌いなこともやれるようになる",
+        "en": "Using fun activities as rewards helps you do less fun tasks"
+      },
+      "application": "ご褒美システムの設計根拠を説明",
+      "tags": ["reward", "motivation", "incentive"],
+      "tone": "behavioral_science"
+    },
+    {
+      "id": "behav_sci_009",
+      "name": { "ja": "タスクシャドーイング効果", "en": "Task Shadowing Effect" },
+      "field": "behavioral_science",
+      "summary": {
+        "ja": "次にやることが見えていると、今やっていることに集中しやすい",
+        "en": "Knowing what comes next helps you focus on what you're doing now"
+      },
+      "application": "計画的に活動しているユーザーに効果を伝える",
+      "tags": ["planning", "focus", "structure"],
+      "tone": "behavioral_science"
+    },
+
+    {
+      "id": "phil_001",
+      "name": { "ja": "アリストテレスの徳倫理", "en": "Virtue Ethics" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "すごい人になるには、一発の成功じゃなくて、毎日の習慣が大事",
+        "en": "Greatness comes not from one act, but from daily habits"
+      },
+      "application": "継続こそが卓越への道であることを哲学的に説明",
+      "tags": ["virtue", "habit", "excellence"],
+      "tone": "philosophy"
+    },
+    {
+      "id": "phil_002",
+      "name": { "ja": "ストア哲学", "en": "Stoicism" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "自分でどうにかできることだけに集中して、どうにもならないことは受け入れる",
+        "en": "Focus only on what you can control and accept what you cannot"
+      },
+      "application": "外的要因に悩むユーザーにストア的視点を提供",
+      "tags": ["control", "acceptance", "stoic"],
+      "tone": "philosophy"
+    },
+    {
+      "id": "phil_003",
+      "name": { "ja": "実存主義", "en": "Existentialism" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "人生の意味は、誰かにもらうものじゃなく、自分で作るもの",
+        "en": "Life's meaning isn't given to you—you create it yourself"
+      },
+      "application": "自分の目標を自分で決めているユーザーに実存的自由を認識させる",
+      "tags": ["meaning", "freedom", "creation"],
+      "tone": "philosophy"
+    },
+    {
+      "id": "phil_004",
+      "name": { "ja": "ニーチェの自己克服", "en": "Self-Overcoming" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "人は昨日の自分を超え続けることで、成長していく",
+        "en": "You grow by constantly surpassing who you were yesterday"
+      },
+      "application": "挑戦を続けるユーザーに哲学的励ましを提供",
+      "tags": ["growth", "challenge", "transcendence"],
+      "tone": "philosophy"
+    },
+    {
+      "id": "phil_005",
+      "name": { "ja": "カント倫理学", "en": "Duty and Will" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "やる気がなくても、やるべきことをやり続けることに価値がある",
+        "en": "There's value in doing what you should, even when you don't feel like it"
+      },
+      "application": "やる気がなくても続けているユーザーに義務の価値を伝える",
+      "tags": ["duty", "morality", "discipline"],
+      "tone": "philosophy"
+    },
+    {
+      "id": "phil_006",
+      "name": { "ja": "サルトル「実存は本質に先立つ」理論", "en": "Existence Precedes Essence" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "人は生まれた時は何者でもなく、行動によって自分を作っていく",
+        "en": "You aren't born as anything—you become who you are through your actions"
+      },
+      "application": "行動を通じて自己を定義しているユーザーに実存的視点を提供",
+      "tags": ["existence", "identity", "action"],
+      "tone": "philosophy"
+    },
+    {
+      "id": "phil_007",
+      "name": { "ja": "東洋思想（禅・道教の無為自然）", "en": "Zen / Dao of Non-action" },
+      "field": "philosophy",
+      "summary": {
+        "ja": "力まず、自然な流れに任せることが、一番うまくいく道",
+        "en": "Not forcing things and going with the natural flow often works best"
+      },
+      "application": "無理なく続けているユーザーに東洋哲学的視点を提供",
+      "tags": ["zen", "flow", "nature"],
+      "tone": "philosophy"
+    },
+
+    {
+      "id": "ethol_001",
+      "name": { "ja": "固定的行動パターン", "en": "Fixed Action Pattern" },
+      "field": "ethology",
+      "summary": {
+        "ja": "特定のきっかけがあると、本能的に決まった行動をしてしまう",
+        "en": "Certain triggers make you instinctively do specific actions"
+      },
+      "application": "習慣化された行動の「自動性」を動物行動学的に説明",
+      "tags": ["instinct", "pattern", "automaticity"],
+      "tone": "ethology"
+    },
+    {
+      "id": "ethol_002",
+      "name": { "ja": "適応的行動理論", "en": "Adaptive Behavior Theory" },
+      "field": "ethology",
+      "summary": {
+        "ja": "生き物は環境に合わせて行動のやり方を変えていく",
+        "en": "Living things adapt their behavior to fit their environment"
+      },
+      "application": "環境に合わせて習慣を調整しているユーザーに適応の価値を伝える",
+      "tags": ["adaptation", "environment", "evolution"],
+      "tone": "ethology"
+    },
+    {
+      "id": "ethol_003",
+      "name": { "ja": "社会的学習理論", "en": "Social Learning Theory" },
+      "field": "ethology",
+      "summary": {
+        "ja": "動物は仲間のやり方を見て、学ぶことができる",
+        "en": "Animals learn by watching what others do"
+      },
+      "application": "コミュニティから学んでいるユーザーに社会的学習の効果を説明",
+      "tags": ["social", "learning", "observation"],
+      "tone": "ethology"
+    },
+    {
+      "id": "ethol_004",
+      "name": { "ja": "親和欲求理論", "en": "Affiliation Motivation" },
+      "field": "ethology",
+      "summary": {
+        "ja": "生き物は本能的に、仲間とつながりたいと思う",
+        "en": "Living things instinctively want to connect with others"
+      },
+      "application": "コミュニティで活動しているユーザーに所属欲求の自然さを伝える",
+      "tags": ["social", "connection", "instinct"],
+      "tone": "ethology"
+    },
+    {
+      "id": "ethol_005",
+      "name": { "ja": "包摂的適応度理論", "en": "Inclusive Fitness" },
+      "field": "ethology",
+      "summary": {
+        "ja": "他の人を助ける行動も、進化の観点では意味がある",
+        "en": "Helping others makes sense from an evolutionary perspective"
+      },
+      "application": "他者を助けている行動にも進化的意味があることを説明",
+      "tags": ["altruism", "fitness", "evolution"],
+      "tone": "ethology"
+    },
+    {
+      "id": "ethol_006",
+      "name": { "ja": "状況依存的戦略理論", "en": "Conditional Strategy Theory" },
+      "field": "ethology",
+      "summary": {
+        "ja": "状況に合わせて、そのときベストな行動を選ぶ",
+        "en": "You choose the best strategy based on the situation"
+      },
+      "application": "柔軟に行動を変えているユーザーに適応的戦略の価値を伝える",
+      "tags": ["strategy", "flexibility", "adaptation"],
+      "tone": "ethology"
+    },
+    {
+      "id": "ethol_007",
+      "name": { "ja": "儀式化行動", "en": "Ritualized Behavior" },
+      "field": "ethology",
+      "summary": {
+        "ja": "動物は特定の行動をいつも同じようにやって、仲間とのコミュニケーションに使う",
+        "en": "Animals ritualize behaviors to communicate and maintain order"
+      },
+      "application": "ルーティン化された行動の意義を動物行動学的に説明",
+      "tags": ["ritual", "routine", "order"],
+      "tone": "ethology"
+    },
+
+    {
+      "id": "cog_001",
+      "name": { "ja": "二重過程理論", "en": "Dual Process Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "脳には、パッと考える速い頭と、じっくり考える遅い頭の2つがある",
+        "en": "Your brain has a fast intuitive part and a slow logical part"
+      },
+      "application": "習慣（システム1）と意思決定（システム2）の違いを説明",
+      "tags": ["thinking", "intuition", "logic"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_002",
+      "name": { "ja": "メタ認知理論", "en": "Metacognition Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "自分が今どう考えているかを、自分で見つめる力",
+        "en": "The ability to watch and control your own thinking"
+      },
+      "application": "振り返り機能を使っているユーザーにメタ認知の価値を伝える",
+      "tags": ["awareness", "thinking", "control"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_003",
+      "name": { "ja": "注意制御理論", "en": "Attention Control Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "どこに注意を向けるかで、できることが変わる",
+        "en": "Where you focus your attention determines what you can do"
+      },
+      "application": "集中して活動しているユーザーに注意の重要性を説明",
+      "tags": ["attention", "focus", "performance"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_004",
+      "name": { "ja": "メンタルモデル理論", "en": "Mental Model Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "人は頭の中に世界の地図を作って、それを使って考える",
+        "en": "You build a mental map of the world and use it to think"
+      },
+      "application": "目標設定と達成プロセスを「モデル化」しているユーザーに認知科学的視点を提供",
+      "tags": ["model", "understanding", "cognition"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_005",
+      "name": { "ja": "ワーキングメモリ理論", "en": "Working Memory Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "頭の中で一時的に覚えておける量には限りがある",
+        "en": "You can only hold a limited amount of information in your mind at once"
+      },
+      "application": "タスク管理を工夫しているユーザーにワーキングメモリの限界と対策を説明",
+      "tags": ["memory", "cognition", "capacity"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_006",
+      "name": { "ja": "認知負荷理論", "en": "Cognitive Load Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "一度にたくさんのことを考えると、頭がパンクして学べなくなる",
+        "en": "Thinking about too many things at once overloads your brain"
+      },
+      "application": "シンプルな習慣から始めているユーザーに認知負荷の削減効果を説明",
+      "tags": ["load", "cognition", "simplicity"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_007",
+      "name": { "ja": "プロトタイプ理論", "en": "Prototype Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "人は「これが典型的」という見本を基準にして、物事を分ける",
+        "en": "You categorize things based on typical examples"
+      },
+      "application": "理想的な習慣のモデルケースを提示する効果を説明",
+      "tags": ["categorization", "model", "recognition"],
+      "tone": "cognitive_science"
+    },
+    {
+      "id": "cog_008",
+      "name": { "ja": "フレーム理論", "en": "Frame Theory" },
+      "field": "cognitive_science",
+      "summary": {
+        "ja": "同じ内容でも、どう見せるかで受け取り方が変わる",
+        "en": "How information is presented changes how you interpret it"
+      },
+      "application": "ポジティブなフレーミングでFBを提供する認知科学的根拠",
+      "tags": ["framing", "perception", "influence"],
+      "tone": "cognitive_science"
+    },
+
+    {
+      "id": "edu_001",
+      "name": { "ja": "GROWモデル", "en": "Goal–Reality–Options–Will" },
+      "field": "education",
+      "summary": {
+        "ja": "目標→現実→選択肢→やる気の順で考えると、うまく計画が立てられる",
+        "en": "Thinking through Goal → Reality → Options → Will helps you plan well"
+      },
+      "application": "目標設定と振り返りのプロセスをGROWモデルで構造化",
+      "tags": ["coaching", "goal", "structure"],
+      "tone": "education"
+    },
+    {
+      "id": "edu_002",
+      "name": { "ja": "スキャフォールディング理論", "en": "Scaffolding Theory" },
+      "field": "education",
+      "summary": {
+        "ja": "最初は手伝ってあげて、だんだん手を離していくと、一人でできるようになる",
+        "en": "Starting with help and gradually removing it builds independence"
+      },
+      "application": "初心者ユーザーへのサポート設計の教育学的根拠",
+      "tags": ["support", "learning", "independence"],
+      "tone": "education"
+    },
+    {
+      "id": "edu_003",
+      "name": { "ja": "リフレクション理論", "en": "Reflection Theory" },
+      "field": "education",
+      "summary": {
+        "ja": "やったことを振り返ると、学びが深くなって成長できる",
+        "en": "Looking back on what you did helps you learn and grow more deeply"
+      },
+      "application": "振り返り機能の教育的価値を説明",
+      "tags": ["reflection", "learning", "growth"],
+      "tone": "education"
+    },
+    {
+      "id": "edu_004",
+      "name": { "ja": "成長マインドセット理論", "en": "Growth Mindset" },
+      "field": "education",
+      "summary": {
+        "ja": "「がんばれば伸びる」と信じることで、本当に伸びる",
+        "en": "Believing you can grow through effort actually helps you grow"
+      },
+      "application": "挑戦を続けるユーザーに成長マインドセットの価値を伝える",
+      "tags": ["mindset", "growth", "belief"],
+      "tone": "education"
+    },
+    {
+      "id": "edu_005",
+      "name": { "ja": "フィードバック理論", "en": "Feedback Theory" },
+      "field": "education",
+      "summary": {
+        "ja": "良いアドバイスをもらうと、学ぶスピードが速くなる",
+        "en": "Getting good advice speeds up your learning"
+      },
+      "application": "AI FBの教育学的意義を説明",
+      "tags": ["feedback", "learning", "acceleration"],
+      "tone": "education"
+    },
+    {
+      "id": "edu_006",
+      "name": { "ja": "漸進性過負荷の原理", "en": "Progressive Overload Principle" },
+      "field": "education",
+      "summary": {
+        "ja": "少しずつ負荷を増やしていくと、できることが着実に増えていく",
+        "en": "Gradually increasing difficulty helps you steadily improve"
+      },
+      "application": "トレーニングや学習で負荷を段階的に上げているユーザーに原理を説明",
+      "tags": ["progression", "growth", "training"],
+      "tone": "education"
+    }
+  ]
+}

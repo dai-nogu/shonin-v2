@@ -2,6 +2,7 @@
 
 import { createContext, useContext, ReactNode } from "react"
 import { useActivitiesDb } from "@/hooks/use-activities-db"
+import type { Result } from "@/types/result"
 
 export interface Activity {
   id: string
@@ -14,8 +15,8 @@ interface ActivitiesContextType {
   activities: Activity[]
   loading: boolean
   error: string | null
-  addActivity: (activity: Omit<Activity, "id">) => Promise<string | null>
-  deleteActivity: (activityId: string) => Promise<boolean>
+  addActivity: (activity: Omit<Activity, "id">) => Promise<Result<string>>
+  deleteActivity: (activityId: string) => Promise<Result<void>>
   getActivity: (activityId: string) => Activity | undefined
   refetch: () => Promise<void>
 }

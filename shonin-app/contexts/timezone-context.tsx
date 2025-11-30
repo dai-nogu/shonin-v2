@@ -11,7 +11,7 @@ interface TimezoneContextType {
   loading: boolean
   error: string | null
   detectAndSetTimezone: () => void
-  getTimezoneDisplayName: (timezone: string) => string
+
 }
 
 const TimezoneContext = createContext<TimezoneContextType | undefined>(undefined)
@@ -73,7 +73,6 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
         // }
 
       } catch (err) {
-        console.error('タイムゾーン初期化エラー:', err)
         setError('タイムゾーン設定の読み込みに失敗しました')
         // エラーの場合はデフォルトのタイムゾーンを使用
         setTimezoneState('Asia/Tokyo')
@@ -103,7 +102,6 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
       //   .eq('id', user.id)
 
     } catch (err) {
-      console.error('タイムゾーン設定エラー:', err)
       setError('タイムゾーン設定の保存に失敗しました')
     }
   }
@@ -120,7 +118,6 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
         localStorage.setItem('shonin-timezone', detectedTimezone)
       }
     } catch (err) {
-      console.error('自動検出設定エラー:', err)
       setError('自動検出設定の保存に失敗しました')
     }
   }
@@ -132,15 +129,11 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
       localStorage.setItem('shonin-timezone', detectedTimezone)
       setError(null)
     } catch (err) {
-      console.error('タイムゾーン検出エラー:', err)
       setError('タイムゾーンの自動検出に失敗しました')
     }
   }
 
-  const getTimezoneDisplayName = (timezone: string): string => {
-    const timezoneInfo = TIMEZONES.find(tz => tz.value === timezone)
-    return timezoneInfo ? timezoneInfo.label : timezone
-  }
+
 
   const value: TimezoneContextType = {
     timezone,
@@ -149,8 +142,7 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
     setIsAutoDetect: setIsAutoDetectWrapper,
     loading,
     error,
-    detectAndSetTimezone,
-    getTimezoneDisplayName
+    detectAndSetTimezone
   }
 
   return (

@@ -54,7 +54,7 @@ CREATE TABLE public.goals (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- セッションテーブル（基本機能 + 基本振り返り）
+-- セッションテーブル（基本機能のみ）
 CREATE TABLE public.sessions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -65,11 +65,6 @@ CREATE TABLE public.sessions (
     session_date DATE,
     notes TEXT,
     location TEXT DEFAULT '',
-    
-    -- 基本振り返り情報（互換性のため）
-    mood INTEGER,
-    achievements TEXT,
-    challenges TEXT,
     
     -- 目標連動機能
     goal_id UUID REFERENCES public.goals(id) ON DELETE SET NULL, -- 関連する目標のID（NULL許可）
@@ -121,6 +116,7 @@ CREATE TRIGGER handle_updated_at_sessions BEFORE UPDATE ON public.sessions
 -- ==========================================
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
@@ -139,6 +135,16 @@ CREATE POLICY "Users can insert own activities" ON public.activities
 CREATE POLICY "Users can update own activities" ON public.activities
     FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own activities" ON public.activities
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Goals policies
+CREATE POLICY "Users can view own goals" ON public.goals
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own goals" ON public.goals
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own goals" ON public.goals
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own goals" ON public.goals
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Sessions policies

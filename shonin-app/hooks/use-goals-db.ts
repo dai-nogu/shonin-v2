@@ -1,15 +1,18 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/auth-context'
 import type { Database } from '@/types/database'
+import type { Result } from '@/types/result'
+import { success, failure } from '@/types/result'
+import { isAuthError, getErrorTranslationKey, redirectToLogin } from '@/lib/client-error-handler'
+import * as goalsActions from '@/app/actions/goals'
 
 type Goal = Database['public']['Tables']['goals']['Row']
-type GoalInsert = Database['public']['Tables']['goals']['Insert']
-type GoalUpdate = Database['public']['Tables']['goals']['Update']
 
-// フォームからのデータ型
+// フォームからのデータ型（Server Actionsと同じ型を使用）
 export interface GoalFormData {
   title: string
   motivation: string
@@ -20,253 +23,342 @@ export interface GoalFormData {
   addDuration?: number // 進捗更新用：追加する時間（秒単位）
 }
 
-export function useGoalsDb() {
+/**
+ * 共通のエラーハンドリングを行うフック
+ * 認証エラーの自動リダイレクトと多言語対応エラーメッセージの設定を一元化
+ */
+function useGoalsErrorHandler(setError: (error: string | null) => void) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const t = useTranslations()
+
+  const handleError = useCallback((err: unknown, fallbackKey?: string): boolean => {
+    // 認証エラーの場合は安全にリダイレクト
+    if (isAuthError(err)) {
+      redirectToLogin(router, pathname)
+      return true
+    }
+    
+    // その他のエラーの場合は多言語対応メッセージを設定
+    const errorKey = getErrorTranslationKey(err, fallbackKey)
+    setError(t(errorKey))
+    return false
+  // setErrorは安定した参照なので依存配列から除外
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, pathname, t])
+
+  return handleError
+}
+
+// 個別の目標を取得するフック
+export function useSingleGoal(goalId: string) {
   const { user } = useAuth()
-  const [goals, setGoals] = useState<Goal[]>([])
+  const router = useRouter()
+  const pathname = usePathname()
+  const t = useTranslations()
+  const [goal, setGoal] = useState<Goal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // アンマウント後のsetState防止フラグ（フック全体で使用）
+  const mountedRef = useRef(true)
+  
+  // 共通のエラーハンドラーを使用（例外処理用）
+  const handleError = useGoalsErrorHandler(setError)
 
-  // 目標を取得
-  const fetchGoals = async (forceLoading: boolean = false) => {
-    try {
-      if (forceLoading) {
-        setLoading(true)
-      }
+  useEffect(() => {
+    // マウント時に初期化、アンマウント時のクリーンアップ
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
-      if (!user?.id) {
-        setGoals([])
-        if (forceLoading) {
+  useEffect(() => {
+    // アンマウント後のsetState防止フラグ（ローカル）
+    let isMounted = true
+    
+    const fetchGoal = async () => {
+      if (!user?.id || !goalId) {
+        if (isMounted) {
+          setGoal(null)
           setLoading(false)
         }
         return
       }
 
-      const { data, error } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-
-      if (error) {
-        console.error('Goals fetch error:', error)
-        throw error
+      const result = await goalsActions.getGoal(goalId)
+      
+      // アンマウント済みの場合はsetStateしない
+      if (!isMounted) return
+      
+      if (result.success) {
+        setGoal(result.data)
+      } else {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_FETCH_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.fetch_error')
+          setError(t(errorKey))
+        }
+        setGoal(null)
       }
-
-      console.log('Raw goals data from database:', data)
-      setGoals(data || [])
-    } catch (err) {
-      console.error('Error in fetchGoals:', err)
-      setError(err instanceof Error ? err.message : '目標の取得に失敗しました')
-    } finally {
-      setLoading(false)
+      
+      // マウント中の場合のみsetLoadingを実行（アンマウント後のsetState防止）
+      if (isMounted) {
+        setLoading(false)
+      }
     }
+
+    fetchGoal()
+    
+    // クリーンアップ：アンマウント時にフラグを更新
+    return () => {
+      isMounted = false
+    }
+  }, [user?.id, goalId, router, pathname, t])
+
+  return { goal, loading, error }
+}
+
+export function useGoalsDb(initialGoals?: Goal[]) {
+  const { user } = useAuth()
+  const t = useTranslations()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [goals, setGoals] = useState<Goal[]>(initialGoals ?? [])
+  const [loading, setLoading] = useState(!initialGoals)
+  const [error, setError] = useState<string | null>(null)
+  
+  // アンマウント後のsetState防止フラグ（フック全体で使用）
+  const mountedRef = useRef(true)
+  // レースコンディション対策：最新リクエストのみ反映
+  const requestIdRef = useRef(0)
+
+  // 共通のエラーハンドラーを使用（例外処理用）
+  const handleError = useGoalsErrorHandler(setError)
+
+  // 目標を取得
+  // isRefreshing: true = バックグラウンド更新（ローディング表示なし）
+  //               false = 初回読み込み/明示的リロード（ローディング表示あり）
+  const fetchGoals = async (isRefreshing: boolean = false) => {
+    // レースコンディション対策：リクエストIDを生成
+    const currentRequestId = ++requestIdRef.current
+    
+    // 新規操作開始時に古いエラーをクリア
+    if (!mountedRef.current) return
+    setError(null)
+    
+    // リフレッシュ時はローディング表示なし、通常時は表示
+    if (!mountedRef.current) return
+    setLoading(!isRefreshing)
+
+    if (!user?.id) {
+      if (!mountedRef.current) return
+      setGoals([])
+      if (!mountedRef.current) return
+      setLoading(false)
+      return
+    }
+
+    const result = await goalsActions.getGoals()
+    
+    // 古いリクエストの結果は無視（レースコンディション対策）
+    if (currentRequestId !== requestIdRef.current) return
+    if (!mountedRef.current) return
+    
+    if (result.success) {
+      setGoals(result.data)
+    } else {
+      // 認証エラーの場合はリダイレクト
+      const code = result.code || 'GOAL_FETCH_FAILED'
+      if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+        redirectToLogin(router, pathname)
+      } else {
+        // その他のエラーは setError で表示
+        const errorKey = getErrorTranslationKey(code, 'goals.fetch_error')
+        setError(t(errorKey))
+      }
+    }
+    
+    if (!mountedRef.current) return
+    setLoading(false)
   }
 
   // 目標を追加
-  const addGoal = async (goalData: GoalFormData): Promise<string | null> => {
+  const addGoal = async (goalData: GoalFormData): Promise<Result<string>> => {
     try {
-      console.log('addGoal called with data:', goalData)
-
-      // calculatedHoursを秒に変換（時間 * 3600）
-      const targetDurationSeconds = goalData.calculatedHours * 3600
-
-      const goalInsert: Omit<GoalInsert, 'user_id'> = {
-        title: goalData.title,
-        description: goalData.motivation || null, // motivationをdescriptionにマッピング
-        target_duration: targetDurationSeconds, // 秒単位で保存
-        current_value: 0, // 初期値は0
-        unit: '時間', // 固定値
-        deadline: goalData.deadline || null,
-        weekday_hours: goalData.weekdayHours || 0,
-        weekend_hours: goalData.weekendHours || 0,
-        status: 'active' as const, // 新規作成時は常にactive
-      }
-
-      console.log('goalInsert data:', goalInsert)
-
+      // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
+      setError(null)
+      
       if (!user?.id) {
-        setError('ログインが必要です')
-        return null
+        redirectToLogin(router, pathname)
+        const errorMsg = t('errors.AUTH_REQUIRED')
+        return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const { data, error } = await supabase
-        .from('goals')
-        .insert({
-          ...goalInsert,
-          user_id: user.id,
-        })
-        .select('id')
-        .single()
-
-      if (error) {
-        console.error('Goal insert error:', error)
-        throw error
+      const result = await goalsActions.addGoal(goalData)
+      
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_ADD_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.add_error')
+          setError(t(errorKey))
+        }
+        return result
       }
-
-      console.log('Goal inserted successfully with id:', data.id)
-      await fetchGoals() // リストを更新
-      return data.id
+      
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
     } catch (err) {
-      console.error('Error in addGoal:', err)
-      setError(err instanceof Error ? err.message : '目標の追加に失敗しました')
-      return null
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.add_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
+      const errorKey = getErrorTranslationKey(err, 'goals.add_error')
+      const errorMsg = t(errorKey)
+      return failure(errorMsg)
     }
   }
 
   // 目標を更新
-  const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<boolean> => {
+  const updateGoal = async (id: string, goalData: Partial<GoalFormData>): Promise<Result<void>> => {
     try {
-      console.log('updateGoal called with id:', id, 'data:', goalData)
+      // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
+      setError(null)
       
       if (!user?.id) {
-        setError('ログインが必要です')
-        return false
+        redirectToLogin(router, pathname)
+        const errorMsg = t('errors.AUTH_REQUIRED')
+        return failure(errorMsg, 'AUTH_REQUIRED')
+      }
+
+      const result = await goalsActions.updateGoal(id, goalData)
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_UPDATE_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.update_error')
+          setError(t(errorKey))
+        }
+        return result
       }
       
-      // 進捗更新のためのaddDuration処理
-      if ('addDuration' in goalData && typeof goalData.addDuration === 'number') {
-        return await updateGoalProgress(id, goalData.addDuration)
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
+    } catch (err) {
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.update_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
       }
-
-      // 通常の目標更新処理
-      const updateData: Partial<GoalUpdate> = {}
       
-      if (goalData.title !== undefined) updateData.title = goalData.title
-      if (goalData.motivation !== undefined) updateData.description = goalData.motivation // motivationをdescriptionにマッピング
-      if (goalData.calculatedHours !== undefined) updateData.target_duration = goalData.calculatedHours * 3600 // 時間を秒に変換
-      if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline
-      if (goalData.weekdayHours !== undefined) updateData.weekday_hours = goalData.weekdayHours
-      if (goalData.weekendHours !== undefined) updateData.weekend_hours = goalData.weekendHours
-
-      // 更新日時を追加
-      updateData.updated_at = new Date().toISOString()
-
-      console.log('updateData:', updateData)
-
-      const { error } = await supabase
-        .from('goals')
-        .update(updateData)
-        .eq('id', id)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('Goal update error:', error)
-        throw error
-      }
-
-      console.log('Goal updated successfully')
-      await fetchGoals() // リストを更新
-      return true
-    } catch (err) {
-      console.error('Error in updateGoal:', err)
-      setError(err instanceof Error ? err.message : '目標の更新に失敗しました')
-      return false
-    }
-  }
-
-  // 目標の進捗を更新（時間を加算）
-  const updateGoalProgress = async (id: string, additionalSeconds: number): Promise<boolean> => {
-    try {
-      if (!user?.id) {
-        setError('ログインが必要です')
-        return false
-      }
-
-      // データベースから最新の目標を取得
-      const { data: currentGoal, error: fetchError } = await supabase
-        .from('goals')
-        .select('current_value')
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .single()
-
-      if (fetchError || !currentGoal) {
-        console.error('Goal fetch error:', fetchError)
-        throw new Error('目標が見つかりません')
-      }
-
-      // 新しい進捗値を計算
-      const newCurrentValue = (currentGoal.current_value || 0) + additionalSeconds
-
-      const { error } = await supabase
-        .from('goals')
-        .update({
-          current_value: newCurrentValue,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('Goal progress update error:', error)
-        throw error
-      }
-
-      await fetchGoals(true) // リストを更新（強制ローディング）
-      return true
-    } catch (err) {
-      console.error('Error in updateGoalProgress:', err)
-      setError(err instanceof Error ? err.message : '目標進捗の更新に失敗しました')
-      return false
+      // その他のエラーは failure のみ返す（UIで表示）
+      const errorKey = getErrorTranslationKey(err, 'goals.update_error')
+      const errorMsg = t(errorKey)
+      return failure(errorMsg)
     }
   }
 
   // 目標を削除
-  const deleteGoal = async (id: string): Promise<boolean> => {
+  const deleteGoal = async (id: string): Promise<Result<void>> => {
     try {
+      // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
+      setError(null)
+      
       if (!user?.id) {
-        setError('ログインが必要です')
-        return false
+        redirectToLogin(router, pathname)
+        const errorMsg = t('errors.AUTH_REQUIRED')
+        return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const { error } = await supabase
-        .from('goals')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('Goal delete error:', error)
-        throw error
+      const result = await goalsActions.deleteGoal(id)
+      
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_DELETE_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.delete_error')
+          setError(t(errorKey))
+        }
+        return result
       }
-
-      await fetchGoals() // リストを更新
-      return true
+      
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
     } catch (err) {
-      console.error('Error in deleteGoal:', err)
-      setError(err instanceof Error ? err.message : '目標の削除に失敗しました')
-      return false
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.delete_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
+      const errorKey = getErrorTranslationKey(err, 'goals.delete_error')
+      const errorMsg = t(errorKey)
+      return failure(errorMsg)
     }
   }
 
   // 目標を完了に設定
-  const completeGoal = async (id: string): Promise<boolean> => {
+  const completeGoal = async (id: string): Promise<Result<void>> => {
     try {
+      // 新規操作開始時に古いエラーをクリア
+      if (!mountedRef.current) return failure('Component unmounted', 'UNMOUNTED')
+      setError(null)
+      
       if (!user?.id) {
-        setError('ログインが必要です')
-        return false
+        redirectToLogin(router, pathname)
+        const errorMsg = t('errors.AUTH_REQUIRED')
+        return failure(errorMsg, 'AUTH_REQUIRED')
       }
 
-      const { error } = await supabase
-        .from('goals')
-        .update({
-          status: 'completed',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('Goal completion error:', error)
-        throw error
+      const result = await goalsActions.completeGoal(id)
+      if (!result.success) {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_COMPLETE_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.complete_error')
+          setError(t(errorKey))
+        }
+        return result
       }
-
-      await fetchGoals() // リストを更新
-      return true
+      
+      await fetchGoals(true) // リストを更新（バックグラウンド）
+      return result
     } catch (err) {
-      console.error('Error in completeGoal:', err)
-      setError(err instanceof Error ? err.message : '目標の完了に失敗しました')
-      return false
+      // 認証エラーは handleError でリダイレクト（UIエラー表示なし）
+      const isAuthErr = handleError(err, 'goals.complete_error')
+      if (isAuthErr) {
+        return failure('Redirecting to login...', 'AUTH_REQUIRED')
+      }
+      
+      // その他のエラーは failure のみ返す（UIで表示）
+      const errorKey = getErrorTranslationKey(err, 'goals.complete_error')
+      const errorMsg = t(errorKey)
+      return failure(errorMsg)
     }
   }
 
@@ -275,17 +367,68 @@ export function useGoalsDb() {
     return goals.find(goal => goal.id === id)
   }
 
-  // アクティブな目標を取得
-  const getActiveGoals = (): Goal[] => {
+  // アクティブな目標を取得（パフォーマンス最適化のためuseMemo化）
+  const getActiveGoals = useMemo((): Goal[] => {
     return goals.filter(goal => goal.status === 'active')
-  }
+  }, [goals])
 
-  // 初回読み込み
+  // マウント時に初期化、アンマウント時のクリーンアップ
   useEffect(() => {
-    if (user?.id) {
-      fetchGoals()
+    mountedRef.current = true // マウント時に必ずtrueにする
+    return () => {
+      mountedRef.current = false
     }
-  }, [user?.id])
+  }, [])
+
+  // 初回読み込み（初期データがない場合のみ）
+  useEffect(() => {
+    // アンマウント後のsetState防止フラグ
+    let isMounted = true
+    
+    const loadInitialGoals = async () => {
+      if (!user?.id || initialGoals) return
+      
+      // レースコンディション対策：リクエストIDを生成
+      const currentRequestId = ++requestIdRef.current
+      
+      if (isMounted && mountedRef.current) {
+        setLoading(true)
+      }
+      
+      const result = await goalsActions.getGoals()
+      
+      // 古いリクエストの結果は無視（レースコンディション対策）
+      if (currentRequestId !== requestIdRef.current) return
+      // アンマウント済みの場合はsetStateしない
+      if (!isMounted || !mountedRef.current) return
+      
+      if (result.success) {
+        setGoals(result.data)
+      } else {
+        // 認証エラーの場合はリダイレクト
+        const code = result.code || 'GOAL_FETCH_FAILED'
+        if (code === 'AUTH_REQUIRED' || code === 'AUTH_FAILED' || code === 'UNAUTHORIZED') {
+          redirectToLogin(router, pathname)
+        } else {
+          // その他のエラーは setError で表示
+          const errorKey = getErrorTranslationKey(code, 'goals.fetch_error')
+          setError(t(errorKey))
+        }
+      }
+      
+      // マウント中の場合のみsetLoadingを実行（アンマウント後のsetState防止）
+      if (isMounted && mountedRef.current) {
+        setLoading(false)
+      }
+    }
+    
+    loadInitialGoals()
+    
+    // クリーンアップ：アンマウント時にフラグを更新
+    return () => {
+      isMounted = false
+    }
+  }, [user?.id, initialGoals, handleError])
 
   return {
     goals,

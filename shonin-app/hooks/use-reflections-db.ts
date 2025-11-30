@@ -1,49 +1,49 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { 
   SessionReflection, 
   SessionMedia, 
   SessionMediaDatabase
 } from '@/types/database';
+import { JA_INPUT_LIMITS, truncateForDb } from '@/lib/input-limits';
 
 export function useReflectionsDb() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [supabase] = useState(() => createClient());
 
-  // 振り返り情報をsessionsテーブルに保存（統合版）
+  // 振り返り情報を暗号化して保存（統合版）
   const saveReflection = async (sessionId: string, reflection: SessionReflection): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // sessionsテーブルの振り返りカラムを更新
-      const { data, error } = await supabase
-        .from('sessions')
-        .update({
-          mood_score: reflection.moodScore,
-          mood_notes: reflection.moodNotes || null,
-          detailed_achievements: reflection.achievements,
-          achievement_satisfaction: reflection.achievementsRating || null,
-          detailed_challenges: reflection.challenges,
-          challenge_severity: reflection.challengesSeverity || null,
-          reflection_notes: reflection.additionalNotes || null,
-          reflection_duration: reflection.reflectionDuration || null,
-        })
-        .eq('id', sessionId)
-        .select('id')
-        .single();
+      // サーバー側で文字数制限を適用（UIバイパス対策）
+      const sanitizedAchievements = truncateForDb(reflection.achievements, JA_INPUT_LIMITS.sessionAchievements);
+      const sanitizedChallenges = truncateForDb(reflection.challenges, JA_INPUT_LIMITS.sessionChallenges);
+      const sanitizedNotes = truncateForDb(reflection.additionalNotes, JA_INPUT_LIMITS.sessionNotes);
+
+      // 暗号化関数を使用して振り返りデータを保存（基本データも含む）
+      const { data, error } = await supabase.rpc('update_session_reflections_encrypted', {
+        p_session_id: sessionId,
+        p_mood: reflection.moodScore || null,
+        p_achievements: sanitizedAchievements,
+        p_challenges: sanitizedChallenges,
+        p_mood_score: reflection.moodScore || null,
+        p_detailed_achievements: sanitizedAchievements,
+        p_detailed_challenges: sanitizedChallenges,
+        p_reflection_notes: sanitizedNotes,
+      });
 
       if (error) {
-        console.error('振り返り保存エラー:', error);
         setError(`振り返りの保存に失敗しました: ${error.message}`);
         return null;
       }
 
-      return data.id;
+      return sessionId;
     } catch (err) {
-      console.error('振り返り保存エラー:', err);
       setError('振り返りの保存中にエラーが発生しました');
       return null;
     } finally {
@@ -51,23 +51,20 @@ export function useReflectionsDb() {
     }
   };
 
-  // 振り返り情報をsessionsテーブルから取得（統合版）
+  // 振り返り情報を復号化して取得（統合版）
   const getReflection = async (sessionId: string): Promise<SessionReflection | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // 復号化ビューから振り返りデータを取得
       const { data, error } = await supabase
-        .from('sessions')
+        .from('sessions_reflections_decrypted')
         .select(`
           mood_score,
-          mood_notes,
           detailed_achievements,
-          achievement_satisfaction,
           detailed_challenges,
-          challenge_severity,
-          reflection_notes,
-          reflection_duration
+          reflection_notes
         `)
         .eq('id', sessionId)
         .single();
@@ -77,26 +74,22 @@ export function useReflectionsDb() {
           // データが見つからない場合
           return null;
         }
-        console.error('振り返り取得エラー:', error);
-        setError(`振り返りの取得に失敗しました: ${error.message}`);
+        setError('振り返りの取得に失敗しました');
         return null;
       }
 
       // データを変換
       const reflection: SessionReflection = {
         moodScore: data.mood_score || 3,
-        moodNotes: data.mood_notes || undefined,
         achievements: data.detailed_achievements || '',
-        achievementsRating: data.achievement_satisfaction || undefined,
+        achievementsRating: undefined, // UI未実装のため削除
         challenges: data.detailed_challenges || '',
-        challengesSeverity: data.challenge_severity || undefined,
+        challengesSeverity: undefined, // UI未実装のため削除
         additionalNotes: data.reflection_notes || undefined,
-        reflectionDuration: data.reflection_duration || undefined,
       };
 
       return reflection;
     } catch (err) {
-      console.error('振り返り取得エラー:', err);
       setError('振り返りの取得中にエラーが発生しました');
       return null;
     } finally {
@@ -131,7 +124,6 @@ export function useReflectionsDb() {
           .upload(filePath, file);
 
         if (uploadError) {
-          console.error('ファイルアップロードエラー:', uploadError);
           setError(`ファイルのアップロードに失敗しました: ${uploadError.message}`);
           continue;
         }
@@ -145,7 +137,7 @@ export function useReflectionsDb() {
           file_name: fileName,
           file_size: file.size,
           mime_type: file.type,
-          caption: caption || null,
+          caption: caption || undefined,
           is_main_image: i === 0, // 最初の画像をメイン画像に設定
         };
 
@@ -156,7 +148,6 @@ export function useReflectionsDb() {
           .single();
 
         if (dbError) {
-          console.error('メディア情報保存エラー:', dbError);
           setError(`メディア情報の保存に失敗しました: ${dbError.message}`);
           continue;
         }
@@ -177,7 +168,6 @@ export function useReflectionsDb() {
 
       return uploadedMedia;
     } catch (err) {
-      console.error('メディアアップロードエラー:', err);
       setError('メディアのアップロード中にエラーが発生しました');
       return [];
     } finally {
@@ -198,7 +188,6 @@ export function useReflectionsDb() {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('メディア取得エラー:', error);
         setError(`メディアの取得に失敗しました: ${error.message}`);
         return [];
       }
@@ -216,7 +205,6 @@ export function useReflectionsDb() {
         createdAt: media.created_at,
       }));
     } catch (err) {
-      console.error('メディア取得エラー:', err);
       setError('メディアの取得中にエラーが発生しました');
       return [];
     } finally {
@@ -263,15 +251,13 @@ export function useReflectionsDb() {
         .single();
 
       if (error) {
-        console.error('AI分析保存エラー:', error);
         setError(`AI分析の保存に失敗しました: ${error.message}`);
         return null;
       }
 
       return data.id;
     } catch (err) {
-      console.error('AI分析保存エラー:', err);
-      setError('AI分析の保存中にエラーが発生しました');
+      setError('保存中にエラーが発生しました');
       return null;
     } finally {
       setIsLoading(false);
@@ -304,8 +290,7 @@ export function useReflectionsDb() {
           // データが見つからない場合
           return null;
         }
-        console.error('AI分析取得エラー:', error);
-        setError(`AI分析の取得に失敗しました: ${error.message}`);
+        setError(`分析の取得に失敗しました: ${error.message}`);
         return null;
       }
 
@@ -320,8 +305,7 @@ export function useReflectionsDb() {
         analyzed_at: data.ai_analyzed_at,
       };
     } catch (err) {
-      console.error('AI分析取得エラー:', err);
-      setError('AI分析の取得中にエラーが発生しました');
+      setError('分析の取得中にエラーが発生しました');
       return null;
     } finally {
       setIsLoading(false);

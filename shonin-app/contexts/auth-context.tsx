@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     // 初期セッションを取得
@@ -49,15 +50,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabase])
 
   // Google OAuth認証
   const signInWithGoogle = async () => {
     try {
+      // 現在のロケールを取得
+      const pathname = window.location.pathname
+      const locale = pathname.split('/')[1] || 'ja'
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: `${window.location.origin}/callback?locale=${locale}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -66,11 +71,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
       
       if (error) {
-        console.error('Google認証エラー:', error.message)
         throw error
       }
     } catch (error) {
-      console.error('認証処理エラー:', error)
       throw error
     }
   }
@@ -80,7 +83,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('ログアウトエラー:', error.message)
         throw error
       }
       
@@ -100,7 +102,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem('lastVisit_evening')
       }
     } catch (error) {
-      console.error('ログアウト処理エラー:', error)
       throw error
     }
   }
