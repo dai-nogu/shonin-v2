@@ -10,6 +10,7 @@
  */
 
 import { JA_INPUT_LIMITS } from './input-limits';
+import { sanitizeXssNullable } from './xss-sanitize';
 
 // =========================================
 // 入力制限設定
@@ -101,6 +102,7 @@ export interface AnalyzedSessionData {
   // 振り返り分析
   achievements: string;         // 結合された成果テキスト
   challenges: string;           // 結合された課題テキスト
+  notes: string;                // 結合されたメモテキスト
   reflectionQuality: 'detailed' | 'moderate' | 'minimal' | 'none';
   
   // 目標分析
@@ -155,10 +157,10 @@ export function analyzeSessionData(
   
   const moodTrend = calculateMoodTrend(sessions);
   
-  // アクティビティ分析
+  // アクティビティ分析（XSS対策: アクティビティ名をサニタイズ）
   const activitiesMap: Record<string, { duration: number; count: number }> = {};
   sessions.forEach(session => {
-    const activityName = session.activities?.name || '不明な活動';
+    const activityName = sanitizeXssNullable(session.activities?.name) || '不明な活動';
     if (!activitiesMap[activityName]) {
       activitiesMap[activityName] = { duration: 0, count: 0 };
     }
@@ -183,15 +185,21 @@ export function analyzeSessionData(
       percentage: data.percentage
     }));
   
-  // 振り返り分析（個別セッションの文字数制限を適用）
+  // 振り返り分析（XSS対策 + 個別セッションの文字数制限を適用）
+  // ユーザー入力をAIに渡す前にサニタイズし、<achievements>などのタグを誤認しないようにする
   const achievements = sessions
     .filter(s => s.achievements)
-    .map(s => truncateField(s.achievements))
+    .map(s => truncateField(sanitizeXssNullable(s.achievements) || ''))
     .join('\n');
   
   const challenges = sessions
     .filter(s => s.challenges)
-    .map(s => truncateField(s.challenges))
+    .map(s => truncateField(sanitizeXssNullable(s.challenges) || ''))
+    .join('\n');
+  
+  const notes = sessions
+    .filter(s => s.notes)
+    .map(s => truncateField(sanitizeXssNullable(s.notes) || ''))
     .join('\n');
   
   const reflectionQuality = calculateReflectionQuality(sessions);
@@ -213,6 +221,7 @@ export function analyzeSessionData(
     topActivities,
     achievements,
     challenges,
+    notes,
     reflectionQuality,
     goalProgress,
     behaviorPatterns,
@@ -277,10 +286,11 @@ function analyzeGoalProgress(sessions: RawSessionData[]): Record<string, any> {
     
     const goalId = session.goal_id;
     if (!goalMap[goalId]) {
+      // ユーザー入力をAIに渡す前にサニタイズ
       goalMap[goalId] = {
         goalId,
-        title: session.goals.title,
-        description: session.goals.description || '',
+        title: sanitizeXssNullable(session.goals.title) || '',
+        description: sanitizeXssNullable(session.goals.description) || '',
         deadline: session.goals.deadline,
         targetDuration: session.goals.target_duration || 0,
         currentValue: session.goals.current_value || 0,
@@ -292,7 +302,7 @@ function analyzeGoalProgress(sessions: RawSessionData[]): Record<string, any> {
       };
     }
     
-    const activityName = session.activities?.name || '不明な活動';
+    const activityName = sanitizeXssNullable(session.activities?.name) || '不明な活動';
     goalMap[goalId].activities[activityName] = 
       (goalMap[goalId].activities[activityName] || 0) + (session.duration || 0);
     goalMap[goalId].totalSessionTime += session.duration || 0;
@@ -347,9 +357,12 @@ function analyzeBehaviorPatterns(sessions: RawSessionData[]) {
     const days = ['日', '月', '火', '水', '木', '金', '土'];
     dayOfWeek[days[dayIndex]] += session.duration || 0;
     
-    // 場所分析
+    // 場所分析（XSS対策: 場所名をサニタイズ）
     if (session.location) {
-      locations[session.location] = (locations[session.location] || 0) + (session.duration || 0);
+      const sanitizedLocation = sanitizeXssNullable(session.location) || '';
+      if (sanitizedLocation) {
+        locations[sanitizedLocation] = (locations[sanitizedLocation] || 0) + (session.duration || 0);
+      }
     }
   });
   

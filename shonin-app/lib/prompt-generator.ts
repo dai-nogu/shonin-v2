@@ -20,16 +20,6 @@ import { getInputLimits as getFieldLimits, getAggregatedLimits, type InputLimits
  * XMLタグで使用される特殊文字をエスケープ
  * これにより、ユーザー入力が意図せずタグ構造を破壊することを防ぐ
  */
-function escapeXmlChars(input: string): string {
-  if (!input) return '';
-  return input
-    .replace(/&/g, '&amp;')   // & は最初にエスケープ（他のエスケープ文字を壊さないため）
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 /**
  * 文字数制限を適用し、超過した場合は切り詰める
  * 切り詰め時は単語/文の途中で切れないよう調整
@@ -60,7 +50,10 @@ function truncateText(input: string, maxLength: number, locale: string): string 
 }
 
 /**
- * ユーザー入力をサニタイズ（XMLエスケープ + 文字数制限）
+ * ユーザー入力の文字数制限を適用
+ * 
+ * 注意: XSSサニタイズはsession-analyzer.tsで実施済み
+ * ここでは文字数制限のみを適用（二重エスケープを防ぐため）
  */
 function sanitizeUserInput(
   input: string | undefined,
@@ -69,13 +62,8 @@ function sanitizeUserInput(
 ): string {
   if (!input) return '';
   
-  // 1. 文字数制限を適用
-  const truncated = truncateText(input, maxLength, locale);
-  
-  // 2. XMLエスケープを適用
-  const escaped = escapeXmlChars(truncated);
-  
-  return escaped;
+  // 文字数制限を適用（XSSサニタイズはsession-analyzer.tsで実施済み）
+  return truncateText(input, maxLength, locale);
 }
 
 
@@ -331,7 +319,7 @@ ${safetyInstruction}`;
  * (XMLタグ形式 - JSONモード入力用として最適)
  * 
  * 【セキュリティ対策】
- * - ユーザー入力（achievements, challenges）はXMLエスケープを適用
+ * - ユーザー入力（achievements, challenges, notes）はXMLエスケープを適用
  * - 文字数制限を適用してトークン爆発を防止
  */
 function generateUserPrompt(data: AnalyzedSessionData, locale: string): string {
@@ -344,6 +332,7 @@ function generateUserPrompt(data: AnalyzedSessionData, locale: string): string {
     topActivities,
     achievements,
     challenges,
+    notes,
     goalProgress,
     behaviorPatterns,
     moodTrend,
@@ -361,27 +350,28 @@ function generateUserPrompt(data: AnalyzedSessionData, locale: string): string {
   // ユーザー入力をサニタイズ（XMLエスケープ + 文字数制限）
   const sanitizedAchievements = sanitizeUserInput(achievements, aggregatedLimit, locale);
   const sanitizedChallenges = sanitizeUserInput(challenges, aggregatedLimit, locale);
+  const sanitizedNotes = sanitizeUserInput(notes, aggregatedLimit, locale);
   
-  // アクティビティ名もサニタイズ（共通定義の制限を使用）
+  // アクティビティ名の文字数制限（XSSサニタイズはsession-analyzer.tsで実施済み）
   const activitiesText = topActivities
     .map(a => {
-      const sanitizedName = escapeXmlChars(a.name.substring(0, fieldLimits.activityName));
-      return `- ${sanitizedName}: ${Math.round(a.duration / 3600 * 10) / 10}h (${Math.round(a.percentage)}%)`;
+      const truncatedName = a.name.substring(0, fieldLimits.activityName);
+      return `- ${truncatedName}: ${Math.round(a.duration / 3600 * 10) / 10}h (${Math.round(a.percentage)}%)`;
     })
     .join('\n');
   
-  // 目標テキストもサニタイズ（共通定義の制限を使用）
+  // 目標テキストの文字数制限（XSSサニタイズはsession-analyzer.tsで実施済み）
   const goalsText = Object.keys(goalProgress).length > 0 
     ? Object.values(goalProgress).map((goal: any) => {
-        const sanitizedTitle = escapeXmlChars(goal.title.substring(0, fieldLimits.goalTitle));
+        const truncatedTitle = goal.title.substring(0, fieldLimits.goalTitle);
         const deadlineText = goal.deadline ? ` (Due: ${goal.deadline})` : '';
         const activitiesDetails = Object.entries(goal.activities)
           .map(([name, time]) => {
-            const sanitizedActName = escapeXmlChars(name.substring(0, fieldLimits.activityName));
-            return `${sanitizedActName} ${Math.round((time as number) / 3600 * 10) / 10}h`;
+            const truncatedActName = name.substring(0, fieldLimits.activityName);
+            return `${truncatedActName} ${Math.round((time as number) / 3600 * 10) / 10}h`;
           })
           .join(', ');
-        return `- ${sanitizedTitle}: ${Math.round(goal.totalSessionTime / 3600 * 10) / 10}h${deadlineText}
+        return `- ${truncatedTitle}: ${Math.round(goal.totalSessionTime / 3600 * 10) / 10}h${deadlineText}
     Progress: ${goal.progressPercentage}%
     Details: ${activitiesDetails}`;
       }).join('\n\n')
@@ -399,9 +389,9 @@ function generateUserPrompt(data: AnalyzedSessionData, locale: string): string {
     .map(([day, duration]) => `${day}: ${Math.round((duration as number) / 3600 * 10) / 10}h`)
     .join(', ');
   
-  // 場所名もサニタイズ（共通定義の制限を使用）
-  const sanitizedLocations = Object.keys(behaviorPatterns.locations)
-    .map(loc => escapeXmlChars(loc.substring(0, fieldLimits.location)))
+  // 場所名の文字数制限（XSSサニタイズはsession-analyzer.tsで実施済み）
+  const truncatedLocations = Object.keys(behaviorPatterns.locations)
+    .map(loc => loc.substring(0, fieldLimits.location))
     .join(', ');
   
   // XMLタグ形式でデータを構造化
@@ -427,6 +417,10 @@ ${sanitizedAchievements || 'None recorded'}
 ${sanitizedChallenges || 'None recorded'}
 </challenges>
 
+<notes>
+${sanitizedNotes || 'None recorded'}
+</notes>
+
 <goals_status>
 ${goalsText}
 </goals_status>
@@ -435,6 +429,6 @@ ${goalsText}
 Top Times: ${topTimeOfDay}
 Top Days: ${topDayOfWeek}
 Consistency: ${Math.round(behaviorPatterns.consistency * 100)}%
-${sanitizedLocations ? `Locations: ${sanitizedLocations}` : ''}
+${truncatedLocations ? `Locations: ${truncatedLocations}` : ''}
 </behavior_analysis>`;
 }
