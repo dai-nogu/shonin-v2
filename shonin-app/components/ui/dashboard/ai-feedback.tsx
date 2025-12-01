@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, RefreshCw, Sparkles } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useState, useEffect } from "react"
@@ -36,13 +36,9 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   ])
   
   const { 
-    isLoading, 
     error, 
     getWeeklyFeedback, 
-    getMonthlyFeedback,
-    getExistingFeedback,
-    getLastWeekRange,
-    getLastMonthRange
+    getMonthlyFeedback
   } = useAIFeedback()
   
   // サブスクリプション情報のローディング中はスケルトンを表示
@@ -121,77 +117,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     return `${nextMonth.getMonth() + 1}/${nextMonth.getDate()}`
   }
 
-  // フィードバックを読み込む
-  const loadFeedbacks = async () => {
-    try {
-      const weekRange = getLastWeekRange()
-      const monthRange = getLastMonthRange()
-
-      const [weeklyResult, monthlyResult] = await Promise.all([
-        getWeeklyFeedback(),
-        getMonthlyFeedback()
-      ])
-
-      const newFeedbacks = []
-
-      // 週次フィードバック
-      if (weeklyResult?.feedback) {
-        newFeedbacks.push({
-          type: t('ai_feedback.weekly'),
-          date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
-          message: weeklyResult.feedback
-        })
-      } else {
-        newFeedbacks.push({
-          type: t('ai_feedback.weekly'), 
-          date: "", 
-          message: t('ai_feedback.weekly_no_data_message')
-        })
-      }
-
-      // 月次フィードバック
-      if (monthlyResult?.feedback) {
-        newFeedbacks.push({
-          type: t('ai_feedback.monthly'),
-          date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
-          message: monthlyResult.feedback
-        })
-      } else {
-        newFeedbacks.push({
-          type: t('ai_feedback.monthly'), 
-          date: "", 
-          message: t('ai_feedback.monthly_no_data_message')
-        })
-      }
-
-      setFeedbacks(newFeedbacks)
-    } catch (err) {
-      safeError('フィードバック読み込みエラー', err)
-      setFeedbacks([
-        { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_no_data_message') },
-        { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_no_data_message') }
-      ])
-    }
-  }
-
-  // 初期状態ではAPIアクセスしない（フィードバック生成ボタン押下時のみ）
-  // useEffect(() => {
-  //   loadFeedbacks()
-  // }, [])
-
-  // 自動ループ機能は無効化（手動操作のみ）
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setIsTransitioning(true)
-  //     setTimeout(() => {
-  //       setCurrentIndex((prev) => (prev + 1) % feedbacks.length)
-  //       setIsTransitioning(false)
-  //     }, 1000) // フェードアウト時間
-  //   }, 20000) // 20秒ごとに切り替え
-
-  //   return () => clearInterval(interval)
-  // }, [feedbacks.length])
-
   const handleTransition = (newIndex: number) => {
     if (newIndex === currentIndex) return
     
@@ -212,59 +137,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     handleTransition(newIndex)
   }
 
-  const handleRefresh = async () => {
-    try {
-      const weekRange = getLastWeekRange()
-      const monthRange = getLastMonthRange()
-
-      // 既存のフィードバックのみを取得（新規生成はしない）
-      const [weeklyResult, monthlyResult] = await Promise.all([
-        getExistingFeedback('weekly', weekRange.start, weekRange.end),
-        getExistingFeedback('monthly', monthRange.start, monthRange.end)
-      ])
-
-      const newFeedbacks = []
-
-      // 週次フィードバック
-      if (weeklyResult?.feedback) {
-        newFeedbacks.push({
-          type: t('ai_feedback.weekly'),
-          date: formatDateRange(weeklyResult.period_start, weeklyResult.period_end),
-          message: weeklyResult.feedback
-        })
-      } else {
-        newFeedbacks.push({
-          type: t('ai_feedback.weekly'), 
-          date: "", 
-          message: t('ai_feedback.weekly_no_data_message')
-        })
-      }
-
-      // 月次フィードバック
-      if (monthlyResult?.feedback) {
-        newFeedbacks.push({
-          type: t('ai_feedback.monthly'),
-          date: formatDateRange(monthlyResult.period_start, monthlyResult.period_end),
-          message: monthlyResult.feedback
-        })
-      } else {
-        newFeedbacks.push({
-          type: t('ai_feedback.monthly'), 
-          date: "", 
-          message: t('ai_feedback.monthly_no_data_message')
-        })
-      }
-
-      setFeedbacks(newFeedbacks)
-    } catch (err) {
-      safeError('フィードバック再読み込みエラー', err)
-      setFeedbacks([
-        { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_no_data_message') },
-        { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_no_data_message') }
-      ])
-    }
-  }
-
   const currentFeedback = feedbacks[currentIndex]
 
   return (
@@ -277,18 +149,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           
           {/* コントロール */}
           <div className="flex items-center space-x-2">
-            {/* 更新ボタン */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
-              title="既存フィードバックを再読み込み"
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
-            
             <Button
               variant="ghost"
               size="sm"
@@ -336,12 +196,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           {/* フィードバックメッセージ */}
           <div className="bg-gray-800 rounded-lg p-3 mb-3">
             <p className="text-gray-300 text-sm leading-relaxed">
-              {isLoading ? (
-                <span className="flex items-center">
-                  <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                  {t('ai_feedback.generating')}
-                </span>
-              ) : error ? (
+              {error ? (
                 <span className="text-red-400">{t('errors.generic')}: {error}</span>
               ) : (
                 currentFeedback.message

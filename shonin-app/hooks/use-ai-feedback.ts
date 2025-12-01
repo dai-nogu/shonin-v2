@@ -107,18 +107,6 @@ export function useAIFeedback() {
     };
   }, [timezone]);
 
-  // 週次フィードバックを生成（強制再生成）
-  const generateWeeklyFeedback = useCallback(async () => {
-    const { start, end } = getLastWeekRange();
-    return generateFeedback('weekly', start, end);
-  }, [generateFeedback, getLastWeekRange]);
-
-  // 月次フィードバックを生成（強制再生成）
-  const generateMonthlyFeedback = useCallback(async () => {
-    const { start, end } = getLastMonthRange();
-    return generateFeedback('monthly', start, end);
-  }, [generateFeedback, getLastMonthRange]);
-
   // APIルート経由で既存フィードバックを取得
   const getExistingFeedback = useCallback(async (
     feedbackType: 'weekly' | 'monthly',
@@ -203,13 +191,7 @@ export function useAIFeedback() {
   return {
     isLoading,
     error,
-    generateFeedback,
-    generateWeeklyFeedback,
-    generateMonthlyFeedback,
-    getExistingFeedback,
     getWeeklyFeedback,
     getMonthlyFeedback,
-    getLastWeekRange,
-    getLastMonthRange,
   };
 } 
