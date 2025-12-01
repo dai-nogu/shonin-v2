@@ -7,6 +7,7 @@ import { generatePrompts, type PromptGenerationConfig } from '@/lib/prompt-gener
 import Anthropic from '@anthropic-ai/sdk';
 import { validateOrigin } from '@/lib/csrf-protection';
 import { safeWarn, safeError, safeLog } from '@/lib/safe-logger';
+import { checkAIRateLimit } from '@/lib/rate-limiter';
 
 // ... (インターフェース定義は変更なし)
 interface SessionData {
@@ -81,6 +82,12 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // レートリミットチェック（ユーザーIDベース）
+    const rateLimitResult = await checkAIRateLimit(request, user.id);
+    if (!rateLimitResult.success && rateLimitResult.errorResponse) {
+      return rateLimitResult.errorResponse;
     }
 
     const { period_type, period_start, period_end, locale = 'ja' }: AnalysisRequest = await request.json();
@@ -263,12 +270,9 @@ async function generateAIFeedback(
     });
 
     const model = periodType === 'weekly' 
-      ? 'claude-3-haiku-20240307'  // または 'claude-3-sonnet-20240229' など適切なモデルID
-      : 'claude-3-opus-20240229';
+      ? 'claude-sonnet-4-20250514'  // 週次: Claude Sonnet 4（高速・コスト効率）
+      : 'claude-opus-4-20250514';   // 月次: Claude Opus 4（高品質）
 
-    // ★ Anthropic APIコール
-    // 注意: Anthropicには `response_format: { type: "json_object" }` はありません。
-    // プロンプトでの指示に従ってJSONを出力させます。
     const message = await anthropic.messages.create({
       model,
       max_tokens: maxTokens,
@@ -297,7 +301,6 @@ async function generateAIFeedback(
       return JSON.stringify({ overview: getFallbackMessage('default', locale, periodType) });
     }
 
-    // ★ ここでリクエストされた「JSONパースのロジック」を追加
     // 生成されたテキストが正しいJSONか検証し、オブジェクトとしてパースできるか確認します
     try {
       const feedbackData = JSON.parse(content);

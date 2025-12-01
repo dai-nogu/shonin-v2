@@ -6,6 +6,7 @@ import { getSubscriptionInfo } from '@/app/actions/subscription-info';
 import { getPlanLimits } from '@/types/subscription';
 import { validateOrigin } from '@/lib/csrf-protection';
 import { safeWarn, safeError } from '@/lib/safe-logger';
+import { checkGeneralRateLimit } from '@/lib/rate-limiter';
 
 interface GetFeedbackRequest {
   feedback_type: 'weekly' | 'monthly';
@@ -56,6 +57,12 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // レートリミットチェック（DB参照のみなので一般制限を適用）
+    const rateLimitResult = await checkGeneralRateLimit(request, user.id);
+    if (!rateLimitResult.success && rateLimitResult.errorResponse) {
+      return rateLimitResult.errorResponse;
     }
 
     const { feedback_type, period_start, period_end }: GetFeedbackRequest = await request.json();
