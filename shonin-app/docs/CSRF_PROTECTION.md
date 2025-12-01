@@ -107,8 +107,7 @@ Cookie ベースの認証では、ブラウザが自動的に Cookie を送信�
 `.env.local` に以下を追加してください：
 
 ```bash
-# CSRF保護用のオリジン設定
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
+# CSRF保護用のオリジン設定（本番ドメイン）
 BASE_URL=https://your-domain.com
 
 # 開発環境では自動的に localhost が許可されます
@@ -118,11 +117,10 @@ BASE_URL=https://your-domain.com
 
 以下のオリジンが自動的に許可されます：
 
-1. `NEXT_PUBLIC_SITE_URL` 環境変数
-2. `BASE_URL` 環境変数
-3. `http://localhost:3000` （開発環境）
-4. `http://127.0.0.1:3000` （開発環境）
-5. `https://shonin-app-*.vercel.app` （Vercelプレビュー環境）
+1. `BASE_URL` 環境変数（本番ドメイン）
+2. `http://localhost:3000` （開発環境）
+3. `http://127.0.0.1:3000` （開発環境）
+4. `https://shonin-app-*.vercel.app` （Vercelプレビュー環境）
 
 ## 既存の保護機能
 
@@ -180,7 +178,6 @@ curl -X POST https://your-domain.com/api/ai/analyze-sessions \
 **原因1: 環境変数が設定されていない**
 ```bash
 # .env.local を確認
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
 BASE_URL=https://your-domain.com
 ```
 

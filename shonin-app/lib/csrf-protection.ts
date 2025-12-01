@@ -9,7 +9,6 @@ import { NextRequest } from 'next/server'
  * 許可されたオリジンのリスト
  */
 const ALLOWED_ORIGINS = [
-  process.env.NEXT_PUBLIC_SITE_URL,
   process.env.BASE_URL,
   'http://localhost:3000', // 開発環境
   'http://127.0.0.1:3000', // 開発環境
