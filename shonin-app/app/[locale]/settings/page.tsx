@@ -1,7 +1,7 @@
-import { ChevronRight, User, Globe, Languages, Activity, KeyRound } from "lucide-react"
+import { ChevronRight, User, Globe, Languages, Activity } from "lucide-react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
 import { getTranslations } from "next-intl/server"
+import { DeleteAccountButton } from "@/components/ui/settings/delete-account-button"
 
 export default async function SettingsPage({
   params
@@ -35,12 +35,6 @@ export default async function SettingsPage({
       title: t("settings.categories.activity"),
       href: `/${locale}/settings/activity`,
       icon: Activity
-    },
-    {
-      id: "account",
-      title: t("settings.categories.account"),
-      href: `/${locale}/settings/account`,
-      icon: KeyRound
     }
   ]
 
@@ -90,6 +84,11 @@ export default async function SettingsPage({
               </Link>
             )
           })}
+        </div>
+
+        {/* 退会ボタン */}
+        <div className="mt-8 flex justify-end">
+          <DeleteAccountButton />
         </div>
       </main>
     </div>

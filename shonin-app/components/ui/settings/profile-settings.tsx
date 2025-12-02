@@ -17,8 +17,8 @@ interface ProfileSettingsProps {
 }
 
 export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }: ProfileSettingsProps) {
-  const { user } = useAuth()
-  const { profile } = useUserProfile()
+  const { user, loading: authLoading } = useAuth()
+  const { profile, loading: profileLoading } = useUserProfile()
   const t = useTranslations()
   
   // ユーザー情報（データベースから取得）
@@ -86,7 +86,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
   return (
     <Card className="border-0 bg-transparent shadow-none max-w-xl mx-auto md:mt-32">
       <CardContent className="space-y-6 px-0 pt-0">
-        {(profile || initialUserProfile) && subscriptionStatus !== null ? (
+        {!authLoading && !profileLoading && (profile || initialUserProfile) && subscriptionStatus !== null ? (
           <>
             {/* 名前・メールアドレス（SPは縦積み、PCは横並び） */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0">
@@ -96,7 +96,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
               </div>
               <div className="space-y-2">
                 <Label className="text-white text-base">{t('settings.email')}</Label>
-                <div className="text-gray-300">{email}</div>
+                <div className="text-gray-300">{email || t('common.not_set')}</div>
               </div>
             </div>
 
@@ -152,14 +152,6 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                 >
                   {t('settings.manage_subscription')}
                 </Button>
-              </div>
-            )}
-            
-            {subscriptionStatus === 'free' && (
-              <div className="p-3 bg-green-900 rounded-lg border border-green-700">
-                <p className="text-sm text-green-300">
-                  {t('settings.upgrade_to_standard')}
-                </p>
               </div>
             )}
           </>

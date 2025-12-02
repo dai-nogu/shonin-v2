@@ -184,7 +184,7 @@
   },
   "settings": {
     "title": "Settings",
-    "description": "Manage your account and preferences",
+    "description": "Manage your preferences",
     "categories": {
       "profile": "Profile",
       "timezone": "Timezone",

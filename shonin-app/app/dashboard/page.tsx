@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { WelcomeCard } from "@/components/welcome-card"
 import { TimeTracker } from "@/components/time-tracker"
 import { ActiveActivitySidebar } from "@/components/active-activity-sidebar"
 import { AIFeedback } from "@/components/ai-feedback"
@@ -231,12 +230,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* メインエリア - 2列分 */}
           <div className="lg:col-span-2">
-            {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
-            <div className="lg:hidden mb-4 lg:mb-6">
-              <WelcomeCard completedSessions={completedSessions} />
-            </div>
-            
-            {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
+            {/* SP用：進行中の行動、PC用：非表示 */}
             <div className="lg:hidden mb-4 lg:mb-6">
               <ActiveActivitySidebar
                 activeSession={currentSession}
@@ -256,11 +250,6 @@ export default function Dashboard() {
 
           {/* サイドバー - 1列分 */}
           <div className="space-y-4 lg:space-y-6">
-            {/* PC用：WelcomeCardを表示、SP用：非表示 */}
-            <div className="hidden lg:block">
-              <WelcomeCard completedSessions={completedSessions} />
-            </div>
-            
             {/* PC用：進行中の行動、SP用：非表示 */}
             <div className="hidden lg:block">
               <ActiveActivitySidebar

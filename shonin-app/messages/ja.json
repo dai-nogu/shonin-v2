@@ -188,7 +188,7 @@
   },
   "settings": {
     "title": "設定",
-    "description": "アカウント設定や各種設定を管理できます",
+    "description": "各種設定を管理できます",
     "categories": {
       "profile": "プロフィール",
       "timezone": "タイムゾーン",
