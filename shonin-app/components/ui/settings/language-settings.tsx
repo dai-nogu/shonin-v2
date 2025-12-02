@@ -3,7 +3,7 @@
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { Globe } from "lucide-react"
 import { useSessions } from "@/contexts/sessions-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Card, CardContent } from "@/components/ui/common/card"
 import { Label } from "@/components/ui/common/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
 import { useTranslations } from 'next-intl'
@@ -29,13 +29,8 @@ export function LanguageSettings() {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-white">
-          {t('settings.language_settings')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardContent className="space-y-4 px-0 pt-0">
         <div className="space-y-2">
           <Select 
             value={currentLocale} 
@@ -76,7 +71,7 @@ export function LanguageSettings() {
 
         {/* 通常の注意事項 */}
         {!isSessionActive && (
-          <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+          <div className="mt-4">
             <p className="text-sm text-gray-300">
               {t('settings.language_change_notice')}
             </p>

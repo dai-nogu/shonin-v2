@@ -250,9 +250,9 @@
     "remaining_days_warning": "You will lose access to {days} remaining days of paid subscription",
     "deletion_immediate_effect": "Deleting your account will immediately prevent login and you will lose access to the remaining paid period.",
     "subscription_will_be_cancelled": "Your subscription will be cancelled and you will not be charged again.",
-    "cancel_plan_only_hint_prefix": "※If you only want to cancel your plan, ",
-    "cancel_plan_only_hint_bold": "you can cancel from Subscription Management in your Profile.",
-    "cancel_plan_only_hint_suffix": " You can continue using the service until the end of the period.",
+    "cancel_plan_only_hint_prefix": "※If you only want to cancel your plan, you can cancel from ",
+    "cancel_plan_only_hint_bold": "Subscription Management in your Profile",
+    "cancel_plan_only_hint_suffix": ". You can continue using the service until the end of the period.",
     "important_warning": "⚠️ Important Notice",
     "warning_irreversible": "• This action cannot be undone.",
     "warning_activity_data": "• All activity data will be deleted.",
@@ -285,8 +285,8 @@
     "UTC": "Coordinated Universal Time (UTC)"
   },
   "languages": {
-    "ja": "🇯🇵 日本語",
-    "en": "🇺🇸 English"
+    "ja": "Japanese (JP)",
+    "en": "English (US)"
   },
   "activities": {
     "title": "Activities",

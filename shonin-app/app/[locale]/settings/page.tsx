@@ -47,7 +47,7 @@ export default async function SettingsPage({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* ヘッダー */}
-      <header className="bg-gray-800 border-b border-gray-700">
+      <header>
         <div className="container mx-auto px-4 py-4 flex items-center">
           <Link href={`/${locale}/dashboard`} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg flex items-center justify-center">

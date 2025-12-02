@@ -14,7 +14,7 @@ export default async function AccountPage({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* ヘッダー */}
-      <header className="bg-gray-800 border-b border-gray-700">
+      <header>
         <div className="container mx-auto px-4 py-4">
           <Link href={`/${locale}/settings`} className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
             <ChevronLeft className="w-6 h-6 text-gray-300" />
