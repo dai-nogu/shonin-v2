@@ -401,7 +401,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
     return (
       <div className="space-y-3">
-        {activities.map((activity) => (
+        {activities.map((activity, index) => (
           <div
             key={`${activity.id}-${activeTab}`}
             onClick={() => {
@@ -411,7 +411,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               }
               // PCでは何もしない（開始・詳細ボタンが個別に制御）
             }}
-            className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-colors group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : ''}`}
+            className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-colors duration-200 group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : 'hover:bg-gray-750'}`}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className={`w-8 h-8 lg:w-10 lg:h-10 ${activity.color} rounded-full`}></div>
@@ -431,7 +432,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                                     ) : (
                     <>
                       <div className="flex items-center">
-                        <span className="text-blue-400">{activity.date}</span>
+                        <span className="text-green-400">{activity.date}</span>
                       </div>
                     </>
                   )}

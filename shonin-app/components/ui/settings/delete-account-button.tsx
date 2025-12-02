@@ -111,7 +111,7 @@ export function DeleteAccountButton() {
       <AlertDialogTrigger asChild>
         <Button 
           variant="outline"
-          className="bg-transparent border-red-600 text-red-400 hover:bg-red-600/10 hover:text-red-300"
+          className="bg-transparent border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-300"
         >
           {t('settings.account_deletion')}
         </Button>

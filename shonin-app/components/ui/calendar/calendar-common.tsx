@@ -207,7 +207,7 @@ export function CalendarCommon({
           <DialogFooter>
             <Button 
               onClick={() => setIsModalOpen(false)}
-              className="bg-gray-700 hover:bg-gray-600 text-white"
+              className="bg-gray-700 hover:bg-gray-600 text-white border-0"
             >
               {t('common.close')}
             </Button>

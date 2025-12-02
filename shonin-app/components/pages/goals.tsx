@@ -267,7 +267,7 @@ export function Goals({ initialGoals }: GoalsProps) {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-300">{t('goals.progress_status')}</span>
                             <span className="text-sm font-medium text-white">
-                              {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({Math.round(progressPercentage)}%)
+                              {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({progressPercentage.toFixed(1)}%)
                             </span>
                           </div>
                           <Progress value={progressPercentage} className="h-2" />

@@ -99,10 +99,22 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
     return null
   }
 
+  // アクティブなアイテムのインデックスを取得
+  const activeIndex = menuItems.findIndex(item => item.id === activePage)
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-700 safe-area-pb">
-      <div className="flex justify-around items-center h-20 px-2">
-        {menuItems.map((item) => {
+      <div className="relative flex justify-around items-center h-20 px-2">
+        {/* スライドインジケーター */}
+        <div
+          className="absolute top-2 h-16 w-16 bg-gray-800/70 rounded-xl transition-all duration-300 ease-out"
+          style={{
+            left: `calc(${(activeIndex / menuItems.length) * 100}% + ${100 / menuItems.length / 2}% - 32px)`,
+            opacity: activeIndex >= 0 ? 1 : 0,
+          }}
+        />
+        
+        {menuItems.map((item, index) => {
           const isActive = activePage === item.id
           const Icon = item.icon
           
@@ -111,15 +123,20 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
               key={item.id}
               onClick={() => handlePageChange(item.id, item.url)}
               className={cn(
-                "flex flex-col items-center justify-center h-16 w-16 rounded-xl transition-all duration-200",
+                "relative z-10 flex flex-col items-center justify-center h-16 w-16 rounded-xl transition-all duration-300 ease-out active:scale-95",
                 isActive 
-                  ? "text-green-500 bg-gray-800/50" 
-                  : "text-gray-400 hover:text-white hover:bg-gray-800/30"
+                  ? "text-green-500" 
+                  : "text-gray-400 hover:text-white"
               )}
             >
               <Icon className={cn(
-                "w-7 h-7 transition-all duration-200",
-                isActive ? "text-green-500" : "text-gray-400"
+                "w-7 h-7 transition-all duration-300 ease-out",
+                isActive ? "text-green-500 scale-110" : "text-gray-400 scale-100"
+              )} />
+              {/* アクティブインジケーターのドット */}
+              <div className={cn(
+                "absolute bottom-1 w-1 h-1 rounded-full bg-green-500 transition-all duration-300",
+                isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
               )} />
             </button>
           )

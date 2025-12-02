@@ -20,7 +20,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         {...props}
       >
         <div
-          className="h-full w-full flex-1 bg-blue-500 transition-all duration-300 ease-in-out"
+          className="h-full w-full flex-1 bg-green-500 transition-all duration-500 ease-out"
           style={{
             transform: `translateX(-${100 - percentage}%)`,
           }}

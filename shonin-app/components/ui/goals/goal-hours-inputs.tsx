@@ -35,13 +35,17 @@ export function GoalHoursInputs({
   const t = useTranslations()
   const [isExpanded, setIsExpanded] = useState(false)
   
-  // deadlineから年月日を分解
+  // deadlineから年月日を分解（先頭ゼロを削除してSelectItemのvalueと一致させる）
   const { year, month, day } = useMemo(() => {
     if (!deadline) {
       return { year: '', month: '', day: '' }
     }
     const [y, m, d] = deadline.split('-')
-    return { year: y || '', month: m || '', day: d || '' }
+    return { 
+      year: y || '', 
+      month: m ? parseInt(m, 10).toString() : '', 
+      day: d ? parseInt(d, 10).toString() : '' 
+    }
   }, [deadline])
 
   // 年のオプション（現在年から+10年まで）
@@ -82,20 +86,30 @@ export function GoalHoursInputs({
   
   return (
     <div className="space-y-2">
-      {!isExpanded ? (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(true)}
-            className="text-gray-400 hover:text-white hover:bg-gray-800 text-xs h-8"
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            {t('goals.add_deadline_and_time_settings')}
-          </Button>
-        </div>
-      ) : (
+      {/* 追加ボタン */}
+      <div 
+        className={`flex justify-end overflow-hidden transition-all duration-300 ease-out ${
+          isExpanded ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'
+        }`}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(true)}
+          className="text-gray-400 hover:text-white hover:bg-gray-800 text-xs h-8"
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          {t('goals.add_deadline_and_time_settings')}
+        </Button>
+      </div>
+      
+      {/* 展開コンテンツ */}
+      <div 
+        className={`overflow-hidden transition-all duration-300 ease-out ${
+          isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
         <div className="space-y-3 border border-gray-700 rounded-lg p-3 bg-gray-800/50">
           <div className="flex justify-between items-center">
             <Label className="text-gray-300 text-xs">{t('goals.deadline_and_time_settings_label')}</Label>
@@ -188,7 +202,7 @@ export function GoalHoursInputs({
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 } 

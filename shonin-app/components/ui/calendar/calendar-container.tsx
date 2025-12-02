@@ -124,6 +124,7 @@ export function CalendarContainer({
         onClose={() => setIsModalOpen(false)}
         date={modalDate}
         sessions={selectedDateSessions}
+        completedSessions={completedSessions}
       />
     </div>
   )

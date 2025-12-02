@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
 import { useTranslations } from 'next-intl'
+import { cn } from "@/lib/utils"
 import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } from "@/lib/upload-photo"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
@@ -24,6 +25,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const t = useTranslations()
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isAnimating, setIsAnimating] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -59,6 +61,12 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   useEffect(() => {
     if (isOpen) {
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
+      // アニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
     }
   }, [isOpen])
 
@@ -342,7 +350,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             onClick={onClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-transparent"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -926,7 +934,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             onClick={onClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-transparent"
           >
             <X className="w-4 h-4" />
           </Button>

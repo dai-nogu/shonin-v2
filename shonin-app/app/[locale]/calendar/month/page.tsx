@@ -119,8 +119,8 @@ function MonthCalendarSSR({
                   <div
                     key={index}
                     onClick={day ? () => onDateClick(day, daySessions) : undefined}
-                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-lg ${
-                      day ? `bg-gray-800 hover:bg-gray-700 cursor-pointer` : "bg-gray-900"
+                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-lg transition-all duration-200 ${
+                      day ? `bg-gray-800 cursor-pointer hover:ring-2 hover:ring-green-500/50` : "bg-gray-900"
                     } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                   >
                     {day && (

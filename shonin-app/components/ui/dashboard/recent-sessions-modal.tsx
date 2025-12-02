@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
 import { useTranslations } from 'next-intl'
+import { cn } from "@/lib/utils"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
@@ -191,14 +192,27 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     }
   }
 
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  // マウント時にアニメーション開始
+  useEffect(() => {
+    setIsAnimating(true)
+  }, [])
+
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        className={cn(
+          "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+          isAnimating ? "opacity-100" : "opacity-0"
+        )}
         onClick={onClose}
       >
         <Card 
-          className="bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden"
+          className={cn(
+            "bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden transition-all duration-300 ease-out",
+            isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           <CardHeader className="relative pb-3 sm:pb-6">
@@ -226,7 +240,8 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                     // モーダル内では常に詳細表示（開始ボタンは別途stopPropagationで制御）
                     handleSessionDetailClick(sessionItem)
                   }}
-                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group cursor-pointer"
+                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all duration-200 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
