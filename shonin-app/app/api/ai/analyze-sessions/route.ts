@@ -7,7 +7,6 @@ import { generatePrompts, type PromptGenerationConfig } from '@/lib/prompt-gener
 import Anthropic from '@anthropic-ai/sdk';
 import { validateOrigin } from '@/lib/csrf-protection';
 import { safeWarn, safeError, safeLog } from '@/lib/safe-logger';
-import { checkAIRateLimit } from '@/lib/rate-limiter';
 
 // ... (インターフェース定義は変更なし)
 interface SessionData {
@@ -82,12 +81,6 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // レートリミットチェック（ユーザーIDベース）
-    const rateLimitResult = await checkAIRateLimit(request, user.id);
-    if (!rateLimitResult.success && rateLimitResult.errorResponse) {
-      return rateLimitResult.errorResponse;
     }
 
     const { period_type, period_start, period_end, locale = 'ja' }: AnalysisRequest = await request.json();
