@@ -5,7 +5,6 @@ import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useTranslations } from 'next-intl'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/common/tabs"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { ActivityCountModal } from "./activity-count-modal"
@@ -529,91 +528,119 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         </CardHeader>
 
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-gray-800">
-              <TabsTrigger 
-                value="recent" 
-                className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
+          {/* スムーズなスライドアニメーション付きタブ */}
+          <div className="w-full">
+            <div className="relative grid grid-cols-3 bg-gray-800 rounded-lg p-1">
+              {/* スライドインジケーター */}
+              <div
+                className="absolute top-1 bottom-1 bg-green-600 rounded-md transition-all duration-300 ease-out"
+                style={{
+                  width: 'calc((100% - 8px) / 3)',
+                  left: activeTab === "recent" 
+                    ? '4px' 
+                    : activeTab === "most-recorded" 
+                      ? 'calc((100% - 8px) / 3 + 4px)' 
+                      : 'calc((100% - 8px) * 2 / 3 + 4px)',
+                }}
+              />
+              <button
+                onClick={() => setActiveTab("recent")}
+                className={`relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-300 ${
+                  activeTab === "recent" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                }`}
               >
                 {t('quick_start.latest')}
-              </TabsTrigger>
-              <TabsTrigger 
-                value="most-recorded" 
-                className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
+              </button>
+              <button
+                onClick={() => setActiveTab("most-recorded")}
+                className={`relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-300 ${
+                  activeTab === "most-recorded" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                }`}
               >
                 {t('quick_start.most_recorded')}
-              </TabsTrigger>
-              <TabsTrigger 
-                value="yesterday" 
-                className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
+              </button>
+              <button
+                onClick={() => setActiveTab("yesterday")}
+                className={`relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-300 ${
+                  activeTab === "yesterday" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                }`}
               >
                 {t('quick_start.yesterday')}
-              </TabsTrigger>
-            </TabsList>
+              </button>
+            </div>
 
-            <TabsContent value="most-recorded" className="mt-4">
-              {renderActivityList(
-                getMostRecordedActivities(),
-                t('quick_start.not_enough_data')
+            {/* タブコンテンツ */}
+            <div className="mt-4">
+              {activeTab === "most-recorded" && (
+                <>
+                  {renderActivityList(
+                    getMostRecordedActivities(),
+                    t('quick_start.not_enough_data')
+                  )}
+                  {/* 回数順タブ：ユニークな行動が3つを超える場合のみ表示 */}
+                  {getMostRecordedActivities().length >= 3 && Array.from(new Set(completedSessions.map(s => s.activityName))).length > 3 && (
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleShowActivityCount}
+                        className="text-gray-400 hover:text-white hover:bg-gray-800"
+                      >
+                        <MoreHorizontal className="w-4 h-4 mr-1" />
+                        {t('quick_start.see_more')}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
-              {/* 回数順タブ：ユニークな行動が3つを超える場合のみ表示 */}
-              {getMostRecordedActivities().length >= 3 && Array.from(new Set(completedSessions.map(s => s.activityName))).length > 3 && (
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleShowActivityCount}
-                    className="text-gray-400 hover:text-white hover:bg-gray-800"
-                  >
-                    <MoreHorizontal className="w-4 h-4 mr-1" />
-                    {t('quick_start.see_more')}
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
 
-            <TabsContent value="recent" className="mt-4">
-              {renderActivityList(
-                getRecentActivities(),
-                t('quick_start.no_recent_activity')
+              {activeTab === "recent" && (
+                <>
+                  {renderActivityList(
+                    getRecentActivities(),
+                    t('quick_start.no_recent_activity')
+                  )}
+                  {/* 最新タブ：全セッション数が3つを超える場合のみ表示 */}
+                  {completedSessions.length > 3 && (
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleShowRecentSessions}
+                        className="text-gray-400 hover:text-white hover:bg-gray-800"
+                      >
+                        <MoreHorizontal className="w-4 h-4 mr-1" />
+                        {t('quick_start.see_more')}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
-              {/* 最新タブ：全セッション数が3つを超える場合のみ表示 */}
-              {completedSessions.length > 3 && (
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleShowRecentSessions}
-                    className="text-gray-400 hover:text-white hover:bg-gray-800"
-                  >
-                    <MoreHorizontal className="w-4 h-4 mr-1" />
-                    {t('quick_start.see_more')}
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
 
-            <TabsContent value="yesterday" className="mt-4">
-              {renderActivityList(
-                getYesterdayActivities(),
-                t('quick_start.no_yesterday_activity')
+              {activeTab === "yesterday" && (
+                <>
+                  {renderActivityList(
+                    getYesterdayActivities(),
+                    t('quick_start.no_yesterday_activity')
+                  )}
+                  {/* 昨日タブ：昨日の行動が3つを超える場合のみ表示 */}
+                  {getYesterdayActivities().length > 3 && (
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleShowRecentSessions}
+                        className="text-gray-400 hover:text-white hover:bg-gray-800"
+                      >
+                        <MoreHorizontal className="w-4 h-4 mr-1" />
+                        {t('quick_start.see_more')}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
-              {/* 昨日タブ：昨日の行動が3つを超える場合のみ表示 */}
-              {getYesterdayActivities().length > 3 && (
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleShowRecentSessions}
-                    className="text-gray-400 hover:text-white hover:bg-gray-800"
-                  >
-                    <MoreHorizontal className="w-4 h-4 mr-1" />
-                    {t('quick_start.see_more')}
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
