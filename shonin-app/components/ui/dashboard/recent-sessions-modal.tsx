@@ -282,7 +282,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                       <div className="flex flex-col">
                         <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{sessionItem.name}</h3>
                         <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
-                          <span className="text-blue-400">{sessionItem.date}</span>
+                          <span className="text-green-400">{sessionItem.date}</span>
                         </div>
                       </div>
                     </div>

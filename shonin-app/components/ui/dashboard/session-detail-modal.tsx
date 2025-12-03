@@ -391,8 +391,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
                   {session.activityName}
                 </h2>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Clock className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
+                <div className="flex items-center mt-1">
                   <span className={`text-green-400 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
                     {formatDuration(session.duration)}
                   </span>
@@ -1074,8 +1073,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
                   {session.activityName}
                 </h2>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Clock className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
+                <div className="flex items-center mt-1">
                   <span className={`text-green-400 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
                     {formatDuration(session.duration)}
                   </span>
