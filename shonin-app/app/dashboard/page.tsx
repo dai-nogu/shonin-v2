@@ -167,11 +167,6 @@ export default function Dashboard() {
     router.push('/session')
   }
 
-  // 目標管理画面への遷移
-  const handleGoalSettingClick = () => {
-    router.push('/goals')
-  }
-
   // 週表示でカレンダーページに遷移
   const handleWeekViewTransition = () => {
     router.push('/calendar?view=week')
@@ -244,7 +239,7 @@ export default function Dashboard() {
             
             <AIFeedback completedSessions={completedSessions} />
             <div className="mt-4 lg:mt-6">
-              <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+              <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
             </div>
           </div>
 

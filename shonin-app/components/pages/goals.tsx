@@ -11,7 +11,7 @@ import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useToast } from "@/contexts/toast-context"
 import { useTranslations, useLocale } from 'next-intl'
 import { formatISODateForLocale } from '@/lib/i18n-utils'
-import { useSubscription } from "@/hooks/use-subscription"
+import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { GoalLimitModal } from "@/components/ui/goals/goal-limit-modal"
 import type { Database } from '@/types/database'
 import {
@@ -66,7 +66,7 @@ export function Goals({ initialGoals }: GoalsProps) {
   } = useGoalsDb(initialGoals)
 
   // サブスクリプション情報
-  const { userPlan } = useSubscription()
+  const { userPlan } = useSubscriptionContext()
 
   // ローカルステート
   const [goals, setGoals] = useState<Goal[]>([])

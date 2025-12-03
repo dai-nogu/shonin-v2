@@ -1,30 +1,29 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
-import { Textarea } from "@/components/ui/common/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
 import { ErrorModal } from "@/components/ui/common/error-modal"
 import { CharacterCounter } from "@/components/ui/common/character-counter"
-import { Plus, Play } from "lucide-react"
+import { Plus, Play, X, Check } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
-import { useToast } from "@/contexts/toast-context"
 import { useTranslations, useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { getInputLimits } from "@/lib/input-limits"
 import type { Activity, SessionData } from "./time-tracker"
 
 interface ActivitySelectorProps {
   onStart: (session: SessionData) => void
-  onGoalSettingClick?: () => void
 }
 
-export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelectorProps) {
+export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const t = useTranslations()
   const locale = useLocale()
+  const router = useRouter()
   const limits = getInputLimits(locale)
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
@@ -34,6 +33,16 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
 
   // 目標データを取得
   const { goals } = useGoalsDb()
+
+  // sessionStorageから追加された目標を自動選択
+  useEffect(() => {
+    const goalIdFromStorage = sessionStorage.getItem('selectedGoalFromAdd')
+    if (goalIdFromStorage) {
+      setSelectedGoal(goalIdFromStorage)
+      // 読み取り後すぐに削除
+      sessionStorage.removeItem('selectedGoalFromAdd')
+    }
+  }, [])
   
   // 目標を選択肢として利用可能な形式に変換
   const availableGoals = goals.map(goal => ({
@@ -55,14 +64,23 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
   // アクティブな目標のみをフィルタリング
   const activeGoals = availableGoals.filter(goal => goal.status === 'active')
   
-  const { activities: customActivities, loading: activitiesLoading, addActivity } = useActivities()
+  const { activities: customActivities, loading: activitiesLoading, addActivity, deleteActivity } = useActivities()
+  const [hoveredTagId, setHoveredTagId] = useState<string | null>(null) // ホバー中のタグID
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
   const [newActivityColor, setNewActivityColor] = useState("bg-red-500")
   const [hoveredColor, setHoveredColor] = useState<string | null>(null)
   
+  // 直接入力用の状態
+  const [activityInput, setActivityInput] = useState("")
+  const [isFocused, setIsFocused] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isComposing, setIsComposing] = useState(false) // IME変換中フラグ
+  const inputContainerRef = useRef<HTMLDivElement>(null)
+  
   // 行動名入力フィールドのref
   const activityNameInputRef = useRef<HTMLInputElement>(null)
+  const activityInputRef = useRef<HTMLInputElement>(null)
 
   // フォームが開いた時に行動名フィールドにフォーカス
   useEffect(() => {
@@ -70,6 +88,51 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       activityNameInputRef.current.focus()
     }
   }, [showAddForm])
+
+  // 入力からフィルタリングしたサジェスト
+  const filteredActivities = customActivities.filter(activity =>
+    activity.name.toLowerCase().includes(activityInput.toLowerCase())
+  )
+  
+  // 入力値が既存アクティビティに完全一致するかチェック
+  const exactMatch = customActivities.find(
+    activity => activity.name.toLowerCase() === activityInput.trim().toLowerCase()
+  )
+  
+  // 新規追加が必要かどうか（入力があり、完全一致がない場合）
+  const canAddNew = activityInput.trim() && !exactMatch
+
+  // 外部クリックでサジェストを閉じる
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (inputContainerRef.current && !inputContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // アクティビティをタグから選択
+  const handleTagClick = useCallback((activity: typeof customActivities[0]) => {
+    setSelectedActivity(activity.id)
+    setActivityInput(activity.name)
+    setShowSuggestions(false)
+  }, [])
+
+  // サジェストから選択
+  const handleSuggestionClick = useCallback((activity: typeof customActivities[0]) => {
+    setSelectedActivity(activity.id)
+    setActivityInput(activity.name)
+    setShowSuggestions(false)
+  }, [])
+
+  // 選択をクリア
+  const handleClearSelection = useCallback(() => {
+    setSelectedActivity("")
+    setActivityInput("")
+    activityInputRef.current?.focus()
+  }, [])
 
   const colorOptions = [
     { value: "bg-red-500", label: "レッド", color: "#ef4444" },
@@ -102,6 +165,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
     if (result.success) {
       // 追加した行動を自動選択
       setSelectedActivity(result.data)
+      setActivityInput(newActivityName.trim())
 
       // フォームをリセット
       setNewActivityName("")
@@ -110,6 +174,24 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
       setShowAddForm(false)
     } else {
       // Toast通知ではなく、エラーステートに設定
+      setOperationError(t('errors.activity_add_failed'))
+    }
+  }
+
+  // 直接入力から新規アクティビティを追加
+  const handleAddFromInput = async () => {
+    if (!activityInput.trim()) return
+
+    const result = await addActivity({
+      name: activityInput.trim(),
+      icon: null,
+      color: colorOptions[Math.floor(Math.random() * colorOptions.length)].value
+    })
+
+    if (result.success) {
+      setSelectedActivity(result.data)
+      setShowSuggestions(false)
+    } else {
       setOperationError(t('errors.activity_add_failed'))
     }
   }
@@ -281,7 +363,7 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
                   {/* 目標設定へのリンク */}
                   <div className="p-2 border-t border-gray-600">
                     <Button
-                      onClick={onGoalSettingClick}
+                      onClick={() => router.push(`/${locale}/goals/add?from=dashboard`)}
                       variant="ghost"
                       size="sm"
                       className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
@@ -294,50 +376,155 @@ export function ActivitySelector({ onStart, onGoalSettingClick }: ActivitySelect
               </Select>
             </div>
 
-            {/* 行動選択 */}
-            <div className="space-y-2">
+            {/* 行動選択 - 直接入力 + サジェスト + タグ */}
+            <div className="space-y-3">
               <Label className="text-white">{t('session_start.select_activity')}</Label>
-              <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
-                  <SelectValue placeholder={t('session_start.activity_placeholder')} />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
-                  {allActivities.map((activity) => (
-                    <SelectItem key={activity.id} value={activity.id} className="text-white hover:bg-gray-700 py-3">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-6 h-6 ${activity.color} rounded-full`}></div>
-                        <span className="text-base">{activity.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                  
-                  {/* 新しい行動を追加ボタン */}
-                  <div className="p-2 border-t border-gray-600">
-                    <Button
-                      onClick={() => setShowAddForm(true)}
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t('session_start.add_new_activity')}
-                    </Button>
+              
+              {/* 入力フィールド + 追加ボタン + サジェスト */}
+              <div ref={inputContainerRef} className="relative">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      ref={activityInputRef}
+                      placeholder={t('session_start.activity_input_placeholder')}
+                      value={activityInput}
+                      onChange={(e) => {
+                        setActivityInput(e.target.value.slice(0, limits.activityName))
+                        setShowSuggestions(true)
+                        // 入力が変わったら選択をクリア（完全一致の場合は選択維持）
+                        const match = customActivities.find(
+                          a => a.name.toLowerCase() === e.target.value.trim().toLowerCase()
+                        )
+                        if (match) {
+                          setSelectedActivity(match.id)
+                        } else {
+                          setSelectedActivity("")
+                        }
+                      }}
+                      onFocus={() => {
+                        setIsFocused(true)
+                        setShowSuggestions(true)
+                      }}
+                      onBlur={() => setIsFocused(false)}
+                      onCompositionStart={() => setIsComposing(true)}
+                      onCompositionEnd={() => setIsComposing(false)}
+                      onKeyDown={(e) => {
+                        // IME変換中（日本語入力の確定時など）は無視
+                        if (isComposing) return
+                        if (e.key === 'Enter' && canAddNew) {
+                          e.preventDefault()
+                          handleAddFromInput()
+                        }
+                      }}
+                      maxLength={limits.activityName}
+                      className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm pr-10 ${
+                        selectedActivity ? "border-green-500/50" : ""
+                      }`}
+                    />
+                    {/* 選択済みクリアボタン */}
+                    {selectedActivity && (
+                      <button
+                        type="button"
+                        onClick={handleClearSelection}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                </SelectContent>
-              </Select>
-            </div>
+                  {/* 追加ボタン */}
+                  <Button
+                    type="button"
+                    onClick={handleAddFromInput}
+                    disabled={!canAddNew}
+                    size="icon"
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 h-10 w-10 flex-shrink-0"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </div>
 
-            {/* 選択された行動のプレビュー */}
-            {selectedActivityData && (
-              <div className="mb-3">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 lg:w-12 lg:h-12 ${selectedActivityData.color} rounded-full`}></div>
-                  <div>
-                    <h3 className="text-white font-semibold text-sm lg:text-base">{selectedActivityData.name}</h3>
+                {/* サジェストドロップダウン */}
+                {showSuggestions && activityInput && filteredActivities.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {/* フィルタリングされた既存アクティビティ */}
+                    {filteredActivities.map((activity) => (
+                      <button
+                        key={activity.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSuggestionClick(activity)}
+                        className={`w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-gray-700 transition-colors text-left ${
+                          selectedActivity === activity.id ? "bg-gray-700/50" : ""
+                        }`}
+                      >
+                        <div className={`w-5 h-5 ${activity.color} rounded-full flex-shrink-0`} />
+                        <span className="text-white text-sm truncate">{activity.name}</span>
+                        {selectedActivity === activity.id && (
+                          <Check className="w-4 h-4 text-green-400 ml-auto flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 過去のアクティビティをタグとして表示 */}
+              {allActivities.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs text-gray-400">{t('session_start.recent_activities')}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {allActivities.slice(0, 8).map((activity) => {
+                      const isSelected = selectedActivity === activity.id
+                      const isHovered = hoveredTagId === activity.id
+                      return (
+                        <div
+                          key={activity.id}
+                          className="relative"
+                          onMouseEnter={() => setHoveredTagId(activity.id)}
+                          onMouseLeave={() => setHoveredTagId(null)}
+                        >
+                          {/* 削除ボタン（ホバー時のみ表示） */}
+                          {isHovered && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                // 選択中のものを削除した場合はクリア
+                                if (selectedActivity === activity.id) {
+                                  setSelectedActivity("")
+                                  setActivityInput("")
+                                }
+                                deleteActivity(activity.id)
+                              }}
+                              className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 bg-gray-600 hover:bg-gray-500 rounded-full flex items-center justify-center transition-all shadow-sm"
+                            >
+                              <X className="w-3 h-3 text-gray-300" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleTagClick(activity)}
+                            className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-all bg-gray-800/80 border ${
+                              isSelected
+                                ? "border-green-400 ring-1 ring-green-400/30"
+                                : "border-gray-700 hover:border-gray-500 hover:bg-gray-700/50"
+                            }`}
+                          >
+                            <div className={`w-3 h-3 ${activity.color} rounded-full flex-shrink-0`} />
+                            <span className={`text-xs font-medium truncate max-w-[100px] ${
+                              isSelected ? "text-green-400" : "text-gray-200"
+                            }`}>
+                              {activity.name}
+                            </span>
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* 場所設定 */}
             <div className="space-y-2">

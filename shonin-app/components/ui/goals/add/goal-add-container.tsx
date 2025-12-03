@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useParams } from "next/navigation"
+import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
@@ -16,7 +16,9 @@ import { useTranslations } from 'next-intl'
 export function GoalAddContainer() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const locale = (params?.locale as string) || 'ja'
+  const fromDashboard = searchParams.get('from') === 'dashboard'
   const { addGoal } = useGoalsDb()
   const { handleAuthError } = useAuthRedirect()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,7 +53,14 @@ export function GoalAddContainer() {
       if (handleAuthError(result)) return
       
       if (result.success) {
-        router.push(`/${locale}/goals`)
+        // ダッシュボードから来た場合は、追加した目標を選択状態でダッシュボードに戻る
+        if (fromDashboard && result.data) {
+          // sessionStorageに保存（URLに露出させない）
+          sessionStorage.setItem('selectedGoalFromAdd', result.data)
+          router.push(`/${locale}/dashboard`)
+        } else {
+          router.push(`/${locale}/goals`)
+        }
       }
       // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない
     } catch (error) {
@@ -62,7 +71,12 @@ export function GoalAddContainer() {
   }
 
   const handleCancel = () => {
-    router.push(`/${locale}/goals`)
+    // ダッシュボードから来た場合はダッシュボードに戻る
+    if (fromDashboard) {
+      router.push(`/${locale}/dashboard`)
+    } else {
+      router.push(`/${locale}/goals`)
+    }
   }
 
   return (

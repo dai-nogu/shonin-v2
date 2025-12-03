@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 import { useTranslations } from 'next-intl'
 import { useRouter } from "next/navigation"
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
-import { useSubscription } from "@/hooks/use-subscription"
+import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { getPlanLimits } from "@/types/subscription"
 import type { CompletedSession } from "./time-tracker"
 import { safeError } from "@/lib/safe-logger"
@@ -25,7 +25,7 @@ interface FeedbackData {
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const t = useTranslations()
   const router = useRouter()
-  const { userPlan, loading: subscriptionLoading } = useSubscription()
+  const { userPlan, loading: subscriptionLoading } = useSubscriptionContext()
   const planLimits = getPlanLimits(userPlan)
   
   const [currentIndex, setCurrentIndex] = useState(0)

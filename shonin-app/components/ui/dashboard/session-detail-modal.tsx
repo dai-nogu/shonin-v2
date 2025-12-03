@@ -26,6 +26,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -103,8 +104,11 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     return texts[mood - 1] || "普通"
   }
 
-  const handleStartSimilar = () => {
+  const handleStartSimilar = async () => {
     if (onStartSimilar) {
+      setIsStarting(true)
+      // 少し遅延を入れて開始感を演出
+      await new Promise((resolve) => setTimeout(resolve, 500))
       onStartSimilar({
         activityId: session.activityId,
         activityName: session.activityName,
@@ -112,6 +116,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         targetTime: session.targetTime,
         goalId: session.goalId
       })
+      setIsStarting(false)
     }
   }
 
@@ -467,10 +472,21 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               {/* スタートボタン */}
               <Button
                 onClick={handleStartSimilar}
-                className="w-full bg-green-600 hover:bg-green-700 text-black"
+                disabled={isStarting}
+                className="w-full bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
               >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}              </Button>
+                {isStarting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                    {t('session_start.starting_recording')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    {t('session_detail.start_session')}
+                  </>
+                )}
+              </Button>
             </div>
           )}
 
@@ -487,10 +503,21 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               {onStartSimilar && (
                 <Button
                   onClick={handleStartSimilar}
-                  className="bg-green-600 hover:bg-green-700 text-black"
+                  disabled={isStarting}
+                  className="bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
                 >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}                </Button>
+                  {isStarting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                      {t('session_start.starting_recording')}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      {t('session_detail.start_session')}
+                    </>
+                  )}
+                </Button>
               )}
             </div>
           )}
@@ -509,6 +536,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [preloadCompleted, setPreloadCompleted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isStarting, setIsStarting] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -618,8 +646,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     return texts[mood - 1] || "普通"
   }
 
-  const handleStartSimilar = () => {
+  const handleStartSimilar = async () => {
     if (onStartSimilar) {
+      setIsStarting(true)
+      // 少し遅延を入れて開始感を演出
+      await new Promise((resolve) => setTimeout(resolve, 500))
       onStartSimilar({
         activityId: session.activityId,
         activityName: session.activityName,
@@ -627,6 +658,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         targetTime: session.targetTime,
         goalId: session.goalId
       })
+      setIsStarting(false)
     }
   }
 
@@ -1061,10 +1093,21 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               {/* スタートボタン */}
               <Button
                 onClick={handleStartSimilar}
-                className="w-full bg-green-600 hover:bg-green-700 text-black"
+                disabled={isStarting}
+                className="w-full bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
               >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}              </Button>
+                {isStarting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                    {t('session_start.starting_recording')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    {t('session_detail.start_session')}
+                  </>
+                )}
+              </Button>
             </div>
           )}
 
@@ -1081,10 +1124,21 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               {onStartSimilar && (
                 <Button
                   onClick={handleStartSimilar}
-                  className="bg-green-600 hover:bg-green-700 text-black"
+                  disabled={isStarting}
+                  className="bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
                 >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}                </Button>
+                  {isStarting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                      {t('session_start.starting_recording')}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      {t('session_detail.start_session')}
+                    </>
+                  )}
+                </Button>
               )}
             </div>
           )}

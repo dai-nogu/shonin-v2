@@ -56,11 +56,6 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
     router.push("/session")
   }
 
-  // 目標管理画面への遷移
-  const handleGoalSettingClick = () => {
-    router.push("/goals")
-  }
-
   return (
     <>
       {/* エラーモーダル */}
@@ -90,7 +85,7 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
       
       <AIFeedback completedSessions={completedSessions} />
       <div className="mt-4 lg:mt-6">
-        <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+        <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
       </div>
     </>
   )
