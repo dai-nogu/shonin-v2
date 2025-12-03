@@ -80,11 +80,6 @@ export function SessionDetailModal({
                 </div>
               </div>
             ))}
-            {sessions.length === 0 && (
-              <div className="text-center text-gray-400 py-8">
-                {t('calendar.no_activities')}
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button 

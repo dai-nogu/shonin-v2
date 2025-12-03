@@ -59,6 +59,20 @@ function WeekCalendarSSR({
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6)
   
+  // 今日の日付（時間をリセット）
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  
+  // 週が過去/未来/今週かを判定
+  const isPastWeek = weekEnd < todayStart
+  const isFutureWeek = weekStart > todayStart
+  
+  // 「まだ記録がありません」の文言を決定
+  const getNoRecordsMessage = () => {
+    if (isPastWeek) return t('common.no_records_past')
+    if (isFutureWeek) return t('common.no_records_future')
+    return t('common.no_records')
+  }
+  
   // 週の各日を生成
   const weekDays = []
   for (let i = 0; i < 7; i++) {
@@ -198,7 +212,7 @@ function WeekCalendarSSR({
                   <div className="flex justify-center mb-1 md:mb-2">
                     <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{t('common.no_records')}</div>
+                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>
@@ -220,7 +234,7 @@ function WeekCalendarSSR({
                   <div className="flex justify-center mb-1 md:mb-2">
                     <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{t('common.no_records')}</div>
+                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>

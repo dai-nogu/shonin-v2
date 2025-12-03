@@ -30,6 +30,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
     { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_default_message') },
     { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }
@@ -121,6 +122,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     if (newIndex === currentIndex) return
     
     setIsTransitioning(true)
+    setIsExpanded(false) // 切り替え時は折りたたみ状態にリセット
     setTimeout(() => {
       setCurrentIndex(newIndex)
       setIsTransitioning(false)
@@ -194,14 +196,39 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           )}
 
           {/* フィードバックメッセージ */}
-          <div className="bg-gray-800 rounded-lg p-3 mb-3">
-            <p className="text-gray-300 text-sm leading-relaxed">
-              {error ? (
-                <span className="text-red-400">{t('errors.generic')}: {error}</span>
-              ) : (
-                currentFeedback.message
-              )}
-            </p>
+          <div className="bg-gray-800 rounded-lg p-3 mb-3 relative">
+            <div
+              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                !currentFeedback.date || isExpanded ? 'max-h-[500px]' : 'max-h-[1.5em]'
+              }`}
+            >
+              <p className="text-gray-300 text-sm leading-relaxed pr-8">
+                {error ? (
+                  <span className="text-red-400">{t('errors.generic')}: {error}</span>
+                ) : (
+                  currentFeedback.message
+                )}
+              </p>
+            </div>
+            {/* 開閉ボタン（実際のFBがある時のみ表示） */}
+            {currentFeedback.date && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="absolute right-2 bottom-2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
+                aria-label={isExpanded ? '折りたたむ' : '展開する'}
+              >
+                <div className="relative w-3 h-3">
+                  {/* 横棒（常に表示） */}
+                  <span className="absolute top-1/2 left-0 w-full h-0.5 bg-current -translate-y-1/2 rounded-full" />
+                  {/* 縦棒（回転してマイナスになる） */}
+                  <span 
+                    className={`absolute top-0 left-1/2 w-0.5 h-full bg-current -translate-x-1/2 rounded-full transition-transform duration-300 ease-in-out origin-center ${
+                      isExpanded ? 'rotate-90' : 'rotate-0'
+                    }`}
+                  />
+                </div>
+              </button>
+            )}
           </div>
 
                       {/* 次回フィードバック予告 */}

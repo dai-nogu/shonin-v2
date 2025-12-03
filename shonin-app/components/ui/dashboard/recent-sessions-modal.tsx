@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from "react"
 import { X, Play, Eye, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
 import { useTranslations } from 'next-intl'
 import { cn } from "@/lib/utils"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
+import { useSessions } from "@/contexts/sessions-context"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
 interface RecentSessionsModalProps {
@@ -44,6 +46,9 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   
   // スクロール位置をリセットするためのref
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
 
   // モバイル判定
   useEffect(() => {
@@ -276,32 +281,76 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                           <Eye className="w-3 h-3 mr-1" />
                           {t('common.details')}
                         </Button>
-                      <Button
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivityClick(sessionItem)
-                        }}
-                      >
-                        <Play className="w-3 h-3 mr-1" />
-                        {t('common.start')}
-                      </Button>
+                      {isSessionActive ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block cursor-not-allowed">
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="bg-[#1eb055] opacity-50 pointer-events-none"
+                                >
+                                  <Play className="w-3 h-3 mr-1" />
+                                  {t('common.start')}
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">{t('common.recording_in_progress')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-[#1eb055] hover:bg-[#1a9649]"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleActivityClick(sessionItem)
+                          }}
+                        >
+                          <Play className="w-3 h-3 mr-1" />
+                          {t('common.start')}
+                        </Button>
+                      )}
                     </div>
                     
                     {/* SPでは開始ボタンを右側に表示 */}
                     <div className="sm:hidden">
-                      <Button
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivityClick(sessionItem)
-                        }}
-                                              >
+                      {isSessionActive ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block cursor-not-allowed">
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="bg-[#1eb055] opacity-50 pointer-events-none"
+                                >
+                                  <Play className="w-3 h-3 mr-1" />
+                                  {t('common.start')}
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">{t('common.recording_in_progress')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-[#1eb055] hover:bg-[#1a9649]"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleActivityClick(sessionItem)
+                          }}
+                        >
                           <Play className="w-3 h-3 mr-1" />
                           {t('common.start')}
                         </Button>
+                      )}
                     </div>
                   </div>
                 </div>

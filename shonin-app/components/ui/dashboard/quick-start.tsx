@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTranslations } from 'next-intl'
 
 import { SessionDetailModal } from "./session-detail-modal"
@@ -11,6 +12,7 @@ import { ActivityCountModal } from "./activity-count-modal"
 import { RecentSessionsModal } from "./recent-sessions-modal"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useSessions } from "@/contexts/sessions-context"
 import type { SessionData, CompletedSession } from "./time-tracker"
 
 interface QuickStartActivity {
@@ -54,6 +56,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   
   // 目標管理フック
   const { getGoal } = useGoalsDb()
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
 
   // モバイル判定（タブレットは除外、スマートフォンのみ）
   useEffect(() => {
@@ -470,27 +475,49 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   <Eye className="w-3 h-3 mr-1" />
                   {t('common.details')}
                 </Button>
-                <Button
-                  size="sm"
-                  disabled={isStarting}
-                  className="bg-green-500 hover:bg-green-600 active:scale-95 active:bg-green-700 transition-all duration-150 text-xs disabled:opacity-70"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleActivityClick(activity)
-                  }}
-                >
-                  {startingActivityId === activity.id ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
-                      {t('common.starting')}
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3 h-3 mr-1" />
-                      {t('common.start')}
-                    </>
-                  )}
-                </Button>
+                {isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block cursor-not-allowed">
+                          <Button
+                            size="sm"
+                            disabled
+                            className="bg-[#1eb055] text-xs opacity-50 pointer-events-none"
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            {t('common.start')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={isStarting}
+                    className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150 text-xs disabled:opacity-50"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleActivityClick(activity)
+                    }}
+                  >
+                    {startingActivityId === activity.id ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                        {t('common.starting')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3 mr-1" />
+                        {t('common.start')}
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             ) : (
               // PC版: 詳細ボタン + 開始ボタン
@@ -507,27 +534,49 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   <Eye className="w-3 h-3 mr-1" />
                   {t('common.details')}
                 </Button>
-                <Button
-                  size="sm"
-                  disabled={isStarting}
-                  className="bg-green-500 hover:bg-green-600 active:scale-95 active:bg-green-700 transition-all duration-150 disabled:opacity-70"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleActivityClick(activity)
-                  }}
-                >
-                  {startingActivityId === activity.id ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
-                      {t('common.starting')}
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3 h-3 mr-1" />
-                      {t('common.start')}
-                    </>
-                  )}
-                </Button>
+                {isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block cursor-not-allowed">
+                          <Button
+                            size="sm"
+                            disabled
+                            className="bg-[#1eb055] opacity-50 pointer-events-none"
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            {t('common.start')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={isStarting}
+                    className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150 disabled:opacity-50"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleActivityClick(activity)
+                    }}
+                  >
+                    {startingActivityId === activity.id ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                        {t('common.starting')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3 mr-1" />
+                        {t('common.start')}
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             )}
           </div>

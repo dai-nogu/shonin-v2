@@ -20,11 +20,14 @@
     "seeMore": "See More",
     "times": " times",
     "no_records": "No records yet",
+    "no_records_past": "No records",
+    "no_records_future": "Looking forward to your records",
     "start": "Start",
     "starting": "Starting...",
     "details": "Details",
     "not_set": "None",
-    "reload_and_retry": "Please reload the page and try again."
+    "reload_and_retry": "Please reload the page and try again.",
+    "recording_in_progress": "Cannot start recording while another session is active"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -120,7 +123,6 @@
     "today": "Today",
     "this_week": "This Week",
     "noEvents": "No events",
-    "no_activities": "No activities",
     "sessionDetails": "Session Details",
     "activities_on_date": "{date}",
     "month_view": "Month View",
@@ -251,13 +253,13 @@
     "next_billing_date": "Next Billing Date",
     "upgrade_to_standard": "Upgrade to the Standard plan to access more features",
     "cancel_scheduled_badge": "Cancels on {date}",
-    "manage_subscription": "Subscription Management",
+    "manage_subscription": "Manage Subscription",
     "subscription_warning_title": "💰 About Your Subscription",
     "remaining_days_warning": "You will lose access to {days} remaining days of paid subscription",
     "deletion_immediate_effect": "Deleting your account will immediately prevent login and you will lose access to the remaining paid period.",
     "subscription_will_be_cancelled": "Your subscription will be cancelled and you will not be charged again.",
     "cancel_plan_only_hint_prefix": "※If you only want to cancel your plan, you can cancel from ",
-    "cancel_plan_only_hint_bold": "Subscription Management in your Profile",
+    "cancel_plan_only_hint_bold": "Manage Subscription in your Profile",
     "cancel_plan_only_hint_suffix": ". You can continue using the service until the end of the period.",
     "important_warning": "⚠️ Important Notice",
     "warning_irreversible": "• This action cannot be undone.",
@@ -394,7 +396,6 @@
   "weekly_progress": {
     "title": "Weekly Progress",
     "week_view": "Switch to calendar",
-    "total_this_week": "Total",
     "days": {
       "monday": "Mon",
       "tuesday": "Tue",

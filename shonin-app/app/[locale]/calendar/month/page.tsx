@@ -41,6 +41,8 @@ function MonthCalendarSSR({
 }: MonthCalendarSSRProps) {
   const t = useTranslations()
   const locale = useLocale()
+  const today = new Date()
+  
   // セッションデータの変換（SSR側で実行）
   const sessions = convertToCalendarSessions(completedSessions)
   const days = getDaysInMonth(currentDate)
@@ -54,6 +56,22 @@ function MonthCalendarSSR({
   const currentMonthSessions = getCurrentMonthSessions(currentDate, sessions)
   const totalMonthTime = currentMonthSessions.reduce((total, session) => total + session.duration, 0)
   const averageMonthTime = currentMonthSessions.length > 0 ? Math.floor(totalMonthTime / currentMonthSessions.length) : 0
+  
+  // 月が過去/未来/今月かを判定
+  const displayYear = currentDate.getFullYear()
+  const displayMonth = currentDate.getMonth()
+  const todayYear = today.getFullYear()
+  const todayMonth = today.getMonth()
+  
+  const isPastMonth = displayYear < todayYear || (displayYear === todayYear && displayMonth < todayMonth)
+  const isFutureMonth = displayYear > todayYear || (displayYear === todayYear && displayMonth > todayMonth)
+  
+  // 「まだ記録がありません」の文言を決定
+  const getNoRecordsMessage = () => {
+    if (isPastMonth) return t('common.no_records_past')
+    if (isFutureMonth) return t('common.no_records_future')
+    return t('common.no_records')
+  }
 
   return (
     <div className="bg-gray-950 text-white">
@@ -167,7 +185,7 @@ function MonthCalendarSSR({
                   <div className="flex justify-center mb-1 md:mb-2">
                     <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{t('common.no_records')}</div>
+                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>
@@ -189,7 +207,7 @@ function MonthCalendarSSR({
                   <div className="flex justify-center mb-1 md:mb-2">
                     <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{t('common.no_records')}</div>
+                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>

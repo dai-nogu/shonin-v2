@@ -102,12 +102,9 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                 <div className="text-xs lg:text-sm text-gray-500">{t('common.no_records')}</div>
               </>
             ) : (
-              <>
-                <div className="text-xl lg:text-2xl font-bold text-green-400">
-                  {formatDuration(totalWeekSeconds)}
-                </div>
-                <div className="text-xs lg:text-sm text-gray-400">{t('weekly_progress.total_this_week')}</div>
-              </>
+              <div className="text-xl lg:text-2xl font-bold text-green-400">
+                {formatDuration(totalWeekSeconds)}
+              </div>
             )}
           </div>
         </div>

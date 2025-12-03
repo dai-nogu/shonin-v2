@@ -20,11 +20,14 @@
     "seeMore": "もっと見る",
     "times": "回",
     "no_records": "まだ記録がありません",
+    "no_records_past": "記録がありませんでした",
+    "no_records_future": "記録を楽しみにしています",
     "start": "記録",
     "starting": "開始中...",
     "details": "詳細",
     "not_set": "なし",
-    "reload_and_retry": "画面をリロードしてもう一度やり直してください。"
+    "reload_and_retry": "画面をリロードしてもう一度やり直してください。",
+    "recording_in_progress": "記録中は他の記録を開始できません"
   },
   "navigation": {
     "dashboard": "ダッシュボード",
@@ -120,7 +123,6 @@
     "today": "今日",
     "this_week": "今週",
     "noEvents": "イベントはありません",
-    "no_activities": "この日は記録がありません",
     "sessionDetails": "セッション詳細",
     "activities_on_date": "{date}",
     "month_view": "月表示",
@@ -394,7 +396,6 @@
   "weekly_progress": {
     "title": "今週の進捗",
     "week_view": "カレンダー表示",
-    "total_this_week": "今週の合計",
     "days": {
       "monday": "月",
       "tuesday": "火",

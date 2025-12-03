@@ -164,11 +164,6 @@ export function CalendarCommon({
                       </div>
                     </div>
                   ))}
-                  {bottomPanelSessions.length === 0 && (
-                    <div className="text-center text-gray-400 py-4">
-                      {t('calendar.no_activities')}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -198,11 +193,6 @@ export function CalendarCommon({
                 </div>
               </div>
             ))}
-            {selectedDateSessions.length === 0 && (
-              <div className="text-center text-gray-400 py-8">
-                {t('calendar.no_activities')}
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button 

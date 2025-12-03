@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/common/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
 import { ErrorModal } from "@/components/ui/common/error-modal"
 import { CharacterCounter } from "@/components/ui/common/character-counter"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Plus, Play, X, Check } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useSessions } from "@/contexts/sessions-context"
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { getInputLimits } from "@/lib/input-limits"
@@ -33,6 +35,9 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
   // 目標データを取得
   const { goals } = useGoalsDb()
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
 
   // sessionStorageから追加された目標を自動選択
   useEffect(() => {
@@ -544,23 +549,44 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             </div>
 
             {/* 開始ボタン */}
-            <Button
-              onClick={handleStart}
-              disabled={!selectedActivity || isStarting}
-              className="w-full bg-green-600 hover:bg-green-700 py-3 text-base font-medium"
-            >
-              {isStarting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  {t('session_start.starting_recording')}
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  {t('session_start.start_recording')}
-                </>
-              )}
-            </Button>
+            {isSessionActive ? (
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <span className="w-full inline-block cursor-not-allowed">
+                      <Button
+                        disabled
+                        className="w-full bg-[#1eb055] py-3 text-base font-medium opacity-50 pointer-events-none"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        {t('session_start.start_recording')}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">{t('common.recording_in_progress')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                onClick={handleStart}
+                disabled={!selectedActivity || isStarting}
+                className="w-full bg-[#1eb055] hover:bg-[#1a9649] py-3 text-base font-medium disabled:opacity-50"
+              >
+                {isStarting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    {t('session_start.starting_recording')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    {t('session_start.start_recording')}
+                  </>
+                )}
+              </Button>
+            )}
           </>
         )}
       </CardContent>

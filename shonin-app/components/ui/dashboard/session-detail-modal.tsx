@@ -4,11 +4,13 @@ import { useEffect, useState } from "react"
 import { X, Clock, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Progress } from "@/components/ui/common/progress"
 import { useTranslations } from 'next-intl'
 import { cn } from "@/lib/utils"
 import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } from "@/lib/upload-photo"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useSessions } from "@/contexts/sessions-context"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
 import type { CompletedSession } from "./time-tracker"
 import { safeWarn } from "@/lib/safe-logger"
@@ -40,6 +42,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   
   // 目標管理フック
   const { getGoal } = useGoalsDb()
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
   
   // 目標情報を取得
   const goalInfo = session?.goalId ? getGoal(session.goalId) : null
@@ -470,23 +475,46 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               )}
               
               {/* スタートボタン */}
-              <Button
-                onClick={handleStartSimilar}
-                disabled={isStarting}
-                className="w-full bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
-              >
-                {isStarting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    {t('session_start.starting_recording')}
-                  </>
+              {onStartSimilar && (
+                isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="w-full inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="w-full bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {t('session_detail.start_session')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('session_detail.start_session')}
-                  </>
-                )}
-              </Button>
+                  <Button
+                    onClick={handleStartSimilar}
+                    disabled={isStarting}
+                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        {t('session_start.starting_recording')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        {t('session_detail.start_session')}
+                      </>
+                    )}
+                  </Button>
+                )
+              )}
             </div>
           )}
 
@@ -501,23 +529,44 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 {t('session_detail.close')}
               </Button>
               {onStartSimilar && (
-                <Button
-                  onClick={handleStartSimilar}
-                  disabled={isStarting}
-                  className="bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
-                >
-                  {isStarting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                      {t('session_start.starting_recording')}
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 mr-2" />
-                      {t('session_detail.start_session')}
-                    </>
-                  )}
-                </Button>
+                isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {t('session_detail.start_session')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    onClick={handleStartSimilar}
+                    disabled={isStarting}
+                    className="bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        {t('session_start.starting_recording')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        {t('session_detail.start_session')}
+                      </>
+                    )}
+                  </Button>
+                )
               )}
             </div>
           )}
@@ -551,6 +600,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   
   // 目標管理フック
   const { getGoal } = useGoalsDb()
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
   
   // 目標情報を取得
   const goalInfo = session?.goalId ? getGoal(session.goalId) : null
@@ -1091,23 +1143,46 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               )}
               
               {/* スタートボタン */}
-              <Button
-                onClick={handleStartSimilar}
-                disabled={isStarting}
-                className="w-full bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
-              >
-                {isStarting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    {t('session_start.starting_recording')}
-                  </>
+              {onStartSimilar && (
+                isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="w-full inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="w-full bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {t('session_detail.start_session')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('session_detail.start_session')}
-                  </>
-                )}
-              </Button>
+                  <Button
+                    onClick={handleStartSimilar}
+                    disabled={isStarting}
+                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        {t('session_start.starting_recording')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        {t('session_detail.start_session')}
+                      </>
+                    )}
+                  </Button>
+                )
+              )}
             </div>
           )}
 
@@ -1122,23 +1197,44 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 {t('session_detail.close')}
               </Button>
               {onStartSimilar && (
-                <Button
-                  onClick={handleStartSimilar}
-                  disabled={isStarting}
-                  className="bg-green-600 hover:bg-green-700 text-black disabled:opacity-70"
-                >
-                  {isStarting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                      {t('session_start.starting_recording')}
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 mr-2" />
-                      {t('session_detail.start_session')}
-                    </>
-                  )}
-                </Button>
+                isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {t('session_detail.start_session')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    onClick={handleStartSimilar}
+                    disabled={isStarting}
+                    className="bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        {t('session_start.starting_recording')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        {t('session_detail.start_session')}
+                      </>
+                    )}
+                  </Button>
+                )
               )}
             </div>
           )}
