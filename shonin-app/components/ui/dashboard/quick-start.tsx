@@ -38,6 +38,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const t = useTranslations()
   
   const [selectedActivity, setSelectedActivity] = useState<QuickStartActivity | null>(null)
+  const [isStarting, setIsStarting] = useState(false)
+  const [startingActivityId, setStartingActivityId] = useState<string | null>(null)
 
   const [activeTab, setActiveTab] = useState("most-recorded")
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -262,10 +264,18 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   }
 
   const handleActivityClick = async (activity: QuickStartActivity) => {
+    // 既にローディング中なら何もしない
+    if (isStarting) return
+    
     setSelectedActivity(activity)
+    setIsStarting(true)
+    setStartingActivityId(activity.id)
     
     // 確認モーダルを表示せず、直接セッション開始処理を実行
     if (onStartActivity) {
+      // 少し遅延を入れて開始感を演出（セッション詳細モーダルと同じ）
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      
       let activityId = activity.id
       
       // データベースに対応する行動が存在するかチェック
@@ -296,6 +306,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             activityId = result.data
           } else {
             // アクティビティ作成に失敗した場合は処理を中止
+            setIsStarting(false)
+            setStartingActivityId(null)
             return
           }
         }
@@ -317,6 +329,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
     
     setSelectedActivity(null)
+    setIsStarting(false)
+    setStartingActivityId(null)
   }
 
   // SPでの詳細表示用のハンドラー
@@ -393,7 +407,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const renderActivityList = (activities: QuickStartActivity[], emptyMessage: string) => {
     if (activities.length === 0) {
       return (
-        <div className="text-center py-8">
+        <div className="text-center py-7">
           <p className="text-gray-400">{emptyMessage}</p>
         </div>
       )
@@ -447,7 +461,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-xs"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 active:bg-gray-500 transition-all duration-150 text-xs"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetail(activity)
@@ -458,14 +472,24 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-green-500 hover:bg-green-600 text-xs"
+                  disabled={isStarting}
+                  className="bg-green-500 hover:bg-green-600 active:scale-95 active:bg-green-700 transition-all duration-150 text-xs disabled:opacity-70"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleActivityClick(activity)
                   }}
                 >
-                  <Play className="w-3 h-3 mr-1" />
-                  {t('common.start')}
+                  {startingActivityId === activity.id ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                      {t('common.starting')}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3 h-3 mr-1" />
+                      {t('common.start')}
+                    </>
+                  )}
                 </Button>
               </div>
             ) : (
@@ -474,7 +498,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 active:bg-gray-500 transition-all duration-150"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetail(activity)
@@ -485,14 +509,24 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-green-500 hover:bg-green-600"
+                  disabled={isStarting}
+                  className="bg-green-500 hover:bg-green-600 active:scale-95 active:bg-green-700 transition-all duration-150 disabled:opacity-70"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleActivityClick(activity)
                   }}
                 >
-                  <Play className="w-3 h-3 mr-1" />
-                  {t('common.start')}
+                  {startingActivityId === activity.id ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
+                      {t('common.starting')}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3 h-3 mr-1" />
+                      {t('common.start')}
+                    </>
+                  )}
                 </Button>
               </div>
             )}

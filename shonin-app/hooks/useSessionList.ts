@@ -11,40 +11,17 @@ export function useSessionList() {
   const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
 
   // セッションコンテキストから状態を取得
-  const {
-    sessions,
-    refetch
-  } = useSessions()
+  // NOTE: use-sessions-db.ts の初回読み込みuseEffectがデータを取得するため、
+  // ここでrefetch()を呼ぶ必要はない
+  const { sessions } = useSessions()
 
   // 初期化処理
+  // NOTE: sessionsはContextで管理されており、use-sessions-dbが初回読み込みを行うため、
+  // ここでは単にuserの存在を確認して初期化完了とする
   useEffect(() => {
     if (!user) return
-    
-    // アンマウント後のsetState防止フラグ
-    let isMounted = true
-
-    const initializeApp = async () => {
-      try {
-        await refetch()
-        // アンマウント済みの場合はsetStateしない
-        if (isMounted) {
-          setIsInitialized(true)
-        }
-      } catch (error) {
-        // アンマウント済みの場合はsetStateしない
-        if (isMounted) {
-          setIsInitialized(true)
-        }
-      }
-    }
-
-    initializeApp()
-    
-    // クリーンアップ：アンマウント時にフラグを更新
-    return () => {
-      isMounted = false
-    }
-  }, [user, refetch])
+    setIsInitialized(true)
+  }, [user])
 
   // セッションデータが更新されたときに基本的な変換処理
   useEffect(() => {

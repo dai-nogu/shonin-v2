@@ -21,6 +21,7 @@
     "times": " times",
     "no_records": "No records yet",
     "start": "Start",
+    "starting": "Starting...",
     "details": "Details",
     "not_set": "None",
     "reload_and_retry": "Please reload the page and try again."

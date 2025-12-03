@@ -21,6 +21,7 @@
     "times": "回",
     "no_records": "まだ記録がありません",
     "start": "記録",
+    "starting": "開始中...",
     "details": "詳細",
     "not_set": "なし",
     "reload_and_retry": "画面をリロードしてもう一度やり直してください。"
