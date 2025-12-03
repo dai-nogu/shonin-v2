@@ -50,6 +50,10 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   // セッション状態を取得
   const { isSessionActive } = useSessions()
 
+  // アニメーション状態（早期returnの前に配置する必要がある）
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+
   // モバイル判定
   useEffect(() => {
     const checkMobile = () => {
@@ -62,10 +66,34 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // モーダルが開いている間は背景スクロールを無効にする
-  useScrollLock(isOpen)
+  // マウント時にアニメーション開始
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false)
+      // 次のフレームでアニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
 
-  if (!isOpen) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  // モーダルが開いている間は背景スクロールを無効にする
+  useScrollLock(isOpen || isClosing)
+
+  if (!isOpen && !isClosing) return null
 
   // アクティビティアイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
@@ -142,7 +170,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   const handleActivityClick = (sessionItem: SessionItem) => {
     if (onStartActivity) {
       const sessionData: SessionData = {
-        activityId: sessionItem.id,
+        activityId: sessionItem.session.activityId,
         activityName: sessionItem.name,
         startTime: new Date(),
         location: sessionItem.location || "",
@@ -153,7 +181,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
       }
       onStartActivity(sessionData)
     }
-    onClose()
+    handleClose()
   }
 
   // SPでの詳細表示用のハンドラー
@@ -197,13 +225,6 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     }
   }
 
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  // マウント時にアニメーション開始
-  useEffect(() => {
-    setIsAnimating(true)
-  }, [])
-
   return (
     <>
       <div 
@@ -211,7 +232,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
           "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
           isAnimating ? "opacity-100" : "opacity-0"
         )}
-        onClick={onClose}
+        onClick={handleClose}
       >
         <Card 
           className={cn(
@@ -222,7 +243,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
         >
           <CardHeader className="relative pb-3 sm:pb-6">
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="ghost"
               size="sm"
               className="absolute right-2 top-2 text-gray-400 hover:text-white"
@@ -245,7 +266,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                     // モーダル内では常に詳細表示（開始ボタンは別途stopPropagationで制御）
                     handleSessionDetailClick(sessionItem)
                   }}
-                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all duration-200 group cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all duration-200 group cursor-pointer hover:scale-[1.01]"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
@@ -272,15 +293,15 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleViewDetail(sessionItem)
                         }}
-                                              >
-                          <Eye className="w-3 h-3 mr-1" />
-                          {t('common.details')}
-                        </Button>
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        {t('common.details')}
+                      </Button>
                       {isSessionActive ? (
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
@@ -304,7 +325,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                       ) : (
                         <Button
                           size="sm"
-                          className="bg-[#1eb055] hover:bg-[#1a9649]"
+                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleActivityClick(sessionItem)
@@ -341,7 +362,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                       ) : (
                         <Button
                           size="sm"
-                          className="bg-[#1eb055] hover:bg-[#1a9649]"
+                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleActivityClick(sessionItem)

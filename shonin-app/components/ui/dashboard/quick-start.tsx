@@ -430,7 +430,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               }
               // PCでは何もしない（開始・詳細ボタンが個別に制御）
             }}
-            className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-colors duration-200 group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : 'hover:bg-gray-750'}`}
+            className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-all duration-200 group hover:bg-gray-700 hover:scale-[1.01] ${isMobile ? 'cursor-pointer' : ''}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -466,7 +466,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 active:bg-gray-500 transition-all duration-150 text-xs"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150 text-xs"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetail(activity)
@@ -525,7 +525,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 active:bg-gray-500 transition-all duration-150"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleViewDetail(activity)

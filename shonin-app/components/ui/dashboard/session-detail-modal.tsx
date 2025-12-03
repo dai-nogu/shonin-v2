@@ -28,6 +28,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
   
   // スワイプ機能用の状態
@@ -62,11 +63,12 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする
-  useScrollLock(isOpen)
+  useScrollLock(isOpen || isClosing)
   
   useEffect(() => {
     if (isOpen) {
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
+      setIsClosing(false)
       // アニメーション開始
       requestAnimationFrame(() => {
         setIsAnimating(true)
@@ -76,7 +78,18 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     }
   }, [isOpen])
 
-  if (!isOpen || !session) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  if ((!isOpen && !isClosing) || !session) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -346,18 +359,23 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={cn(
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+        isAnimating ? "opacity-100" : "opacity-0"
+      )}
+      onClick={handleClose}
     >
       <Card 
-        className={`bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto ${
-          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
-        }`}
+        className={cn(
+          `bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto transition-all duration-300 ease-out`,
+          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto',
+          isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         <CardHeader className={`relative ${isMobile ? 'pb-2' : ''}`} style={isMobile ? { paddingTop: '3rem' } : {}}>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             variant="ghost"
             size="sm"
             className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-transparent"
@@ -483,7 +501,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                         <span className="w-full inline-block cursor-not-allowed">
                           <Button
                             disabled
-                            className="w-full bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                            className="w-full bg-[#1eb055] text-black opacity-50 pointer-events-none"
                           >
                             <Play className="w-4 h-4 mr-2" />
                             {t('session_detail.start_session')}
@@ -499,11 +517,11 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   <Button
                     onClick={handleStartSimilar}
                     disabled={isStarting}
-                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50"
                   >
                     {isStarting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                         {t('session_start.starting_recording')}
                       </>
                     ) : (
@@ -522,7 +540,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           {!isMobile && (
             <div className="flex justify-end space-x-3 pt-4">
               <Button
-                onClick={onClose}
+                onClick={handleClose}
                 variant="outline"
                 className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
               >
@@ -536,7 +554,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                         <span className="inline-block cursor-not-allowed">
                           <Button
                             disabled
-                            className="bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                            className="bg-[#1eb055] text-black opacity-50 pointer-events-none"
                           >
                             <Play className="w-4 h-4 mr-2" />
                             {t('session_detail.start_session')}
@@ -552,11 +570,11 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   <Button
                     onClick={handleStartSimilar}
                     disabled={isStarting}
-                    className="bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                    className="bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50"
                   >
                     {isStarting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                         {t('session_start.starting_recording')}
                       </>
                     ) : (
@@ -586,6 +604,8 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isStarting, setIsStarting] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -657,15 +677,33 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   }, [isOpen, session?.id])
 
   // モーダルが開いている間は背景スクロールを無効にする
-  useScrollLock(isOpen)
+  useScrollLock(isOpen || isClosing)
   
   useEffect(() => {
     if (isOpen) {
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
+      setIsClosing(false)
+      // アニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
     }
   }, [isOpen])
 
-  if (!isOpen || !session) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  if ((!isOpen && !isClosing) || !session) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -1004,18 +1042,23 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={cn(
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+        isAnimating ? "opacity-100" : "opacity-0"
+      )}
+      onClick={handleClose}
     >
       <Card 
-        className={`bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto ${
-          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
-        }`}
+        className={cn(
+          `bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto transition-all duration-300 ease-out`,
+          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto',
+          isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         <CardHeader className={`relative ${isMobile ? 'pb-2' : ''}`} style={isMobile ? { paddingTop: '3rem' } : {}}>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             variant="ghost"
             size="sm"
             className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-transparent"
@@ -1151,7 +1194,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                         <span className="w-full inline-block cursor-not-allowed">
                           <Button
                             disabled
-                            className="w-full bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                            className="w-full bg-[#1eb055] text-black opacity-50 pointer-events-none"
                           >
                             <Play className="w-4 h-4 mr-2" />
                             {t('session_detail.start_session')}
@@ -1167,11 +1210,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   <Button
                     onClick={handleStartSimilar}
                     disabled={isStarting}
-                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50"
                   >
                     {isStarting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                         {t('session_start.starting_recording')}
                       </>
                     ) : (
@@ -1190,7 +1233,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           {!isMobile && (
             <div className="flex justify-end space-x-3 pt-4">
               <Button
-                onClick={onClose}
+                onClick={handleClose}
                 variant="outline"
                 className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
               >
@@ -1204,7 +1247,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                         <span className="inline-block cursor-not-allowed">
                           <Button
                             disabled
-                            className="bg-[#1eb055] text-white opacity-50 pointer-events-none"
+                            className="bg-[#1eb055] text-black opacity-50 pointer-events-none"
                           >
                             <Play className="w-4 h-4 mr-2" />
                             {t('session_detail.start_session')}
@@ -1220,11 +1263,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   <Button
                     onClick={handleStartSimilar}
                     disabled={isStarting}
-                    className="bg-[#1eb055] hover:bg-[#1a9649] text-white disabled:opacity-50"
+                    className="bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50"
                   >
                     {isStarting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                         {t('session_start.starting_recording')}
                       </>
                     ) : (

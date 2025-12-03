@@ -48,6 +48,10 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   // セッション状態を取得
   const { isSessionActive } = useSessions()
 
+  // アニメーション状態（早期returnの前に配置する必要がある）
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+
   // モバイル判定
   useEffect(() => {
     const checkMobile = () => {
@@ -60,10 +64,34 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // モーダルが開いている間は背景スクロールを無効にする（SP対応強化）
-  useScrollLock(isOpen)
+  // マウント時にアニメーション開始
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false)
+      // 次のフレームでアニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
 
-  if (!isOpen) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  // モーダルが開いている間は背景スクロールを無効にする（SP対応強化）
+  useScrollLock(isOpen || isClosing)
+
+  if (!isOpen && !isClosing) return null
 
   // 行動アイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
@@ -145,7 +173,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   const handleActivityClick = (activity: ActivityItem) => {
     if (onStartActivity) {
       const sessionData: SessionData = {
-        activityId: activity.id,
+        activityId: activity.latestSession.activityId,
         activityName: activity.name,
         startTime: new Date(),
         location: activity.latestSession.location || "",
@@ -156,7 +184,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
       }
       onStartActivity(sessionData)
     }
-    onClose()
+    handleClose()
   }
 
   // SPでの詳細表示用のハンドラー
@@ -189,7 +217,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     if (onStartActivity) {
       onStartActivity(sessionData)
     }
-    onClose()
+    handleClose()
   }
 
   const handlePageChange = (page: number) => {
@@ -200,13 +228,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     }
   }
 
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  // マウント時にアニメーション開始
-  useEffect(() => {
-    setIsAnimating(true)
-  }, [])
-
   return (
     <>
       <div 
@@ -214,7 +235,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
           "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
           isAnimating ? "opacity-100" : "opacity-0"
         )}
-        onClick={onClose}
+        onClick={handleClose}
       >
         <Card 
           className={cn(
@@ -225,7 +246,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
         >
           <CardHeader className="relative pb-3 sm:pb-6">
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="ghost"
               size="sm"
               className="absolute right-2 top-2 text-gray-400 hover:text-white"
@@ -249,8 +270,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                     handleActivityDetailClick(activity)
                   } : undefined}
                   className={cn(
-                    "flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg transition-all duration-200 group hover:scale-[1.01] active:scale-[0.99]",
-                    isMobile ? 'cursor-pointer hover:bg-gray-700' : ''
+                    "flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all duration-200 group hover:scale-[1.01]",
+                    isMobile ? 'cursor-pointer' : ''
                   )}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
@@ -278,15 +299,15 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleViewDetail(activity)
                         }}
-                                              >
-                          <Eye className="w-3 h-3 mr-1" />
-                          {t('common.details')}
-                        </Button>
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        {t('common.details')}
+                      </Button>
                       {isSessionActive ? (
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
@@ -310,7 +331,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       ) : (
                         <Button
                           size="sm"
-                          className="bg-[#1eb055] hover:bg-[#1a9649]"
+                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleActivityClick(activity)
@@ -347,7 +368,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       ) : (
                         <Button
                           size="sm"
-                          className="bg-[#1eb055] hover:bg-[#1a9649]"
+                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleActivityClick(activity)
