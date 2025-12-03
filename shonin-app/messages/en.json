@@ -19,6 +19,7 @@
     "no": "No",
     "seeMore": "See More",
     "times": " times",
+    "no_records": "No records yet",
     "start": "Start",
     "details": "Details",
     "not_set": "None",
@@ -101,7 +102,7 @@
     "fetch_error": "An error occurred while fetching feedback"
   },
   "quick_start": {
-    "start_activity": "Recent activities",
+    "start_activity": "Quick Start",
     "complete_first_session": "Once you complete your first record, it'll appear here.",
     "latest": "Latest",
     "most_recorded": "Most Recorded",
@@ -141,10 +142,14 @@
     "goal_label": "Goal",
     "goal_placeholder": "Improve my focus and reduce distractions.",
     "motivation_label": "Reason",
-    "motivation_placeholder": "ITo feel more in control of my time and attention.",
+    "motivation_placeholder": "To feel more in control of my time and attention.",
     "deadline_label_required": "Deadline",
     "weekday_hours_label": "Weekday Hours",
     "weekend_hours_label": "Weekend Hours",
+    "add_time_settings": "Add Time Settings",
+    "add_deadline_and_time_settings": "Add Deadline and Time",
+    "time_settings_label": "Time Settings",
+    "deadline_and_time_settings_label": "Deadline and Time Settings",
     "weekly_calculation": "Weekly",
     "monthly_calculation": "Monthly",
     "total_goal": "Total Goal",
@@ -383,7 +388,7 @@
   },
   "weekly_progress": {
     "title": "Weekly Progress",
-    "week_view": "Switch to Week",
+    "week_view": "Switch to calendar",
     "total_this_week": "Total",
     "days": {
       "monday": "Mon",
@@ -549,5 +554,37 @@
       "range_360_720": "You shut out the world for {hours} hours. That determination is already shaping your future.",
       "range_720_1440": "You gave everything—body and mind—for {hours} hours. Please rest well."
     }    
+  },
+  "validation": {
+    "title": {
+      "too_small": "Please enter a title",
+      "too_big": "Title must be 100 characters or less",
+      "invalid_type": "Title must be a string"
+    },
+    "motivation": {
+      "too_small": "Please enter your motivation",
+      "too_big": "Motivation must be 500 characters or less"
+    },
+    "deadline": {
+      "invalid_date": "Please enter a valid date",
+      "too_small": "Please enter a deadline"
+    },
+    "weekdayHours": {
+      "too_small": "Please enter a value of 0 or more",
+      "too_big": "Please enter a value of 24 or less",
+      "invalid_type": "Please enter a number"
+    },
+    "weekendHours": {
+      "too_small": "Please enter a value of 0 or more",
+      "too_big": "Please enter a value of 24 or less",
+      "invalid_type": "Please enter a number"
+    },
+    "name": {
+      "too_small": "Please enter a name",
+      "too_big": "Name must be 50 characters or less"
+    },
+    "description": {
+      "too_big": "Description must be 1000 characters or less"
+    }
   }
 } 

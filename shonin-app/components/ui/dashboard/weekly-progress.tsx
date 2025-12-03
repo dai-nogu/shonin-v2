@@ -99,7 +99,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                 <div className="flex justify-center mb-2">
                   <BarChart3 className="w-8 h-8 lg:w-10 lg:h-10 text-gray-600" />
                 </div>
-                <div className="text-xs lg:text-sm text-gray-500">まだ軌跡がありません</div>
+                <div className="text-xs lg:text-sm text-gray-500">{t('common.no_records')}</div>
               </>
             ) : (
               <>

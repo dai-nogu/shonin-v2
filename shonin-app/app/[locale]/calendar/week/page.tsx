@@ -198,7 +198,7 @@ function WeekCalendarSSR({
                   <div className="flex justify-center mb-1 md:mb-2">
                     <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">まだ軌跡がありません</div>
+                  <div className="text-xs md:text-sm text-gray-500">{t('common.no_records')}</div>
                 </>
               ) : (
                 <>
@@ -220,7 +220,7 @@ function WeekCalendarSSR({
                   <div className="flex justify-center mb-1 md:mb-2">
                     <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">まだ軌跡がありません</div>
+                  <div className="text-xs md:text-sm text-gray-500">{t('common.no_records')}</div>
                 </>
               ) : (
                 <>
