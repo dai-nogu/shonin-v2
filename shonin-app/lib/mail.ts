@@ -11,7 +11,7 @@ import React from 'react';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // メール送信元アドレス
-const EMAIL_FROM = 'Shonin <no-reply@account-shonin.com>';
+const EMAIL_FROM = 'No Name yet <no-reply@account-shonin.com>';
 
 // 型定義
 export type EmailCategory = 'auth' | 'subscription';
@@ -68,7 +68,7 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
       
       switch (authType) {
         case 'welcome':
-          subject = 'Shoninへようこそ！';
+          subject = 'ようこそ！';
           break;
         case 'welcome_back':
           subject = 'おかえりなさい！';
@@ -77,7 +77,7 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
           subject = 'ご利用ありがとうございました';
           break;
         default:
-          subject = 'Shoninからのお知らせ';
+          subject = 'お知らせ';
       }
 
       emailTemplate = AuthEmailTemplate({ 

@@ -243,7 +243,7 @@
     "logout_error": "An error occurred during logout. Please try again later.",
     "logging_out": "Logging out...",
     "back": "Back",
-    "account_deletion": "Leave SHONIN",
+    "account_deletion": "Leave",
     "account_deletion_confirmation": "Delete Account",
     "account_deletion_error": "Failed to delete account. Please try again.",
     "current_plan": "Current Plan",

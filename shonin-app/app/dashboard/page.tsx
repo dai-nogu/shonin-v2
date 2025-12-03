@@ -63,7 +63,7 @@ export default function Dashboard() {
   // アクティブなセッションがある場合の自動遷移（アプリ初回起動時のみ）
   useEffect(() => {
     // アプリが初めて起動されたか（リロードや直接アクセス）を判定
-    const isAppStartup = !sessionStorage.getItem('shonin-app-started')
+    const isAppStartup = !sessionStorage.getItem('app-started')
     
     if (isInitialized && isSessionActive && currentSession && isAppStartup) {
       router.push('/session')
@@ -71,7 +71,7 @@ export default function Dashboard() {
     
     // アプリが起動したことを記録（セッション中は維持）
     if (isInitialized) {
-      sessionStorage.setItem('shonin-app-started', 'true')
+      sessionStorage.setItem('app-started', 'true')
     }
   }, [isInitialized, isSessionActive, currentSession, router])
 

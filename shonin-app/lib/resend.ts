@@ -3,7 +3,7 @@ import { Resend } from 'resend'
 
 export const resend = new Resend(process.env.RESEND_API_KEY)
 
-export async function sendShoninMail(opts: {
+export async function sendAppMail(opts: {
   to: string
   subject: string
   html: string

@@ -14,9 +14,9 @@ export function Header({
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">S</span>
+            <span className="text-white font-bold text-sm">?</span>
           </div>
-          <h1 className="text-xl font-bold text-white">SHONIN</h1>
+          <h1 className="text-xl font-bold text-white">No Name yet</h1>
         </div>
         
         {/* SP専用：ハンバーガーメニュー（ボトムナビゲーション実装により非表示） */}

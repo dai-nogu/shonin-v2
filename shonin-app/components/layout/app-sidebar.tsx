@@ -122,10 +122,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       <SidebarHeader className="border-gray-800 p-4">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">S</span>
+            <span className="text-white font-bold text-sm">?</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">SHONIN</h1>
+            <h1 className="text-lg font-bold text-white">No Name yet</h1>
           </div>
         </div>
       </SidebarHeader>

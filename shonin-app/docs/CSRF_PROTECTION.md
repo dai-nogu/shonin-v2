@@ -84,7 +84,7 @@ Cookie ベースの認証では、ブラウザが自動的に Cookie を送信�
 **攻撃例:**
 ```html
 <!-- 悪意のあるサイト evil.com -->
-<form action="https://shonin-app.com/api/ai/analyze-sessions" method="POST">
+<form action="https://your-app.com/api/ai/analyze-sessions" method="POST">
   <input type="hidden" name="period_type" value="weekly">
 </form>
 <script>
@@ -120,7 +120,7 @@ BASE_URL=https://your-domain.com
 1. `BASE_URL` 環境変数（本番ドメイン）
 2. `http://localhost:3000` （開発環境）
 3. `http://127.0.0.1:3000` （開発環境）
-4. `https://shonin-app-*.vercel.app` （Vercelプレビュー環境）
+4. `https://no-name-yet-app-*.vercel.app` （Vercelプレビュー環境）
 
 ## 既存の保護機能
 

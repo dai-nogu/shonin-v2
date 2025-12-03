@@ -12,7 +12,7 @@ export function AuthEmailTemplate({ firstName, emailType }: AuthEmailTemplatePro
         <>
           <h1 style={{ color: '#333' }}>{firstName}さん！、ようこそ</h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            Shoninへのご登録ありがとうございます。
+            ご登録ありがとうございます。
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
             あなたの成長を見つめ、証明する旅が始まります。
@@ -27,7 +27,7 @@ export function AuthEmailTemplate({ firstName, emailType }: AuthEmailTemplatePro
         <>
           <h1 style={{ color: '#333' }}>{firstName}さん、おかえりなさい！</h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            再びShoninにログインいただき、ありがとうございます。
+            再びログインいただき、ありがとうございます。
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
             引き続き、あなたの努力と成長を記録していきましょう。
@@ -42,7 +42,7 @@ export function AuthEmailTemplate({ firstName, emailType }: AuthEmailTemplatePro
         <>
           <h1 style={{ color: '#333' }}>ご利用ありがとうございました、{firstName}さん</h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            Shoninをご利用いただき、誠にありがとうございました。
+            ご利用いただき、誠にありがとうございました。
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
             これまでの{firstName}さんの努力の記録は、すべて削除されました。

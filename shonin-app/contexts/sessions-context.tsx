@@ -611,7 +611,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
       // セッション終了時にアプリ起動フラグをクリア（次回起動時に自動遷移を有効にする）
       if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('shonin-app-started')
+        sessionStorage.removeItem('app-started')
       }
       
       return mainSessionId

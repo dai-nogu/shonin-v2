@@ -70,8 +70,8 @@ function isAllowedOrigin(origin: string): boolean {
   }
 
   // 本番環境のVercelプレビューURLを許可
-  // 例: https://shonin-app-*.vercel.app
-  if (origin.match(/^https:\/\/shonin-app-[a-z0-9-]+\.vercel\.app$/)) {
+  // 例: https://no-name-yet-app-*.vercel.app
+  if (origin.match(/^https:\/\/no-name-yet-app-[a-z0-9-]+\.vercel\.app$/)) {
     return true
   }
 

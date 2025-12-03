@@ -33,7 +33,7 @@ export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
       if (viewMode) {
         setCalendarViewMode(viewMode)
       } else {
-        const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
+        const savedViewMode = localStorage.getItem('app-calendar-view-mode')
         if (savedViewMode === 'month' || savedViewMode === 'week') {
           setCalendarViewMode(savedViewMode)
         }
@@ -45,7 +45,7 @@ export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
   // カレンダー表示モードの保存
   useEffect(() => {
     if (isInitialized && typeof window !== 'undefined') {
-      localStorage.setItem('shonin-calendar-view-mode', calendarViewMode)
+      localStorage.setItem('app-calendar-view-mode', calendarViewMode)
     }
   }, [calendarViewMode, isInitialized])
 
