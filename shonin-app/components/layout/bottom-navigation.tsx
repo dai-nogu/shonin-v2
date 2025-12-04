@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, CreditCard, Settings } from "lucide-react"
+import { Home, Calendar, Target, MessageSquare, CreditCard, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useFeedback } from "@/contexts/feedback-context"
 
 interface BottomNavigationProps {
   currentPage?: string
@@ -19,6 +20,7 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
   const [isMobile, setIsMobile] = useState(false)
   const [activePage, setActivePage] = useState(currentPage)
   const t = useTranslations()
+  const { unreadCount } = useFeedback()
 
   // next-intlを使用したメニューアイテム
   const menuItems = [
@@ -41,10 +43,11 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       url: `/${locale}/goals`,
     },
     {
-      id: "plan",
-      label: t('navigation.plan'),
-      icon: CreditCard,
-      url: `/${locale}/plan`,
+      id: "feedback",
+      label: t('navigation.feedback'),
+      icon: MessageSquare,
+      url: `/${locale}/feedback`,
+      badge: true, // 通知バッジ表示フラグ
     },
     {
       id: "settings",
@@ -66,6 +69,8 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       setActivePage("calendar")
     } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
+    } else if (pathWithoutLocale === "/feedback") {
+      setActivePage("feedback")
     } else if (pathWithoutLocale === "/plan") {
       setActivePage("plan")
     } else if (pathWithoutLocale === "/settings") {
@@ -133,6 +138,12 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
                 "w-7 h-7 transition-all duration-300 ease-out",
                 isActive ? "text-green-500 scale-110" : "text-gray-400 scale-100"
               )} />
+              {/* 通知バッジ */}
+              {item.badge && unreadCount > 0 && (
+                <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+                  {unreadCount}
+                </span>
+              )}
               {/* アクティブインジケーターのドット */}
               <div className={cn(
                 "absolute bottom-1 w-1 h-1 rounded-full bg-green-500 transition-all duration-300",

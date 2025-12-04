@@ -396,6 +396,8 @@ export interface AiFeedbackDecrypted {
   content: string; // 復号化されたコンテンツ
   period_start: string;
   period_end: string;
+  is_read: boolean;
+  read_at: string | null;
   created_at: string;
 }
 

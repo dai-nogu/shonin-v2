@@ -53,7 +53,7 @@ export function TimeTracker({ onStartSession, completedSessions }: TimeTrackerPr
   }
 
   return (
-    <div className="space-y-6">
+    <div id="time-tracker" className="space-y-6">
       <QuickStart completedSessions={completedSessions} onStartActivity={handleStartSession} />
       <ActivitySelector onStart={handleStartSession} />
     </div>

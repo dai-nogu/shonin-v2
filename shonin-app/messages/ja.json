@@ -27,12 +27,15 @@
     "details": "詳細",
     "not_set": "なし",
     "reload_and_retry": "画面をリロードしてもう一度やり直してください。",
-    "recording_in_progress": "記録中は他の記録を開始できません"
+    "recording_in_progress": "記録中は他の記録を開始できません",
+    "total": "合計",
+    "read_more": "続きを読む"
   },
   "navigation": {
     "dashboard": "ダッシュボード",
     "calendar": "カレンダー",
     "goals": "目標",
+    "feedback": "フィードバック",
     "plan": "プラン",
     "settings": "設定",
     "home": "ホーム"

@@ -116,9 +116,9 @@ export function DeleteAccountButton() {
           {t('settings.account_deletion')}
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
+      <AlertDialogContent className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-red-400">
+          <AlertDialogTitle className="text-red-400 text-xl font-bold">
             {t('settings.account_deletion_confirmation')}
           </AlertDialogTitle>
 

@@ -9,6 +9,7 @@ import { TimezoneProvider } from "@/contexts/timezone-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ToastProvider } from "@/contexts/toast-context"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
+import { FeedbackProvider } from "@/contexts/feedback-context"
 import { ConditionalSidebarProvider } from "@/components/layout/conditional-sidebar-provider"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -39,13 +40,15 @@ export default async function LocaleLayout({
             <TimezoneProvider>
               <ToastProvider>
                 <SubscriptionProvider>
-                  <ActivitiesProvider>
-                    <SessionsProvider>
-                      <ConditionalSidebarProvider>
-                        {children}
-                      </ConditionalSidebarProvider>
-                    </SessionsProvider>
-                  </ActivitiesProvider>
+                  <FeedbackProvider>
+                    <ActivitiesProvider>
+                      <SessionsProvider>
+                        <ConditionalSidebarProvider>
+                          {children}
+                        </ConditionalSidebarProvider>
+                      </SessionsProvider>
+                    </ActivitiesProvider>
+                  </FeedbackProvider>
                 </SubscriptionProvider>
               </ToastProvider>
             </TimezoneProvider>

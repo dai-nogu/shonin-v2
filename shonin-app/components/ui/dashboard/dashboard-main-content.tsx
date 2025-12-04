@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from 'next-intl'
 import { TimeTracker } from "./time-tracker"
 import { ActiveActivitySidebar } from "./active-activity-sidebar"
-import { AIFeedback } from "./ai-feedback"
 import { Button } from "@/components/ui/common/button"
 import { ErrorModal } from "@/components/ui/common/error-modal"
 import { useSessions } from "@/contexts/sessions-context"
@@ -83,9 +82,11 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
         </div>
       )}
       
-      <AIFeedback completedSessions={completedSessions} />
-      <div className="mt-4 lg:mt-6">
-        <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
+      <div className="space-y-6">
+        {/* グリッドレイアウトを採用 */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+          <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
+        </div>
       </div>
     </>
   )

@@ -3,14 +3,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useTranslations } from 'next-intl'
 import { useRouter } from "next/navigation"
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
 import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { getPlanLimits } from "@/types/subscription"
 import type { CompletedSession } from "./time-tracker"
-import { safeError } from "@/lib/safe-logger"
 
 interface AIFeedbackProps {
   completedSessions: CompletedSession[]
@@ -30,7 +29,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
+  
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
     { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_default_message') },
     { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }
@@ -88,18 +87,6 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     )
   }
 
-  // 日付をフォーマット（月/日形式）
-  const formatDate = (date: Date) => {
-    return `${date.getMonth() + 1}/${date.getDate()}`
-  }
-
-  // 日付範囲を文字列に変換
-  const formatDateRange = (start: string, end: string) => {
-    const startDate = new Date(start)
-    const endDate = new Date(end)
-    return `${formatDate(startDate)} 〜 ${formatDate(endDate)}`
-  }
-
   // 来週月曜日の日付を計算
   const getNextWeekMonday = () => {
     const today = new Date()
@@ -122,11 +109,10 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     if (newIndex === currentIndex) return
     
     setIsTransitioning(true)
-    setIsExpanded(false) // 切り替え時は折りたたみ状態にリセット
     setTimeout(() => {
       setCurrentIndex(newIndex)
       setIsTransitioning(false)
-    }, 1000) // フェードアウト時間
+    }, 500) // フェードアウト時間短縮
   }
 
   const handlePrev = () => {
@@ -142,106 +128,82 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const currentFeedback = feedbacks[currentIndex]
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
-      <CardHeader className="pb-3 lg:pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white text-[1.25rem] md:text-2xl">
-            {currentFeedback.type}{t('ai_feedback.feedback')}
-          </CardTitle>
-          
-          {/* コントロール */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handlePrev}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
+      <Card className="bg-transparent border-0 shadow-none">
+        <CardHeader className="px-0 pt-0 pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                {currentFeedback.type}{t('ai_feedback.feedback')}
+              </span>
+            </CardTitle>
             
-            {/* インジケーター */}
-            <div className="flex space-x-1">
-              {feedbacks.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleTransition(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-blue-500' : 'bg-gray-600'
-                  }`}
-                  aria-label={`${index === 0 ? '週次' : '月次'}フィードバックに切り替え`}
-                />
-              ))}
-            </div>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleNext}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8 p-0"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-          {/* 日付表示 */}
-          {currentFeedback.date && (
-            <div className="flex justify-end mb-2 lg:mb-3">
-              <span className="text-xs text-gray-400">{currentFeedback.date}</span>
-            </div>
-          )}
-
-          {/* フィードバックメッセージ */}
-          <div className="bg-gray-800 rounded-lg p-3 mb-3 relative">
-            <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                !currentFeedback.date || isExpanded ? 'max-h-[500px]' : 'max-h-[1.5em]'
-              }`}
-            >
-              <p className="text-gray-300 text-sm leading-relaxed pr-8">
-                {error ? (
-                  <span className="text-red-400">{t('errors.generic')}: {error}</span>
-                ) : (
-                  currentFeedback.message
-                )}
-              </p>
-            </div>
-            {/* 開閉ボタン（実際のFBがある時のみ表示） */}
-            {currentFeedback.date && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="absolute right-2 bottom-2 w-6 h-6 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
-                aria-label={isExpanded ? '折りたたむ' : '展開する'}
+            {/* コントロール */}
+            <div className="flex items-center space-x-2 bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handlePrev}
+                className="text-gray-400 hover:text-white hover:bg-white/10 h-7 w-7 p-0 rounded-md"
               >
-                <div className="relative w-3 h-3">
-                  {/* 横棒（常に表示） */}
-                  <span className="absolute top-1/2 left-0 w-full h-0.5 bg-current -translate-y-1/2 rounded-full" />
-                  {/* 縦棒（回転してマイナスになる） */}
-                  <span 
-                    className={`absolute top-0 left-1/2 w-0.5 h-full bg-current -translate-x-1/2 rounded-full transition-transform duration-300 ease-in-out origin-center ${
-                      isExpanded ? 'rotate-90' : 'rotate-0'
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              
+              <div className="flex space-x-1.5 px-2">
+                {feedbacks.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleTransition(index)}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentIndex ? 'bg-blue-400 w-3' : 'bg-gray-600 hover:bg-gray-500'
                     }`}
+                    aria-label={`${index === 0 ? '週次' : '月次'}フィードバックに切り替え`}
                   />
-                </div>
-              </button>
-            )}
+                ))}
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNext}
+                className="text-gray-400 hover:text-white hover:bg-white/10 h-7 w-7 p-0 rounded-md"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-
-                      {/* 次回フィードバック予告 */}
-            <div className="text-xs text-gray-500">
-              {currentFeedback.type === t('ai_feedback.weekly') && (
-                <div>{t('ai_feedback.next_weekly_feedback')}: {getNextWeekMonday()} {t('ai_feedback.scheduled')}</div>
-              )}
-              {currentFeedback.type === t('ai_feedback.monthly') && (
-                <div>{t('ai_feedback.next_monthly_feedback')}: {getNextMonthFirstDay()} {t('ai_feedback.scheduled')}</div>
+        </CardHeader>
+        
+        <CardContent className="px-0">
+          <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
+            
+            {/* フィードバック表示 */}
+            <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-md p-5 shadow-lg">
+              {error ? (
+                <div className="text-red-400 flex items-center text-sm">
+                  <span className="mr-2">⚠️</span>
+                  {t('errors.generic')}: {error}
+                </div>
+              ) : (
+                <p className="text-gray-300 leading-relaxed text-sm lg:text-base whitespace-pre-wrap">
+                  {currentFeedback.message}
+                </p>
               )}
             </div>
-        </div>
-      </CardContent>
-    </Card>
+
+            {/* 次回フィードバック予告 */}
+            <div className="mt-3 flex justify-end">
+               <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-gray-900/30 border border-white/5 text-[10px] lg:text-xs text-gray-500">
+                <span className="w-1 h-1 rounded-full bg-gray-500"></span>
+                {currentFeedback.type === t('ai_feedback.weekly') && (
+                  <span>{t('ai_feedback.next_weekly_feedback')}: <span className="text-gray-400">{getNextWeekMonday()}</span> {t('ai_feedback.scheduled')}</span>
+                )}
+                {currentFeedback.type === t('ai_feedback.monthly') && (
+                  <span>{t('ai_feedback.next_monthly_feedback')}: <span className="text-gray-400">{getNextMonthFirstDay()}</span> {t('ai_feedback.scheduled')}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
   )
-} 
+}

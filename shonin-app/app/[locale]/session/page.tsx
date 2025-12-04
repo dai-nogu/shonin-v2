@@ -46,8 +46,8 @@ export default function SessionPage() {
     try {
       setIsSaving(true)
       const sessionId = await saveSession(sessionData)
-      // 保存完了後にダッシュボードに戻る
-      router.push('/dashboard')
+      // 保存完了後にダッシュボードに戻る (お祝いエフェクト付き)
+      router.push('/dashboard?celebrate=true')
       return sessionId
     } catch (error) {
       setIsSaving(false)

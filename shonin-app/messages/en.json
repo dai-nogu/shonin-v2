@@ -27,12 +27,15 @@
     "details": "Details",
     "not_set": "None",
     "reload_and_retry": "Please reload the page and try again.",
-    "recording_in_progress": "Cannot start recording while another session is active"
+    "recording_in_progress": "Cannot start recording while another session is active",
+    "total": "Total",
+    "read_more": "Read more"
   },
   "navigation": {
     "dashboard": "Dashboard",
     "calendar": "Calendar",
     "goals": "Goals",
+    "feedback": "Feedback",
     "plan": "Plan",
     "settings": "Settings",
     "home": "Home"
@@ -103,7 +106,11 @@
     "scheduled": "scheduled",
     "generating": "Generating feedback...",
     "generate_error": "An error occurred while generating feedback",
-    "fetch_error": "An error occurred while fetching feedback"
+    "fetch_error": "An error occurred while fetching feedback",
+    "new_badge": "New"
+  },
+  "feedback": {
+    "description": "Reflect on your efforts and feel your growth"
   },
   "quick_start": {
     "start_activity": "Quick Start",

@@ -424,161 +424,151 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           <div
             key={`${activity.id}-${activeTab}`}
             onClick={() => {
-              // SPでは詳細表示（開始ボタンは別途stopPropagationで制御）
               if (isMobile) {
                 handleActivityDetailClick(activity)
               }
-              // PCでは何もしない（開始・詳細ボタンが個別に制御）
             }}
-            className={`flex items-center justify-between p-3 lg:p-4 bg-gray-800 rounded-lg transition-all duration-200 group hover:bg-gray-700 hover:scale-[1.01] ${isMobile ? 'cursor-pointer' : ''}`}
+            className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 bg-card/40 backdrop-blur-md transition-all duration-300 group hover:bg-card/60 hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-0.5 ${isMobile ? 'cursor-pointer' : ''}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div className={`w-8 h-8 lg:w-10 lg:h-10 ${activity.color} rounded-full`}></div>
+            {/* 背景の光るエフェクト - より強く */}
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${activity.color.replace('bg-', 'bg-gradient-to-r from-transparent via-').replace('-500', '-400 to-transparent')}`} />
+            
+            <div className="flex items-center space-x-4 flex-1 min-w-0 relative z-10">
+              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} shadow-lg shadow-black/30 text-xl ring-1 ring-white/10`}>
+                {activity.icon || activity.name.charAt(0)}
+              </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="text-white font-medium truncate text-sm lg:text-base">{activity.name}</h3>
+                  <h3 className="text-white font-bold truncate text-base lg:text-lg tracking-tight drop-shadow-md">{activity.name}</h3>
                 </div>
 
-                <div className="flex items-center space-x-2 lg:space-x-4 text-xs lg:text-sm text-gray-400">
+                <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
                   {activeTab === "most-recorded" ? (
                     <>
-                      <div className="flex items-center space-x-1">
-                        <span className="font-medium text-green-400">{activity.sessionCount}{t('common.times')}</span>
+                      <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
+                        <span className="font-bold text-green-400">{activity.sessionCount}</span>
+                        <span className="text-xs text-gray-300 opacity-90">{t('common.times')}</span>
                       </div>
                     </>
-                                    ) : (
+                  ) : (
                     <>
-                      <div className="flex items-center">
-                        <span className="text-green-400">{activity.date}</span>
+                      <div className="flex items-center bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
+                        <span className="text-green-400 font-medium">{activity.date}</span>
                       </div>
                     </>
+                  )}
+                  {activity.goalTitle && (
+                    <div className="hidden sm:flex items-center text-xs text-purple-200 bg-purple-500/20 border border-purple-500/20 px-2.5 py-0.5 rounded-full truncate max-w-[150px]">
+                      <Target className="w-3 h-3 mr-1 flex-shrink-0" />
+                      <span className="truncate font-medium">{activity.goalTitle}</span>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* SP版とPC版で構造を分ける */}
-            {isMobile ? (
-              // SP版: 詳細ボタン + 開始ボタン
-              <div className="flex items-center space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150 text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleViewDetail(activity)
-                  }}
-                >
-                  <Eye className="w-3 h-3 mr-1" />
-                  {t('common.details')}
-                </Button>
-                {isSessionActive ? (
-                  <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <span className="inline-block cursor-not-allowed">
-                          <Button
-                            size="sm"
-                            disabled
-                            className="bg-[#1eb055] text-xs opacity-50 pointer-events-none"
-                          >
-                            <Play className="w-3 h-3 mr-1" />
-                            {t('common.start')}
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs">{t('common.recording_in_progress')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <Button
-                    size="sm"
-                    disabled={isStarting}
-                    className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150 text-xs disabled:opacity-50"
+            {/* アクションボタン */}
+            <div className="flex items-center space-x-2 relative z-10 pl-4">
+              {/* SP版: 詳細ボタン + 開始ボタン */}
+              {isMobile ? (
+                <>
+                   <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleActivityClick(activity)
+                      handleViewDetail(activity)
                     }}
                   >
-                    {startingActivityId === activity.id ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
-                        {t('common.starting')}
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3 h-3 mr-1" />
-                        {t('common.start')}
-                      </>
-                    )}
+                    <Eye className="w-4 h-4" />
                   </Button>
-                )}
-              </div>
-            ) : (
-              // PC版: 詳細ボタン + 開始ボタン
-              <div className="flex items-center space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleViewDetail(activity)
-                  }}
-                >
-                  <Eye className="w-3 h-3 mr-1" />
-                  {t('common.details')}
-                </Button>
-                {isSessionActive ? (
-                  <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <span className="inline-block cursor-not-allowed">
-                          <Button
-                            size="sm"
-                            disabled
-                            className="bg-[#1eb055] opacity-50 pointer-events-none"
-                          >
-                            <Play className="w-3 h-3 mr-1" />
-                            {t('common.start')}
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-xs">{t('common.recording_in_progress')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
+                  {isSessionActive ? (
+                     <Button
+                      size="icon"
+                      disabled
+                      className="h-10 w-10 rounded-full bg-gray-700 text-gray-500 opacity-50"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                    </Button>
+                  ) : (
+                    <Button
+                      size="icon"
+                      disabled={isStarting}
+                      className={`h-10 w-10 rounded-full shadow-lg shadow-green-900/30 transition-all duration-300 hover:scale-110 hover:shadow-green-500/30 active:scale-95 ${
+                        startingActivityId === activity.id 
+                          ? "bg-gray-700 cursor-wait" 
+                          : "bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleActivityClick(activity)
+                      }}
+                    >
+                      {startingActivityId === activity.id ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      )}
+                    </Button>
+                  )}
+                </>
+              ) : (
+                // PC版: 詳細ボタン + 開始ボタン (テキスト付き)
+                <>
                   <Button
                     size="sm"
-                    disabled={isStarting}
-                    className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150 disabled:opacity-50"
+                    variant="ghost"
+                    className="text-gray-400 hover:text-white hover:bg-white/10"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleActivityClick(activity)
+                      handleViewDetail(activity)
                     }}
                   >
-                    {startingActivityId === activity.id ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
-                        {t('common.starting')}
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3 h-3 mr-1" />
-                        {t('common.start')}
-                      </>
-                    )}
+                    <Eye className="w-4 h-4 mr-1.5" />
+                    {t('common.details')}
                   </Button>
-                )}
-              </div>
-            )}
+                  {isSessionActive ? (
+                    <Button
+                      size="sm"
+                      disabled
+                      className="bg-gray-700 text-gray-500 opacity-50 cursor-not-allowed px-4"
+                    >
+                      <Play className="w-3 h-3 mr-1.5 fill-current" />
+                      {t('common.start')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={isStarting}
+                      className={`font-semibold px-5 shadow-lg shadow-green-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-green-500/30 active:translate-y-0 active:scale-95 ${
+                        startingActivityId === activity.id 
+                          ? "bg-gray-700 cursor-wait" 
+                          : "bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white border-0"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleActivityClick(activity)
+                      }}
+                    >
+                      {startingActivityId === activity.id ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                          {t('common.starting')}
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3 h-3 mr-1.5 fill-current" />
+                          {t('common.start')}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -604,76 +594,55 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
   return (
     <>
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            {t('quick_start.start_activity')}
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          {/* スムーズなスライドアニメーション付きタブ */}
-          <div className="w-full">
-            <div className="relative grid grid-cols-3 bg-gray-800 rounded-lg p-1">
-              {/* スライドインジケーター */}
-              <div
-                className="absolute top-1 bottom-1 bg-green-600 rounded-md transition-all duration-300 ease-out"
-                style={{
-                  width: 'calc((100% - 8px) / 3)',
-                  left: activeTab === "recent" 
-                    ? '4px' 
-                    : activeTab === "most-recorded" 
-                      ? 'calc((100% - 8px) / 3 + 4px)' 
-                      : 'calc((100% - 8px) * 2 / 3 + 4px)',
-                }}
-              />
-              <button
-                onClick={() => setActiveTab("recent")}
-                className={`relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-300 ${
-                  activeTab === "recent" ? "text-white" : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {t('quick_start.latest')}
-              </button>
+      <Card className="bg-transparent border-0 shadow-none">
+        <CardHeader className="px-0 pt-0 pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                {t('quick_start.start_activity')}
+              </span>
+            </CardTitle>
+            
+            {/* タブ切り替え - よりコンパクトでモダンに */}
+            <div className="flex bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10">
               <button
                 onClick={() => setActiveTab("most-recorded")}
-                className={`relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-300 ${
-                  activeTab === "most-recorded" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
+                  activeTab === "most-recorded" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 {t('quick_start.most_recorded')}
               </button>
               <button
+                onClick={() => setActiveTab("recent")}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
+                  activeTab === "recent" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                {t('quick_start.latest')}
+              </button>
+              <button
                 onClick={() => setActiveTab("yesterday")}
-                className={`relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-300 ${
-                  activeTab === "yesterday" ? "text-white" : "text-gray-400 hover:text-gray-200"
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
+                  activeTab === "yesterday" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 {t('quick_start.yesterday')}
               </button>
             </div>
+          </div>
+        </CardHeader>
 
+        <CardContent className="px-0">
+          {/* Bento Grid Layout */}
+          <div className="w-full">
             {/* タブコンテンツ */}
-            <div className="mt-4">
+            <div className="mt-2">
               {activeTab === "most-recorded" && (
                 <>
                   {renderActivityList(
                     getMostRecordedActivities(),
                     t('quick_start.not_enough_data')
-                  )}
-                  {/* 回数順タブ：ユニークな行動が3つを超える場合のみ表示 */}
-                  {getMostRecordedActivities().length >= 3 && Array.from(new Set(completedSessions.map(s => s.activityName))).length > 3 && (
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleShowActivityCount}
-                        className="text-gray-400 hover:text-white hover:bg-gray-800"
-                      >
-                        <MoreHorizontal className="w-4 h-4 mr-1" />
-                        {t('quick_start.see_more')}
-                      </Button>
-                    </div>
                   )}
                 </>
               )}
@@ -684,20 +653,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     getRecentActivities(),
                     t('quick_start.no_recent_activity')
                   )}
-                  {/* 最新タブ：全セッション数が3つを超える場合のみ表示 */}
-                  {completedSessions.length > 3 && (
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleShowRecentSessions}
-                        className="text-gray-400 hover:text-white hover:bg-gray-800"
-                      >
-                        <MoreHorizontal className="w-4 h-4 mr-1" />
-                        {t('quick_start.see_more')}
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
 
@@ -706,20 +661,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   {renderActivityList(
                     getYesterdayActivities(),
                     t('quick_start.no_yesterday_activity')
-                  )}
-                  {/* 昨日タブ：昨日の行動が3つを超える場合のみ表示 */}
-                  {getYesterdayActivities().length > 3 && (
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleShowRecentSessions}
-                        className="text-gray-400 hover:text-white hover:bg-gray-800"
-                      >
-                        <MoreHorizontal className="w-4 h-4 mr-1" />
-                        {t('quick_start.see_more')}
-                      </Button>
-                    </div>
                   )}
                 </>
               )}

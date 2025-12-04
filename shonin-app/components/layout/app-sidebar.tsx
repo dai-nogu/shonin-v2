@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, Settings, CreditCard, LogOut, User } from "lucide-react"
+import { Home, Calendar, Target, MessageSquare, Settings, CreditCard, LogOut, User } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/common/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
+import { useFeedback } from "@/contexts/feedback-context"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +51,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const [operationError, setOperationError] = useState<string | null>(null)
   const t = useTranslations()
   const { user, signOut, loading } = useAuth()
+  const { unreadCount } = useFeedback()
 
   // ユーザー名を取得（Googleアカウントの名前を使用）
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || ''
@@ -73,6 +75,13 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       url: `/${locale}/goals`,
       icon: Target,
       id: "goals",
+    },
+    {
+      title: t('navigation.feedback'),
+      url: `/${locale}/feedback`,
+      icon: MessageSquare,
+      id: "feedback",
+      badge: true, // 通知バッジ表示フラグ
     },
   ]
 
@@ -102,6 +111,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       setActivePage("calendar")
     } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
+    } else if (pathWithoutLocale === "/feedback") {
+      setActivePage("feedback")
     } else if (pathWithoutLocale === "/plan" || pathWithoutLocale.startsWith("/settings")) {
       // プランや設定ページではサイドバーのメニューをアクティブにしない
       setActivePage("")
@@ -143,6 +154,12 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
                   >
                     <item.icon className={`w-4 h-4 transition-all duration-200 ${activePage === item.id ? 'text-green-500 scale-110' : ''}`} />
                     <span>{item.title}</span>
+                    {/* 通知バッジ */}
+                    {item.badge && unreadCount > 0 && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
                     {/* アクティブインジケーター */}
                     {activePage === item.id && (
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-green-500 rounded-r-full transition-all duration-300" />

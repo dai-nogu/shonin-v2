@@ -247,7 +247,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const selectedActivityData = allActivities.find((a) => a.id === selectedActivity)
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
+    <Card className="bg-transparent border-0 shadow-none">
       {/* エラーモーダル */}
       <ErrorModal
         isOpen={!!operationError}
@@ -258,23 +258,25 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
         message={operationError || ''}
       />
 
-      <CardHeader className="pb-4">
-        <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-          {t('session_start.title')}
+      <CardHeader className="px-0 pt-0 pb-4">
+        <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+             {t('session_start.title')}
+          </span>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-4 lg:space-y-6">
+      <CardContent className="px-0 space-y-4 lg:space-y-6">
         {/* 新しい行動追加フォーム */}
         {showAddForm && (
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white text-base">{t('session_start.add_new_activity')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-xl p-5 shadow-lg animate-fade-in-down">
+            <div className="pb-3 mb-4 border-b border-white/5">
+              <h3 className="text-white text-base font-semibold">{t('session_start.add_new_activity')}</h3>
+            </div>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-300">{t('session_start.activity_name')}</Label>
+                  <Label className="text-gray-300 text-xs uppercase tracking-wider">{t('session_start.activity_name')}</Label>
                   <CharacterCounter current={newActivityName.length} max={limits.activityName} />
                 </div>
                 <Input
@@ -283,42 +285,41 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value.slice(0, limits.activityName))}
                   maxLength={limits.activityName}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  className="bg-gray-900/50 border-gray-700 focus:border-green-500/50 focus:ring-green-500/20 text-white placeholder-gray-500 transition-all"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300">{t('session_start.activity_color')}</Label>
-                <div className="grid grid-cols-6 gap-2 relative">
+                <Label className="text-gray-300 text-xs uppercase tracking-wider">{t('session_start.activity_color')}</Label>
+                <div className="grid grid-cols-6 gap-3 relative bg-gray-900/30 p-3 rounded-lg border border-white/5">
                   {colorOptions.map((color) => (
-                    <div key={color.value} className="relative">
+                    <div key={color.value} className="relative flex justify-center">
                       <button
                         type="button"
                         onClick={() => setNewActivityColor(color.value)}
                         onMouseEnter={() => setHoveredColor(color.value)}
                         onMouseLeave={() => setHoveredColor(null)}
-                        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 transition-all ${
+                        className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
                           newActivityColor === color.value 
-                            ? "border-white ring-2 ring-green-400" 
-                            : "border-gray-600 hover:border-gray-400"
+                            ? "border-white ring-2 ring-green-400 shadow-[0_0_10px_rgba(255,255,255,0.3)]" 
+                            : "border-transparent hover:border-white/50"
                         }`}
                         style={{ backgroundColor: color.color }}
                       />
                       {hoveredColor === color.value && (
-                        <div className="absolute bottom-10 lg:bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap z-10">
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-10 border border-white/10">
                           {color.label}
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="text-xs text-gray-400">
-                  選択中: {colorOptions.find(c => c.value === newActivityColor)?.label}
+                <div className="text-xs text-gray-400 text-right">
+                  選択中: <span className="text-white font-medium">{colorOptions.find(c => c.value === newActivityColor)?.label}</span>
                 </div>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex space-x-3 pt-2">
                 <Button
                   onClick={() => {
                     setShowAddForm(false)
@@ -327,267 +328,274 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     setHoveredColor(null)
                   }}
                   variant="outline"
-                  className="flex-1 bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-sm"
+                  className="flex-1 bg-transparent border-gray-600 text-gray-300 hover:bg-white/5 hover:text-white text-sm h-10"
                 >
                   {t('session_start.cancel')}
                 </Button>
                 <Button
                   onClick={handleAddActivity}
                   disabled={!newActivityName.trim()}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
+                  className="flex-1 bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/20 h-10"
                 >
                   {t('session_start.save')}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* フォーム表示時以外の通常の内容 */}
         {!showAddForm && (
-          <>
-            {/* 目標選択 */}
-            <div className="space-y-2">
-              <Label className="text-white text-sm">
-                {t('session_start.select_goal')}
-              </Label>
-              <Select value={selectedGoal} onValueChange={setSelectedGoal}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white data-[placeholder]:text-gray-400">
-                  <SelectValue placeholder={t('session_start.goal_placeholder')} />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
-                  <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2">
-                    {t('session_start.no_goal')}
-                  </SelectItem>
-                  {activeGoals.map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2">
-                      <span className="text-sm font-medium">{goal.title}</span>
+          <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-xl p-5 shadow-lg transition-all duration-300 hover:border-white/20">
+            <div className="space-y-6">
+              {/* 目標選択 */}
+              <div className="space-y-2">
+                <Label className="text-gray-300 text-xs uppercase tracking-wider pl-1">
+                  {t('session_start.select_goal')}
+                </Label>
+                <Select value={selectedGoal} onValueChange={setSelectedGoal}>
+                  <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white focus:ring-green-500/20 focus:border-green-500/50 h-11">
+                    <SelectValue placeholder={t('session_start.goal_placeholder')} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 backdrop-blur-xl">
+                    <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2 cursor-pointer focus:bg-gray-700">
+                      {t('session_start.no_goal')}
                     </SelectItem>
-                  ))}
-                  
-                  {/* 目標設定へのリンク */}
-                  <div className="p-2 border-t border-gray-600">
+                    {activeGoals.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2 cursor-pointer focus:bg-gray-700">
+                        <span className="text-sm font-medium">{goal.title}</span>
+                      </SelectItem>
+                    ))}
+                    
+                    {/* 目標設定へのリンク */}
+                    <div className="p-2 border-t border-gray-600/50 mt-1">
+                      <Button
+                        onClick={() => router.push(`/${locale}/goals/add?from=dashboard`)}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/10 h-9"
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-2" />
+                        {t('goals.addGoal')}
+                      </Button>
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* 行動選択 - 直接入力 + サジェスト + タグ */}
+              <div className="space-y-3">
+                <Label className="text-gray-300 text-xs uppercase tracking-wider pl-1">{t('session_start.select_activity')}</Label>
+                
+                {/* 入力フィールド + 追加ボタン + サジェスト */}
+                <div ref={inputContainerRef} className="relative">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        ref={activityInputRef}
+                        placeholder={t('session_start.activity_input_placeholder')}
+                        value={activityInput}
+                        onChange={(e) => {
+                          setActivityInput(e.target.value.slice(0, limits.activityName))
+                          setShowSuggestions(true)
+                          // 入力が変わったら選択をクリア（完全一致の場合は選択維持）
+                          const match = customActivities.find(
+                            a => a.name.toLowerCase() === e.target.value.trim().toLowerCase()
+                          )
+                          if (match) {
+                            setSelectedActivity(match.id)
+                          } else {
+                            setSelectedActivity("")
+                          }
+                        }}
+                        onFocus={() => {
+                          setIsFocused(true)
+                          setShowSuggestions(true)
+                        }}
+                        onBlur={() => setIsFocused(false)}
+                        onCompositionStart={() => setIsComposing(true)}
+                        onCompositionEnd={() => setIsComposing(false)}
+                        onKeyDown={(e) => {
+                          // IME変換中（日本語入力の確定時など）は無視
+                          if (isComposing) return
+                          if (e.key === 'Enter' && canAddNew) {
+                            e.preventDefault()
+                            handleAddFromInput()
+                          }
+                        }}
+                        maxLength={limits.activityName}
+                        className={`bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm pr-10 h-11 transition-all ${
+                          selectedActivity ? "border-green-500/50 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]" : "focus:border-green-500/50 focus:ring-green-500/20"
+                        }`}
+                      />
+                      {/* 選択済みクリアボタン */}
+                      {selectedActivity && (
+                        <button
+                          type="button"
+                          onClick={handleClearSelection}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors bg-gray-800 rounded-full p-0.5"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    {/* 追加ボタン */}
                     <Button
-                      onClick={() => router.push(`/${locale}/goals/add?from=dashboard`)}
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                      type="button"
+                      onClick={handleAddFromInput}
+                      disabled={!canAddNew}
+                      size="icon"
+                      className="bg-gray-800 hover:bg-gray-700 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed h-11 w-11 flex-shrink-0 rounded-lg transition-all"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t('goals.addGoal')}
+                      <Plus className="w-5 h-5 text-gray-300" />
                     </Button>
                   </div>
-                </SelectContent>
-              </Select>
-            </div>
 
-            {/* 行動選択 - 直接入力 + サジェスト + タグ */}
-            <div className="space-y-3">
-              <Label className="text-white">{t('session_start.select_activity')}</Label>
-              
-              {/* 入力フィールド + 追加ボタン + サジェスト */}
-              <div ref={inputContainerRef} className="relative">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      ref={activityInputRef}
-                      placeholder={t('session_start.activity_input_placeholder')}
-                      value={activityInput}
-                      onChange={(e) => {
-                        setActivityInput(e.target.value.slice(0, limits.activityName))
-                        setShowSuggestions(true)
-                        // 入力が変わったら選択をクリア（完全一致の場合は選択維持）
-                        const match = customActivities.find(
-                          a => a.name.toLowerCase() === e.target.value.trim().toLowerCase()
-                        )
-                        if (match) {
-                          setSelectedActivity(match.id)
-                        } else {
-                          setSelectedActivity("")
-                        }
-                      }}
-                      onFocus={() => {
-                        setIsFocused(true)
-                        setShowSuggestions(true)
-                      }}
-                      onBlur={() => setIsFocused(false)}
-                      onCompositionStart={() => setIsComposing(true)}
-                      onCompositionEnd={() => setIsComposing(false)}
-                      onKeyDown={(e) => {
-                        // IME変換中（日本語入力の確定時など）は無視
-                        if (isComposing) return
-                        if (e.key === 'Enter' && canAddNew) {
-                          e.preventDefault()
-                          handleAddFromInput()
-                        }
-                      }}
-                      maxLength={limits.activityName}
-                      className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm pr-10 ${
-                        selectedActivity ? "border-green-500/50" : ""
-                      }`}
-                    />
-                    {/* 選択済みクリアボタン */}
-                    {selectedActivity && (
-                      <button
-                        type="button"
-                        onClick={handleClearSelection}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  {/* 追加ボタン */}
-                  <Button
-                    type="button"
-                    onClick={handleAddFromInput}
-                    disabled={!canAddNew}
-                    size="icon"
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 h-10 w-10 flex-shrink-0"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </Button>
+                  {/* サジェストドロップダウン */}
+                  {showSuggestions && activityInput && filteredActivities.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-gray-800/95 backdrop-blur-xl border border-gray-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto animate-scale-in origin-top">
+                      {/* フィルタリングされた既存アクティビティ */}
+                      {filteredActivities.map((activity) => (
+                        <button
+                          key={activity.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => handleSuggestionClick(activity)}
+                          className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0 ${
+                            selectedActivity === activity.id ? "bg-green-500/10" : ""
+                          }`}
+                        >
+                          <div className={`w-6 h-6 ${activity.color} rounded-full flex-shrink-0 shadow-sm`} />
+                          <span className="text-white text-sm truncate flex-1">{activity.name}</span>
+                          {selectedActivity === activity.id && (
+                            <Check className="w-4 h-4 text-green-400 ml-auto flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* サジェストドロップダウン */}
-                {showSuggestions && activityInput && filteredActivities.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {/* フィルタリングされた既存アクティビティ */}
-                    {filteredActivities.map((activity) => (
-                      <button
-                        key={activity.id}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => handleSuggestionClick(activity)}
-                        className={`w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-gray-700 transition-colors text-left ${
-                          selectedActivity === activity.id ? "bg-gray-700/50" : ""
-                        }`}
-                      >
-                        <div className={`w-5 h-5 ${activity.color} rounded-full flex-shrink-0`} />
-                        <span className="text-white text-sm truncate">{activity.name}</span>
-                        {selectedActivity === activity.id && (
-                          <Check className="w-4 h-4 text-green-400 ml-auto flex-shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 過去のアクティビティをタグとして表示 */}
-              {allActivities.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs text-gray-400">{t('session_start.recent_activities')}</span>
-                  <div className="flex flex-wrap gap-2">
-                    {allActivities.slice(0, 8).map((activity) => {
-                      const isSelected = selectedActivity === activity.id
-                      const isHovered = hoveredTagId === activity.id
-                      return (
-                        <div
-                          key={activity.id}
-                          className="relative"
-                          onMouseEnter={() => setHoveredTagId(activity.id)}
-                          onMouseLeave={() => setHoveredTagId(null)}
-                        >
-                          {/* 削除ボタン（ホバー時のみ表示） */}
-                          {isHovered && (
+                {/* 過去のアクティビティをタグとして表示 */}
+                {allActivities.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex flex-wrap gap-2">
+                      {allActivities.slice(0, 8).map((activity) => {
+                        const isSelected = selectedActivity === activity.id
+                        const isHovered = hoveredTagId === activity.id
+                        return (
+                          <div
+                            key={activity.id}
+                            className="relative"
+                            onMouseEnter={() => setHoveredTagId(activity.id)}
+                            onMouseLeave={() => setHoveredTagId(null)}
+                          >
+                            {/* 削除ボタン（ホバー時のみ表示） */}
+                            {isHovered && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  // 選択中のものを削除した場合はクリア
+                                  if (selectedActivity === activity.id) {
+                                    setSelectedActivity("")
+                                    setActivityInput("")
+                                  }
+                                  deleteActivity(activity.id)
+                                }}
+                                className="absolute -top-2 -right-2 z-10 w-5 h-5 bg-gray-700 hover:bg-red-500/80 text-gray-300 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg scale-in"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                // 選択中のものを削除した場合はクリア
-                                if (selectedActivity === activity.id) {
-                                  setSelectedActivity("")
-                                  setActivityInput("")
-                                }
-                                deleteActivity(activity.id)
-                              }}
-                              className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 bg-gray-600 hover:bg-gray-500 rounded-full flex items-center justify-center transition-all shadow-sm"
+                              onClick={() => handleTagClick(activity)}
+                              className={`group inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 border ${
+                                isSelected
+                                  ? "bg-green-500/10 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                                  : "bg-gray-900/40 border-gray-700 hover:border-gray-500 hover:bg-gray-800"
+                              }`}
                             >
-                              <X className="w-3 h-3 text-gray-300" />
+                              <div className={`w-2.5 h-2.5 ${activity.color} rounded-full flex-shrink-0 transition-transform group-hover:scale-110`} />
+                              <span className={`text-xs font-medium truncate max-w-[100px] ${
+                                isSelected ? "text-green-100" : "text-gray-300 group-hover:text-white"
+                              }`}>
+                                {activity.name}
+                              </span>
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleTagClick(activity)}
-                            className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-all bg-gray-800/80 border ${
-                              isSelected
-                                ? "border-green-400 ring-1 ring-green-400/30"
-                                : "border-gray-700 hover:border-gray-500 hover:bg-gray-700/50"
-                            }`}
-                          >
-                            <div className={`w-3 h-3 ${activity.color} rounded-full flex-shrink-0`} />
-                            <span className={`text-xs font-medium truncate max-w-[100px] ${
-                              isSelected ? "text-green-400" : "text-gray-200"
-                            }`}>
-                              {activity.name}
-                            </span>
-                          </button>
-                        </div>
-                      )
-                    })}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* 場所設定 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-white text-sm">
-                  {t('session_start.location')}
-                </Label>
-                <CharacterCounter current={location.length} max={limits.location} />
-              </div>
-              <Input
-                placeholder={t('session_start.location_placeholder')}
-                value={location}
-                onChange={(e) => setLocation(e.target.value.slice(0, limits.location))}
-                maxLength={limits.location}
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 text-sm"
-              />
-            </div>
-
-            {/* 開始ボタン */}
-            {isSessionActive ? (
-              <TooltipProvider>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <span className="w-full inline-block cursor-not-allowed">
-                      <Button
-                        disabled
-                        className="w-full bg-[#1eb055] py-3 text-base font-medium opacity-50 pointer-events-none"
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        {t('session_start.start_recording')}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">{t('common.recording_in_progress')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <Button
-                onClick={handleStart}
-                disabled={!selectedActivity || isStarting}
-                className="w-full bg-[#1eb055] hover:bg-[#1a9649] py-3 text-base font-medium disabled:opacity-50"
-              >
-                {isStarting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    {t('session_start.starting_recording')}
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    {t('session_start.start_recording')}
-                  </>
                 )}
-              </Button>
-            )}
-          </>
+              </div>
+
+              {/* 場所設定 */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-gray-300 text-xs uppercase tracking-wider pl-1">
+                    {t('session_start.location')}
+                  </Label>
+                  <CharacterCounter current={location.length} max={limits.location} />
+                </div>
+                <Input
+                  placeholder={t('session_start.location_placeholder')}
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value.slice(0, limits.location))}
+                  maxLength={limits.location}
+                  className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm h-11 focus:border-green-500/50 focus:ring-green-500/20"
+                />
+              </div>
+
+              {/* 開始ボタン */}
+              <div className="pt-2">
+                {isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="w-full inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="w-full bg-gray-800 border border-gray-700 py-6 text-base font-medium opacity-50 pointer-events-none rounded-xl"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {t('session_start.start_recording')}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    onClick={handleStart}
+                    disabled={!selectedActivity || isStarting}
+                    className={`w-full py-6 text-base font-bold tracking-wide rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:shadow-none ${
+                      !selectedActivity || isStarting 
+                        ? "bg-gray-800 text-gray-500" 
+                        : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-green-900/30 hover:shadow-green-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                    }`}
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        {t('session_start.starting_recording')}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-5 h-5 mr-2 fill-current" />
+                        {t('session_start.start_recording')}
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
