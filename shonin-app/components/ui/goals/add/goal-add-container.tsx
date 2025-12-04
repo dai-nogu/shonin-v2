@@ -80,12 +80,12 @@ export function GoalAddContainer() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl">
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">{t('goals.addGoal')}</CardTitle>
+    <div className="container mx-auto max-w-3xl">
+      <Card className="bg-card/30 border-white/10 backdrop-blur-md shadow-2xl">
+        <CardHeader className="pb-2 border-b border-white/5 mb-6">
+          <CardTitle className="text-2xl font-bold text-white tracking-tight">{t('goals.addGoal')}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8 pt-2">
           <GoalTitleInput
             value={formData.title}
             onChange={(value) => updateField("title", value)}

@@ -209,7 +209,7 @@ export function Goals({ initialGoals }: GoalsProps) {
           <div className="fixed bottom-24 right-6 z-[60] md:hidden">
             <Button
               onClick={handleAddGoal}
-              className="bg-green-500 hover:bg-green-600 shadow-lg w-11 h-11 rounded-full p-0"
+              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white hover:from-green-500 hover:to-emerald-600 shadow-lg shadow-green-900/20 w-14 h-14 rounded-full p-0 transition-all duration-300 hover:scale-110 active:scale-95"
             >
               <Plus className="w-8 h-8" />
             </Button>
@@ -226,36 +226,38 @@ export function Goals({ initialGoals }: GoalsProps) {
             const weeklyHours = calculateWeeklyHours(goal.weekdayHours, goal.weekendHours)
 
             return (
-              <Card key={goal.id} className="bg-gray-900 border-gray-800">
-                <CardHeader className="px-2 md:px-6">
-                  <div className="flex items-start justify-between">
+              <div 
+                key={goal.id} 
+                className="relative overflow-hidden rounded-xl border border-white/10 bg-card/40 backdrop-blur-md transition-all duration-300 hover:bg-card/60 hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 group"
+              >
+                 <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500 bg-gradient-to-r from-transparent via-white to-transparent" />
+                
+                <div className="p-6 relative z-10">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <CardTitle className="text-white text-xl mb-3">{goal.title}</CardTitle>
+                      <h3 className="text-xl font-bold text-white mb-1 tracking-tight">{goal.title}</h3>
+                      {goal.motivation && (
+                        <p className="text-sm text-gray-400 line-clamp-2">{goal.motivation}</p>
+                      )}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1 ml-4">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleEditGoal(goal.id)}
-                        className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteClick(goal.id)}
-                        className="bg-gray-800 border-gray-700 text-red-400 hover:bg-red-900"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-full"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-2 md:px-6">
-                  {/* 動機表示 */}
-                  <div className="bg-gray-800 p-3 rounded-lg">
-                    <p className="text-sm text-white">{goal.motivation}</p>
                   </div>
                   
                   {/* 期限と時間設定がある場合のみ表示 */}
@@ -263,28 +265,34 @@ export function Goals({ initialGoals }: GoalsProps) {
                     <>
                       {/* 進捗表示 */}
                       {(goal.targetDurationSeconds && goal.targetDurationSeconds > 0) && (
-                        <div className="space-y-2 mt-6">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-300">{t('goals.progress_status')}</span>
-                            <span className="text-sm font-medium text-white">
-                              {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} ({progressPercentage.toFixed(1)}%)
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center justify-between text-xs font-medium">
+                            <span className="text-gray-400">{t('goals.progress_status')}</span>
+                            <span className="text-white">
+                              {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} 
+                              <span className="ml-1 text-green-400">({progressPercentage.toFixed(1)}%)</span>
                             </span>
                           </div>
-                          <Progress value={progressPercentage} className="h-2" />
+                          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                              style={{ width: `${progressPercentage}%` }}
+                            />
+                          </div>
                         </div>
                       )}
 
                       {/* 期限と残り日数 */}
                       {goal.deadline && (
-                        <div className="flex items-center justify-between text-sm mt-6">
+                        <div className="flex items-center justify-between text-xs mt-4 bg-white/5 rounded-lg p-2 border border-white/5">
                           <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-400">{t('goals.deadline_label')}: {formatISODateForLocale(goal.deadline, currentLocale)}</span>
+                            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                            <span className="text-gray-300">{formatISODateForLocale(goal.deadline, currentLocale)}</span>
                           </div>
-                          <div className={`flex items-center space-x-1 ${
-                            isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-gray-400'
+                          <div className={`flex items-center space-x-1 font-medium ${
+                            isOverdue ? 'text-red-400' : isUrgent ? 'text-yellow-400' : 'text-blue-400'
                           }`}>
-                            <Clock className="w-4 h-4" />
+                            <Clock className="w-3.5 h-3.5" />
                             <span>
                               {isOverdue 
                                 ? t('goals.days_overdue', { days: Math.abs(remainingDays) })
@@ -297,54 +305,56 @@ export function Goals({ initialGoals }: GoalsProps) {
 
                       {/* 取り組み時間の詳細 */}
                       {((goal.weekdayHours && goal.weekdayHours > 0) || (goal.weekendHours && goal.weekendHours > 0)) && (
-                        <div className="bg-gray-800 py-3 px-2 md:px-3 rounded-lg mt-3">
-                          <div className="grid grid-cols-3 gap-2 md:gap-4 text-sm">
-                            <div className="flex items-center justify-center space-x-1">
-                              <span className="text-gray-400">{t('goals.weekday')}: </span>
-                              <span className="text-white">{goal.weekdayHours}{t('goals.hours_unit')}</span>
-                            </div>
-                            <div className="flex items-center justify-center space-x-1">
-                              <span className="text-gray-400">{t('goals.weekend')}: </span>
-                              <span className="text-white">{goal.weekendHours}{t('goals.hours_unit')}</span>
-                            </div>
-                            <div className="flex items-center justify-center space-x-1">
-                              <span className="text-gray-400">{t('goals.weekly')}: </span>
-                              <span className="text-white">{weeklyHours}{t('goals.hours_unit')}</span>
-                            </div>
+                        <div className="grid grid-cols-3 gap-2 mt-3">
+                          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekday')}</span>
+                            <span className="text-sm font-medium text-white">{goal.weekdayHours}h</span>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekend')}</span>
+                            <span className="text-sm font-medium text-white">{goal.weekendHours}h</span>
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekly')}</span>
+                            <span className="text-sm font-medium text-white">{weeklyHours}h</span>
                           </div>
                         </div>
                       )}
                     </>
                   ) : null}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )
           })}
         </div>
 
-        {/* 目標追加ボタン - PC用（目標一覧の下に配置） */}
+        {/* 目標追加ボタン - PC用 */}
         {goals.length > 0 && (
           <div className="mt-8 text-center hidden md:block">
             <Button
               onClick={handleAddGoal}
-              className="bg-green-500 hover:bg-green-600 px-8 py-3"
-              size="lg"
+              className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-green-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0"
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="w-6 h-6 mr-2" />
               {t('goals.add_goal')}
             </Button>
           </div>
         )}
 
         {!loading && goals.length === 0 && (
-          <div className="text-center py-12">
-            <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-400 mb-2">{t('goals.set_goal_message')}</h3>
+          <div className="text-center py-16 bg-card/20 rounded-2xl border border-dashed border-white/10 backdrop-blur-sm">
+            <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Target className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-medium text-white mb-2">{t('goals.set_goal_message')}</h3>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm">
+              {t('goals.goals_description_placeholder')}
+            </p>
             <Button
               onClick={handleAddGoal}
-              className="bg-green-500 hover:bg-green-600 px-8 md:px-12 py-3"
+              className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-green-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               {t('goals.set_goal')}
             </Button>
           </div>

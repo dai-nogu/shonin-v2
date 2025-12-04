@@ -32,7 +32,7 @@ export function GoalMotivationTextarea({
         onChange={(e) => onChange(e.target.value.slice(0, limits.goalMotivation))}
         maxLength={limits.goalMotivation}
         placeholder={placeholder || t('goals.motivation_placeholder')}
-        className="bg-gray-800 border-gray-700 text-white"
+        className="bg-white/5 border-white/10 text-white placeholder:text-gray-400 focus:border-green-500/50 focus:bg-white/10 transition-all duration-300"
       />
     </div>
   )

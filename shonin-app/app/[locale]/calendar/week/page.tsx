@@ -168,13 +168,20 @@ function WeekCalendarSSR({
                   <div
                     key={index}
                     onClick={() => onDateClick(day, daySessions)}
-                    className={`min-h-[150px] p-0 md:p-3 rounded-lg bg-gray-800 cursor-pointer ${
-                      todayCheck ? "ring-2 ring-green-500" : ""
+                    className={`min-h-[150px] p-0 md:p-3 rounded-xl transition-colors cursor-pointer border border-gray-800/50 ${
+                      todayCheck ? "bg-gray-900/80 relative overflow-hidden" : "bg-gray-900 hover:bg-gray-800/80"
                     }`}
                   >
-                    <div className="text-center mb-3">
-                      <div className="text-gray-400 text-sm">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
-                      <div className={`text-lg font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
+                    {todayCheck && (
+                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50" />
+                    )}
+                    <div className="text-center mb-3 flex flex-col items-center">
+                      <div className="text-gray-400 text-sm mb-1">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-full text-lg font-medium ${
+                        todayCheck 
+                          ? "bg-green-500 text-black shadow-[0_0_10px_rgba(34,197,94,0.4)]" 
+                          : "text-white"
+                      }`}>
                         {day.getDate()}
                       </div>
                     </div>
@@ -183,15 +190,15 @@ function WeekCalendarSSR({
                       {daySessions.slice(0, 2).map((session: CalendarSession) => (
                         <div
                           key={session.id}
-                          className={`text-xs p-[0.1rem] md:p-2 rounded ${session.color} bg-opacity-20 border-opacity-30`}
+                          className={`text-xs p-[0.1rem] md:p-2 rounded-md shadow-sm backdrop-blur-sm ${session.color} bg-opacity-20 border-l-2 border-white/20`}
                         >
                           <div className="flex items-center space-x-1">
-                            <span className="text-white truncate">{session.activity}</span>
+                            <span className="text-white truncate pl-1 font-medium">{session.activity}</span>
                           </div>
                         </div>
                       ))}
                       {daySessions.length > 2 && (
-                        <div className={`text-xs text-gray-400 text-center py-[0.1rem] md:py-1 rounded bg-gray-700 bg-opacity-50`}>
+                        <div className={`text-xs text-gray-400 text-center py-[0.1rem] md:py-1 rounded bg-gray-800/50`}>
                           {t('calendar.others_count', { count: daySessions.length - 2 })}
                         </div>
                       )}
@@ -205,21 +212,23 @@ function WeekCalendarSSR({
 
         {/* 統計サマリー */}
         <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-6 mb-2 md:mb-0">
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-2 md:p-4 text-center">
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl shadow-lg">
+            <CardContent className="p-3 md:p-6 text-center">
               {totalWeekTime === 0 ? (
                 <>
-                  <div className="flex justify-center mb-1 md:mb-2">
-                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
+                  <div className="flex justify-center mb-2">
+                    <div className="p-2 rounded-full bg-gray-800/50">
+                      <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
+                    </div>
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
+                  <div className="text-xs md:text-sm text-gray-500 font-medium">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>
-                  <div className="text-lg md:text-2xl font-bold text-green-400">
+                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-1">
                     {formatDuration(totalWeekTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
                     {t('calendar.week_stats.total_time')}
                   </div>
                 </>
@@ -227,21 +236,23 @@ function WeekCalendarSSR({
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-2 md:p-4 text-center">
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl shadow-lg">
+            <CardContent className="p-3 md:p-6 text-center">
               {averageWeekTime === 0 ? (
                 <>
-                  <div className="flex justify-center mb-1 md:mb-2">
-                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
+                  <div className="flex justify-center mb-2">
+                    <div className="p-2 rounded-full bg-gray-800/50">
+                      <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
+                    </div>
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
+                  <div className="text-xs md:text-sm text-gray-500 font-medium">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>
-                  <div className="text-lg md:text-2xl font-bold text-purple-400">
+                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-1">
                     {formatDuration(averageWeekTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
                     {t('calendar.week_stats.average_time')}
                   </div>
                 </>

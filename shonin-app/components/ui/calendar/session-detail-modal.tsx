@@ -65,18 +65,23 @@ export function SessionDetailModal({
               {t('calendar.activities_on_date', { date: formatDateForLocale(date, locale) })}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto pr-1">
             {sessions.map((session) => (
               <div 
                 key={session.id} 
-                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30 cursor-pointer transition-all duration-200 hover:bg-opacity-30 active:scale-[0.98]`}
+                className={`p-4 rounded-xl shadow-sm ${session.color} bg-opacity-10 border border-white/10 cursor-pointer transition-all duration-200 hover:bg-opacity-20 hover:scale-[1.01] active:scale-[0.98]`}
                 onClick={() => handleSessionClick(session)}
               >
-                <div className="flex items-center space-x-2">
-                  <span className="text-white font-medium">{session.activity}</span>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white font-semibold text-lg">{session.activity}</span>
+                  </div>
+                  <div className="text-white/90 font-mono text-sm bg-white/10 px-2 py-1 rounded">
+                    {formatDuration(session.duration)}
+                  </div>
                 </div>
-                <div className="mt-1 text-gray-400 text-sm">
-                  {formatDuration(session.duration)}
+                <div className="text-gray-400 text-xs flex items-center">
+                  Click to view details
                 </div>
               </div>
             ))}

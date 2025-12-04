@@ -178,6 +178,7 @@
     "add_goal": "Add Goal",
     "set_goal": "Add Goal",
     "set_goal_message": "Let's add a goal",
+    "goals_description_placeholder": "Set goals and visualize your progress.",
     "delete_confirmation_title": "Delete Goal Confirmation",
     "delete_confirmation": "Are you sure you want to delete this goal?",
     "delete_error": "Failed to delete goal",

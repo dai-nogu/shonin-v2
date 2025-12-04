@@ -137,32 +137,41 @@ function MonthCalendarSSR({
                   <div
                     key={index}
                     onClick={day ? () => onDateClick(day, daySessions) : undefined}
-                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-lg ${
-                      day ? `bg-gray-800 cursor-pointer` : "bg-gray-900"
-                    } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
+                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-xl transition-colors ${
+                      day ? `bg-gray-900 border border-gray-800/50 hover:bg-gray-800/80 cursor-pointer` : "bg-gray-950/50"
+                    } ${todayCheck ? "relative overflow-hidden" : ""}`}
                   >
+                    {todayCheck && (
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50" />
+                    )}
                     {day && (
                       <>
-                        <div className="mb-1 md:mb-2 text-center">
-                          <span className={`text-xs md:text-sm font-medium ${todayCheck ? "text-green-400" : "text-white"}`}>
+                        <div className="mb-1 md:mb-2 flex justify-center md:justify-start">
+                          <span className={`text-xs md:text-sm font-medium w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full ${
+                            todayCheck 
+                              ? "bg-green-500 text-black font-bold shadow-[0_0_10px_rgba(34,197,94,0.4)]" 
+                              : "text-gray-400"
+                          }`}>
                             {day}
                           </span>
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="space-y-1 px-1">
                           {/* SP: 1つまで、PC: 2つまで表示 */}
                           {daySessions.slice(0, 2).map((session) => (
                             <div
                               key={session.id}
-                              className={`text-xs p-[0.1rem] md:p-1 rounded ${session.color} bg-opacity-20 border-opacity-30`}
+                              className={`text-xs p-1 rounded-md shadow-sm backdrop-blur-sm ${session.color} bg-opacity-20 border-l-2 border-white/20`}
                             >
                               <div className="flex items-center space-x-1">
-                                <span className="text-white truncate text-xs">{session.activity}</span>
+                                <span className="text-white truncate text-[10px] md:text-xs font-medium pl-1">
+                                  {session.activity}
+                                </span>
                               </div>
                             </div>
                           ))}
                           {daySessions.length > 2 && (
-                            <div className={`text-xs text-gray-400 text-center py-[0.1rem] md:py-1 rounded bg-gray-700 bg-opacity-50`}>
+                            <div className={`text-[10px] md:text-xs text-gray-400 text-center py-0.5 rounded bg-gray-800/50`}>
                               +{daySessions.length - 2}
                             </div>
                           )}
@@ -178,21 +187,23 @@ function MonthCalendarSSR({
 
         {/* 統計サマリー */}
         <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-6 mb-2 md:mb-0">
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-2 md:p-4 text-center">
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl shadow-lg">
+            <CardContent className="p-3 md:p-6 text-center">
               {totalMonthTime === 0 ? (
                 <>
-                  <div className="flex justify-center mb-1 md:mb-2">
-                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
+                  <div className="flex justify-center mb-2">
+                    <div className="p-2 rounded-full bg-gray-800/50">
+                      <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
+                    </div>
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
+                  <div className="text-xs md:text-sm text-gray-500 font-medium">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>
-                  <div className="text-lg md:text-2xl font-bold text-green-400">
+                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-1">
                     {formatDuration(totalMonthTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
                     {t('calendar.month_stats.total_time')}
                   </div>
                 </>
@@ -200,21 +211,23 @@ function MonthCalendarSSR({
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="p-2 md:p-4 text-center">
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl shadow-lg">
+            <CardContent className="p-3 md:p-6 text-center">
               {averageMonthTime === 0 ? (
                 <>
-                  <div className="flex justify-center mb-1 md:mb-2">
-                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-gray-600" />
+                  <div className="flex justify-center mb-2">
+                    <div className="p-2 rounded-full bg-gray-800/50">
+                      <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
+                    </div>
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">{getNoRecordsMessage()}</div>
+                  <div className="text-xs md:text-sm text-gray-500 font-medium">{getNoRecordsMessage()}</div>
                 </>
               ) : (
                 <>
-                  <div className="text-lg md:text-2xl font-bold text-purple-400">
+                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-1">
                     {formatDuration(averageMonthTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
                     {t('calendar.month_stats.average_time')}
                   </div>
                 </>

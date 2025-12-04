@@ -577,7 +577,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     className={`w-full py-6 text-base font-bold tracking-wide rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:shadow-none ${
                       !selectedActivity || isStarting 
                         ? "bg-gray-800 text-gray-500" 
-                        : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-green-900/30 hover:shadow-green-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                        : "bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white shadow-green-900/30 hover:shadow-green-500/30 hover:-translate-y-0.5 active:translate-y-0"
                     }`}
                   >
                     {isStarting ? (

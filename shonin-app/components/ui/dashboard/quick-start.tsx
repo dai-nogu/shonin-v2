@@ -511,7 +511,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                       className={`h-10 w-10 rounded-full shadow-lg shadow-green-900/30 transition-all duration-300 hover:scale-110 hover:shadow-green-500/30 active:scale-95 ${
                         startingActivityId === activity.id 
                           ? "bg-gray-700 cursor-wait" 
-                          : "bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white"
+                          : "bg-gradient-to-br from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white"
                       }`}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -568,7 +568,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                       className={`font-semibold px-5 shadow-lg shadow-green-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-green-500/30 active:translate-y-0 active:scale-95 ${
                         startingActivityId === activity.id 
                           ? "bg-gray-700 cursor-wait" 
-                          : "bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white border-0"
+                          : "bg-gradient-to-br from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0"
                       }`}
                       onClick={(e) => {
                         e.stopPropagation()
