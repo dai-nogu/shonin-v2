@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/common/badge"
 import { useTranslations } from 'next-intl'
 import { useSessions } from "@/contexts/sessions-context"
 import type { SessionData } from "./time-tracker"
+import { cn } from "@/lib/utils"
 
 interface ActiveActivitySidebarProps {
   activeSession: SessionData | null
@@ -49,10 +50,10 @@ export function ActiveActivitySidebar({
   const statusInfo = getStatusInfo()
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
+    <Card className="backdrop-blur-md bg-card/50 border-white/10 shadow-lg">
       <CardHeader className="pb-3">
-        <CardTitle className="text-white flex items-center">
-          <Clock className="w-4 h-4 mr-2" />
+        <CardTitle className="flex items-center text-base font-medium text-foreground/80">
+          <Clock className="w-4 h-4 mr-2 text-primary" />
           {t('active_session.recording')}...
         </CardTitle>
       </CardHeader>
@@ -60,55 +61,57 @@ export function ActiveActivitySidebar({
       <CardContent className="space-y-4">
         {/* 行動名 */}
         <div>
-          <h3 className="text-white font-semibold text-lg">{activeSession.activityName}</h3>
+          <h3 className="text-foreground font-bold text-lg leading-tight mb-1">{activeSession.activityName}</h3>
           {activeSession.location && (
-            <p className="text-gray-400 text-xs">📍 {activeSession.location}</p>
+            <p className="text-muted-foreground text-xs flex items-center gap-1">📍 {activeSession.location}</p>
           )}
         </div>
 
         {/* 経過時間 */}
-        <div className="text-center">
-          <div className="text-2xl font-mono font-bold text-white">
+        <div className="text-center py-2 bg-secondary/20 rounded-lg backdrop-blur-sm border border-white/5">
+          <div className={cn("text-3xl font-mono font-bold tabular-nums",
+             sessionState === "paused" ? "text-yellow-500" : "text-primary"
+          )}>
             {formattedTime}
           </div>
         </div>
 
         {/* 目標時間の進捗 */}
         {activeSession.targetTime && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-gray-400">
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium">
               <span>{t('active_session.target')}</span>
               <span>
                 {Math.floor(activeSession.targetTime / 60)}{t('time.hours_unit')}
                 {activeSession.targetTime % 60 > 0 && ` ${activeSession.targetTime % 60}${t('time.minutes_unit')}`}
               </span>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-1">
+            <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
               <div
-                className={`h-1 rounded-full transition-all duration-300 ${
+                className={cn("h-full rounded-full transition-all duration-500",
                   elapsedTime >= activeSession.targetTime * 60
-                    ? "bg-green-500"
+                    ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
                     : elapsedTime >= activeSession.targetTime * 60 * 0.8
                     ? "bg-yellow-500"
-                    : "bg-blue-500"
-                }`}
+                    : "bg-primary"
+                )}
                 style={{
                   width: `${Math.min((elapsedTime / (activeSession.targetTime * 60)) * 100, 100)}%`,
                 }}
               />
             </div>
-            <div className="text-xs text-gray-400 text-center">
+            <div className="text-xs text-muted-foreground text-right font-medium">
               {Math.round((elapsedTime / (activeSession.targetTime * 60)) * 100)}%
             </div>
           </div>
         )}
 
         {/* アクションボタン */}
-        <div className="space-y-2">
+        <div className="space-y-2 pt-1">
           <Button
             onClick={onViewSession}
             size="sm"
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all"
           >
             {t('common.details')}
           </Button>
@@ -119,16 +122,16 @@ export function ActiveActivitySidebar({
                 onClick={onTogglePause}
                 variant="outline"
                 size="sm"
-                className="flex-1 bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                className="flex-1 hover:bg-secondary border-white/10"
               >
                 {sessionState === "paused" ? (
                   <>
-                    <Play className="w-3 h-3 mr-1" />
+                    <Play className="w-3 h-3 mr-1 fill-current" />
                     {t('active_session.resume')}
                   </>
                 ) : (
                   <>
-                    <Pause className="w-3 h-3 mr-1" />
+                    <Pause className="w-3 h-3 mr-1 fill-current" />
                     {t('active_session.pause')}
                   </>
                 )}
@@ -137,9 +140,10 @@ export function ActiveActivitySidebar({
               <Button
                 onClick={onEnd}
                 size="sm"
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                variant="destructive"
+                className="flex-1 shadow-md hover:shadow-red-900/20"
               >
-                <Square className="w-3 h-3 mr-1" />
+                <Square className="w-3 h-3 mr-1 fill-current" />
                 {t('active_session.end')}
               </Button>
             </div>
