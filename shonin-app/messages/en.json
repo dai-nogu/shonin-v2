@@ -465,6 +465,10 @@
     "downgrade": "Downgrade",
     "manage_subscription": "Manage Subscription",
     "per_month": "/month",
+    "per_year": "/year",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "yearly_savings": "Save 2 months!",
     "current_plan_tooltip": "This is your current plan",
     "features": {
       "activity_limit": "Up to 3 activities",

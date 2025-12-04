@@ -3,10 +3,10 @@
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Minus, Circle } from "lucide-react";
 import { getPlanConfigs } from "@/lib/plan-config";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { PlanType } from "@/types/subscription";
+import type { PlanType, BillingCycle } from "@/types/subscription";
 import { safeError } from "@/lib/safe-logger";
 
 type ActionState = {
@@ -26,6 +26,7 @@ interface PlanPageClientProps {
 
 export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
   const t = useTranslations("plan");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   
   const [state, formAction, isPending] = useActionState(async (prevState: ActionState, formData: FormData) => {
     const result = await createStripeSession(prevState, formData);
@@ -63,13 +64,27 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
 
   // ユーザーのプランに基づいてプランデータを取得し、翻訳を適用
   const planConfigs = getPlanConfigs(userPlan);
-  const plans = planConfigs.map(plan => ({
-    ...plan,
-    name: t(plan.name as any),
-    priceLabel: plan.priceLabel ? t(plan.priceLabel as any) : "",
-    features: plan.features.map(feature => t(feature as any)),
-    buttonText: t(plan.buttonText as any),
-  }));
+  const plans = planConfigs.map(plan => {
+    // 年額の場合は価格とpriceIdを切り替え
+    const isYearly = billingCycle === 'yearly';
+    const displayPrice = isYearly && plan.yearlyPrice ? plan.yearlyPrice : plan.price;
+    const displayPriceLabel = isYearly && plan.yearlyPriceLabel ? plan.yearlyPriceLabel : plan.priceLabel;
+    const displayPriceId = isYearly && plan.yearlyPriceId ? plan.yearlyPriceId : plan.priceId;
+    // 通常の年額（月額×12）- Standardプランのみ
+    const originalYearlyPrice = plan.id === 'standard' && isYearly ? '$119.88' : null;
+    
+    return {
+      ...plan,
+      name: t(plan.name as any),
+      price: displayPrice,
+      priceLabel: displayPriceLabel ? t(displayPriceLabel as any) : "",
+      priceId: displayPriceId,
+      originalYearlyPrice,
+      showYearlySavings: plan.id === 'standard' && isYearly,
+      features: plan.features.map(feature => t(feature as any)),
+      buttonText: t(plan.buttonText as any),
+    };
+  });
 
   // 機能比較データも翻訳を適用
   const featureComparisonData = [
@@ -111,6 +126,30 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
           <p className="text-sm lg:text-base text-gray-400">
             {t("description")}
           </p>
+
+          {/* 月額/年額 トグルスイッチ */}
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <span className={`text-sm font-medium transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500'}`}>
+              {t("monthly")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+              className={`relative w-14 h-8 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950 ${
+                billingCycle === 'yearly' ? 'bg-green-500' : 'bg-gray-600'
+              }`}
+              aria-label="Toggle billing cycle"
+            >
+              <span
+                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                  billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            <span className={`text-sm font-medium transition-colors ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-500'}`}>
+              {t("yearly")}
+            </span>
+          </div>
           
           {/* エラーメッセージ */}
           {state.status === "error" && state.error && (
@@ -144,16 +183,28 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                     <h2 className="text-lg lg:text-xl font-bold text-white mb-2 lg:mb-3">
                       {plan.isCurrent ? t("current_plan") : plan.name}
                     </h2>
-                    <div className="flex items-baseline justify-center gap-1 mb-2">
+                    <div className="flex items-baseline justify-center gap-2 mb-1">
                       <span className="text-3xl lg:text-4xl font-extrabold text-white">
                         {plan.price}
                       </span>
                       {plan.priceLabel && (
-                        <span className="text-sm lg:text-base text-gray-400 ml-1">
+                        <span className="text-sm lg:text-base text-gray-400">
                           {plan.priceLabel}
                         </span>
                       )}
+                      {/* 通常年額（取り消し線） */}
+                      {plan.originalYearlyPrice && (
+                        <span className="text-sm text-gray-500 line-through">
+                          {plan.originalYearlyPrice}
+                        </span>
+                      )}
                     </div>
+                    {/* 2ヶ月分お得バッジ */}
+                    {plan.showYearlySavings && (
+                      <span className="inline-block text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-medium">
+                        {t("yearly_savings")}
+                      </span>
+                    )}
                   </div>
 
                   {/* Features List */}
@@ -266,7 +317,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                     <h2 className={`text-xl font-bold text-white mb-3 ${plan.isPopular ? "mt-1" : ""}`}>
                       {plan.isCurrent ? t("current_plan") : plan.name}
                     </h2>
-                    <div className="flex items-baseline justify-center gap-1 mb-4">
+                    <div className="flex items-baseline justify-center gap-2 mb-1">
                       <span className={`text-4xl font-extrabold ${plan.isPopular ? "text-green-400" : "text-white"}`}>
                         {plan.price}
                       </span>
@@ -275,7 +326,19 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                           {plan.priceLabel}
                         </span>
                       )}
+                      {/* 通常年額（取り消し線） */}
+                      {plan.originalYearlyPrice && (
+                        <span className="text-sm text-gray-500 line-through">
+                          {plan.originalYearlyPrice}
+                        </span>
+                      )}
                     </div>
+                    {/* 2ヶ月分お得バッジ */}
+                    {plan.showYearlySavings && (
+                      <span className="inline-block text-xs bg-green-500/20 text-green-400 px-2.5 py-1 rounded-full font-medium mt-1">
+                        {t("yearly_savings")}
+                      </span>
+                    )}
                   </div>
 
                   {/* Features List */}

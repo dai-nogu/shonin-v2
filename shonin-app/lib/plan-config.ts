@@ -1,4 +1,4 @@
-import { PlanType, PLAN_HIERARCHY, PLAN_TO_PRICE_ID } from '@/types/subscription';
+import { PlanType, PLAN_HIERARCHY, PLAN_TO_PRICE_ID, PLAN_PRICE_IDS, BillingCycle } from '@/types/subscription';
 
 export interface PlanFeature {
   label: string;
@@ -13,6 +13,10 @@ export interface Plan {
   price: string;
   priceLabel: string;
   priceId: string; // Stripe Price ID
+  yearlyPrice?: string; // 年額価格
+  yearlyPriceLabel?: string; // 年額ラベル
+  yearlyPriceId?: string; // 年額のStripe Price ID
+  yearlySavings?: string; // 年額の割引率
   features: string[];
   isCurrent: boolean;
   buttonText: string;
@@ -50,7 +54,11 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
       name: "standard", 
       price: "$9.99",
       priceLabel: "per_month",
-      priceId: PLAN_TO_PRICE_ID.standard ?? '',
+      priceId: PLAN_PRICE_IDS.standard.monthly,
+      yearlyPrice: "$99.99",
+      yearlyPriceLabel: "per_year",
+      yearlyPriceId: PLAN_PRICE_IDS.standard.yearly,
+      yearlySavings: "yearly_savings",
       features: [],
       isCurrent: userPlan === 'standard',
       buttonText: userPlan === 'standard' 

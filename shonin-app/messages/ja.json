@@ -461,6 +461,10 @@
     "downgrade": "ダウングレード",
     "manage_subscription": "サブスクリプション管理",
     "per_month": "/月",
+    "per_year": "/年",
+    "monthly": "月額",
+    "yearly": "年額",
+    "yearly_savings": "2ヶ月分お得！",
     "current_plan_tooltip": "現在ご利用中のプランです",
     "features": {
       "activity_limit": "アクティビティ追加3つまで",
