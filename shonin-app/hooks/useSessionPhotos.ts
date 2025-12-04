@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useCallback } from "react"
 import { hasSessionPhotosMultiple, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 
@@ -10,6 +10,12 @@ interface UseSessionPhotosProps {
 }
 
 export function useSessionPhotos({ completedSessions, setCompletedSessions }: UseSessionPhotosProps) {
+  // 処理済みのセッションIDを追跡（無限ループ防止）
+  const processedSessionIdsRef = useRef<Set<string>>(new Set())
+  
+  // setCompletedSessionsを安定した参照で保持
+  const setCompletedSessionsRef = useRef(setCompletedSessions)
+  setCompletedSessionsRef.current = setCompletedSessions
   
   // セッションの写真有無を確認してcompletedSessionsを更新
   useEffect(() => {
@@ -21,19 +27,38 @@ export function useSessionPhotos({ completedSessions, setCompletedSessions }: Us
         return
       }
 
-      const sessionIds = completedSessions.map(session => session.id)
+      // まだ処理していないセッションのみ抽出
+      const unprocessedSessions = completedSessions.filter(
+        session => !processedSessionIdsRef.current.has(session.id)
+      )
+      
+      // 全て処理済みなら何もしない（無限ループ防止）
+      if (unprocessedSessions.length === 0) {
+        return
+      }
+
+      const sessionIds = unprocessedSessions.map(session => session.id)
       const photoStatusMap = await hasSessionPhotosMultiple(sessionIds)
 
       // アンマウント済みの場合はsetStateしない
       if (!isMounted) return
 
-      // 写真情報を更新
-      const sessionsWithPhotos: CompletedSession[] = completedSessions.map(session => ({
-        ...session,
-        hasPhotos: photoStatusMap[session.id] || false
-      }))
+      // 処理済みとしてマーク
+      sessionIds.forEach(id => processedSessionIdsRef.current.add(id))
 
-      setCompletedSessions(sessionsWithPhotos)
+      // 写真情報を更新（新しいセッションのみ更新）
+      const sessionsWithPhotos: CompletedSession[] = completedSessions.map(session => {
+        // 今回処理したセッションのみ写真情報を更新
+        if (photoStatusMap[session.id] !== undefined) {
+          return {
+            ...session,
+            hasPhotos: photoStatusMap[session.id] || false
+          }
+        }
+        return session
+      })
+
+      setCompletedSessionsRef.current(sessionsWithPhotos)
 
       // 写真付きセッションの画像を事前にプリロード
       const sessionsWithPhotosIds = sessionsWithPhotos
@@ -52,7 +77,10 @@ export function useSessionPhotos({ completedSessions, setCompletedSessions }: Us
     return () => {
       isMounted = false
     }
-  }, [completedSessions, setCompletedSessions])
+  // NOTE: setCompletedSessionsはrefで管理しているため、依存配列から除外
+  // completedSessionsのIDリストの変化のみを監視
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedSessions.map(s => s.id).join(',')])
 
   // 写真付きセッションの画像を事前にプリロードする関数
   const preloadSessionPhotos = async (sessionIds: string[]) => {

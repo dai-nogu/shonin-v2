@@ -8,6 +8,8 @@ import { SessionsProvider } from "@/contexts/sessions-context"
 import { TimezoneProvider } from "@/contexts/timezone-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ToastProvider } from "@/contexts/toast-context"
+import { SubscriptionProvider } from "@/contexts/subscription-context"
+import { FeedbackProvider } from "@/contexts/feedback-context"
 import { ConditionalSidebarProvider } from "@/components/layout/conditional-sidebar-provider"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -37,13 +39,17 @@ export default async function LocaleLayout({
           <AuthProvider>
             <TimezoneProvider>
               <ToastProvider>
-                <ActivitiesProvider>
-                  <SessionsProvider>
-                    <ConditionalSidebarProvider>
-                      {children}
-                    </ConditionalSidebarProvider>
-                  </SessionsProvider>
-                </ActivitiesProvider>
+                <SubscriptionProvider>
+                  <FeedbackProvider>
+                    <ActivitiesProvider>
+                      <SessionsProvider>
+                        <ConditionalSidebarProvider>
+                          {children}
+                        </ConditionalSidebarProvider>
+                      </SessionsProvider>
+                    </ActivitiesProvider>
+                  </FeedbackProvider>
+                </SubscriptionProvider>
               </ToastProvider>
             </TimezoneProvider>
           </AuthProvider>
@@ -69,7 +75,7 @@ export async function generateMetadata({
   const { locale } = await params
   
   return {
-    title: locale === 'ja' ? "SHONIN - 証人" : "SHONIN - Witness",
+    title: locale === 'ja' ? "No Name yet" : "No Name yet",
     description: locale === 'ja' 
       ? "あなたの成長を見つめ、証明する" 
       : "Be a witness to your growth",

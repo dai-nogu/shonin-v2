@@ -14,7 +14,7 @@ export function useReflectionsDb() {
   const [error, setError] = useState<string | null>(null);
   const [supabase] = useState(() => createClient());
 
-  // 振り返り情報を暗号化して保存（統合版）
+  // 振り返り情報を保存（シンプル版 - 直接テーブル更新）
   const saveReflection = async (sessionId: string, reflection: SessionReflection): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
@@ -25,25 +25,47 @@ export function useReflectionsDb() {
       const sanitizedChallenges = truncateForDb(reflection.challenges, JA_INPUT_LIMITS.sessionChallenges);
       const sanitizedNotes = truncateForDb(reflection.additionalNotes, JA_INPUT_LIMITS.sessionNotes);
 
-      // 暗号化関数を使用して振り返りデータを保存（基本データも含む）
-      const { data, error } = await supabase.rpc('update_session_reflections_encrypted', {
-        p_session_id: sessionId,
-        p_mood: reflection.moodScore || null,
-        p_achievements: sanitizedAchievements,
-        p_challenges: sanitizedChallenges,
-        p_mood_score: reflection.moodScore || null,
-        p_detailed_achievements: sanitizedAchievements,
-        p_detailed_challenges: sanitizedChallenges,
-        p_reflection_notes: sanitizedNotes,
+      console.log('[saveReflection] Saving reflection data:', {
+        sessionId,
+        moodScore: reflection.moodScore,
+        achievements: sanitizedAchievements?.substring(0, 50),
+        challenges: sanitizedChallenges?.substring(0, 50),
+        notes: sanitizedNotes?.substring(0, 50),
       });
 
+      // 直接sessionsテーブルを更新（mood_scoreと振り返りデータ）
+      // notesカラムに振り返りデータをJSON形式で保存
+      const reflectionJson = JSON.stringify({
+        achievements: sanitizedAchievements || null,
+        challenges: sanitizedChallenges || null,
+        additionalNotes: sanitizedNotes || null,
+      });
+
+      const { data, error } = await supabase
+        .from('sessions')
+        .update({
+          mood_score: reflection.moodScore || null,
+          notes: reflectionJson,
+        })
+        .eq('id', sessionId)
+        .select('id')
+        .single();
+
       if (error) {
-        setError(`振り返りの保存に失敗しました: ${error.message}`);
+        console.error('[saveReflection] Update error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        setError(`振り返りの保存に失敗しました: ${error.message || 'Unknown error'}`);
         return null;
       }
 
+      console.log('[saveReflection] Success:', data);
       return sessionId;
     } catch (err) {
+      console.error('[saveReflection] Exception:', err);
       setError('振り返りの保存中にエラーが発生しました');
       return null;
     } finally {

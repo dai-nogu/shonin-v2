@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Activity, Trash2 } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Card, CardContent } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useToast } from "@/contexts/toast-context"
 import { useTranslations } from 'next-intl'
@@ -60,19 +60,11 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-white">
-          {t('settings.activity_management')}
-        </CardTitle>
-        <p className="text-gray-300 text-sm">
-          {t('settings.activity_management_description')}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardContent className="space-y-4 px-0 pt-0">
         {activitiesLoading ? (
           <div className="text-center py-8 text-gray-300">
-            <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p>{t('settings.loading_activities')}</p>
           </div>
         ) : (

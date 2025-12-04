@@ -45,18 +45,17 @@ export interface CompletedSession extends SessionData {
 interface TimeTrackerProps {
   onStartSession: (sessionData: SessionData) => void
   completedSessions: CompletedSession[]
-  onGoalSettingClick?: () => void
 }
 
-export function TimeTracker({ onStartSession, completedSessions, onGoalSettingClick }: TimeTrackerProps) {
+export function TimeTracker({ onStartSession, completedSessions }: TimeTrackerProps) {
   const handleStartSession = (sessionData: SessionData) => {
     onStartSession(sessionData)
   }
 
   return (
-    <div className="space-y-6">
+    <div id="time-tracker" className="space-y-6">
       <QuickStart completedSessions={completedSessions} onStartActivity={handleStartSession} />
-      <ActivitySelector onStart={handleStartSession} onGoalSettingClick={onGoalSettingClick} />
+      <ActivitySelector onStart={handleStartSession} />
     </div>
   )
 }

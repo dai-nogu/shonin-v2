@@ -49,31 +49,31 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 240 10% 3.9%; /* より深い黒 */
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 240 10% 3.9%; /* カードのベース色（透明度で調整するため背景と同じに） */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
+    --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -90,5 +90,125 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    /* Midnight Sanctuary Background - 明るさを微調整 */
+    background-image: 
+      radial-gradient(circle at 50% 0%, hsl(240, 25%, 13%) 0%, transparent 60%),
+      radial-gradient(circle at 0% 0%, hsl(260, 25%, 10%) 0%, transparent 50%),
+      radial-gradient(circle at 100% 0%, hsl(220, 25%, 10%) 0%, transparent 50%);
+    background-attachment: fixed;
   }
+}
+
+/* ===== モダンUIアニメーションユーティリティ ===== */
+@layer utilities {
+  /* スムーズなトランジション */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .transition-fast {
+    @apply transition-all duration-150 ease-out;
+  }
+  
+  .transition-slow {
+    @apply transition-all duration-500 ease-out;
+  }
+
+  /* ホバーリフトエフェクト */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+
+  /* ホバーグロー */
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  .hover-glow:hover {
+    @apply shadow-[0_0_20px_rgba(34,197,94,0.3)];
+  }
+
+  /* アクティブプレスエフェクト */
+  .press-effect {
+    @apply transition-transform duration-150 ease-out;
+  }
+  .press-effect:active {
+    @apply scale-[0.97];
+  }
+
+  /* リストアイテムのスタッガードアニメーション */
+  .stagger-item {
+    @apply opacity-0 animate-fade-in-up;
+  }
+
+  /* カード出現アニメーション */
+  .card-appear {
+    @apply opacity-0 animate-scale-in;
+  }
+
+  /* スケルトンローディングシマー */
+  .skeleton-shimmer {
+    @apply bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] animate-shimmer;
+  }
+}
+
+/* ===== スタッガードアニメーション用遅延 ===== */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* ===== ページトランジション ===== */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+/* ===== モーダルアニメーション ===== */
+.modal-overlay {
+  @apply transition-opacity duration-300;
+}
+
+.modal-content {
+  @apply transition-all duration-300 ease-out;
+}
+
+.modal-enter {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+
+.modal-enter-active {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* ===== ボトムナビゲーションアイコンアニメーション ===== */
+.nav-icon-active {
+  @apply transition-all duration-300 ease-out;
+}
+
+/* ===== プログレスバーアニメーション ===== */
+.progress-animate {
+  @apply transition-all duration-500 ease-out;
+}
+
+/* ===== フォーカスリングアニメーション ===== */
+.focus-ring-animate {
+  @apply transition-shadow duration-200;
+}
+.focus-ring-animate:focus {
+  @apply ring-2 ring-green-500/50 ring-offset-2 ring-offset-gray-900;
 }

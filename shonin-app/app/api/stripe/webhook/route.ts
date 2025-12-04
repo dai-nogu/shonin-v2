@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { getPlanTypeFromPriceId, type PlanType } from '@/types/subscription';
 import { safeError, stripeLog } from '@/lib/safe-logger';
+import { sendEmailInternal } from '@/lib/mail';
 
 // ==========================================
 // Stripeイベント処理
@@ -269,21 +270,19 @@ async function handleCheckoutCompleted(
 
         stripeLog('アップグレードメールを送信します', { email: userData.email, plan: planName });
 
-        await fetch(`${process.env.BASE_URL}/api/send`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userData.email,
-            firstName: firstName,
-            emailCategory: 'subscription',
-            emailType: 'upgrade',
-            planName: planName,
-          }),
+        const emailResult = await sendEmailInternal({
+          email: userData.email,
+          firstName: firstName,
+          emailCategory: 'subscription',
+          emailType: 'upgrade',
+          planName: planName,
         });
 
-        stripeLog('✓ アップグレードメールを送信しました');
+        if (emailResult.success) {
+          stripeLog('✓ アップグレードメールを送信しました');
+        } else {
+          safeError('アップグレードメール送信に失敗しました', emailResult.error);
+        }
       }
     } catch (emailError) {
       // メール送信エラーはログのみ（サブスクリプション処理は継続）
@@ -472,23 +471,21 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
               console.log('✅ キャンセルが確定しました。ダウングレード予定メールを送信します:', userData.email, `変更日: ${changeDate}`);
 
-              await fetch(`${process.env.BASE_URL}/api/send`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  email: userData.email,
-                  firstName: firstName,
-                  emailCategory: 'subscription',
-                  emailType: 'downgrade_scheduled',
-                  planName: 'Free',
-                  currentPlanName: currentPlanName,
-                  changeDate: changeDate,
-                }),
+              const emailResult = await sendEmailInternal({
+                email: userData.email,
+                firstName: firstName,
+                emailCategory: 'subscription',
+                emailType: 'downgrade_scheduled',
+                planName: 'Free',
+                currentPlanName: currentPlanName,
+                changeDate: changeDate,
               });
 
-              console.log('✓ ダウングレード予定メールを送信しました');
+              if (emailResult.success) {
+                console.log('✓ ダウングレード予定メールを送信しました');
+              } else {
+                safeError('ダウングレード予定メール送信に失敗しました', emailResult.error);
+              }
             }
           } else if (wasCancelScheduledBefore) {
             console.log('既にキャンセル予定として記録済みのため、メール送信をスキップします');
@@ -606,21 +603,19 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
         console.log('ダウングレードメールを送信します:', userData.email);
 
-        await fetch(`${process.env.BASE_URL}/api/send`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userData.email,
-            firstName: firstName,
-            emailCategory: 'subscription',
-            emailType: 'downgrade',
-            planName: 'Free',
-          }),
+        const emailResult = await sendEmailInternal({
+          email: userData.email,
+          firstName: firstName,
+          emailCategory: 'subscription',
+          emailType: 'downgrade',
+          planName: 'Free',
         });
 
-        console.log('✓ ダウングレードメールを送信しました');
+        if (emailResult.success) {
+          console.log('✓ ダウングレードメールを送信しました');
+        } else {
+          safeError('ダウングレードメール送信に失敗しました', emailResult.error);
+        }
       }
     } catch (emailError) {
       // メール送信エラーはログのみ（サブスクリプション処理は継続）

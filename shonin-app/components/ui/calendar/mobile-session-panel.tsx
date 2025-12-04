@@ -22,34 +22,27 @@ export function MobileSessionPanel({
 
   return (
     <div>
-      {/* 日付部分 - 白い背景で区別 */}
-      <div className="text-black px-2 md:px-4 py-1" style={{backgroundColor: '#e4e4e4'}}>
-        <h3 className="text-lg font-medium">{date}</h3>
+      {/* 日付部分 */}
+      <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 sticky top-0 z-10">
+        <h3 className="text-lg font-bold text-gray-900">{date}</h3>
       </div>
       
-      {/* アクティビティ部分 - 既存の背景色 */}
-      <div className="bg-gray-900 border-t border-gray-700">
-        <div className="pb-2">
-          <div>
-            {sessions.map((session) => (
-              <div 
-                key={session.id} 
-                className={`flex items-center justify-between py-2 px-3 rounded-lg ${session.color} bg-opacity-20`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="text-white font-medium">{session.activity}</div>
-                </div>
-                <div className="text-gray-400 text-sm">
-                  {formatDuration(session.duration)}
-                </div>
+      {/* アクティビティ部分 */}
+      <div className="bg-gray-950 p-2">
+        <div className="space-y-2">
+          {sessions.map((session) => (
+            <div 
+              key={session.id} 
+              className={`flex items-center justify-between py-3 px-4 rounded-xl shadow-sm ${session.color} bg-opacity-20 border-l-4 border-white/20 backdrop-blur-sm`}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="text-white font-medium text-base">{session.activity}</div>
               </div>
-            ))}
-            {sessions.length === 0 && (
-              <div className="text-center text-gray-400 py-4">
-                {t('calendar.no_activities')}
+              <div className="text-white/90 font-mono text-sm bg-black/20 px-2 py-1 rounded">
+                {formatDuration(session.duration)}
               </div>
-            )}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

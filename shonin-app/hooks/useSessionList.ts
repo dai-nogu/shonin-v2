@@ -11,40 +11,17 @@ export function useSessionList() {
   const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
 
   // セッションコンテキストから状態を取得
-  const {
-    sessions,
-    refetch
-  } = useSessions()
+  // NOTE: use-sessions-db.ts の初回読み込みuseEffectがデータを取得するため、
+  // ここでrefetch()を呼ぶ必要はない
+  const { sessions } = useSessions()
 
   // 初期化処理
+  // NOTE: sessionsはContextで管理されており、use-sessions-dbが初回読み込みを行うため、
+  // ここでは単にuserの存在を確認して初期化完了とする
   useEffect(() => {
     if (!user) return
-    
-    // アンマウント後のsetState防止フラグ
-    let isMounted = true
-
-    const initializeApp = async () => {
-      try {
-        await refetch()
-        // アンマウント済みの場合はsetStateしない
-        if (isMounted) {
-          setIsInitialized(true)
-        }
-      } catch (error) {
-        // アンマウント済みの場合はsetStateしない
-        if (isMounted) {
-          setIsInitialized(true)
-        }
-      }
-    }
-
-    initializeApp()
-    
-    // クリーンアップ：アンマウント時にフラグを更新
-    return () => {
-      isMounted = false
-    }
-  }, [user, refetch])
+    setIsInitialized(true)
+  }, [user])
 
   // セッションデータが更新されたときに基本的な変換処理
   useEffect(() => {
@@ -68,24 +45,42 @@ export function useSessionList() {
       }
 
       // 基本的なCompletedSessionの型に変換（写真情報は含まない）
-      const convertedSessions: CompletedSession[] = completedSessionsData.map(session => ({
-        id: session.id,
-        activityId: session.activity_id,
-        activityName: session.activities?.name || '不明',
-        startTime: new Date(session.start_time),
-        endTime: new Date(session.end_time!),
-        duration: session.duration,
-        sessionDate: session.session_date || undefined,
-        location: session.location || '',
-        notes: session.notes || '',
-        mood: session.mood || undefined,
-        achievements: session.achievements || undefined,
-        challenges: session.challenges || undefined,
-        activityColor: session.activities?.color,
-        activityIcon: session.activities?.icon || undefined,
-        goalId: session.goal_id || undefined,
-        hasPhotos: false // デフォルト値
-      }))
+      const convertedSessions: CompletedSession[] = completedSessionsData.map(session => {
+        // notesがJSON形式の場合はパースして振り返りデータを取り出す
+        let parsedNotes = session.notes || ''
+        let achievements = session.achievements || undefined
+        let challenges = session.challenges || undefined
+        
+        if (session.notes && session.notes.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(session.notes)
+            achievements = parsed.achievements || achievements
+            challenges = parsed.challenges || challenges
+            parsedNotes = parsed.additionalNotes || ''
+          } catch {
+            // JSONパースに失敗した場合はそのまま使用
+          }
+        }
+        
+        return {
+          id: session.id,
+          activityId: session.activity_id,
+          activityName: session.activities?.name || '不明',
+          startTime: new Date(session.start_time),
+          endTime: new Date(session.end_time!),
+          duration: session.duration,
+          sessionDate: session.session_date || undefined,
+          location: session.location || '',
+          notes: parsedNotes,
+          mood: session.mood || session.mood_score || undefined,
+          achievements,
+          challenges,
+          activityColor: session.activities?.color,
+          activityIcon: session.activities?.icon || undefined,
+          goalId: session.goal_id || undefined,
+          hasPhotos: false // デフォルト値
+        }
+      })
 
       setCompletedSessions(convertedSessions)
     }

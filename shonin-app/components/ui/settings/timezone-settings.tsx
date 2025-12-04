@@ -4,7 +4,7 @@ import { Globe } from "lucide-react"
 import { useTimezone } from "@/contexts/timezone-context"
 import { useSessions } from "@/contexts/sessions-context"
 import { TIMEZONES } from "@/lib/timezone-utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
+import { Card, CardContent } from "@/components/ui/common/card"
 import { Label } from "@/components/ui/common/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select"
 import { useTranslations } from 'next-intl'
@@ -18,11 +18,8 @@ export function TimezoneSettings() {
   const t = useTranslations()
 
   return (
-    <Card className="bg-gray-800 border-gray-700 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-white">{t('settings.timezone_settings')}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="border-0 bg-transparent shadow-none">
+      <CardContent className="space-y-4 px-0 pt-0">
         <div className="space-y-2">
           <Select 
             value={timezone} 
@@ -63,7 +60,7 @@ export function TimezoneSettings() {
 
         {/* 通常の注意事項 */}
         {!isSessionActive && (
-          <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+          <div className="mt-4">
             <p className="text-base text-red-400 font-semibold">
               ⚠️ {t('settings.timezone_notice_title')}
             </p>

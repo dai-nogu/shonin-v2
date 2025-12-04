@@ -42,7 +42,7 @@ export default function Calendar() {
     const initializeApp = async () => {
       try {
         // ローカルストレージから設定を復元
-        const savedViewMode = localStorage.getItem('shonin-calendar-view-mode')
+        const savedViewMode = localStorage.getItem('app-calendar-view-mode')
         if (savedViewMode === 'month' || savedViewMode === 'week') {
           setCalendarViewMode(savedViewMode)
         }
@@ -104,7 +104,7 @@ export default function Calendar() {
   // カレンダー表示モードの保存
   useEffect(() => {
     if (isInitialized && typeof window !== 'undefined') {
-      localStorage.setItem('shonin-calendar-view-mode', calendarViewMode)
+      localStorage.setItem('app-calendar-view-mode', calendarViewMode)
     }
   }, [calendarViewMode, isInitialized])
 

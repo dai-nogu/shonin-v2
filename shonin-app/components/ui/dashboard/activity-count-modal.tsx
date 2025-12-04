@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Play, Eye, BarChart3 } from "lucide-react"
+import { X, Play, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
 import { useTranslations } from 'next-intl'
+import { cn } from "@/lib/utils"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
+import { useSessions } from "@/contexts/sessions-context"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
 interface ActivityCountModalProps {
@@ -41,6 +44,13 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   
   // スクロール位置をリセットするためのref
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
+
+  // アニメーション状態（早期returnの前に配置する必要がある）
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   // モバイル判定
   useEffect(() => {
@@ -54,10 +64,34 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // モーダルが開いている間は背景スクロールを無効にする（SP対応強化）
-  useScrollLock(isOpen)
+  // マウント時にアニメーション開始
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false)
+      // 次のフレームでアニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
 
-  if (!isOpen) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  // モーダルが開いている間は背景スクロールを無効にする（SP対応強化）
+  useScrollLock(isOpen || isClosing)
+
+  if (!isOpen && !isClosing) return null
 
   // 行動アイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
@@ -139,7 +173,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   const handleActivityClick = (activity: ActivityItem) => {
     if (onStartActivity) {
       const sessionData: SessionData = {
-        activityId: activity.id,
+        activityId: activity.latestSession.activityId,
         activityName: activity.name,
         startTime: new Date(),
         location: activity.latestSession.location || "",
@@ -150,7 +184,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
       }
       onStartActivity(sessionData)
     }
-    onClose()
+    handleClose()
   }
 
   // SPでの詳細表示用のハンドラー
@@ -183,7 +217,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     if (onStartActivity) {
       onStartActivity(sessionData)
     }
-    onClose()
+    handleClose()
   }
 
   const handlePageChange = (page: number) => {
@@ -197,16 +231,22 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        onClick={onClose}
+        className={cn(
+          "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+          isAnimating ? "opacity-100" : "opacity-0"
+        )}
+        onClick={handleClose}
       >
         <Card 
-          className="bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden"
+          className={cn(
+            "bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden transition-all duration-300 ease-out",
+            isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           <CardHeader className="relative pb-3 sm:pb-6">
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="ghost"
               size="sm"
               className="absolute right-2 top-2 text-gray-400 hover:text-white"
@@ -221,75 +261,56 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
           </CardHeader>
 
           <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="space-y-2 sm:space-y-3">
+            <div className="grid gap-3">
               {currentActivities.map((activity, index) => (
                 <div
                   key={`${activity.id}-${currentPage}`}
-                  onClick={isMobile ? () => {
-                    // SPの場合のみカード全体をクリック可能にする
-                    handleActivityDetailClick(activity)
-                  } : undefined}
-                  className={`flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg transition-colors group ${isMobile ? 'cursor-pointer hover:bg-gray-700' : ''}`}
+                  onClick={() => handleActivityDetailClick(activity)}
+                  className={`p-4 rounded-xl shadow-sm ${activity.color} bg-opacity-10 border border-white/10 cursor-pointer transition-all duration-200 hover:bg-opacity-20 hover:scale-[1.01] hover:-translate-y-0.5`}
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-400 font-mono text-xs sm:text-sm w-3 sm:w-4 md:w-6 text-right">
-                        {startIndex + index + 1}
-                      </span>
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${activity.color} rounded-full`}></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <span className="text-white font-semibold text-lg truncate">{activity.name}</span>
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      {/* SP: 縦並び, PC: 横並び */}
-                      <div className="flex flex-col">
-                        <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{activity.name}</h3>
-                        <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
-                          <span className="font-medium text-green-400">{activity.sessionCount}{t('common.times')}</span>
-                        </div>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <div className="text-white/90 font-mono text-sm bg-white/10 px-2 py-1 rounded">
+                        {activity.sessionCount}{t('common.times')}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <div className="hidden sm:flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleViewDetail(activity)
-                        }}
-                                              >
-                          <Eye className="w-3 h-3 mr-1" />
-                          {t('common.details')}
-                        </Button>
-                      <Button
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivityClick(activity)
-                        }}
-                      >
-                        <Play className="w-3 h-3 mr-1" />
-                        {t('common.start')}
-                      </Button>
-                    </div>
-                    
-                    {/* SPでは開始ボタンを右側に表示 */}
-                    <div className="sm:hidden">
-                      <Button
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivityClick(activity)
-                        }}
-                                              >
+                      {/* 開始ボタン */}
+                      {isSessionActive ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block cursor-not-allowed">
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="bg-[#1eb055] opacity-50 pointer-events-none"
+                                >
+                                  <Play className="w-3 h-3 mr-1" />
+                                  {t('common.start')}
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" align="end">
+                              <p className="text-xs">{t('common.recording_in_progress')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleActivityClick(activity)
+                          }}
+                        >
                           <Play className="w-3 h-3 mr-1" />
                           {t('common.start')}
                         </Button>
+                      )}
                     </div>
                   </div>
                 </div>

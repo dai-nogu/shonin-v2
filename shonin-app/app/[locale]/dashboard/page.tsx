@@ -44,4 +44,4 @@ export default async function DashboardPage() {
       <BottomNavigation currentPage="dashboard" />
     </>
   )
-} 
+}

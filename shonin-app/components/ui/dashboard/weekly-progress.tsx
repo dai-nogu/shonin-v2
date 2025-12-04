@@ -64,54 +64,74 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
   const totalWeekSeconds = weekData.reduce((sum, day) => sum + day.totalSeconds, 0)
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
-      <CardHeader className="pb-3 lg:pb-4">
+    <div id="weekly-progress">
+      <Card className="bg-transparent border-0 shadow-none">
+      <CardHeader className="px-0 pt-0 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center">
-            {t('weekly_progress.title')}
+          <CardTitle className="text-white flex items-center text-xl font-bold tracking-tight">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+               {t('weekly_progress.title')}
+            </span>
           </CardTitle>
           <Button
             onClick={onWeekViewClick}
             variant="ghost"
             size="sm"
-            className="text-green-400 hover:text-green-300 hover:bg-gray-800 text-xs lg:text-sm"
+            className="text-green-400 hover:text-green-300 hover:bg-white/5 text-xs lg:text-sm rounded-full px-3"
           >
-            <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+            <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5" />
             {t('weekly_progress.week_view')}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2 lg:space-y-3">
-        {weekData.map((day) => (
-          <div key={day.day} className="flex items-center">
-            <span className="text-gray-300 w-8 lg:w-10 text-xs lg:text-sm">{day.day}</span>
-            <Progress value={day.progress} className="flex-1 h-1.5 lg:h-2" />
-            <span className="text-gray-300 text-xs lg:text-sm w-10 lg:w-12 text-right">
-              {formatDuration(day.totalSeconds)}
-            </span>
-          </div>
-        ))}
-
-        <div className="pt-3 lg:pt-4 border-t border-gray-800">
-          <div className="text-center">
-            {totalWeekSeconds === 0 ? (
-              <>
-                <div className="flex justify-center mb-2">
-                  <BarChart3 className="w-8 h-8 lg:w-10 lg:h-10 text-gray-600" />
+      
+      <CardContent className="px-0">
+        <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-md p-5 shadow-lg transition-all duration-300 hover:border-white/20">
+           <div className="space-y-3 lg:space-y-4">
+            {weekData.map((day) => (
+              <div key={day.day} className="flex items-center group">
+                <span className="text-gray-400 w-8 lg:w-10 text-xs lg:text-sm font-medium group-hover:text-gray-200 transition-colors">{day.day}</span>
+                
+                <div className="flex-1 mx-2">
+                  <Progress 
+                    value={day.progress} 
+                    max={100} 
+                    className="h-2 lg:h-2.5 bg-gray-800/80" 
+                    variant="liquid"
+                  />
                 </div>
-                <div className="text-xs lg:text-sm text-gray-500">まだ軌跡がありません</div>
-              </>
-            ) : (
-              <>
-                <div className="text-xl lg:text-2xl font-bold text-green-400">
-                  {formatDuration(totalWeekSeconds)}
-                </div>
-                <div className="text-xs lg:text-sm text-gray-400">{t('weekly_progress.total_this_week')}</div>
-              </>
-            )}
+                
+                <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right font-mono ${
+                   day.totalSeconds > 0 ? "text-white font-medium" : "text-gray-600"
+                }`}>
+                  {formatDuration(day.totalSeconds)}
+                </span>
+              </div>
+            ))}
+    
+            <div className="pt-4 mt-2 border-t border-white/5">
+              <div className="text-center flex flex-col items-center justify-center min-h-[60px]">
+                {totalWeekSeconds === 0 ? (
+                  <div className="flex flex-col items-center opacity-50">
+                    <div className="p-2 rounded-full bg-white/5 mb-1">
+                      <BarChart3 className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
+                    </div>
+                    <div className="text-xs text-gray-500">{t('common.no_records')}</div>
+                  </div>
+                ) : (
+                  <div className="animate-fade-in-up">
+                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-widest">{t('common.total')}</div>
+                    <div className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300 shadow-green-500/20 drop-shadow-sm font-mono">
+                      {formatDuration(totalWeekSeconds)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   )
 }

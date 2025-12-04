@@ -3,10 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { WelcomeCard } from "./welcome-card"
 import { TimeTracker } from "./time-tracker"
 import { ActiveActivitySidebar } from "./active-activity-sidebar"
-import { AIFeedback } from "./ai-feedback"
 import { Button } from "@/components/ui/common/button"
 import { ErrorModal } from "@/components/ui/common/error-modal"
 import { useSessions } from "@/contexts/sessions-context"
@@ -57,11 +55,6 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
     router.push("/session")
   }
 
-  // 目標管理画面への遷移
-  const handleGoalSettingClick = () => {
-    router.push("/goals")
-  }
-
   return (
     <>
       {/* エラーモーダル */}
@@ -74,27 +67,26 @@ export function DashboardMainContent({ initialCompletedSessions, user }: Dashboa
         message={operationError || ''}
       />
 
-      {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
-      <div className="lg:hidden mb-4 lg:mb-6">
-        <WelcomeCard completedSessions={completedSessions} />
-      </div>
+      {/* SP用：進行中の行動、PC用：非表示 */}
+      {isSessionActive && (
+        <div className="lg:hidden mb-4 lg:mb-6">
+          <ActiveActivitySidebar
+            activeSession={currentSession}
+            isActive={isSessionActive}
+            onViewSession={handleViewSession}
+            onTogglePause={() => {}} // 暫定：セッションページで処理
+            onEnd={() => {}} // 暫定：セッションページで処理
+            sessionState="active" // 暫定：実際の値は不要
+            isDashboard={true} // ダッシュボード表示モード
+          />
+        </div>
+      )}
       
-      {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
-      <div className="lg:hidden mb-4 lg:mb-6">
-        <ActiveActivitySidebar
-          activeSession={currentSession}
-          isActive={isSessionActive}
-          onViewSession={handleViewSession}
-          onTogglePause={() => {}} // 暫定：セッションページで処理
-          onEnd={() => {}} // 暫定：セッションページで処理
-          sessionState="active" // 暫定：実際の値は不要
-          isDashboard={true} // ダッシュボード表示モード
-        />
-      </div>
-      
-      <AIFeedback completedSessions={completedSessions} />
-      <div className="mt-4 lg:mt-6">
-        <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+      <div className="space-y-6">
+        {/* グリッドレイアウトを採用 */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+          <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
+        </div>
       </div>
     </>
   )

@@ -28,45 +28,7 @@ export function useAIFeedback() {
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
 
-  const generateFeedback = useCallback(async (
-    periodType: 'weekly' | 'monthly',
-    periodStart: string,
-    periodEnd: string
-  ): Promise<AIFeedbackResponse | null> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/ai/analyze-sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // 認証情報を含める
-        body: JSON.stringify({
-          period_type: periodType,
-          period_start: periodStart,
-          period_end: periodEnd,
-          locale: locale,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'フィードバック生成に失敗しました');
-      }
-
-      const data: AIFeedbackResponse = await response.json();
-      return data;
-
-    } catch (err) {
-      // Server Actionsのエラーメッセージは無視して、常に多言語対応メッセージを表示
-      setError(t('ai_feedback.generate_error'));
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [locale, t]);
+  // Note: フィードバック生成はCron Jobで自動実行されるため、手動生成機能は削除しました
 
   // 先週の日付範囲を計算（月曜〜日曜）
   const getLastWeekRange = useCallback(() => {
@@ -106,18 +68,6 @@ export function useAIFeedback() {
       end: getDateStringInTimezone(lastMonthEnd, timezone),
     };
   }, [timezone]);
-
-  // 週次フィードバックを生成（強制再生成）
-  const generateWeeklyFeedback = useCallback(async () => {
-    const { start, end } = getLastWeekRange();
-    return generateFeedback('weekly', start, end);
-  }, [generateFeedback, getLastWeekRange]);
-
-  // 月次フィードバックを生成（強制再生成）
-  const generateMonthlyFeedback = useCallback(async () => {
-    const { start, end } = getLastMonthRange();
-    return generateFeedback('monthly', start, end);
-  }, [generateFeedback, getLastMonthRange]);
 
   // APIルート経由で既存フィードバックを取得
   const getExistingFeedback = useCallback(async (
@@ -172,44 +122,22 @@ export function useAIFeedback() {
     }
   }, [t]);
 
-  // 週次フィードバックを取得（既存 or 新規生成）
+  // 週次フィードバックを取得（Cron Jobで自動生成されたものを取得）
   const getWeeklyFeedback = useCallback(async () => {
     const { start, end } = getLastWeekRange();
-    
-    // まずDBから既存をチェック
-    const existing = await getExistingFeedback('weekly', start, end);
-    if (existing) {
-      return existing;
-    }
-    
-    // 存在しない場合は新規生成
-    return generateFeedback('weekly', start, end);
-  }, [getLastWeekRange, getExistingFeedback, generateFeedback]);
+    return await getExistingFeedback('weekly', start, end);
+  }, [getLastWeekRange, getExistingFeedback]);
 
-  // 月次フィードバックを取得（既存 or 新規生成）
+  // 月次フィードバックを取得（Cron Jobで自動生成されたものを取得）
   const getMonthlyFeedback = useCallback(async () => {
     const { start, end } = getLastMonthRange();
-    
-    // まずDBから既存をチェック
-    const existing = await getExistingFeedback('monthly', start, end);
-    if (existing) {
-      return existing;
-    }
-    
-    // 存在しない場合は新規生成
-    return generateFeedback('monthly', start, end);
-  }, [getLastMonthRange, getExistingFeedback, generateFeedback]);
+    return await getExistingFeedback('monthly', start, end);
+  }, [getLastMonthRange, getExistingFeedback]);
 
   return {
     isLoading,
     error,
-    generateFeedback,
-    generateWeeklyFeedback,
-    generateMonthlyFeedback,
-    getExistingFeedback,
     getWeeklyFeedback,
     getMonthlyFeedback,
-    getLastWeekRange,
-    getLastMonthRange,
   };
 } 

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { safeLog, safeError, safeWarn } from '@/lib/safe-logger'
 import { validateOrigin } from '@/lib/csrf-protection'
+import { sendEmailInternal } from '@/lib/mail'
 
 const supabaseServer = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -103,28 +104,21 @@ export async function POST(request: NextRequest) {
 
     safeLog('✓ Supabaseアカウントを削除しました');
     
-    // 退会メールを送信
+    // 退会メールを送信（直接関数呼び出し）
     try {
       safeLog('退会メールを送信します', user.email);
       
-      const emailResponse = await fetch(`${process.env.BASE_URL}/api/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: user.email,
-          firstName: firstName,
-          emailCategory: 'auth',
-          emailType: 'goodbye',
-        }),
+      const emailResult = await sendEmailInternal({
+        email: user.email!,
+        firstName: firstName,
+        emailCategory: 'auth',
+        emailType: 'goodbye',
       });
 
-      if (emailResponse.ok) {
+      if (emailResult.success) {
         safeLog('✓ 退会メールを送信しました');
       } else {
-        const emailError = await emailResponse.json();
-        safeError('退会メールの送信に失敗しました', emailError);
+        safeError('退会メールの送信に失敗しました', emailResult.error);
       }
     } catch (emailError) {
       // メール送信エラーはログのみ（アカウント削除は完了しているため継続）

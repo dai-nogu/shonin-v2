@@ -76,10 +76,10 @@ export default function SessionPage() {
       <>
         <AppSidebar currentPage="dashboard" />
         <SidebarInset>
-          <div className="min-h-screen bg-gray-950 text-white pb-20 flex items-center justify-center">
+          <div className="min-h-screen pb-20 flex items-center justify-center">
             <div className="text-center">
-              <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
-              <p className="text-gray-400">
+              <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+              <p className="text-muted-foreground">
                 {isSaving ? tActiveSession('recording') : tCommon('loading')}
               </p>
             </div>
@@ -96,14 +96,14 @@ export default function SessionPage() {
       <>
         <AppSidebar currentPage="dashboard" />
         <SidebarInset>
-          <div className="min-h-screen bg-gray-950 text-white pb-20">
+          <div className="min-h-screen pb-20">
             <div className="container mx-auto px-4 py-4 lg:py-8">
               <div className="text-center">
                 <h1 className="text-2xl font-bold mb-4">{tSessionPage('not_found_title')}</h1>
-                <p className="text-gray-400 mb-6">{tSessionPage('not_found_description')}</p>
+                <p className="text-muted-foreground mb-6">{tSessionPage('not_found_description')}</p>
                 <button 
                   onClick={() => router.push('/dashboard')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg"
                 >
                   {tSessionPage('back_to_dashboard')}
                 </button>
@@ -120,7 +120,7 @@ export default function SessionPage() {
     <>
       <AppSidebar currentPage="dashboard" />
       <SidebarInset>
-        <div className="min-h-screen bg-gray-950 text-white pb-20">
+        <div className="min-h-screen pb-20">
           <div className="container mx-auto px-4 py-4 lg:py-8">
             <ActiveSession 
               session={currentSession} 

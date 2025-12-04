@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { WelcomeCard } from "@/components/welcome-card"
 import { TimeTracker } from "@/components/time-tracker"
 import { ActiveActivitySidebar } from "@/components/active-activity-sidebar"
 import { AIFeedback } from "@/components/ai-feedback"
@@ -64,7 +63,7 @@ export default function Dashboard() {
   // アクティブなセッションがある場合の自動遷移（アプリ初回起動時のみ）
   useEffect(() => {
     // アプリが初めて起動されたか（リロードや直接アクセス）を判定
-    const isAppStartup = !sessionStorage.getItem('shonin-app-started')
+    const isAppStartup = !sessionStorage.getItem('app-started')
     
     if (isInitialized && isSessionActive && currentSession && isAppStartup) {
       router.push('/session')
@@ -72,7 +71,7 @@ export default function Dashboard() {
     
     // アプリが起動したことを記録（セッション中は維持）
     if (isInitialized) {
-      sessionStorage.setItem('shonin-app-started', 'true')
+      sessionStorage.setItem('app-started', 'true')
     }
   }, [isInitialized, isSessionActive, currentSession, router])
 
@@ -168,11 +167,6 @@ export default function Dashboard() {
     router.push('/session')
   }
 
-  // 目標管理画面への遷移
-  const handleGoalSettingClick = () => {
-    router.push('/goals')
-  }
-
   // 週表示でカレンダーページに遷移
   const handleWeekViewTransition = () => {
     router.push('/calendar?view=week')
@@ -231,12 +225,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* メインエリア - 2列分 */}
           <div className="lg:col-span-2">
-            {/* SP用：WelcomeCardを最初に表示、PC用：非表示 */}
-            <div className="lg:hidden mb-4 lg:mb-6">
-              <WelcomeCard completedSessions={completedSessions} />
-            </div>
-            
-            {/* SP用：進行中の行動をWelcomeCardの下に表示、PC用：非表示 */}
+            {/* SP用：進行中の行動、PC用：非表示 */}
             <div className="lg:hidden mb-4 lg:mb-6">
               <ActiveActivitySidebar
                 activeSession={currentSession}
@@ -250,17 +239,12 @@ export default function Dashboard() {
             
             <AIFeedback completedSessions={completedSessions} />
             <div className="mt-4 lg:mt-6">
-              <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} onGoalSettingClick={handleGoalSettingClick} />
+              <TimeTracker onStartSession={handleStartSession} completedSessions={completedSessions} />
             </div>
           </div>
 
           {/* サイドバー - 1列分 */}
           <div className="space-y-4 lg:space-y-6">
-            {/* PC用：WelcomeCardを表示、SP用：非表示 */}
-            <div className="hidden lg:block">
-              <WelcomeCard completedSessions={completedSessions} />
-            </div>
-            
             {/* PC用：進行中の行動、SP用：非表示 */}
             <div className="hidden lg:block">
               <ActiveActivitySidebar

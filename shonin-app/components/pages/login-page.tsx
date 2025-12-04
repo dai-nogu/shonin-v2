@@ -32,13 +32,13 @@ export function LoginPage() {
       <Card className="w-full max-w-md bg-gray-900 border-gray-800">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
-            {/* TODO: SHONINのロゴを追加 */}
+            {/* TODO: ロゴを追加 */}
             <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">S</span>
+              <span className="text-2xl font-bold text-white">?</span>
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-white">
-            SHONIN
+            No Name yet
           </CardTitle>
           <CardDescription className="text-gray-200">
             {t('login.tagline')}

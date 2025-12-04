@@ -3,7 +3,7 @@
 import { CalendarContainer, type CalendarSession } from "@/components/ui/calendar/calendar-container"
 import { useCalendarViewMode } from "@/hooks/useCalendarViewMode"
 import { useSessionList } from "@/hooks/useSessionList"
-import { useSubscription } from "@/hooks/use-subscription"
+import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { PlanLimitModal } from "@/components/ui/calendar/plan-limit-modal"
 
 interface MonthCalendarProps {
@@ -12,7 +12,7 @@ interface MonthCalendarProps {
 }
 
 export function MonthCalendarCSR({ initialDate, CalendarComponent }: MonthCalendarProps) {
-  const { userPlan, loading: subscriptionLoading } = useSubscription()
+  const { userPlan, loading: subscriptionLoading } = useSubscriptionContext()
   const { 
     currentDate, 
     onNavigate, 

@@ -266,66 +266,77 @@ export function ActiveSession({
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* メインタイマーカード */}
-      <Card className="bg-gray-900 border-gray-800">
+      <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl">
         <CardHeader className="text-center pb-4">
-          <div className="flex items-center justify-center space-x-3 mb-2">
+          <div className="flex items-center justify-center space-x-3 mb-4">
             <div
-              className={`w-3 h-3 ${statusInfo.color} rounded-full ${sessionState === "active" ? "animate-pulse" : ""}`}
+              className={`w-3 h-3 ${statusInfo.color} rounded-full shadow-[0_0_10px_currentColor] ${sessionState === "active" ? "animate-pulse" : ""}`}
             />
-            <span className="text-green-400 font-medium">{statusInfo.text}</span>
+            <span className={cn("font-medium tracking-wide", 
+              sessionState === "active" ? "text-green-500" : 
+              sessionState === "paused" ? "text-yellow-500" : "text-blue-500"
+            )}>{statusInfo.text}</span>
           </div>
-          <h2 className="text-2xl font-bold text-white">{session.activityName}</h2>
-          {session.location && <p className="text-gray-400 text-sm">📍 {session.location}</p>}
+          <h2 className="text-4xl font-bold tracking-tight mb-2">{session.activityName}</h2>
+          {session.location && (
+            <Badge variant="secondary" className="text-muted-foreground bg-secondary/50">
+              📍 {session.location}
+            </Badge>
+          )}
         </CardHeader>
 
-        <CardContent className="text-center space-y-6">
+        <CardContent className="text-center space-y-8">
           {/* 経過時間表示 */}
           <div className="space-y-2">
             <div
-              className={`text-6xl font-mono font-bold ${sessionState === "ended" ? "text-blue-400" : "text-white"}`}
+              className={cn("text-7xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums transition-colors py-4", 
+                sessionState === "ended" ? "text-blue-500" : "text-foreground"
+              )}
             >
               {formattedTime}
             </div>
-            <div className="text-gray-400 text-sm">
+            <div className="text-muted-foreground text-sm font-medium">
               {t('active_session.start_time')}:{" "}
               {getTimeStringInTimezone(session.startTime, timezone, '24h').substring(0, 5)}
             </div>
             
             {/* 目標時間と進捗表示 */}
             {session.targetTime && (
-              <div className="space-y-2 mt-4">
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
+              <div className="space-y-3 mt-8 max-w-md mx-auto">
+                <div className="flex items-center justify-between text-sm text-muted-foreground font-medium">
                   <span>
                     {t('active_session.target')}: {Math.floor(session.targetTime / 60)}{t('time.hours_unit')}
                     {session.targetTime % 60 > 0 && `${session.targetTime % 60}${t('time.minutes_unit')}`}
                   </span>
+                  <span>
+                    {Math.round((elapsedTime / (session.targetTime * 60)) * 100)}%
+                  </span>
                 </div>
-                <div className="w-full bg-gray-800 rounded-full h-2">
+                <div className="w-full bg-secondary/50 rounded-full h-3 overflow-hidden backdrop-blur-sm">
                   <div
-                    className={`h-2 rounded-full transition-all duration-300 ${
+                    className={cn("h-full rounded-full transition-all duration-500",
                       elapsedTime >= session.targetTime * 60
-                        ? "bg-green-500"
+                        ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]"
                         : elapsedTime >= session.targetTime * 60 * 0.8
                         ? "bg-yellow-500"
                         : "bg-blue-500"
-                    }`}
+                    )}
                     style={{
                       width: `${Math.min((elapsedTime / (session.targetTime * 60)) * 100, 100)}%`,
                     }}
                   />
                 </div>
-                <div className="text-xs text-gray-400">
-                                {t('active_session.progress')}: {Math.round((elapsedTime / (session.targetTime * 60)) * 100)}%
-            {elapsedTime >= session.targetTime * 60 && (
-              <span className="text-green-400 ml-2">{t('active_session.goal_achieved')}</span>
-            )}
-                </div>
+                {elapsedTime >= session.targetTime * 60 && (
+                  <div className="text-sm text-green-500 font-medium animate-pulse flex items-center justify-center gap-1">
+                     🎉 {t('active_session.goal_achieved')}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* 制御ボタン */}
-          <div className="flex justify-center space-x-4">
+          <div className="flex justify-center items-center gap-4 pt-4">
             {sessionState === "ended" ? (
               // 終了後のボタン
               <>
@@ -333,7 +344,7 @@ export function ActiveSession({
                   onClick={handleResume}
                   variant="outline"
                   size="lg"
-                  className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                  className="h-14 px-8 text-base hover:bg-secondary/80 border-white/10"
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
                   {t('active_session.resume')}
@@ -341,7 +352,7 @@ export function ActiveSession({
                 <Button 
                   onClick={handleSave} 
                   size="lg" 
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="h-14 px-8 text-base bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-green-900/20 transition-all hover:-translate-y-0.5"
                   disabled={isSaving || isReflectionLoading || isUploading}
                 >
                   <Save className="w-5 h-5 mr-2" />
@@ -355,23 +366,28 @@ export function ActiveSession({
                   onClick={handleTogglePause}
                   variant="outline"
                   size="lg"
-                  className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                  className="h-16 px-8 rounded-full border-2 hover:bg-secondary/80 border-white/10 backdrop-blur-sm"
                 >
                   {sessionState === "paused" ? (
                     <>
-                      <Play className="w-5 h-5 mr-2" />
+                      <Play className="w-6 h-6 mr-2 fill-current" />
                       {t('active_session.resume')}
                     </>
                   ) : (
                     <>
-                      <Pause className="w-5 h-5 mr-2" />
+                      <Pause className="w-6 h-6 mr-2 fill-current" />
                       {t('active_session.pause')}
                     </>
                   )}
                 </Button>
 
-                <Button onClick={handleEnd} variant="destructive" size="lg" className="bg-red-600 hover:bg-red-700">
-                  <Square className="w-5 h-5 mr-2" />
+                <Button 
+                  onClick={handleEnd} 
+                  variant="destructive" 
+                  size="lg" 
+                  className="h-16 px-8 rounded-full shadow-lg hover:shadow-red-900/20 transition-all hover:-translate-y-0.5"
+                >
+                  <Square className="w-6 h-6 mr-2 fill-current" />
                   {t('active_session.end')}
                 </Button>
               </>
@@ -380,15 +396,15 @@ export function ActiveSession({
 
           {/* 状態別メッセージ */}
           {sessionState === "paused" && (
-            <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 border-opacity-30 rounded-lg p-3">
-              <p className="text-yellow-400 text-sm" dangerouslySetInnerHTML={{ __html: t('active_session.paused_message') }} />
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 backdrop-blur-sm">
+              <p className="text-yellow-500 text-sm font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.paused_message') }} />
             </div>
           )}
 
           {sessionState === "ended" && completedDurationMinutes > 0 && (
-            <div className="space-y-3">
-              <p className="text-white text-sm" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
-              <p className="text-gray-300 text-sm leading-relaxed">
+            <div className="space-y-4 bg-secondary/30 rounded-xl p-6 backdrop-blur-sm border border-white/5">
+              <p className="text-foreground font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 {(() => {
                   const minutes = Math.floor(completedDurationMinutes)
                   const hours = Math.floor(completedDurationMinutes / 60)
@@ -424,8 +440,8 @@ export function ActiveSession({
 
           {/* エラー表示 */}
           {localReflectionError && (
-            <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-3">
-              <p className="text-red-400 text-sm">⚠️ {localReflectionError}</p>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+              <p className="text-destructive text-sm font-medium">⚠️ {localReflectionError}</p>
             </div>
           )}
         </CardContent>
@@ -433,22 +449,22 @@ export function ActiveSession({
 
       {/* アクション・メモカード（終了時のみ表示） */}
       {sessionState === "ended" && (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-3 mb-4">
+        <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-xl animate-in slide-in-from-bottom-4 duration-500">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <Button
                 onClick={() => {
                   setShowNotes(!showNotes)
                   setShowPhotos(false) // 写真タブを閉じる
                 }}
                 variant={showNotes ? "default" : "outline"}
-                className={
+                className={cn("h-12 text-base transition-all",
                   showNotes
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                }
+                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    : "hover:bg-secondary"
+                )}
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
+                <MessageSquare className="w-5 h-5 mr-2" />
                 {t('active_session.memo_label')}
               </Button>
 
@@ -458,16 +474,16 @@ export function ActiveSession({
                   setShowNotes(false) // メモタブを閉じる
                 }}
                 variant={showPhotos ? "default" : "outline"}
-                className={
+                className={cn("h-12 text-base transition-all",
                   showPhotos
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                }
+                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    : "hover:bg-secondary"
+                )}
               >
-                <Camera className="w-4 h-4 mr-2" />
+                <Camera className="w-5 h-5 mr-2" />
                 {t('active_session.photos_label')}
                 {(photos.length) > 0 && (
-                  <span className="ml-1 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                  <span className="ml-2 bg-blue-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow-sm">
                     {photos.length}
                   </span>
                 )}
@@ -487,51 +503,37 @@ export function ActiveSession({
 
             {/* 写真アップロードエリア */}
             {showPhotos && (
-              <div className="space-y-4">
+              <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="mb-4">
-                  <Label className="text-white text-sm font-medium">{t('active_session.add_photos')}</Label>
+                  <Label className="text-base font-medium">{t('active_session.add_photos')}</Label>
                 </div>
 
                 {/* アップロードされた写真のプレビュー */}
                 {(photos.length > 0) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* 保存済みの写真 */}
-                    {/* {savedPhotos.map((photo, index) => ( */}
-                    {/*   <div key={`saved-${photo.id}`} className="relative group"> */}
-                    {/*     <img */}
-                    {/*       src={photo.url} */}
-                    {/*       alt={`保存済み写真 ${index + 1}`} */}
-                    {/*       className="w-full h-32 object-cover rounded-lg border border-green-500" */}
-                    {/*     /> */}
-                    {/*     <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded"> */}
-                    {/*       ✓ 保存済み */}
-                    {/*     </div> */}
-                    {/*     <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded"> */}
-                    {/*       {photo.fileName} */}
-                    {/*     </div> */}
-                    {/*   </div> */}
-                    {/* ))} */}
-                    {/* アップロード待ちの写真 */}
+                  <div className="grid grid-cols-2 gap-4">
                     {photos.map((photo, index) => (
-                      <div key={`pending-${index}`} className="relative group">
+                      <div key={`pending-${index}`} className="relative group rounded-xl overflow-hidden shadow-md">
                         <img
                           src={URL.createObjectURL(photo)}
                           alt={`アップロード予定写真 ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg border border-gray-600"
+                          className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Button
                           onClick={() => handlePhotoRemove(index)}
-                          size="sm"
+                          size="icon"
                           variant="destructive"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 p-0"
+                          className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-4 h-4" />
                         </Button>
-                        <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                        <div className="absolute top-2 left-2 bg-yellow-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                           {t('active_session.waiting_save')}
                         </div>
-                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                          {photo.name}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                          <p className="text-white text-xs truncate px-1">
+                            {photo.name}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -539,14 +541,15 @@ export function ActiveSession({
                 )}
 
                 {photos.length === 0 && (
-                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
-                    <Camera className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                    <p className="text-gray-400 text-sm mb-2">{t('active_session.upload_photos_description')}</p>
+                  <div className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors rounded-xl p-10 text-center bg-secondary/20">
+                    <div className="bg-secondary/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Camera className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground text-sm mb-4">{t('active_session.upload_photos_description')}</p>
                     <Button
                       onClick={handlePhotoButtonClick}
                       variant="outline"
-                      size="sm"
-                      className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+                      className="bg-background hover:bg-secondary"
                     >
                       {t('active_session.select_photos')}
                     </Button>
@@ -557,22 +560,21 @@ export function ActiveSession({
 
             {/* メモ・振り返り入力エリア */}
             {showNotes && !showPhotos && (
-              <div className="space-y-4">
+              <div className="space-y-6 animate-in fade-in duration-300">
                 {/* 気分評価 */}
-                <div className="space-y-2">
-                  <Label className="text-white text-sm font-medium">{t('active_session.mood_question')}</Label>
-                  <div className="flex justify-start space-x-3">
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">{t('active_session.mood_question')}</Label>
+                  <div className="flex justify-between sm:justify-start sm:gap-4">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <Button
                         key={rating}
                         onClick={() => setMood(rating)}
                         variant={mood === rating ? "default" : "outline"}
-                        size="lg"
                         className={cn(
-                          "h-14 w-14 text-2xl p-0 flex items-center justify-center",
+                          "h-14 w-14 text-2xl p-0 flex items-center justify-center rounded-xl transition-all",
                           mood === rating
-                            ? "bg-green-500 hover:bg-green-600"
-                            : "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                            ? "bg-green-500 hover:bg-green-600 text-white scale-110 shadow-lg shadow-green-900/20 ring-2 ring-green-500 ring-offset-2 ring-offset-background"
+                            : "hover:bg-secondary hover:scale-105"
                         )}
                       >
                         {rating === 1 && "😞"}
@@ -588,7 +590,7 @@ export function ActiveSession({
                 {/* 学びや成果（振り返り） */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-white text-sm font-medium">{t('active_session.achievements_label')}</Label>
+                    <Label className="text-sm font-medium">{t('active_session.achievements_label')}</Label>
                     <CharacterCounter current={achievements.length} max={limits.sessionAchievements} />
                   </div>
                   <Textarea
@@ -597,14 +599,14 @@ export function ActiveSession({
                     value={achievements}
                     onChange={(e) => setAchievements(e.target.value.slice(0, limits.sessionAchievements))}
                     maxLength={limits.sessionAchievements}
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                    className="bg-secondary/20 border-white/10 min-h-[100px] focus-visible:ring-primary resize-none"
                   />
                 </div>
 
                 {/* 課題や改善点（明日の予定） */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-white text-sm font-medium">{t('active_session.challenges_label')}</Label>
+                    <Label className="text-sm font-medium">{t('active_session.challenges_label')}</Label>
                     <CharacterCounter current={challenges.length} max={limits.sessionChallenges} />
                   </div>
                   <Textarea
@@ -612,14 +614,14 @@ export function ActiveSession({
                     value={challenges}
                     onChange={(e) => setChallenges(e.target.value.slice(0, limits.sessionChallenges))}
                     maxLength={limits.sessionChallenges}
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                    className="bg-secondary/20 border-white/10 min-h-[100px] focus-visible:ring-primary resize-none"
                   />
                 </div>
 
                 {/* 自由記述メモ（その他） */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-white text-sm font-medium">{t('active_session.notes_label')}</Label>
+                    <Label className="text-sm font-medium">{t('active_session.notes_label')}</Label>
                     <CharacterCounter current={notes.length} max={limits.sessionNotes} />
                   </div>
                   <Textarea
@@ -627,7 +629,7 @@ export function ActiveSession({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
                     maxLength={limits.sessionNotes}
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 min-h-[80px]"
+                    className="bg-secondary/20 border-white/10 min-h-[100px] focus-visible:ring-primary resize-none"
                   />
                 </div>
               </div>

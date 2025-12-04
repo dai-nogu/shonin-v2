@@ -1,13 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Clock, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play } from "lucide-react"
+import { X, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Progress } from "@/components/ui/common/progress"
 import { useTranslations } from 'next-intl'
+import { cn } from "@/lib/utils"
 import { getSessionPhotos, type UploadedPhoto, getSessionPhotosWithPreload } from "@/lib/upload-photo"
 import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useSessions } from "@/contexts/sessions-context"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
 import type { CompletedSession } from "./time-tracker"
 import { safeWarn } from "@/lib/safe-logger"
@@ -24,6 +27,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const t = useTranslations()
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -35,8 +41,14 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
   const totalPages = hasContent ? 2 : 1 // メモがある場合は2ページ、ない場合は1ページ
   
+  // 固定高さが必要かどうか（複数ページ or スタートボタンがある場合）
+  const needsFixedHeight = totalPages > 1 || !!onStartSimilar
+  
   // 目標管理フック
   const { getGoal } = useGoalsDb()
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
   
   // 目標情報を取得
   const goalInfo = session?.goalId ? getGoal(session.goalId) : null
@@ -54,15 +66,33 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   }, [])
 
   // モーダルが開いている間は背景スクロールを無効にする
-  useScrollLock(isOpen)
+  useScrollLock(isOpen || isClosing)
   
   useEffect(() => {
     if (isOpen) {
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
+      setIsClosing(false)
+      // アニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
     }
   }, [isOpen])
 
-  if (!isOpen || !session) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  if ((!isOpen && !isClosing) || !session) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -95,8 +125,11 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     return texts[mood - 1] || "普通"
   }
 
-  const handleStartSimilar = () => {
+  const handleStartSimilar = async () => {
     if (onStartSimilar) {
+      setIsStarting(true)
+      // 少し遅延を入れて開始感を演出
+      await new Promise((resolve) => setTimeout(resolve, 500))
       onStartSimilar({
         activityId: session.activityId,
         activityName: session.activityName,
@@ -104,6 +137,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
         targetTime: session.targetTime,
         goalId: session.goalId
       })
+      setIsStarting(false)
     }
   }
 
@@ -165,80 +199,76 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     }
   }
 
-  // アクティビティ情報を取得
+  // アクティビティ情報を取得（一文字アイコン）
   const activityInfo = {
-    icon: session.activityIcon || "📚",
+    icon: session.activityName?.charAt(0) || "?",
     color: session.activityColor || "bg-blue-500"
   }
 
   // 1ページ目のコンテンツ
   const renderPage1 = () => (
-    <div className="space-y-4">
-      {/* 基本情報 */}
-      <div className="grid grid-cols-1 gap-1">
-        {/* 実施日時と場所を横並び */}
-        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Calendar className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.implementation_date')}</span>
-              </div>
-              <div className="text-white">
-                <div className="text-sm">{formatDateTime(session.startTime)}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <MapPin className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.location')}</span>
-              </div>
-              <div className="text-white text-sm">{session.location || t('common.not_set')}</div>
-            </CardContent>
-          </Card>
+    <div className="space-y-2">
+      {/* コンパクトな情報カード */}
+      <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-800/50 space-y-4">
+        {/* 日時と場所 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-blue-400 mb-1.5">
+              <Calendar className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.implementation_date')}</span>
+            </div>
+            <div className="text-white text-sm font-medium">
+              {formatDateTime(session.startTime)}
+            </div>
+          </div>
+          
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-green-400 mb-1.5">
+              <MapPin className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.location')}</span>
+            </div>
+            <div className="text-white text-sm font-medium truncate">
+              {session.location || t('common.not_set')}
+            </div>
+          </div>
         </div>
 
-        {/* 関連する目標と気分を横並び */}
-        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Target className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.related_goal')}</span>
-              </div>
-              {goalInfo ? (
-                <div className="text-white text-sm">{goalInfo.title}</div>
-              ) : (
-                <div className="text-gray-400 text-sm">{t('common.not_set')}</div>
-              )}
-            </CardContent>
-          </Card>
+        {/* 区切り線 */}
+        <div className="border-t border-gray-700/50"></div>
 
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.mood')}</span>
+        {/* 目標と気分 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-purple-400 mb-1.5">
+              <Target className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.related_goal')}</span>
+            </div>
+            <div className="text-white text-sm font-medium">
+              {goalInfo ? goalInfo.title : <span className="text-gray-500">{t('common.not_set')}</span>}
+            </div>
+          </div>
+
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-yellow-400 mb-1.5">
+              <Star className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.mood')}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{getMoodEmoji(session.mood || 3)}</span>
+              <div className="flex space-x-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-3 h-3 transition-all ${
+                      star <= (session.mood || 3) 
+                        ? "text-yellow-400 fill-yellow-400" 
+                        : "text-gray-700 fill-gray-800"
+                    }`}
+                  />
+                ))}
               </div>
-              <div className="flex items-center space-x-2">
-                <div>
-                  <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-3 h-3 ${
-                          star <= (session.mood || 3) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -246,81 +276,85 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
 
   // 2ページ目のコンテンツ
   const renderPage2 = () => (
-    <div className="space-y-3">
-      {/* 学びや成果 */}
-      {session.achievements && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-gray-300 font-medium text-sm">{t('session_detail.achievements')}</span>
-            </div>
-            <div className="text-white text-sm whitespace-pre-wrap">{session.achievements}</div>
-          </CardContent>
-        </Card>
-      )}
+    <div className="space-y-2">
+      {/* 振り返り・メモ */}
+      <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
+        <h3 className="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center">
+          <span className="w-0.5 h-3 bg-green-500 rounded-full mr-1.5"></span>
+          {t('session_detail.reflection_and_notes')}
+        </h3>
 
-      {/* 課題や改善点 */}
-      {session.challenges && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-orange-400" />
-              <span className="text-gray-300 font-medium text-sm">{t('session_detail.improvements')}</span>
+        <div className="space-y-3">
+          {/* 学びや成果 */}
+          {session.achievements && (
+            <div className="relative pl-3 border-l-2 border-green-500/30">
+              <span className="text-xs font-medium text-green-400 mb-0.5 block">{t('session_detail.achievements')}</span>
+              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
+                {session.achievements}
+              </div>
             </div>
-            <div className="text-white text-sm whitespace-pre-wrap">{session.challenges}</div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* その他のメモ */}
-      {session.notes && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-blue-400" />
-              <span className="text-gray-300 font-medium text-sm">その他のメモ</span>
+          {/* 課題や改善点 */}
+          {session.challenges && (
+            <div className="relative pl-3 border-l-2 border-orange-500/30">
+              <span className="text-xs font-medium text-orange-400 mb-0.5 block">{t('session_detail.improvements')}</span>
+              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
+                {session.challenges}
+              </div>
             </div>
-            <div className="text-white text-sm whitespace-pre-wrap">{session.notes}</div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+
+          {/* その他のメモ */}
+          {session.notes && (
+            <div className="relative pl-3 border-l-2 border-blue-500/30">
+              <span className="text-xs font-medium text-blue-400 mb-0.5 block">その他のメモ</span>
+              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
+                {session.notes}
+              </div>
+            </div>
+          )}
+          
+          {/* メモがない場合 */}
+          {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
+            <div className="text-center py-3 text-gray-500 text-xs italic">
+              メモはありません
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* 目標時間と達成度 */}
       {session.targetTime && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <Target className="w-4 h-4 text-purple-400" />
-              <span className="text-gray-300 font-medium text-sm">目標達成度</span>
+        <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-1.5 text-purple-400">
+              <Target className="w-3 h-3" />
+              <span className="text-xs font-medium">目標達成度</span>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-400">目標時間</span>
-                <span className="text-white">{formatDuration(session.targetTime * 60)}</span>
-              </div>
-              <Progress 
-                value={Math.min((session.duration / (session.targetTime * 60)) * 100, 100)} 
-                className="h-2" 
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+              session.duration >= session.targetTime * 60 
+                ? "bg-green-500/10 text-green-400 border border-green-500/20" 
+                : "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+            }`}>
+              {Math.round((session.duration / (session.targetTime * 60)) * 100)}%
+            </span>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px] text-gray-400 mb-0.5">
+              <span>0m</span>
+              <span>{formatDuration(session.targetTime * 60)}</span>
+            </div>
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                   session.duration >= session.targetTime * 60 ? "bg-gradient-to-r from-green-500 to-green-400" : "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                }`}
+                style={{ width: `${Math.min((session.duration / (session.targetTime * 60)) * 100, 100)}%` }}
               />
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-400">達成率</span>
-                <span className={`font-medium ${
-                  session.duration >= session.targetTime * 60 ? "text-green-400" : "text-yellow-400"
-                }`}>
-                  {Math.round((session.duration / (session.targetTime * 60)) * 100)}%
-                  {session.duration >= session.targetTime * 60 && " 🎉"}
-                </span>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* メモがない場合の表示 */}
-      {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
-        <div className="text-center py-8">
-          <p className="text-gray-400 text-sm">記録されたメモはありません</p>
+          </div>
         </div>
       )}
     </div>
@@ -328,164 +362,174 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={cn(
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+        isAnimating ? "opacity-100" : "opacity-0"
+      )}
+      onClick={handleClose}
     >
       <Card 
-        className={`bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto ${
-          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
-        }`}
+        className={cn(
+          `bg-[#0f1115] border-gray-800 shadow-2xl max-w-2xl w-full mx-auto transition-all duration-300 ease-out overflow-hidden ring-1 ring-white/5`,
+          isMobile && needsFixedHeight ? 'h-[450px] max-h-[85vh]' : 'max-h-[85vh] overflow-y-auto rounded-xl',
+          isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
-        <CardHeader className={`relative ${isMobile ? 'pb-2' : ''}`} style={isMobile ? { paddingTop: '3rem' } : {}}>
+        <CardHeader className={`relative ${isMobile ? 'pb-2 pt-3' : 'pb-3 pt-4'}`}>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-full w-7 h-7 p-0"
           >
             <X className="w-4 h-4" />
           </Button>
           
-          {/* アクティビティヘッダー */}
-          <div className="mb-2">
-            <div className="flex items-center space-x-3">
-              <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full`}></div>
-              <div className="flex-1 min-w-0">
-                <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
-                  {session.activityName}
-                </h2>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Clock className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
-                  <span className={`text-green-400 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
-                    {formatDuration(session.duration)}
-                  </span>
-                </div>
+          {/* コンパクトなヘッダー */}
+          <div className="flex items-center space-x-3">
+            <div className={`${isMobile ? 'w-12 h-12' : 'w-14 h-14'} ${activityInfo.color} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
+              <span className="text-xl font-bold text-white">{activityInfo.icon}</span>
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h2 className={`text-white font-bold ${isMobile ? 'text-base' : 'text-lg'} truncate mb-1`}>
+                {session.activityName}
+              </h2>
+              <div className="flex items-center text-green-400">
+                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} font-mono`}>
+                  {formatDuration(session.duration)}
+                </span>
               </div>
             </div>
           </div>
         </CardHeader>
 
         {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
-        <CardContent className={`flex flex-col ${isMobile ? 'h-[290px]' : 'min-h-0'} relative`}>
-          {/* ナビゲーションボタン（SP用） */}
-          {isMobile && currentPage > 1 && totalPages > 1 && (
-            <Button
-              onClick={handlePrevPage}
-              variant="outline"
-              size="sm"
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Button>
-          )}
-
-          {isMobile && currentPage < totalPages && totalPages > 1 && (
-            <Button
-              onClick={handleNextPage}
-              variant="outline"
-              size="sm"
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Button>
-          )}
-
+        <CardContent className={`flex flex-col ${needsFixedHeight ? (isMobile ? 'h-[360px]' : 'h-[320px]') : ''} relative`}>
           {/* コンテンツエリア - スクロール可能 */}
-          <div className="flex-1 overflow-y-auto">
-            {isMobile ? (
-              // SPでのページ表示（スワイプ対応・アニメーション付き）
+          <div className={`${needsFixedHeight ? 'flex-1' : ''} overflow-hidden relative`}>
+            {/* スライダー本体 */}
+            <div 
+              className={`${needsFixedHeight ? 'h-full' : ''} w-full relative`}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <div 
-                className="h-full relative overflow-hidden"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
+                className={`${totalPages > 1 ? 'h-full' : ''} w-full transition-transform duration-300 ease-out flex`}
+                style={{
+                  transform: `translateX(calc(-${(currentPage - 1) * 100}% + ${-slideOffset}px))`
+                }}
               >
-                <div 
-                  className="h-full transition-transform duration-300 ease-out"
-                  style={{
-                    transform: `translateX(calc(-${(currentPage - 1) * 100}% + ${-slideOffset}px))`
-                  }}
-                >
-                  <div className="flex h-full">
-                    {/* 1ページ目 */}
-                    <div className="w-full flex-shrink-0">
-                      <div className="pb-4 h-full overflow-y-auto">
-                        {renderPage1()}
-                      </div>
-                    </div>
-                    
-                    {/* 2ページ目（メモがある場合のみ） */}
-                    {hasContent && (
-                      <div className="w-full flex-shrink-0">
-                        <div className="pb-4 h-full overflow-y-auto">
-                          {renderPage2()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                {/* 1ページ目: 基本情報 */}
+                <div className="w-full flex-shrink-0 overflow-y-auto px-1 py-1">
+                  {renderPage1()}
                 </div>
+                
+                {/* 2ページ目: メモ（ある場合） */}
+                {hasContent && (
+                  <div className="w-full flex-shrink-0 overflow-y-auto px-1 py-1">
+                    {renderPage2()}
+                  </div>
+                )}
               </div>
-            ) : (
-              // PCでの通常表示
-              <div className="space-y-6">
-                {renderPage1()}
-                {hasContent && renderPage2()}
-              </div>
-            )}
+            </div>
           </div>
 
-          {/* フッターエリア - 固定（ページインジケーター + スタートボタン） */}
-          {isMobile && (
-            <div className="flex-shrink-0 pt-4 space-y-3">
-              {/* ページインジケーター */}
-              {totalPages > 1 && (
+          {/* フッターエリア - 固定（ナビゲーション + インジケーター + スタートボタン） */}
+          <div className={`flex-shrink-0 pt-1 space-y-2 ${isMobile ? '' : 'px-1'}`}>
+            {/* ナビゲーション行（左右ボタン + インジケーター） */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-2">
+                {/* 左ボタン */}
+                <Button
+                  onClick={handlePrevPage}
+                  variant="ghost"
+                  size="icon"
+                  disabled={currentPage <= 1}
+                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </Button>
+
+                {/* インジケーター */}
                 <div className="flex justify-center space-x-2">
                   {Array.from({ length: totalPages }, (_, i) => (
-                    <div
+                    <button
                       key={i}
-                      className={`w-2 h-2 rounded-full ${
-                        i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
+                      onClick={() => !isTransitioning && setCurrentPage(i + 1)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                        i + 1 === currentPage 
+                          ? 'bg-green-400 w-4' 
+                          : 'bg-gray-600 hover:bg-gray-500'
                       }`}
                     />
                   ))}
                 </div>
-              )}
+
+                {/* 右ボタン */}
+                <Button
+                  onClick={handleNextPage}
+                  variant="ghost"
+                  size="icon"
+                  disabled={currentPage >= totalPages}
+                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
+              </div>
+            )}
               
               {/* スタートボタン */}
-              <Button
-                onClick={handleStartSimilar}
-                className="w-full bg-green-600 hover:bg-green-700 text-black"
-              >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}              </Button>
-            </div>
-          )}
-
-          {/* PCでのアクションボタン */}
-          {!isMobile && (
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button
-                onClick={onClose}
-                variant="outline"
-                className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-              >
-                {t('session_detail.close')}
-              </Button>
               {onStartSimilar && (
-                <Button
-                  onClick={handleStartSimilar}
-                  className="bg-green-600 hover:bg-green-700 text-black"
-                >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}                </Button>
+                isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="w-full inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="w-full bg-[#1eb055] text-black opacity-50 pointer-events-none h-9"
+                          >
+                            <Play className="w-3.5 h-3.5 mr-1.5" />
+                            <span className="text-sm">{t('session_detail.start_session')}</span>
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    onClick={handleStartSimilar}
+                    disabled={isStarting}
+                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50 h-9"
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin mr-1.5" />
+                        <span className="text-sm">{t('session_start.starting_recording')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 mr-1.5" />
+                        <span className="text-sm">{t('session_detail.start_session')}</span>
+                      </>
+                    )}
+                  </Button>
+                )
               )}
-            </div>
-          )}
+          </div>
+
+          {/* PCでのアクションボタン - PCレイアウト削除 */}
+          {/* {!isMobile && ( ... )} は削除し、モバイルと同じスタートボタン配置に統合 */}
         </CardContent>
       </Card>
     </div>
@@ -501,6 +545,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [preloadCompleted, setPreloadCompleted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isStarting, setIsStarting] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -513,8 +560,14 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   // 写真がある場合は3ページ（基本情報、メモ、写真）、メモがない場合は2ページ（基本情報、写真）、写真もメモもない場合は1ページ
   const totalPages = sessionPhotos.length > 0 ? (hasContent ? 3 : 2) : (hasContent ? 2 : 1)
   
+  // 固定高さが必要かどうか（複数ページ or スタートボタンがある場合）
+  const needsFixedHeight = totalPages > 1 || !!onStartSimilar
+  
   // 目標管理フック
   const { getGoal } = useGoalsDb()
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
   
   // 目標情報を取得
   const goalInfo = session?.goalId ? getGoal(session.goalId) : null
@@ -569,15 +622,33 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   }, [isOpen, session?.id])
 
   // モーダルが開いている間は背景スクロールを無効にする
-  useScrollLock(isOpen)
+  useScrollLock(isOpen || isClosing)
   
   useEffect(() => {
     if (isOpen) {
       setCurrentPage(1) // モーダルが開いたら1ページ目に戻す
+      setIsClosing(false)
+      // アニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
     }
   }, [isOpen])
 
-  if (!isOpen || !session) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  if ((!isOpen && !isClosing) || !session) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -610,8 +681,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     return texts[mood - 1] || "普通"
   }
 
-  const handleStartSimilar = () => {
+  const handleStartSimilar = async () => {
     if (onStartSimilar) {
+      setIsStarting(true)
+      // 少し遅延を入れて開始感を演出
+      await new Promise((resolve) => setTimeout(resolve, 500))
       onStartSimilar({
         activityId: session.activityId,
         activityName: session.activityName,
@@ -619,6 +693,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
         targetTime: session.targetTime,
         goalId: session.goalId
       })
+      setIsStarting(false)
     }
   }
 
@@ -687,82 +762,76 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     }
   }
 
-  // アクティビティ情報を取得
+  // アクティビティ情報を取得（一文字アイコン）
   const activityInfo = {
-    icon: session.activityIcon || "📚",
+    icon: session.activityName?.charAt(0) || "?",
     color: session.activityColor || "bg-blue-500"
   }
 
   // 1ページ目のコンテンツ
   const renderPage1 = () => (
-    <div className="space-y-4">
-      {/* 基本情報 */}
-      <div className="grid grid-cols-1 gap-1">
-        {/* 実施日時と場所を横並び */}
-        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Calendar className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.implementation_date')}</span>
-              </div>
-              <div className="text-white">
-                <div className="text-sm">{formatDateTime(session.startTime)}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <MapPin className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.location')}</span>
-              </div>
-              <div className="text-white text-sm">{session.location || t('common.not_set')}</div>
-            </CardContent>
-          </Card>
+    <div className="space-y-2">
+      {/* コンパクトな情報カード */}
+      <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-800/50 space-y-4">
+        {/* 日時と場所 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-blue-400 mb-1.5">
+              <Calendar className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.implementation_date')}</span>
+            </div>
+            <div className="text-white text-sm font-medium">
+              {formatDateTime(session.startTime)}
+            </div>
+          </div>
+          
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-green-400 mb-1.5">
+              <MapPin className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.location')}</span>
+            </div>
+            <div className="text-white text-sm font-medium truncate">
+              {session.location || t('common.not_set')}
+            </div>
+          </div>
         </div>
 
-        {/* 関連する目標と気分を横並び */}
-        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Target className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.related_goal')}</span>
-              </div>
-              {goalInfo ? (
-                <div className="text-white text-sm">{goalInfo.title}</div>
-              ) : (
-                <div className="text-gray-400 text-sm">{t('common.not_set')}</div>
-              )}
-            </CardContent>
-          </Card>
+        {/* 区切り線 */}
+        <div className="border-t border-gray-700/50"></div>
 
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-gray-300 font-medium text-sm">{t('session_detail.mood')}</span>
+        {/* 目標と気分 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-purple-400 mb-1.5">
+              <Target className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.related_goal')}</span>
+            </div>
+            <div className="text-white text-sm font-medium">
+              {goalInfo ? goalInfo.title : <span className="text-gray-500">{t('common.not_set')}</span>}
+            </div>
+          </div>
+
+          <div className="py-1">
+            <div className="flex items-center space-x-1.5 text-yellow-400 mb-1.5">
+              <Star className="w-3 h-3" />
+              <span className="text-xs font-medium opacity-70">{t('session_detail.mood')}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{getMoodEmoji(session.mood || 3)}</span>
+              <div className="flex space-x-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-3 h-3 transition-all ${
+                      star <= (session.mood || 3) 
+                        ? "text-yellow-400 fill-yellow-400" 
+                        : "text-gray-700 fill-gray-800"
+                    }`}
+                  />
+                ))}
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="text-xl">{getMoodEmoji(session.mood || 3)}</div>
-                <div>
-                  <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-3 h-3 ${
-                          star <= (session.mood || 3) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <div className="text-white text-sm mt-1">{getMoodText(session.mood || 3)}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -770,81 +839,85 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
 
   // 2ページ目のコンテンツ
   const renderPage2 = () => (
-    <div className="space-y-3">
-      {/* 学びや成果 */}
-      {session.achievements && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-gray-300 font-medium text-sm">{t('session_detail.achievements')}</span>
-            </div>
-            <div className="text-white text-sm whitespace-pre-wrap">{session.achievements}</div>
-          </CardContent>
-        </Card>
-      )}
+    <div className="space-y-2">
+      {/* 振り返り・メモ */}
+      <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
+        <h3 className="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center">
+          <span className="w-0.5 h-3 bg-green-500 rounded-full mr-1.5"></span>
+          {t('session_detail.reflection_and_notes')}
+        </h3>
 
-      {/* 課題や改善点 */}
-      {session.challenges && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-orange-400" />
-              <span className="text-gray-300 font-medium text-sm">{t('session_detail.improvements')}</span>
+        <div className="space-y-3">
+          {/* 学びや成果 */}
+          {session.achievements && (
+            <div className="relative pl-3 border-l-2 border-green-500/30">
+              <span className="text-xs font-medium text-green-400 mb-0.5 block">{t('session_detail.achievements')}</span>
+              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
+                {session.achievements}
+              </div>
             </div>
-            <div className="text-white text-sm whitespace-pre-wrap">{session.challenges}</div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* その他のメモ */}
-      {session.notes && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-blue-400" />
-              <span className="text-gray-300 font-medium text-sm">その他のメモ</span>
+          {/* 課題や改善点 */}
+          {session.challenges && (
+            <div className="relative pl-3 border-l-2 border-orange-500/30">
+              <span className="text-xs font-medium text-orange-400 mb-0.5 block">{t('session_detail.improvements')}</span>
+              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
+                {session.challenges}
+              </div>
             </div>
-            <div className="text-white text-sm whitespace-pre-wrap">{session.notes}</div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+
+          {/* その他のメモ */}
+          {session.notes && (
+            <div className="relative pl-3 border-l-2 border-blue-500/30">
+              <span className="text-xs font-medium text-blue-400 mb-0.5 block">その他のメモ</span>
+              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
+                {session.notes}
+              </div>
+            </div>
+          )}
+          
+          {/* メモがない場合 */}
+          {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
+            <div className="text-center py-3 text-gray-500 text-xs italic">
+              メモはありません
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* 目標時間と達成度 */}
       {session.targetTime && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <Target className="w-4 h-4 text-purple-400" />
-              <span className="text-gray-300 font-medium text-sm">目標達成度</span>
+        <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-1.5 text-purple-400">
+              <Target className="w-3 h-3" />
+              <span className="text-xs font-medium">目標達成度</span>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-400">目標時間</span>
-                <span className="text-white">{formatDuration(session.targetTime * 60)}</span>
-              </div>
-              <Progress 
-                value={Math.min((session.duration / (session.targetTime * 60)) * 100, 100)} 
-                className="h-2" 
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+              session.duration >= session.targetTime * 60 
+                ? "bg-green-500/10 text-green-400 border border-green-500/20" 
+                : "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+            }`}>
+              {Math.round((session.duration / (session.targetTime * 60)) * 100)}%
+            </span>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px] text-gray-400 mb-0.5">
+              <span>0m</span>
+              <span>{formatDuration(session.targetTime * 60)}</span>
+            </div>
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                   session.duration >= session.targetTime * 60 ? "bg-gradient-to-r from-green-500 to-green-400" : "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                }`}
+                style={{ width: `${Math.min((session.duration / (session.targetTime * 60)) * 100, 100)}%` }}
               />
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-400">達成率</span>
-                <span className={`font-medium ${
-                  session.duration >= session.targetTime * 60 ? "text-green-400" : "text-yellow-400"
-                }`}>
-                  {Math.round((session.duration / (session.targetTime * 60)) * 100)}%
-                  {session.duration >= session.targetTime * 60 && " 🎉"}
-                </span>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* メモがない場合の表示 */}
-      {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
-        <div className="text-center py-8">
-          <p className="text-gray-400 text-sm">記録されたメモはありません</p>
+          </div>
         </div>
       )}
     </div>
@@ -852,59 +925,54 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
 
   // 3ページ目のコンテンツ（写真）
   const renderPage3 = () => (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {loadingPhotos ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="text-gray-400 text-sm">写真を読み込んでいます...</div>
+        <div className="flex flex-col justify-center items-center py-8 bg-gray-800/30 rounded-lg border border-gray-800/50">
+          <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
+          <div className="text-gray-400 text-xs">読み込み中...</div>
         </div>
       ) : sessionPhotos.length > 0 ? (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardContent className={`${isMobile ? 'p-2' : 'p-3'}`}>
-            <div className="flex items-center space-x-2 mb-3">
-              <Camera className="w-4 h-4 text-blue-400" />
-              <span className="text-gray-300 font-medium text-sm">写真</span>
-            </div>
-            <div className={`grid gap-3 ${
-              isMobile 
-                ? 'grid-cols-1' // SPでは1列で大きく表示
-                : sessionPhotos.length === 1 
-                  ? 'grid-cols-1' // PCで1枚の場合は1列
-                  : sessionPhotos.length === 2
-                    ? 'grid-cols-2' // PCで2枚の場合は2列
-                    : 'grid-cols-2' // PCで3枚以上の場合は2列
-            }`}>
-              {sessionPhotos.map((photo, index) => (
-                <div key={photo.id || index} className="relative group">
-                  <img
-                    src={photo.url}
-                    alt={`Photo ${index + 1}`}
-                    className={`w-full object-cover rounded-lg transition-opacity duration-200 ${
-                      isMobile 
-                        ? 'h-48' // SPでは高さを大きく
-                        : sessionPhotos.length === 1
-                          ? 'h-64' // PCで1枚の場合は大きく
-                          : 'h-32' // PCで複数枚の場合
-                    } ${imageLoadStates[photo.url] ? 'opacity-100' : 'opacity-0'}`}
-                    onLoad={() => handleImageLoad(photo.url)}
-                    loading="lazy"
-                  />
-                  {/* ローディング表示（初期状態または読み込み中のみ表示） */}
-                  {!imageLoadStates[photo.url] && (
-                    <div className={`absolute inset-0 bg-gray-700 animate-pulse rounded-lg flex items-center justify-center ${
-                      isMobile ? 'h-48' : sessionPhotos.length === 1 ? 'h-64' : 'h-32'
-                    }`}>
-                      <div className="text-gray-500 text-sm">読み込み中...</div>
-                    </div>
-                  )}
-
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
+          <div className="flex items-center space-x-1.5 text-blue-400 mb-2">
+            <Camera className="w-3 h-3" />
+            <span className="font-medium text-xs">写真</span>
+          </div>
+          <div className={`grid gap-2 ${
+            sessionPhotos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+          }`}>
+            {sessionPhotos.map((photo, index) => (
+              <div 
+                key={photo.id || index} 
+                className={`relative group rounded-lg overflow-hidden border border-gray-700/50 bg-gray-900 ${
+                  sessionPhotos.length === 1 ? 'aspect-video' : 'aspect-square'
+                }`}
+              >
+                <img
+                  src={photo.url}
+                  alt={`Photo ${index + 1}`}
+                  className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                    imageLoadStates[photo.url] ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={() => handleImageLoad(photo.url)}
+                  loading="lazy"
+                />
+                
+                {/* ローディングスケルトン */}
+                {!imageLoadStates[photo.url] && (
+                  <div className="absolute inset-0 bg-gray-800 animate-pulse flex items-center justify-center">
+                    <Camera className="w-5 h-5 text-gray-600 opacity-50" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-400 text-sm">写真はありません</p>
+        <div className="flex flex-col items-center justify-center py-8 bg-gray-800/30 rounded-lg border border-gray-800/50">
+          <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center mb-2 text-gray-600">
+             <Image className="w-5 h-5" />
+          </div>
+          <p className="text-gray-500 text-xs">写真はありません</p>
         </div>
       )}
     </div>
@@ -912,174 +980,181 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={cn(
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+        isAnimating ? "opacity-100" : "opacity-0"
+      )}
+      onClick={handleClose}
     >
       <Card 
-        className={`bg-gray-900 border-gray-800 max-w-2xl w-full mx-auto ${
-          isMobile ? 'h-[430px] overflow-hidden' : 'max-h-[90vh] overflow-y-auto'
-        }`}
+        className={cn(
+          `bg-[#0f1115] border-gray-800 shadow-2xl max-w-2xl w-full mx-auto transition-all duration-300 ease-out overflow-hidden ring-1 ring-white/5`,
+          isMobile && needsFixedHeight ? 'h-[450px] max-h-[85vh]' : 'max-h-[85vh] overflow-y-auto rounded-xl',
+          isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+        )}
         onClick={(e) => e.stopPropagation()}
       >
-        <CardHeader className={`relative ${isMobile ? 'pb-2' : ''}`} style={isMobile ? { paddingTop: '3rem' } : {}}>
+        <CardHeader className={`relative ${isMobile ? 'pb-2 pt-3' : 'pb-3 pt-4'}`}>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-full w-7 h-7 p-0"
           >
             <X className="w-4 h-4" />
           </Button>
           
-          {/* アクティビティヘッダー */}
-          <div className="mb-2">
-            <div className="flex items-center space-x-3">
-              <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} ${activityInfo.color} rounded-full`}></div>
-              <div className="flex-1 min-w-0">
-                <h2 className={`text-white font-bold ${isMobile ? 'text-lg' : 'text-xl'} truncate`}>
-                  {session.activityName}
-                </h2>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Clock className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
-                  <span className={`text-green-400 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
-                    {formatDuration(session.duration)}
-                  </span>
-                </div>
+          {/* コンパクトなヘッダー */}
+          <div className="flex items-center space-x-3">
+            <div className={`${isMobile ? 'w-12 h-12' : 'w-14 h-14'} ${activityInfo.color} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
+              <span className="text-xl font-bold text-white">{activityInfo.icon}</span>
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h2 className={`text-white font-bold ${isMobile ? 'text-base' : 'text-lg'} truncate mb-1`}>
+                {session.activityName}
+              </h2>
+              <div className="flex items-center text-green-400">
+                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} font-mono`}>
+                  {formatDuration(session.duration)}
+                </span>
               </div>
             </div>
           </div>
         </CardHeader>
 
         {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
-        <CardContent className={`flex flex-col ${isMobile ? 'h-[290px]' : 'min-h-0'} relative`}>
-          {/* ナビゲーションボタン（SP用） */}
-          {isMobile && currentPage > 1 && totalPages > 1 && (
-            <Button
-              onClick={handlePrevPage}
-              variant="outline"
-              size="sm"
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Button>
-          )}
-
-          {isMobile && currentPage < totalPages && totalPages > 1 && (
-            <Button
-              onClick={handleNextPage}
-              variant="outline"
-              size="sm"
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-gray-700 border-gray-600 text-white hover:bg-gray-600 shadow-lg p-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Button>
-          )}
-
+        <CardContent className={`flex flex-col ${needsFixedHeight ? (isMobile ? 'h-[360px]' : 'h-[320px]') : ''} relative`}>
           {/* コンテンツエリア - スクロール可能 */}
-          <div className="flex-1 overflow-y-auto">
-            {isMobile ? (
-              // SPでのページ表示（スワイプ対応・アニメーション付き）
+          <div className={`${needsFixedHeight ? 'flex-1' : ''} overflow-hidden relative`}>
+            {/* スライダー本体 */}
+            <div 
+              className={`${needsFixedHeight ? 'h-full' : ''} w-full relative`}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <div 
-                className="h-full relative overflow-hidden"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
+                className={`${totalPages > 1 ? 'h-full' : ''} w-full transition-transform duration-300 ease-out flex`}
+                style={{
+                  transform: `translateX(calc(-${(currentPage - 1) * 100}% + ${-slideOffset}px))`
+                }}
               >
-                <div 
-                  className="h-full transition-transform duration-300 ease-out"
-                  style={{
-                    transform: `translateX(calc(-${(currentPage - 1) * 100}% + ${-slideOffset}px))`
-                  }}
-                >
-                  <div className="flex h-full">
-                    {/* 1ページ目 */}
-                    <div className="w-full flex-shrink-0">
-                      <div className="pb-4 h-full overflow-y-auto">
-                        {renderPage1()}
-                      </div>
-                    </div>
-                    
-                    {/* 2ページ目（メモがある場合） */}
-                    {hasContent && (
-                      <div className="w-full flex-shrink-0">
-                        <div className="pb-4 h-full overflow-y-auto">
-                          {renderPage2()}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* 2ページ目または3ページ目（写真がある場合） */}
-                    {sessionPhotos.length > 0 && (
-                      <div className="w-full flex-shrink-0">
-                        <div className="pb-4 h-full overflow-y-auto">
-                          {renderPage3()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                {/* 1ページ目: 基本情報 */}
+                <div className="w-full flex-shrink-0 overflow-y-auto px-1 py-1">
+                  {renderPage1()}
                 </div>
+                
+                {/* 2ページ目: メモ（ある場合） */}
+                {hasContent && (
+                  <div className="w-full flex-shrink-0 overflow-y-auto px-1 py-1">
+                    {renderPage2()}
+                  </div>
+                )}
+                
+                {/* 3ページ目: 写真（ある場合） */}
+                {sessionPhotos.length > 0 && (
+                  <div className="w-full flex-shrink-0 overflow-y-auto px-1 py-1">
+                    {renderPage3()}
+                  </div>
+                )}
               </div>
-            ) : (
-              // PCでの通常表示
-              <div className="space-y-6">
-                {renderPage1()}
-                {hasContent && renderPage2()}
-                {sessionPhotos.length > 0 && renderPage3()}
-              </div>
-            )}
+            </div>
           </div>
 
-          {/* フッターエリア - 固定（ページインジケーター + スタートボタン） */}
-          {isMobile && (
-            <div className="flex-shrink-0 pt-4 space-y-3">
-              {/* ページインジケーター */}
-              {totalPages > 1 && (
+          {/* フッターエリア - 固定（ナビゲーション + インジケーター + スタートボタン） */}
+          <div className={`flex-shrink-0 pt-1 space-y-2 ${isMobile ? '' : 'px-1'}`}>
+            {/* ナビゲーション行（左右ボタン + インジケーター） */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-2">
+                {/* 左ボタン */}
+                <Button
+                  onClick={handlePrevPage}
+                  variant="ghost"
+                  size="icon"
+                  disabled={currentPage <= 1}
+                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </Button>
+
+                {/* インジケーター */}
                 <div className="flex justify-center space-x-2">
                   {Array.from({ length: totalPages }, (_, i) => (
-                    <div
+                    <button
                       key={i}
-                      className={`w-2 h-2 rounded-full ${
-                        i + 1 === currentPage ? 'bg-green-400' : 'bg-gray-600'
+                      onClick={() => !isTransitioning && setCurrentPage(i + 1)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                        i + 1 === currentPage 
+                          ? 'bg-green-400 w-4' 
+                          : 'bg-gray-600 hover:bg-gray-500'
                       }`}
                     />
                   ))}
                 </div>
-              )}
+
+                {/* 右ボタン */}
+                <Button
+                  onClick={handleNextPage}
+                  variant="ghost"
+                  size="icon"
+                  disabled={currentPage >= totalPages}
+                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
+              </div>
+            )}
               
               {/* スタートボタン */}
-              <Button
-                onClick={handleStartSimilar}
-                className="w-full bg-green-600 hover:bg-green-700 text-black"
-              >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}              </Button>
-            </div>
-          )}
-
-          {/* PCでのアクションボタン */}
-          {!isMobile && (
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button
-                onClick={onClose}
-                variant="outline"
-                className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
-              >
-                {t('session_detail.close')}
-              </Button>
               {onStartSimilar && (
-                <Button
-                  onClick={handleStartSimilar}
-                  className="bg-green-600 hover:bg-green-700 text-black"
-                >
-                <Play className="w-4 h-4" />
-                {t('session_detail.start_session')}                </Button>
+                isSessionActive ? (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <span className="w-full inline-block cursor-not-allowed">
+                          <Button
+                            disabled
+                            className="w-full bg-[#1eb055] text-black opacity-50 pointer-events-none h-9"
+                          >
+                            <Play className="w-3.5 h-3.5 mr-1.5" />
+                            <span className="text-sm">{t('session_detail.start_session')}</span>
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{t('common.recording_in_progress')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    onClick={handleStartSimilar}
+                    disabled={isStarting}
+                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50 h-9"
+                  >
+                    {isStarting ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin mr-1.5" />
+                        <span className="text-sm">{t('session_start.starting_recording')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 mr-1.5" />
+                        <span className="text-sm">{t('session_detail.start_session')}</span>
+                      </>
+                    )}
+                  </Button>
+                )
               )}
-            </div>
-          )}
+          </div>
+
+          {/* PCでのアクションボタン - PCレイアウト削除 */}
+          {/* {!isMobile && ( ... )} は削除し、モバイルと同じスタートボタン配置に統合 */}
         </CardContent>
       </Card>
     </div>

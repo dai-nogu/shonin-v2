@@ -64,6 +64,11 @@ export function CalendarContainer({
 
   // 内部で使用する日付クリック処理
   const handleInternalDateClick = (date: any, sessions: CalendarSession[]) => {
+    // 記録がない日はモーダルを表示しない
+    if (sessions.length === 0) {
+      return
+    }
+    
     setSelectedDateSessions(sessions)
     
     // 日付文字列のフォーマット（月と週で異なる）
@@ -124,6 +129,7 @@ export function CalendarContainer({
         onClose={() => setIsModalOpen(false)}
         date={modalDate}
         sessions={selectedDateSessions}
+        completedSessions={completedSessions}
       />
     </div>
   )

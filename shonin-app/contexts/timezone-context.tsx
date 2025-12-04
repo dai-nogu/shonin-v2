@@ -42,8 +42,8 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
         setError(null)
 
         // ローカルストレージから設定を読み込み
-        const savedTimezone = localStorage.getItem('shonin-timezone')
-        const savedAutoDetect = localStorage.getItem('shonin-auto-detect-timezone')
+        const savedTimezone = localStorage.getItem('app-timezone')
+        const savedAutoDetect = localStorage.getItem('app-auto-detect-timezone')
 
         if (savedAutoDetect === 'false') {
           // 自動検出が無効の場合は保存されたタイムゾーンを使用
@@ -58,7 +58,7 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
           setTimezoneState(detectedTimezone)
           
           // 検出したタイムゾーンを保存
-          localStorage.setItem('shonin-timezone', detectedTimezone)
+          localStorage.setItem('app-timezone', detectedTimezone)
         }
 
         // TODO: 将来的にはSupabaseからユーザー設定を読み込む
@@ -87,12 +87,12 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
   const setTimezone = (newTimezone: string) => {
     try {
       setTimezoneState(newTimezone)
-      localStorage.setItem('shonin-timezone', newTimezone)
+      localStorage.setItem('app-timezone', newTimezone)
       
       // 手動設定の場合は自動検出を無効にする
       if (isAutoDetect) {
         setIsAutoDetect(false)
-        localStorage.setItem('shonin-auto-detect-timezone', 'false')
+        localStorage.setItem('app-auto-detect-timezone', 'false')
       }
 
       // TODO: 将来的にはSupabaseにも保存
@@ -109,13 +109,13 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
   const setIsAutoDetectWrapper = (autoDetect: boolean) => {
     try {
       setIsAutoDetect(autoDetect)
-      localStorage.setItem('shonin-auto-detect-timezone', autoDetect.toString())
+      localStorage.setItem('app-auto-detect-timezone', autoDetect.toString())
 
       if (autoDetect) {
         // 自動検出を有効にした場合は現在のタイムゾーンを検出
         const detectedTimezone = detectUserTimezone()
         setTimezoneState(detectedTimezone)
-        localStorage.setItem('shonin-timezone', detectedTimezone)
+        localStorage.setItem('app-timezone', detectedTimezone)
       }
     } catch (err) {
       setError('自動検出設定の保存に失敗しました')
@@ -126,7 +126,7 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
     try {
       const detectedTimezone = detectUserTimezone()
       setTimezoneState(detectedTimezone)
-      localStorage.setItem('shonin-timezone', detectedTimezone)
+      localStorage.setItem('app-timezone', detectedTimezone)
       setError(null)
     } catch (err) {
       setError('タイムゾーンの自動検出に失敗しました')

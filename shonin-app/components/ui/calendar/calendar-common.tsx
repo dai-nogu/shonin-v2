@@ -148,27 +148,23 @@ export function CalendarCommon({
             </div>
             
             {/* アクティビティ部分 - 既存の背景色 */}
-            <div className="bg-gray-900 border-t border-gray-700">
-              <div className="pb-2">
-                <div>
+            <div className="bg-gray-900 border-t border-gray-800 pb-6 pt-2">
+              <div className="px-2">
+                <div className="space-y-2">
                   {bottomPanelSessions.map((session) => (
                     <div 
                       key={session.id} 
-                      className={`flex items-center justify-between py-2 px-3 rounded-lg ${session.color} bg-opacity-20`}
+                      className={`flex items-center justify-between py-3 px-4 rounded-xl shadow-sm ${session.color} bg-opacity-20 border border-white/5`}
                     >
                       <div className="flex items-center space-x-3">
+                        <div className="w-2 h-2 rounded-full bg-white/50" />
                         <div className="text-white font-medium">{session.activity}</div>
                       </div>
-                      <div className="text-gray-400 text-sm">
+                      <div className="text-gray-300 text-sm font-mono">
                         {formatDuration(session.duration)}
                       </div>
                     </div>
                   ))}
-                  {bottomPanelSessions.length === 0 && (
-                    <div className="text-center text-gray-400 py-4">
-                      {t('calendar.no_activities')}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -184,30 +180,31 @@ export function CalendarCommon({
             {t('calendar.activities_on_date', { date: formatDateForLocale(modalDate, locale) })}
           </DialogTitle>
         </DialogHeader>
-          <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto pr-1">
             {selectedDateSessions.map((session) => (
               <div 
                 key={session.id} 
-                className={`p-3 rounded-lg ${session.color} bg-opacity-20 border border-opacity-30`}
+                className={`p-4 rounded-xl shadow-sm ${session.color} bg-opacity-10 border border-white/10 hover:bg-opacity-20 transition-colors`}
               >
-                <div className="flex items-center space-x-2">
-                  <span className="text-white font-medium">{session.activity}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-white/60"></span>
+                    <span className="text-white font-semibold text-lg">{session.activity}</span>
+                  </div>
                 </div>
-                <div className="mt-1 text-gray-400 text-sm">
-                  {formatDuration(session.duration)}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="text-gray-400">Duration</div>
+                  <div className="text-white font-mono bg-black/20 px-2 py-1 rounded">
+                    {formatDuration(session.duration)}
+                  </div>
                 </div>
               </div>
             ))}
-            {selectedDateSessions.length === 0 && (
-              <div className="text-center text-gray-400 py-8">
-                {t('calendar.no_activities')}
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button 
               onClick={() => setIsModalOpen(false)}
-              className="bg-gray-700 hover:bg-gray-600 text-white"
+              className="bg-gray-700 hover:bg-gray-600 text-white border-0"
             >
               {t('common.close')}
             </Button>

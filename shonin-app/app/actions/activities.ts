@@ -46,7 +46,7 @@ async function getCurrentUser() {
   return user
 }
 
-// アクティビティを取得
+// アクティビティを取得（削除されていないもののみ）
 export async function getActivities(): Promise<Result<Activity[]>> {
   try {
     const user = await getCurrentUser()
@@ -56,6 +56,7 @@ export async function getActivities(): Promise<Result<Activity[]>> {
       .from('activities')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null) // 論理削除されていないもののみ
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -132,15 +133,17 @@ export async function updateActivity(id: string, updates: ActivityUpdate): Promi
   }
 }
 
-// アクティビティを削除
+// アクティビティを削除（論理削除：deleted_atに日時を設定）
+// 過去のセッションでは元のアクティビティ名・色を保持するため、実際には削除しない
 export async function deleteActivity(id: string): Promise<Result<boolean>> {
   try {
     const user = await getCurrentUser() // 認証チェック
     const supabase = await getSupabaseClient()
 
+    // 論理削除: deleted_atに現在時刻を設定
     const { error } = await supabase
       .from('activities')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
 
     if (error) {

@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/generate-feedback",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/generate-feedback?type=monthly",
+      "schedule": "0 9 1 * *"
+    }
+  ]
+}
+

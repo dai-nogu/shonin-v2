@@ -1,7 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { WelcomeCard } from "./welcome-card"
 import { ActiveActivitySidebar } from "./active-activity-sidebar"
 import { WeeklyProgress } from "./weekly-progress"
 import { useSessions } from "@/contexts/sessions-context"
@@ -36,23 +35,20 @@ export function DashboardSidebarContent({ initialCompletedSessions, user }: Dash
 
   return (
     <>
-      {/* PC用：WelcomeCardを表示、SP用：非表示 */}
-      <div className="hidden lg:block">
-        <WelcomeCard completedSessions={completedSessions} />
-      </div>
-      
       {/* PC用：進行中の行動、SP用：非表示 */}
-      <div className="hidden lg:block">
-        <ActiveActivitySidebar
-          activeSession={currentSession}
-          isActive={isSessionActive}
-          onViewSession={handleViewSession}
-          onTogglePause={() => {}} // 暫定：セッションページで処理
-          onEnd={() => {}} // 暫定：セッションページで処理
-          sessionState="active" // 暫定：実際の値は不要
-          isDashboard={true} // ダッシュボード表示モード
-        />
-      </div>
+      {isSessionActive && (
+        <div className="hidden lg:block">
+          <ActiveActivitySidebar
+            activeSession={currentSession}
+            isActive={isSessionActive}
+            onViewSession={handleViewSession}
+            onTogglePause={() => {}} // 暫定：セッションページで処理
+            onEnd={() => {}} // 暫定：セッションページで処理
+            sessionState="active" // 暫定：実際の値は不要
+            isDashboard={true} // ダッシュボード表示モード
+          />
+        </div>
+      )}
 
       <WeeklyProgress completedSessions={completedSessions} onWeekViewClick={handleWeekViewTransition} />
     </>

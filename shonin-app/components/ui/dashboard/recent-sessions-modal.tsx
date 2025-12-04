@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Play, Eye, Clock } from "lucide-react"
+import { X, Play, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ModalPagination } from "@/components/ui/dashboard/modal-pagination"
 import { useTranslations } from 'next-intl'
+import { cn } from "@/lib/utils"
 
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
+import { useSessions } from "@/contexts/sessions-context"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
 interface RecentSessionsModalProps {
@@ -17,6 +20,7 @@ interface RecentSessionsModalProps {
   onClose: () => void
   onStartActivity?: (sessionData: SessionData) => void
   onViewDetail?: (session: CompletedSession) => void
+  filterMode?: 'all' | 'yesterday'  // フィルタモード
 }
 
 interface SessionItem {
@@ -34,7 +38,7 @@ interface SessionItem {
 
 const ITEMS_PER_PAGE = 10
 
-export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStartActivity, onViewDetail }: RecentSessionsModalProps) {
+export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStartActivity, onViewDetail, filterMode = 'all' }: RecentSessionsModalProps) {
   const t = useTranslations()
   const [currentPage, setCurrentPage] = useState(1)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -43,6 +47,13 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   
   // スクロール位置をリセットするためのref
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  
+  // セッション状態を取得
+  const { isSessionActive } = useSessions()
+
+  // アニメーション状態（早期returnの前に配置する必要がある）
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   // モバイル判定
   useEffect(() => {
@@ -56,10 +67,34 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // モーダルが開いている間は背景スクロールを無効にする
-  useScrollLock(isOpen)
+  // マウント時にアニメーション開始
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false)
+      // 次のフレームでアニメーション開始
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
 
-  if (!isOpen) return null
+  // ふわっと閉じるハンドラー
+  const handleClose = () => {
+    setIsAnimating(false)
+    setIsClosing(true)
+    // アニメーション完了後に実際に閉じる
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 300)
+  }
+
+  // モーダルが開いている間は背景スクロールを無効にする
+  useScrollLock(isOpen || isClosing)
+
+  if (!isOpen && !isClosing) return null
 
   // アクティビティアイコンマッピング
   const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
@@ -103,7 +138,19 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
 
   // 最新順でセッションを取得（最大100件）
   const getRecentSessions = (): SessionItem[] => {
-    return completedSessions
+    // filterModeに応じてフィルタリング
+    let filteredSessions = completedSessions
+    
+    if (filterMode === 'yesterday') {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      filteredSessions = completedSessions.filter(session => {
+        const sessionDate = new Date(session.endTime)
+        return sessionDate.toDateString() === yesterday.toDateString()
+      })
+    }
+    
+    return filteredSessions
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .slice(0, 100) // 最大100件に制限
       .map(session => {
@@ -136,7 +183,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   const handleActivityClick = (sessionItem: SessionItem) => {
     if (onStartActivity) {
       const sessionData: SessionData = {
-        activityId: sessionItem.id,
+        activityId: sessionItem.session.activityId,
         activityName: sessionItem.name,
         startTime: new Date(),
         location: sessionItem.location || "",
@@ -147,7 +194,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
       }
       onStartActivity(sessionData)
     }
-    onClose()
+    handleClose()
   }
 
   // SPでの詳細表示用のハンドラー
@@ -194,16 +241,22 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        onClick={onClose}
+        className={cn(
+          "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+          isAnimating ? "opacity-100" : "opacity-0"
+        )}
+        onClick={handleClose}
       >
         <Card 
-          className="bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden"
+          className={cn(
+            "bg-gray-900 border-gray-800 w-full max-w-md sm:max-w-lg md:max-w-2xl mx-auto h-[400px] sm:max-h-[90vh] sm:h-auto overflow-hidden transition-all duration-300 ease-out",
+            isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           <CardHeader className="relative pb-3 sm:pb-6">
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="ghost"
               size="sm"
               className="absolute right-2 top-2 text-gray-400 hover:text-white"
@@ -213,81 +266,66 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
             
                           <CardTitle className="text-white flex items-center text-lg sm:text-xl">
                 <Clock className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                {t('quick_start.latest')}
+                {filterMode === 'yesterday' ? t('quick_start.yesterday') : t('quick_start.latest')}
               </CardTitle>
           </CardHeader>
 
           <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="space-y-2 sm:space-y-3">
+            <div className="grid gap-3">
               {currentSessions.map((sessionItem, index) => (
                 <div
                   key={`${sessionItem.id}-${currentPage}`}
-                  onClick={() => {
-                    // モーダル内では常に詳細表示（開始ボタンは別途stopPropagationで制御）
-                    handleSessionDetailClick(sessionItem)
-                  }}
-                  className="flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors group cursor-pointer"
+                  onClick={() => handleSessionDetailClick(sessionItem)}
+                  className={`p-4 rounded-xl shadow-sm ${sessionItem.color} bg-opacity-10 border border-white/10 cursor-pointer transition-all duration-200 hover:bg-opacity-20 hover:scale-[1.01] hover:-translate-y-0.5`}
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-400 font-mono text-xs sm:text-sm w-3 sm:w-4 md:w-6 text-right">
-                        {startIndex + index + 1}
-                      </span>
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${sessionItem.color} rounded-full`}></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <span className="text-white font-semibold text-lg truncate">{sessionItem.name}</span>
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      {/* 回数順モーダルと同じレイアウトに統一 */}
-                      <div className="flex flex-col">
-                        <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{sessionItem.name}</h3>
-                        <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
-                          <span className="text-blue-400">{sessionItem.date}</span>
-                        </div>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <div className="text-white/90 font-mono text-sm bg-white/10 px-2 py-1 rounded">
+                        {sessionItem.duration}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <div className="hidden sm:flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleViewDetail(sessionItem)
-                        }}
-                                              >
-                          <Eye className="w-3 h-3 mr-1" />
-                          {t('common.details')}
-                        </Button>
-                      <Button
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivityClick(sessionItem)
-                        }}
-                      >
-                        <Play className="w-3 h-3 mr-1" />
-                        {t('common.start')}
-                      </Button>
-                    </div>
-                    
-                    {/* SPでは開始ボタンを右側に表示 */}
-                    <div className="sm:hidden">
-                      <Button
-                        size="sm"
-                        className="bg-green-500 hover:bg-green-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActivityClick(sessionItem)
-                        }}
-                                              >
+                      {/* 開始ボタン */}
+                      {isSessionActive ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block cursor-not-allowed">
+                                <Button
+                                  size="sm"
+                                  disabled
+                                  className="bg-[#1eb055] opacity-50 pointer-events-none"
+                                >
+                                  <Play className="w-3 h-3 mr-1" />
+                                  {t('common.start')}
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" align="end">
+                              <p className="text-xs">{t('common.recording_in_progress')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleActivityClick(sessionItem)
+                          }}
+                        >
                           <Play className="w-3 h-3 mr-1" />
                           {t('common.start')}
                         </Button>
+                      )}
                     </div>
+                  </div>
+                  {/* 日付を下部に表示 */}
+                  <div className="mt-2 text-xs text-white/60">
+                    {sessionItem.date}
                   </div>
                 </div>
               ))}

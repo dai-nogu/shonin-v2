@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { safeError } from '@/lib/safe-logger'
+import { sendEmailInternal } from '@/lib/mail'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
           is_new_user: isNewUser
         });
         
-        // メール送信
+        // メール送信（直接関数呼び出し）
         try {
           if (isNewUser) {
             console.log('新規ユーザー登録: ウェルカムメールを送信します', user.email);
@@ -70,29 +71,17 @@ export async function GET(request: NextRequest) {
             console.log('既存ユーザーのログイン: おかえりなさいメールを送信します', user.email);
           }
           
-            const emailPayload = {
-              email: user.email,
-              firstName: firstName,
-              emailCategory: 'auth' as const,
-              emailType: isNewUser ? ('welcome' as const) : ('welcome_back' as const),
-            };
-            console.log('メール送信ペイロード:', JSON.stringify(emailPayload, null, 2));
+          const emailResult = await sendEmailInternal({
+            email: user.email!,
+            firstName: firstName,
+            emailCategory: 'auth',
+            emailType: isNewUser ? 'welcome' : 'welcome_back',
+          });
           
-          // メール送信APIを呼び出し
-          const emailResponse = await fetch(`${process.env.BASE_URL}/api/send`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(emailPayload),
-          })
-          
-          const emailResult = await emailResponse.json();
-          console.log('メール送信APIのレスポンス:', JSON.stringify(emailResult, null, 2));
-          console.log('ステータスコード:', emailResponse.status);
-          
-          if (!emailResponse.ok) {
-            console.error('メール送信APIがエラーを返しました:', emailResult);
+          if (emailResult.success) {
+            console.log('✓ メール送信成功');
+          } else {
+            console.error('メール送信エラー:', emailResult.error);
           }
         } catch (emailError) {
           // メール送信エラーはログのみ（ユーザー登録は継続）

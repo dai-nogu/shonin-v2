@@ -9,7 +9,6 @@ import { NextRequest } from 'next/server'
  * 許可されたオリジンのリスト
  */
 const ALLOWED_ORIGINS = [
-  process.env.NEXT_PUBLIC_SITE_URL,
   process.env.BASE_URL,
   'http://localhost:3000', // 開発環境
   'http://127.0.0.1:3000', // 開発環境
@@ -71,8 +70,8 @@ function isAllowedOrigin(origin: string): boolean {
   }
 
   // 本番環境のVercelプレビューURLを許可
-  // 例: https://shonin-app-*.vercel.app
-  if (origin.match(/^https:\/\/shonin-app-[a-z0-9-]+\.vercel\.app$/)) {
+  // 例: https://no-name-yet-app-*.vercel.app
+  if (origin.match(/^https:\/\/no-name-yet-app-[a-z0-9-]+\.vercel\.app$/)) {
     return true
   }
 
