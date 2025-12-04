@@ -299,7 +299,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 active:scale-95 transition-all duration-150"
+                        className="bg-gray-700 border border-white/30 text-gray-300 hover:bg-gray-600 hover:border-white/50 active:scale-95 transition-all duration-150"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleViewDetail(activity)

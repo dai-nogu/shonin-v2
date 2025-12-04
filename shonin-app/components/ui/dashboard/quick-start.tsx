@@ -521,7 +521,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-gray-400 hover:text-white hover:bg-white/10"
+                    className="text-gray-400 hover:text-white hover:bg-white/10 border border-white/30 hover:border-white/50"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleViewDetail(activity)
@@ -644,6 +644,19 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     getMostRecordedActivities(),
                     t('quick_start.not_enough_data')
                   )}
+                  {getMostRecordedActivities().length > 0 && (
+                    <div className="flex justify-end mt-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowActivityCountModal(true)}
+                        className="text-gray-400 hover:text-white hover:bg-white/10"
+                      >
+                        <MoreHorizontal className="w-4 h-4 mr-1" />
+                        {t('quick_start.see_more')}
+                      </Button>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -653,6 +666,19 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     getRecentActivities(),
                     t('quick_start.no_recent_activity')
                   )}
+                  {getRecentActivities().length > 0 && (
+                    <div className="flex justify-end mt-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowRecentSessionsModal(true)}
+                        className="text-gray-400 hover:text-white hover:bg-white/10"
+                      >
+                        <MoreHorizontal className="w-4 h-4 mr-1" />
+                        {t('quick_start.see_more')}
+                      </Button>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -661,6 +687,19 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   {renderActivityList(
                     getYesterdayActivities(),
                     t('quick_start.no_yesterday_activity')
+                  )}
+                  {getYesterdayActivities().length > 0 && (
+                    <div className="flex justify-end mt-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowRecentSessionsModal(true)}
+                        className="text-gray-400 hover:text-white hover:bg-white/10"
+                      >
+                        <MoreHorizontal className="w-4 h-4 mr-1" />
+                        {t('quick_start.see_more')}
+                      </Button>
+                    </div>
                   )}
                 </>
               )}
