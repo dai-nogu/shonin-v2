@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Play, Eye, BarChart3 } from "lucide-react"
+import { X, Play, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -261,90 +261,23 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
           </CardHeader>
 
           <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="space-y-2 sm:space-y-3">
+            <div className="grid gap-3">
               {currentActivities.map((activity, index) => (
                 <div
                   key={`${activity.id}-${currentPage}`}
-                  onClick={isMobile ? () => {
-                    // SPの場合のみカード全体をクリック可能にする
-                    handleActivityDetailClick(activity)
-                  } : undefined}
-                  className={cn(
-                    "flex items-center justify-between p-2 sm:p-3 md:p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-all duration-200 group hover:scale-[1.01]",
-                    isMobile ? 'cursor-pointer' : ''
-                  )}
+                  onClick={() => handleActivityDetailClick(activity)}
+                  className={`p-4 rounded-xl shadow-sm ${activity.color} bg-opacity-10 border border-white/10 cursor-pointer transition-all duration-200 hover:bg-opacity-20 hover:scale-[1.01] hover:-translate-y-0.5`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-400 font-mono text-xs sm:text-sm w-3 sm:w-4 md:w-6 text-right">
-                        {startIndex + index + 1}
-                      </span>
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${activity.color} rounded-full`}></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <span className="text-white font-semibold text-lg truncate">{activity.name}</span>
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      {/* SP: 縦並び, PC: 横並び */}
-                      <div className="flex flex-col">
-                        <h3 className="text-white font-semibold truncate text-base sm:text-lg mb-1">{activity.name}</h3>
-                        <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-400">
-                          <span className="font-medium text-green-400">{activity.sessionCount}{t('common.times')}</span>
-                        </div>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <div className="text-white/90 font-mono text-sm bg-white/10 px-2 py-1 rounded">
+                        {activity.sessionCount}{t('common.times')}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <div className="hidden sm:flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-gray-700 border border-white/30 text-gray-300 hover:bg-gray-600 hover:border-white/50 active:scale-95 transition-all duration-150"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleViewDetail(activity)
-                        }}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        {t('common.details')}
-                      </Button>
-                      {isSessionActive ? (
-                        <TooltipProvider>
-                          <Tooltip delayDuration={0}>
-                            <TooltipTrigger asChild>
-                              <span className="inline-block cursor-not-allowed">
-                                <Button
-                                  size="sm"
-                                  disabled
-                                  className="bg-[#1eb055] opacity-50 pointer-events-none"
-                                >
-                                  <Play className="w-3 h-3 mr-1" />
-                                  {t('common.start')}
-                                </Button>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" align="end">
-                              <p className="text-xs">{t('common.recording_in_progress')}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleActivityClick(activity)
-                          }}
-                        >
-                          <Play className="w-3 h-3 mr-1" />
-                          {t('common.start')}
-                        </Button>
-                      )}
-                    </div>
-                    
-                    {/* SPでは開始ボタンを右側に表示 */}
-                    <div className="sm:hidden">
+                      {/* 開始ボタン */}
                       {isSessionActive ? (
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>

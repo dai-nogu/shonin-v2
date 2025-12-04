@@ -48,6 +48,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
   const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
+  const [recentSessionsFilterMode, setRecentSessionsFilterMode] = useState<'all' | 'yesterday'>('all')
   const [isMobile, setIsMobile] = useState(false)
   const [previousModal, setPreviousModal] = useState<'activity-count' | 'recent-sessions' | null>(null)
   
@@ -362,12 +363,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const handleCloseDetail = () => {
     setShowDetailModal(false)
     setSelectedSession(null)
-    // 詳細モーダルを閉じた時に、前のモーダルを再表示
-    if (previousModal === 'activity-count') {
-      setShowActivityCountModal(true)
-    } else if (previousModal === 'recent-sessions') {
-      setShowRecentSessionsModal(true)
-    }
+    // 詳細モーダルを閉じた時は直接ダッシュボードに戻る（前のモーダルは再表示しない）
     setPreviousModal(null)
   }
 
@@ -693,7 +689,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setShowRecentSessionsModal(true)}
+                        onClick={() => {
+                          setRecentSessionsFilterMode('all')
+                          setShowRecentSessionsModal(true)
+                        }}
                         className="text-gray-400 hover:text-white hover:bg-white/10"
                       >
                         <MoreHorizontal className="w-4 h-4 mr-1" />
@@ -715,7 +714,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setShowRecentSessionsModal(true)}
+                        onClick={() => {
+                          setRecentSessionsFilterMode('yesterday')
+                          setShowRecentSessionsModal(true)
+                        }}
                         className="text-gray-400 hover:text-white hover:bg-white/10"
                       >
                         <MoreHorizontal className="w-4 h-4 mr-1" />
@@ -753,6 +755,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         onClose={handleCloseRecentSessions}
         onStartActivity={onStartActivity}
         onViewDetail={handleRecentSessionsDetail}
+        filterMode={recentSessionsFilterMode}
       />
     </>
   )

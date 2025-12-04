@@ -45,24 +45,42 @@ export function useSessionList() {
       }
 
       // 基本的なCompletedSessionの型に変換（写真情報は含まない）
-      const convertedSessions: CompletedSession[] = completedSessionsData.map(session => ({
-        id: session.id,
-        activityId: session.activity_id,
-        activityName: session.activities?.name || '不明',
-        startTime: new Date(session.start_time),
-        endTime: new Date(session.end_time!),
-        duration: session.duration,
-        sessionDate: session.session_date || undefined,
-        location: session.location || '',
-        notes: session.notes || '',
-        mood: session.mood || undefined,
-        achievements: session.achievements || undefined,
-        challenges: session.challenges || undefined,
-        activityColor: session.activities?.color,
-        activityIcon: session.activities?.icon || undefined,
-        goalId: session.goal_id || undefined,
-        hasPhotos: false // デフォルト値
-      }))
+      const convertedSessions: CompletedSession[] = completedSessionsData.map(session => {
+        // notesがJSON形式の場合はパースして振り返りデータを取り出す
+        let parsedNotes = session.notes || ''
+        let achievements = session.achievements || undefined
+        let challenges = session.challenges || undefined
+        
+        if (session.notes && session.notes.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(session.notes)
+            achievements = parsed.achievements || achievements
+            challenges = parsed.challenges || challenges
+            parsedNotes = parsed.additionalNotes || ''
+          } catch {
+            // JSONパースに失敗した場合はそのまま使用
+          }
+        }
+        
+        return {
+          id: session.id,
+          activityId: session.activity_id,
+          activityName: session.activities?.name || '不明',
+          startTime: new Date(session.start_time),
+          endTime: new Date(session.end_time!),
+          duration: session.duration,
+          sessionDate: session.session_date || undefined,
+          location: session.location || '',
+          notes: parsedNotes,
+          mood: session.mood || session.mood_score || undefined,
+          achievements,
+          challenges,
+          activityColor: session.activities?.color,
+          activityIcon: session.activities?.icon || undefined,
+          goalId: session.goal_id || undefined,
+          hasPhotos: false // デフォルト値
+        }
+      })
 
       setCompletedSessions(convertedSessions)
     }

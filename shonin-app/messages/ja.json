@@ -91,7 +91,8 @@
     "improvements": "明日の予定",
     "no_content": "特になし",
     "start_session": "記録",
-    "close": "閉じる"
+    "close": "閉じる",
+    "reflection_and_notes": "振り返り・メモ"
   },
   "ai_feedback": {
     "feedback": "フィードバック",

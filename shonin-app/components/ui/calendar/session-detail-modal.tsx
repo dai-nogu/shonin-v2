@@ -80,9 +80,6 @@ export function SessionDetailModal({
                     {formatDuration(session.duration)}
                   </div>
                 </div>
-                <div className="text-gray-400 text-xs flex items-center">
-                  Click to view details
-                </div>
               </div>
             ))}
           </div>

@@ -91,7 +91,8 @@
     "improvements": "Tomorrow's Plan",
     "no_content": "None",
     "start_session": "Start",
-    "close": "Close"
+    "close": "Close",
+    "reflection_and_notes": "Reflection & Notes"
   },
   "ai_feedback": {
     "feedback": "Feedback",
