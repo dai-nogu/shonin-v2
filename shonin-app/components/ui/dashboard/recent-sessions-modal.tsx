@@ -317,7 +317,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                                 </Button>
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent side="top" align="end">
                               <p className="text-xs">{t('common.recording_in_progress')}</p>
                             </TooltipContent>
                           </Tooltip>
@@ -354,7 +354,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                                 </Button>
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent side="top" align="end">
                               <p className="text-xs">{t('common.recording_in_progress')}</p>
                             </TooltipContent>
                           </Tooltip>

@@ -91,7 +91,7 @@ function WeekCalendarSSR({
   return (
     <div className="bg-gray-950 text-white">
       <div className="px-0">
-        <Card className="bg-gray-900 border-0 rounded-none">
+        <Card className="!bg-gray-950 border-0 rounded-none shadow-none">
           <CardHeader>
             <div className="flex items-center justify-end">
               <div className="flex items-center space-x-2">
@@ -99,7 +99,7 @@ function WeekCalendarSSR({
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate("prev")}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -107,7 +107,7 @@ function WeekCalendarSSR({
                   variant="outline"
                   size="sm"
                   onClick={onTodayClick}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   {t('calendar.this_week')}
                 </Button>
@@ -115,7 +115,7 @@ function WeekCalendarSSR({
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate("next")}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -168,7 +168,7 @@ function WeekCalendarSSR({
                   <div
                     key={index}
                     onClick={() => onDateClick(day, daySessions)}
-                    className={`min-h-[150px] p-0 md:p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer ${
+                    className={`min-h-[150px] p-0 md:p-3 rounded-lg bg-gray-800 cursor-pointer ${
                       todayCheck ? "ring-2 ring-green-500" : ""
                     }`}
                   >

@@ -323,7 +323,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                                 </Button>
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent side="top" align="end">
                               <p className="text-xs">{t('common.recording_in_progress')}</p>
                             </TooltipContent>
                           </Tooltip>
@@ -360,7 +360,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                                 </Button>
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent side="top" align="end">
                               <p className="text-xs">{t('common.recording_in_progress')}</p>
                             </TooltipContent>
                           </Tooltip>

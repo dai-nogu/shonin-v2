@@ -486,13 +486,24 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     <Eye className="w-4 h-4" />
                   </Button>
                   {isSessionActive ? (
-                     <Button
-                      size="icon"
-                      disabled
-                      className="h-10 w-10 rounded-full bg-gray-700 text-gray-500 opacity-50"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block cursor-not-allowed">
+                            <Button
+                              size="icon"
+                              disabled
+                              className="h-10 w-10 rounded-full bg-gray-700 text-gray-500 opacity-50 pointer-events-none"
+                            >
+                              <Play className="w-4 h-4 fill-current" />
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end">
+                          <p className="text-xs">{t('common.recording_in_progress')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : (
                     <Button
                       size="icon"
@@ -531,14 +542,25 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     {t('common.details')}
                   </Button>
                   {isSessionActive ? (
-                    <Button
-                      size="sm"
-                      disabled
-                      className="bg-gray-700 text-gray-500 opacity-50 cursor-not-allowed px-4"
-                    >
-                      <Play className="w-3 h-3 mr-1.5 fill-current" />
-                      {t('common.start')}
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block cursor-not-allowed">
+                            <Button
+                              size="sm"
+                              disabled
+                              className="bg-gray-700 text-gray-500 opacity-50 pointer-events-none px-4"
+                            >
+                              <Play className="w-3 h-3 mr-1.5 fill-current" />
+                              {t('common.start')}
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end">
+                          <p className="text-xs">{t('common.recording_in_progress')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : (
                     <Button
                       size="sm"

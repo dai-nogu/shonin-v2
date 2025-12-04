@@ -16,7 +16,7 @@ export function CalendarViewToggle({ viewMode }: CalendarViewToggleProps) {
   const locale = (params?.locale as string) || 'ja'
 
   return (
-    <div className="bg-gray-900 px-2 md:px-4 pt-6 pb-3">
+    <div className="bg-gray-950 px-2 md:px-4 pt-6 pb-3">
       <div className="flex items-center space-x-2">
         <Button
           onClick={() => router.push(`/${locale}/calendar/month`)}
@@ -24,8 +24,8 @@ export function CalendarViewToggle({ viewMode }: CalendarViewToggleProps) {
           size="sm"
           className={
             viewMode === "month"
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              ? "bg-green-600 hover:bg-green-600 text-white"
+              : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
           }
         >
           <Calendar className="w-4 h-4 mr-1" />
@@ -37,8 +37,8 @@ export function CalendarViewToggle({ viewMode }: CalendarViewToggleProps) {
           size="sm"
           className={
             viewMode === "week"
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              ? "bg-green-600 hover:bg-green-600 text-white"
+              : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
           }
         >
           <Calendar className="w-4 h-4 mr-1" />

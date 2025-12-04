@@ -76,7 +76,7 @@ function MonthCalendarSSR({
   return (
     <div className="bg-gray-950 text-white">
       <div className="px-0">
-        <Card className="bg-gray-900 border-0 rounded-none">
+        <Card className="!bg-gray-950 border-0 rounded-none shadow-none">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-white">{monthName}</CardTitle>
@@ -85,7 +85,7 @@ function MonthCalendarSSR({
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate("prev")}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -93,7 +93,7 @@ function MonthCalendarSSR({
                   variant="outline"
                   size="sm"
                   onClick={onTodayClick}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   {t('calendar.today')}
                 </Button>
@@ -101,7 +101,7 @@ function MonthCalendarSSR({
                   variant="outline"
                   size="sm"
                   onClick={() => onNavigate("next")}
-                  className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -137,8 +137,8 @@ function MonthCalendarSSR({
                   <div
                     key={index}
                     onClick={day ? () => onDateClick(day, daySessions) : undefined}
-                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-lg transition-all duration-200 ${
-                      day ? `bg-gray-800 cursor-pointer hover:ring-2 hover:ring-green-500/50` : "bg-gray-900"
+                    className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-lg ${
+                      day ? `bg-gray-800 cursor-pointer` : "bg-gray-900"
                     } ${todayCheck ? "ring-2 ring-green-500" : ""}`}
                   >
                     {day && (
