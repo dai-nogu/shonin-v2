@@ -25,6 +25,10 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
   const today = getCurrentTimeInTimezone(timezone)
   const weekStart = getWeekStartInTimezone(today, timezone)
   
+  // 今日の曜日インデックス（月曜日=0, 日曜日=6）
+  const todayDayOfWeek = today.getDay()
+  const todayIndex = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1
+  
   // 今週の各日のデータを計算
   const weekData = []
   const dayNames = [
@@ -107,8 +111,13 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                     <div
                       className="h-full bg-emerald-700 rounded-full"
                       style={{
-                        width: isAnimated ? `${day.progress}%` : '0%',
-                        transition: `width 1.2s cubic-bezier(0.4, 0, 0.2, 1) ${index * 100}ms`,
+                        // 今日だけアニメーション、他の日は最初から表示
+                        width: index === todayIndex 
+                          ? (isAnimated ? `${day.progress}%` : '0%')
+                          : `${day.progress}%`,
+                        transition: index === todayIndex 
+                          ? 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                          : 'none',
                       }}
                     />
                   </div>
