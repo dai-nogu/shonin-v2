@@ -69,7 +69,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       <CardHeader className="px-0 pt-0 pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center text-xl font-bold tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+            <span className="text-[#fffffC]">
                {t('weekly_progress.title')}
             </span>
           </CardTitle>
@@ -77,7 +77,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
             onClick={onWeekViewClick}
             variant="ghost"
             size="sm"
-            className="text-green-400 hover:text-green-300 hover:bg-white/5 text-xs lg:text-sm rounded-full px-3"
+            className="text-emerald-500 hover:bg-white/5 text-xs lg:text-sm rounded-full px-3 transition-all duration-300 hover:scale-[1.02]"
           >
             <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5" />
             {t('weekly_progress.week_view')}
@@ -86,7 +86,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       </CardHeader>
       
       <CardContent className="px-0">
-        <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-md p-5 shadow-lg transition-all duration-300 hover:border-white/20">
+        <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
            <div className="space-y-3 lg:space-y-4">
             {weekData.map((day) => (
               <div key={day.day} className="flex items-center group">
@@ -121,7 +121,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                 ) : (
                   <div className="animate-fade-in-up">
                     <div className="text-xs text-gray-400 mb-1 uppercase tracking-widest">{t('common.total')}</div>
-                    <div className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300 shadow-green-500/20 drop-shadow-sm font-mono">
+                    <div className="text-2xl lg:text-3xl font-bold text-emerald-500 drop-shadow-sm font-mono">
                       {formatDuration(totalWeekSeconds)}
                     </div>
                   </div>

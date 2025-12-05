@@ -26,11 +26,11 @@ export function ModalPagination({
     <div className={`mt-3 sm:mt-6 pt-2 sm:pt-4 border-t border-gray-800 ${className}`}>
       <div className="flex items-center justify-center space-x-2 sm:space-x-2">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50 px-3 sm:px-3"
+          className="text-gray-300 hover:bg-gray-800 disabled:opacity-50 px-3 sm:px-3"
         >
           <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
@@ -56,8 +56,8 @@ export function ModalPagination({
                 onClick={() => onPageChange(pageNum)}
                 className={
                   currentPage === pageNum
-                    ? "bg-green-600 hover:bg-green-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
-                    : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
+                    ? "bg-emerald-700 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px] text-white"
+                    : "bg-transparent border-gray-600 text-gray-300 hover:bg-gray-800 px-3 sm:px-3 text-xs sm:text-sm min-w-[32px]"
                 }
               >
                 {pageNum}
@@ -67,11 +67,11 @@ export function ModalPagination({
         </div>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 disabled:opacity-50 px-3 sm:px-3"
+          className="text-gray-300 hover:bg-gray-800 disabled:opacity-50 px-3 sm:px-3"
         >
           <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>

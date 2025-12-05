@@ -68,7 +68,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   // Freeプランの場合はアップグレードプロンプトを表示
   if (!planLimits.hasAIFeedback) {
     return (
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-transparent border-white/10">
         <CardContent className="pt-6">
           <div className="text-center py-8 space-y-4">
             <div className="text-gray-400">
@@ -77,7 +77,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
             </div>
             <Button
               onClick={() => router.push('/plan')}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+              className="bg-emerald-700 text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             >
               {t('plan.limit_modal.view_plans')}
             </Button>
@@ -132,13 +132,13 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
         <CardHeader className="px-0 pt-0 pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              <span className="text-[#fffffC]">
                 {currentFeedback.type}{t('ai_feedback.feedback')}
               </span>
             </CardTitle>
             
             {/* コントロール */}
-            <div className="flex items-center space-x-2 bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10">
+            <div className="flex items-center space-x-2 p-1">
               <Button
                 variant="ghost"
                 size="sm"
@@ -177,7 +177,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
             
             {/* フィードバック表示 */}
-            <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-md p-5 shadow-lg">
+            <div className="rounded-xl border border-white/10 p-5">
               {error ? (
                 <div className="text-red-400 flex items-center text-sm">
                   <span className="mr-2">⚠️</span>
@@ -192,8 +192,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
             {/* 次回フィードバック予告 */}
             <div className="mt-3 flex justify-end">
-               <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-gray-900/30 border border-white/5 text-[10px] lg:text-xs text-gray-500">
-                <span className="w-1 h-1 rounded-full bg-gray-500"></span>
+               <div className="inline-flex items-center px-3 py-1 text-[10px] lg:text-xs text-gray-500">
                 {currentFeedback.type === t('ai_feedback.weekly') && (
                   <span>{t('ai_feedback.next_weekly_feedback')}: <span className="text-gray-400">{getNextWeekMonday()}</span> {t('ai_feedback.scheduled')}</span>
                 )}

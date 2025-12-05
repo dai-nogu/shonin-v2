@@ -35,7 +35,7 @@ export function ActiveActivitySidebar({
   const getStatusInfo = () => {
     switch (sessionState) {
       case "active":
-        return { color: "bg-green-500", text: t('active_session.recording'), icon: "🟢" }
+        return { color: "bg-emerald-700", text: t('active_session.recording'), icon: "🟢" }
       case "paused":
         return { color: "bg-yellow-500", text: t('active_session.paused'), icon: "⏸️" }
       case "ended":
@@ -90,7 +90,7 @@ export function ActiveActivitySidebar({
               <div
                 className={cn("h-full rounded-full transition-all duration-500",
                   elapsedTime >= activeSession.targetTime * 60
-                    ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                    ? "bg-emerald-700 shadow-[0_0_8px_rgba(4,120,87,0.5)]"
                     : elapsedTime >= activeSession.targetTime * 60 * 0.8
                     ? "bg-yellow-500"
                     : "bg-primary"

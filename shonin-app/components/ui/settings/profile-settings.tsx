@@ -148,7 +148,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
               <div className="pt-2">
                 <Button
                   onClick={handleManageSubscription}
-                  className="bg-green-600 text-white hover:bg-green-700"
+                  className="bg-emerald-700 text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {t('settings.manage_subscription')}
                 </Button>

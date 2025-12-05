@@ -32,7 +32,7 @@ export function GoalTitleInput({
         onChange={(e) => onChange(e.target.value.slice(0, limits.goalTitle))}
         maxLength={limits.goalTitle}
         placeholder={placeholder || t('goals.goal_placeholder')}
-        className="bg-white/5 border-white/10 text-white placeholder:text-gray-400 focus:border-green-500/50 focus:bg-white/10 transition-all duration-300"
+        className="bg-white/5 border-white/10 text-white placeholder:text-gray-400 focus:border-emerald-700/50 focus:bg-white/10 transition-all duration-300"
       />
     </div>
   )

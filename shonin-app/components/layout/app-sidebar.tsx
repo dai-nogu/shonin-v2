@@ -132,7 +132,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     <Sidebar className="border-r border-gray-800">
       <SidebarHeader className="border-gray-800 p-4">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">?</span>
           </div>
           <div>
@@ -152,7 +152,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
                     isActive={activePage === item.id}
                     className="text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 ease-out active:scale-[0.98]"
                   >
-                    <item.icon className={`w-4 h-4 transition-all duration-200 ${activePage === item.id ? 'text-green-500 scale-110' : ''}`} />
+                    <item.icon className={`w-4 h-4 transition-all duration-200 ${activePage === item.id ? 'text-emerald-500 scale-110' : ''}`} />
                     <span>{item.title}</span>
                     {/* 通知バッジ */}
                     {item.badge && unreadCount > 0 && (
@@ -162,7 +162,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
                     )}
                     {/* アクティブインジケーター */}
                     {activePage === item.id && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-green-500 rounded-r-full transition-all duration-300" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-700 rounded-r-full transition-all duration-300" />
                     )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -182,7 +182,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
                   size="lg"
                   className="text-gray-300 hover:text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 data-[state=open]:text-white"
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
                     <User className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex flex-col items-start">

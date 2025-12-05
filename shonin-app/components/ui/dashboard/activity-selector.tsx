@@ -73,7 +73,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [hoveredTagId, setHoveredTagId] = useState<string | null>(null) // ホバー中のタグID
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
-  const [newActivityColor, setNewActivityColor] = useState("bg-red-500")
+  const [newActivityColor, setNewActivityColor] = useState("bg-sumi")
   const [hoveredColor, setHoveredColor] = useState<string | null>(null)
   
   // 直接入力用の状態
@@ -140,18 +140,16 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   }, [])
 
   const colorOptions = [
-    { value: "bg-red-500", label: "レッド", color: "#ef4444" },
-    { value: "bg-blue-500", label: "ブルー", color: "#3b82f6" },
-    { value: "bg-yellow-500", label: "イエロー", color: "#eab308" },
-    { value: "bg-green-500", label: "グリーン", color: "#22c55e" },
-    { value: "bg-purple-500", label: "パープル", color: "#8b5cf6" },
-    { value: "bg-orange-500", label: "オレンジ", color: "#f97316" },
-    { value: "bg-pink-500", label: "ピンク", color: "#ec4899" },
-    { value: "bg-teal-500", label: "ライトブルー", color: "#91f0ff" },
-    { value: "bg-emerald-500", label: "エメラルド", color: "#10b981" },
-    { value: "bg-cyan-500", label: "ブラウン", color: "#d0430b" },
-    { value: "bg-indigo-500", label: "インディゴ", color: "#6366f1" },
-    { value: "bg-gray-500", label: "グレー", color: "#6b7280" },
+    { value: "bg-sumi", label: "墨色", color: "#5a5a5a" },
+    { value: "bg-ai", label: "藍色", color: "#165e83" },
+    { value: "bg-gin-nezu", label: "銀鼠", color: "#9fa0a0" },
+    { value: "bg-seiji", label: "青磁色", color: "#7ebea5" },
+    { value: "bg-usuzumi", label: "薄墨色", color: "#787878" },
+    { value: "bg-hatoba", label: "鳩羽色", color: "#675f7c" },
+    { value: "bg-fuji-nezu", label: "藤鼠", color: "#a6a5c4" },
+    { value: "bg-aotake", label: "青竹色", color: "#7ebeab" },
+    { value: "bg-susutake", label: "煤竹色", color: "#5b5248" },
+    { value: "bg-rikyu-nezu", label: "利休鼠", color: "#6b7b6e" },
   ]
 
   // 全行動（カスタムのみ）
@@ -174,7 +172,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
       // フォームをリセット
       setNewActivityName("")
-      setNewActivityColor("bg-red-500")
+      setNewActivityColor("bg-sumi")
       setHoveredColor(null)
       setShowAddForm(false)
     } else {
@@ -260,7 +258,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
       <CardHeader className="px-0 pt-0 pb-4">
         <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          <span className="text-[#fffffC]">
              {t('session_start.title')}
           </span>
         </CardTitle>
@@ -269,7 +267,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       <CardContent className="px-0 space-y-4 lg:space-y-6">
         {/* 新しい行動追加フォーム */}
         {showAddForm && (
-          <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-xl p-5 shadow-lg animate-fade-in-down">
+          <div className="rounded-xl border border-white/10 p-5 shadow-lg animate-fade-in-down">
             <div className="pb-3 mb-4 border-b border-white/5">
               <h3 className="text-white text-base font-semibold">{t('session_start.add_new_activity')}</h3>
             </div>
@@ -285,7 +283,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value.slice(0, limits.activityName))}
                   maxLength={limits.activityName}
-                  className="bg-gray-900/50 border-gray-700 focus:border-green-500/50 focus:ring-green-500/20 text-white placeholder-gray-500 transition-all"
+                  className="bg-gray-900/50 border-gray-700 focus:border-emerald-700/50 focus:ring-emerald-700/20 text-white placeholder-gray-500 transition-all"
                 />
               </div>
 
@@ -301,7 +299,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                         onMouseLeave={() => setHoveredColor(null)}
                         className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
                           newActivityColor === color.value 
-                            ? "border-white ring-2 ring-green-400 shadow-[0_0_10px_rgba(255,255,255,0.3)]" 
+                            ? "border-white ring-2 ring-emerald-500 shadow-[0_0_10px_rgba(255,255,255,0.3)]" 
                             : "border-transparent hover:border-white/50"
                         }`}
                         style={{ backgroundColor: color.color }}
@@ -324,7 +322,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   onClick={() => {
                     setShowAddForm(false)
                     setNewActivityName("")
-                    setNewActivityColor("bg-red-500")
+                    setNewActivityColor("bg-sumi")
                     setHoveredColor(null)
                   }}
                   variant="outline"
@@ -335,7 +333,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 <Button
                   onClick={handleAddActivity}
                   disabled={!newActivityName.trim()}
-                  className="flex-1 bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/20 h-10"
+                  className="flex-1 bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 h-10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {t('session_start.save')}
                 </Button>
@@ -346,7 +344,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
         {/* フォーム表示時以外の通常の内容 */}
         {!showAddForm && (
-          <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-xl p-5 shadow-lg transition-all duration-300 hover:border-white/20">
+          <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
             <div className="space-y-6">
               {/* 目標選択 */}
               <div className="space-y-2">
@@ -354,28 +352,50 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   {t('session_start.select_goal')}
                 </Label>
                 <Select value={selectedGoal} onValueChange={setSelectedGoal}>
-                  <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white focus:ring-green-500/20 focus:border-green-500/50 h-11">
+                  <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white focus:ring-emerald-700/20 focus:border-emerald-700/50 h-11">
                     <SelectValue placeholder={t('session_start.goal_placeholder')} />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 backdrop-blur-xl">
-                    <SelectItem value="none" className="text-gray-400 hover:bg-gray-700 py-2 cursor-pointer focus:bg-gray-700">
-                      {t('session_start.no_goal')}
-                    </SelectItem>
-                    {activeGoals.map((goal) => (
-                      <SelectItem key={goal.id} value={goal.id} className="text-white hover:bg-gray-700 py-2 cursor-pointer focus:bg-gray-700">
-                        <span className="text-sm font-medium">{goal.title}</span>
+                  <SelectContent className="bg-gray-900/95 border-gray-800 backdrop-blur-2xl shadow-2xl rounded-xl min-w-[280px]">
+                    <div className="px-1 py-1">
+                      <SelectItem 
+                        value="none" 
+                        showCheck={false}
+                        className="rounded-lg text-gray-400 focus:bg-white/5 focus:text-gray-200 py-2.5 px-3 cursor-pointer transition-colors duration-200 data-[state=checked]:text-emerald-500 data-[state=checked]:bg-emerald-950/30"
+                      >
+                        <span className="flex items-center">
+                          {t('session_start.no_goal')}
+                        </span>
                       </SelectItem>
-                    ))}
+                      
+                      {activeGoals.length > 0 && <div className="h-px bg-white/5 my-1 mx-2" />}
+                      
+                      {activeGoals.map((goal) => (
+                        <SelectItem 
+                          key={goal.id} 
+                          value={goal.id} 
+                          showCheck={false}
+                          className="rounded-lg text-gray-300 focus:bg-emerald-900/20 focus:text-emerald-400 py-2.5 px-3 cursor-pointer transition-colors duration-200 data-[state=checked]:text-emerald-500 data-[state=checked]:bg-emerald-950/30 my-0.5"
+                        >
+                          <span className="text-sm font-medium truncate">{goal.title}</span>
+                        </SelectItem>
+                      ))}
+                    </div>
                     
                     {/* 目標設定へのリンク */}
-                    <div className="p-2 border-t border-gray-600/50 mt-1">
+                    <div className="p-2 border-t border-white/5 mt-1 bg-gray-900/50">
                       <Button
-                        onClick={() => router.push(`/${locale}/goals/add?from=dashboard`)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Selectが閉じてしまうのを防ぐか、あるいは閉じて遷移するか。router.pushなら閉じてOK。
+                          router.push(`/${locale}/goals/add?from=dashboard`)
+                        }}
                         variant="ghost"
                         size="sm"
-                        className="w-full text-green-400 hover:text-green-300 hover:bg-green-500/10 h-9"
+                        className="w-full justify-start text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 h-10 transition-all duration-300 rounded-lg group"
                       >
-                        <Plus className="w-3.5 h-3.5 mr-2" />
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center mr-3 group-hover:bg-emerald-500/20 transition-colors">
+                          <Plus className="w-3.5 h-3.5" />
+                        </div>
                         {t('goals.addGoal')}
                       </Button>
                     </div>
@@ -425,7 +445,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                         }}
                         maxLength={limits.activityName}
                         className={`bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm pr-10 h-11 transition-all ${
-                          selectedActivity ? "border-green-500/50 shadow-[0_0_0_1px_rgba(34,197,94,0.2)]" : "focus:border-green-500/50 focus:ring-green-500/20"
+                          selectedActivity ? "border-emerald-700/50 shadow-[0_0_0_1px_rgba(4,120,87,0.2)]" : "focus:border-emerald-700/50 focus:ring-emerald-700/20"
                         }`}
                       />
                       {/* 選択済みクリアボタン */}
@@ -462,13 +482,13 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => handleSuggestionClick(activity)}
                           className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0 ${
-                            selectedActivity === activity.id ? "bg-green-500/10" : ""
+                            selectedActivity === activity.id ? "bg-emerald-700/10" : ""
                           }`}
                         >
                           <div className={`w-6 h-6 ${activity.color} rounded-full flex-shrink-0 shadow-sm`} />
                           <span className="text-white text-sm truncate flex-1">{activity.name}</span>
                           {selectedActivity === activity.id && (
-                            <Check className="w-4 h-4 text-green-400 ml-auto flex-shrink-0" />
+                            <Check className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0" />
                           )}
                         </button>
                       ))}
@@ -513,13 +533,13 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                               onClick={() => handleTagClick(activity)}
                               className={`group inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 border ${
                                 isSelected
-                                  ? "bg-green-500/10 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
-                                  : "bg-gray-900/40 border-gray-700 hover:border-gray-500 hover:bg-gray-800"
+                                  ? "bg-gray-900/40 border-emerald-700/50 shadow-[0_0_10px_rgba(4,120,87,0.1)]"
+                                  : "bg-gray-900/40 border-gray-700 hover:border-gray-500"
                               }`}
                             >
                               <div className={`w-2.5 h-2.5 ${activity.color} rounded-full flex-shrink-0 transition-transform group-hover:scale-110`} />
                               <span className={`text-xs font-medium truncate max-w-[100px] ${
-                                isSelected ? "text-green-100" : "text-gray-300 group-hover:text-white"
+                                isSelected ? "text-white" : "text-gray-300 group-hover:text-white"
                               }`}>
                                 {activity.name}
                               </span>
@@ -545,7 +565,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   value={location}
                   onChange={(e) => setLocation(e.target.value.slice(0, limits.location))}
                   maxLength={limits.location}
-                  className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm h-11 focus:border-green-500/50 focus:ring-green-500/20"
+                  className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm h-11 focus:border-emerald-700/50 focus:ring-emerald-700/20"
                 />
               </div>
 
@@ -577,7 +597,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     className={`w-full py-6 text-base font-bold tracking-wide rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:shadow-none ${
                       !selectedActivity || isStarting 
                         ? "bg-gray-800 text-gray-500" 
-                        : "bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white shadow-green-900/30 hover:shadow-green-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                        : "bg-emerald-700 text-white shadow-emerald-900/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
                     }`}
                   >
                     {isStarting ? (

@@ -151,7 +151,7 @@ export function DeleteAccountButton() {
               </p>
               <p className="text-sm text-gray-300">
                 {t('settings.cancel_plan_only_hint_prefix')}
-                <strong className="text-green-400">{t('settings.cancel_plan_only_hint_bold')}</strong>
+                <strong className="text-emerald-400">{t('settings.cancel_plan_only_hint_bold')}</strong>
                 <span className="text-white">{t('settings.cancel_plan_only_hint_suffix')}</span>
               </p>
             </div>

@@ -53,7 +53,7 @@ const ToastComponent: React.FC<ToastComponentProps> = ({ toast, onRemove }) => {
 
     switch (toast.type) {
       case 'success':
-        return `${visibleStyles} bg-green-50 text-green-800 border border-green-200`
+        return `${visibleStyles} bg-emerald-50 text-emerald-800 border border-emerald-200`
       case 'error':
         return `${visibleStyles} bg-red-50 text-red-800 border border-red-200`
       case 'warning':
@@ -69,7 +69,7 @@ const ToastComponent: React.FC<ToastComponentProps> = ({ toast, onRemove }) => {
     
     switch (toast.type) {
       case 'success':
-        return <CheckCircle {...iconProps} className={`${iconProps.className} text-green-500`} />
+        return <CheckCircle {...iconProps} className={`${iconProps.className} text-emerald-700`} />
       case 'error':
         return <AlertCircle {...iconProps} className={`${iconProps.className} text-red-500`} />
       case 'warning':

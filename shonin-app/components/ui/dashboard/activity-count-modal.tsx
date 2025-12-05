@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { X, Play, BarChart3 } from "lucide-react"
+import { X, Play, BarChart3, Eye, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { SessionDetailModal } from "./session-detail-modal"
 import { useScrollLock } from "@/lib/modal-scroll-lock"
 import { useSessions } from "@/contexts/sessions-context"
+import { useGoalsDb } from "@/hooks/use-goals-db"
 import type { CompletedSession, SessionData } from "./time-tracker"
 
 interface ActivityCountModalProps {
@@ -30,6 +31,8 @@ interface ActivityItem {
   category: string
   icon: string
   color: string
+  goalId?: string
+  goalTitle?: string
   latestSession: CompletedSession
 }
 
@@ -47,6 +50,9 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
   
   // セッション状態を取得
   const { isSessionActive } = useSessions()
+  
+  // 目標管理フック
+  const { getGoal } = useGoalsDb()
 
   // アニメーション状態（早期returnの前に配置する必要がある）
   const [isAnimating, setIsAnimating] = useState(false)
@@ -99,7 +105,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
     "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
     "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
-    "英語学習": { icon: "🌍", color: "bg-green-500", category: "学習" },
+    "英語学習": { icon: "🌍", color: "bg-emerald-600", category: "学習" },
     "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
   }
 
@@ -151,6 +157,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
           color: stats.latestSession.activityColor,
           category: "その他"
         }
+        
+        const goalInfo = stats.latestSession.goalId ? getGoal(stats.latestSession.goalId) : null
 
         return {
           id: stats.latestSession.id,
@@ -160,6 +168,8 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
           category: activityInfo.category,
           icon: activityInfo.icon,
           color: activityInfo.color,
+          goalId: stats.latestSession.goalId,
+          goalTitle: goalInfo?.title,
           latestSession: stats.latestSession
         }
       })
@@ -249,7 +259,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
               onClick={handleClose}
               variant="ghost"
               size="sm"
-              className="absolute right-2 top-2 text-gray-400 hover:text-white"
+              className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -260,58 +270,145 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
             </CardTitle>
           </CardHeader>
 
-          <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="grid gap-3">
+          <CardContent ref={scrollContainerRef} className="overflow-y-auto h-[calc(400px-80px)] sm:max-h-[calc(90vh-200px)] sm:h-auto px-3 sm:px-6 pt-2 pb-3 sm:pb-6">
+            <div className="space-y-3">
               {currentActivities.map((activity, index) => (
                 <div
                   key={`${activity.id}-${currentPage}`}
-                  onClick={() => handleActivityDetailClick(activity)}
-                  className={`p-4 rounded-xl shadow-sm ${activity.color} bg-opacity-10 border border-white/10 cursor-pointer transition-all duration-200 hover:bg-opacity-20 hover:scale-[1.01] hover:-translate-y-0.5`}
+                  onClick={() => {
+                    if (isMobile) {
+                      handleActivityDetailClick(activity)
+                    }
+                  }}
+                  className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-0.5 ${isMobile ? 'cursor-pointer' : ''}`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <span className="text-white font-semibold text-lg truncate">{activity.name}</span>
+                  {/* 左側：アイコン + 情報 */}
+                  <div className="flex items-center space-x-4 flex-1 min-w-0 relative z-10">
+                    <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} text-xl`}>
+                      {activity.icon || activity.name.charAt(0)}
                     </div>
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <div className="text-white/90 font-mono text-sm bg-white/10 px-2 py-1 rounded">
-                        {activity.sessionCount}{t('common.times')}
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="text-white font-bold truncate text-base lg:text-lg tracking-tight drop-shadow-md">
+                          {activity.name}
+                        </h3>
                       </div>
-                      {/* 開始ボタン */}
-                      {isSessionActive ? (
-                        <TooltipProvider>
-                          <Tooltip delayDuration={0}>
-                            <TooltipTrigger asChild>
-                              <span className="inline-block cursor-not-allowed">
-                                <Button
-                                  size="sm"
-                                  disabled
-                                  className="bg-[#1eb055] opacity-50 pointer-events-none"
-                                >
-                                  <Play className="w-3 h-3 mr-1" />
-                                  {t('common.start')}
-                                </Button>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" align="end">
-                              <p className="text-xs">{t('common.recording_in_progress')}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
+
+                      <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
+                        <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
+                          <span className="font-bold text-emerald-400">{activity.sessionCount}</span>
+                          <span className="text-xs text-gray-300 opacity-90">{t('common.times')}</span>
+                        </div>
+                        {activity.goalTitle && (
+                          <div className="hidden sm:flex items-center text-xs text-purple-200 bg-purple-500/20 border border-purple-500/20 px-2.5 py-0.5 rounded-full truncate max-w-[150px]">
+                            <Target className="w-3 h-3 mr-1 flex-shrink-0" />
+                            <span className="truncate font-medium">{activity.goalTitle}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* アクションボタン */}
+                  <div className="flex items-center space-x-2 relative z-10 pl-4">
+                    {/* SP版: 詳細ボタン + 開始ボタン */}
+                    {isMobile ? (
+                      <>
                         <Button
-                          size="sm"
-                          className="bg-[#1eb055] hover:bg-[#1a9649] active:scale-95 active:bg-[#158a3d] transition-all duration-150"
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleActivityClick(activity)
+                            handleViewDetail(activity)
                           }}
                         >
-                          <Play className="w-3 h-3 mr-1" />
-                          {t('common.start')}
+                          <Eye className="w-4 h-4" />
                         </Button>
-                      )}
-                    </div>
+                        {isSessionActive ? (
+                          <TooltipProvider>
+                            <Tooltip delayDuration={0}>
+                              <TooltipTrigger asChild>
+                                <span className="inline-block cursor-not-allowed">
+                                  <Button
+                                    size="icon"
+                                    disabled
+                                    className="h-10 w-10 rounded-full bg-gray-700 text-gray-500 opacity-50 pointer-events-none"
+                                  >
+                                    <Play className="w-4 h-4 fill-current" />
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" align="end">
+                                <p className="text-xs">{t('common.recording_in_progress')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Button
+                            size="icon"
+                            className="h-10 w-10 rounded-full bg-emerald-700 text-white shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-110 active:scale-95"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleActivityClick(activity)
+                            }}
+                          >
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      // PC版: 詳細ボタン + 開始ボタン (テキスト付き)
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-gray-400 hover:text-white hover:bg-white/10 border border-white/30 hover:border-white/50"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleViewDetail(activity)
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-1.5" />
+                          {t('common.details')}
+                        </Button>
+                        {isSessionActive ? (
+                          <TooltipProvider>
+                            <Tooltip delayDuration={0}>
+                              <TooltipTrigger asChild>
+                                <span className="inline-block cursor-not-allowed">
+                                  <Button
+                                    size="sm"
+                                    disabled
+                                    className="bg-gray-700 text-gray-500 opacity-50 pointer-events-none px-4"
+                                  >
+                                    <Play className="w-3 h-3 mr-1.5 fill-current" />
+                                    {t('common.start')}
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" align="end">
+                                <p className="text-xs">{t('common.recording_in_progress')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="px-5 bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleActivityClick(activity)
+                            }}
+                          >
+                            <Play className="w-3 h-3 mr-1.5 fill-current" />
+                            {t('common.start')}
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

@@ -209,7 +209,7 @@ export function Goals({ initialGoals }: GoalsProps) {
           <div className="fixed bottom-24 right-6 z-[60] md:hidden">
             <Button
               onClick={handleAddGoal}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white hover:from-green-500 hover:to-emerald-600 shadow-lg shadow-green-900/20 w-14 h-14 rounded-full p-0 transition-all duration-300 hover:scale-110 active:scale-95"
+              className="bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 w-14 h-14 rounded-full p-0 transition-all duration-300 hover:scale-110 active:scale-95"
             >
               <Plus className="w-8 h-8" />
             </Button>
@@ -270,12 +270,12 @@ export function Goals({ initialGoals }: GoalsProps) {
                             <span className="text-gray-400">{t('goals.progress_status')}</span>
                             <span className="text-white">
                               {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} 
-                              <span className="ml-1 text-green-400">({progressPercentage.toFixed(1)}%)</span>
+                              <span className="ml-1 text-emerald-400">({progressPercentage.toFixed(1)}%)</span>
                             </span>
                           </div>
                           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                              className="h-full bg-emerald-700 rounded-full transition-all duration-500 ease-out"
                               style={{ width: `${progressPercentage}%` }}
                             />
                           </div>
@@ -333,7 +333,7 @@ export function Goals({ initialGoals }: GoalsProps) {
           <div className="mt-8 text-center hidden md:block">
             <Button
               onClick={handleAddGoal}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-green-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0"
+              className="bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0 active:scale-[0.98]"
             >
               <Plus className="w-6 h-6 mr-2" />
               {t('goals.add_goal')}
@@ -342,7 +342,7 @@ export function Goals({ initialGoals }: GoalsProps) {
         )}
 
         {!loading && goals.length === 0 && (
-          <div className="text-center py-16 bg-card/20 rounded-2xl border border-dashed border-white/10 backdrop-blur-sm">
+          <div className="text-center py-16 rounded-2xl border border-white/10">
             <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <Target className="w-10 h-10 text-gray-400" />
             </div>
@@ -352,7 +352,7 @@ export function Goals({ initialGoals }: GoalsProps) {
             </p>
             <Button
               onClick={handleAddGoal}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-green-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0"
+              className="bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0 active:scale-[0.98]"
             >
               <Plus className="w-5 h-5 mr-2" />
               {t('goals.set_goal')}

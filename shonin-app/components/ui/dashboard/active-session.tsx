@@ -253,7 +253,7 @@ export function ActiveSession({
   const getStatusInfo = () => {
     switch (sessionState) {
       case "active":
-        return { color: "bg-green-500", text: t('active_session.recording') }
+        return { color: "bg-emerald-700", text: t('active_session.recording') }
       case "paused":
         return { color: "bg-yellow-500", text: t('active_session.paused') }
       case "ended":
@@ -273,7 +273,7 @@ export function ActiveSession({
               className={`w-3 h-3 ${statusInfo.color} rounded-full shadow-[0_0_10px_currentColor] ${sessionState === "active" ? "animate-pulse" : ""}`}
             />
             <span className={cn("font-medium tracking-wide", 
-              sessionState === "active" ? "text-green-500" : 
+              sessionState === "active" ? "text-emerald-500" : 
               sessionState === "paused" ? "text-yellow-500" : "text-blue-500"
             )}>{statusInfo.text}</span>
           </div>
@@ -316,7 +316,7 @@ export function ActiveSession({
                   <div
                     className={cn("h-full rounded-full transition-all duration-500",
                       elapsedTime >= session.targetTime * 60
-                        ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]"
+                        ? "bg-emerald-700 shadow-[0_0_15px_rgba(4,120,87,0.6)]"
                         : elapsedTime >= session.targetTime * 60 * 0.8
                         ? "bg-yellow-500"
                         : "bg-blue-500"
@@ -327,7 +327,7 @@ export function ActiveSession({
                   />
                 </div>
                 {elapsedTime >= session.targetTime * 60 && (
-                  <div className="text-sm text-green-500 font-medium animate-pulse flex items-center justify-center gap-1">
+                  <div className="text-sm text-emerald-500 font-medium animate-pulse flex items-center justify-center gap-1">
                      🎉 {t('active_session.goal_achieved')}
                   </div>
                 )}
@@ -352,7 +352,7 @@ export function ActiveSession({
                 <Button 
                   onClick={handleSave} 
                   size="lg" 
-                  className="h-14 px-8 text-base bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-green-900/20 transition-all hover:-translate-y-0.5"
+                  className="h-14 px-8 text-base bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
                   disabled={isSaving || isReflectionLoading || isUploading}
                 >
                   <Save className="w-5 h-5 mr-2" />
@@ -460,7 +460,7 @@ export function ActiveSession({
                 variant={showNotes ? "default" : "outline"}
                 className={cn("h-12 text-base transition-all",
                   showNotes
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    ? "bg-emerald-700 text-white shadow-md"
                     : "hover:bg-secondary"
                 )}
               >
@@ -476,7 +476,7 @@ export function ActiveSession({
                 variant={showPhotos ? "default" : "outline"}
                 className={cn("h-12 text-base transition-all",
                   showPhotos
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    ? "bg-emerald-700 text-white shadow-md"
                     : "hover:bg-secondary"
                 )}
               >
@@ -573,7 +573,7 @@ export function ActiveSession({
                         className={cn(
                           "h-14 w-14 text-2xl p-0 flex items-center justify-center rounded-xl transition-all",
                           mood === rating
-                            ? "bg-green-500 hover:bg-green-600 text-white scale-110 shadow-lg shadow-green-900/20 ring-2 ring-green-500 ring-offset-2 ring-offset-background"
+                            ? "bg-emerald-700 text-white scale-110 shadow-lg shadow-emerald-900/20 ring-2 ring-emerald-700 ring-offset-2 ring-offset-background"
                             : "hover:bg-secondary hover:scale-105"
                         )}
                       >

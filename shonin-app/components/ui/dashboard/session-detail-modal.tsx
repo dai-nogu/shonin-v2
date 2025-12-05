@@ -223,7 +223,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           </div>
           
           <div className="py-1">
-            <div className="flex items-center space-x-1.5 text-green-400 mb-1.5">
+            <div className="flex items-center space-x-1.5 text-emerald-400 mb-1.5">
               <MapPin className="w-3 h-3" />
               <span className="text-xs font-medium opacity-70">{t('session_detail.location')}</span>
             </div>
@@ -280,15 +280,15 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
       {/* 振り返り・メモ */}
       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
         <h3 className="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center">
-          <span className="w-0.5 h-3 bg-green-500 rounded-full mr-1.5"></span>
+          <span className="w-0.5 h-3 bg-emerald-700 rounded-full mr-1.5"></span>
           {t('session_detail.reflection_and_notes')}
         </h3>
 
         <div className="space-y-3">
           {/* 学びや成果 */}
           {session.achievements && (
-            <div className="relative pl-3 border-l-2 border-green-500/30">
-              <span className="text-xs font-medium text-green-400 mb-0.5 block">{t('session_detail.achievements')}</span>
+            <div className="relative pl-3 border-l-2 border-emerald-700/30">
+              <span className="text-xs font-medium text-emerald-400 mb-0.5 block">{t('session_detail.achievements')}</span>
               <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
                 {session.achievements}
               </div>
@@ -334,7 +334,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             </div>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
               session.duration >= session.targetTime * 60 
-                ? "bg-green-500/10 text-green-400 border border-green-500/20" 
+                ? "bg-emerald-700/10 text-emerald-400 border border-emerald-700/20" 
                 : "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
             }`}>
               {Math.round((session.duration / (session.targetTime * 60)) * 100)}%
@@ -349,7 +349,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                   session.duration >= session.targetTime * 60 ? "bg-gradient-to-r from-green-500 to-green-400" : "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                   session.duration >= session.targetTime * 60 ? "bg-emerald-700" : "bg-yellow-500"
                 }`}
                 style={{ width: `${Math.min((session.duration / (session.targetTime * 60)) * 100, 100)}%` }}
               />
@@ -381,7 +381,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-full w-7 h-7 p-0"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-lg w-7 h-7 p-0"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -396,7 +396,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               <h2 className={`text-white font-bold ${isMobile ? 'text-base' : 'text-lg'} truncate mb-1`}>
                 {session.activityName}
               </h2>
-              <div className="flex items-center text-green-400">
+              <div className="flex items-center text-emerald-400">
                 <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} font-mono`}>
                   {formatDuration(session.duration)}
                 </span>
@@ -448,7 +448,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   variant="ghost"
                   size="icon"
                   disabled={currentPage <= 1}
-                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  className={`hover:bg-gray-700 text-white rounded-lg w-8 h-8 p-0 transition-all ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -463,7 +463,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                       onClick={() => !isTransitioning && setCurrentPage(i + 1)}
                       className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                         i + 1 === currentPage 
-                          ? 'bg-green-400 w-4' 
+                          ? 'bg-emerald-500 w-4' 
                           : 'bg-gray-600 hover:bg-gray-500'
                       }`}
                     />
@@ -476,7 +476,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   variant="ghost"
                   size="icon"
                   disabled={currentPage >= totalPages}
-                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  className={`hover:bg-gray-700 text-white rounded-lg w-8 h-8 p-0 transition-all ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -494,7 +494,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                         <span className="w-full inline-block cursor-not-allowed">
                           <Button
                             disabled
-                            className="w-full bg-[#1eb055] text-black opacity-50 pointer-events-none h-9"
+                            className="w-full bg-emerald-700 text-white opacity-50 pointer-events-none h-9"
                           >
                             <Play className="w-3.5 h-3.5 mr-1.5" />
                             <span className="text-sm">{t('session_detail.start_session')}</span>
@@ -510,7 +510,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   <Button
                     onClick={handleStartSimilar}
                     disabled={isStarting}
-                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50 h-9"
+                    className="w-full bg-emerald-700 text-white disabled:opacity-50 h-9 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isStarting ? (
                       <>
@@ -786,7 +786,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           </div>
           
           <div className="py-1">
-            <div className="flex items-center space-x-1.5 text-green-400 mb-1.5">
+            <div className="flex items-center space-x-1.5 text-emerald-400 mb-1.5">
               <MapPin className="w-3 h-3" />
               <span className="text-xs font-medium opacity-70">{t('session_detail.location')}</span>
             </div>
@@ -843,15 +843,15 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       {/* 振り返り・メモ */}
       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
         <h3 className="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center">
-          <span className="w-0.5 h-3 bg-green-500 rounded-full mr-1.5"></span>
+          <span className="w-0.5 h-3 bg-emerald-700 rounded-full mr-1.5"></span>
           {t('session_detail.reflection_and_notes')}
         </h3>
 
         <div className="space-y-3">
           {/* 学びや成果 */}
           {session.achievements && (
-            <div className="relative pl-3 border-l-2 border-green-500/30">
-              <span className="text-xs font-medium text-green-400 mb-0.5 block">{t('session_detail.achievements')}</span>
+            <div className="relative pl-3 border-l-2 border-emerald-700/30">
+              <span className="text-xs font-medium text-emerald-400 mb-0.5 block">{t('session_detail.achievements')}</span>
               <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
                 {session.achievements}
               </div>
@@ -897,7 +897,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             </div>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
               session.duration >= session.targetTime * 60 
-                ? "bg-green-500/10 text-green-400 border border-green-500/20" 
+                ? "bg-emerald-700/10 text-emerald-400 border border-emerald-700/20" 
                 : "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
             }`}>
               {Math.round((session.duration / (session.targetTime * 60)) * 100)}%
@@ -912,7 +912,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                   session.duration >= session.targetTime * 60 ? "bg-gradient-to-r from-green-500 to-green-400" : "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                   session.duration >= session.targetTime * 60 ? "bg-emerald-700" : "bg-yellow-500"
                 }`}
                 style={{ width: `${Math.min((session.duration / (session.targetTime * 60)) * 100, 100)}%` }}
               />
@@ -999,7 +999,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-full w-7 h-7 p-0"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-lg w-7 h-7 p-0"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -1014,7 +1014,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               <h2 className={`text-white font-bold ${isMobile ? 'text-base' : 'text-lg'} truncate mb-1`}>
                 {session.activityName}
               </h2>
-              <div className="flex items-center text-green-400">
+              <div className="flex items-center text-emerald-400">
                 <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} font-mono`}>
                   {formatDuration(session.duration)}
                 </span>
@@ -1073,7 +1073,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   variant="ghost"
                   size="icon"
                   disabled={currentPage <= 1}
-                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  className={`hover:bg-gray-700 text-white rounded-lg w-8 h-8 p-0 transition-all ${currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1088,7 +1088,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                       onClick={() => !isTransitioning && setCurrentPage(i + 1)}
                       className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                         i + 1 === currentPage 
-                          ? 'bg-green-400 w-4' 
+                          ? 'bg-emerald-500 w-4' 
                           : 'bg-gray-600 hover:bg-gray-500'
                       }`}
                     />
@@ -1101,7 +1101,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   variant="ghost"
                   size="icon"
                   disabled={currentPage >= totalPages}
-                  className={`bg-gray-800/50 hover:bg-gray-700 text-white rounded-full w-8 h-8 p-0 border border-gray-700 transition-all ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  className={`hover:bg-gray-700 text-white rounded-lg w-8 h-8 p-0 transition-all ${currentPage >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1119,7 +1119,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                         <span className="w-full inline-block cursor-not-allowed">
                           <Button
                             disabled
-                            className="w-full bg-[#1eb055] text-black opacity-50 pointer-events-none h-9"
+                            className="w-full bg-emerald-700 text-white opacity-50 pointer-events-none h-9"
                           >
                             <Play className="w-3.5 h-3.5 mr-1.5" />
                             <span className="text-sm">{t('session_detail.start_session')}</span>
@@ -1135,7 +1135,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   <Button
                     onClick={handleStartSimilar}
                     disabled={isStarting}
-                    className="w-full bg-[#1eb055] hover:bg-[#1a9649] text-black disabled:opacity-50 h-9"
+                    className="w-full bg-emerald-700 text-white disabled:opacity-50 h-9 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isStarting ? (
                       <>

@@ -81,7 +81,7 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
                     <span className="text-white font-medium">{activity.name}</span>
                     {/* 現在進行中のアクティビティの場合は表示 */}
                     {isSessionActive && currentSession && currentSession.activityId === activity.id && (
-                      <span className="text-green-300 text-xs bg-green-900 px-2 py-1 rounded-full">
+                      <span className="text-emerald-300 text-xs bg-emerald-900 px-2 py-1 rounded-full">
                         {t('settings.in_progress')}
                       </span>
                     )}

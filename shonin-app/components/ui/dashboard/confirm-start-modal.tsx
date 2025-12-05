@@ -72,7 +72,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
             onClick={onCancel}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -93,7 +93,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
             <div className={`bg-opacity-50 rounded p-3 space-y-2 ${isMobile ? 'space-y-1' : ''}`}>
               <div className={`flex items-center justify-between text-sm ${isMobile ? 'text-xs' : ''}`}>
                 <span>前回の記録時間:</span>
-                <span className="text-green-400 font-mono">{activity.duration}</span>
+                <span className="text-emerald-400 font-mono">{activity.duration}</span>
               </div>
               <div className={`flex items-center justify-between text-sm ${isMobile ? 'text-xs' : ''}`}>
                 <span>前回の実施日:</span>
@@ -143,7 +143,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
             </Button>
             <Button 
               onClick={onConfirm} 
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+              className="flex-1 bg-emerald-700 text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               size={isMobile ? "sm" : "default"}
             >
               <Play className="w-4 h-4 mr-2" />
