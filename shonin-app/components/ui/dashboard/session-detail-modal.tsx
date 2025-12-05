@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play } from "lucide-react"
+import { X, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play, CloudRain, Cloud, Minus, Sun, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -115,9 +115,15 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     return `${dateStr} (${weekday})`
   }
 
-  const getMoodEmoji = (mood: number) => {
-    const emojis = ["😫", "😔", "😐", "😊", "😄"]
-    return emojis[mood - 1] || "😐"
+  const getMoodIcon = (mood: number) => {
+    const icons = [
+      <CloudRain key="1" className="w-5 h-5 text-gray-400" />,
+      <Cloud key="2" className="w-5 h-5 text-gray-400" />,
+      <Minus key="3" className="w-5 h-5 text-gray-400" />,
+      <Sun key="4" className="w-5 h-5 text-gray-400" />,
+      <Sparkles key="5" className="w-5 h-5 text-gray-400" />
+    ]
+    return icons[mood - 1] || icons[2]
   }
 
   const getMoodText = (mood: number) => {
@@ -254,7 +260,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
               <span className="text-xs font-medium opacity-70">{t('session_detail.mood')}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-lg">{getMoodEmoji(session.mood || 3)}</span>
+              <span className="flex items-center">{getMoodIcon(session.mood || 3)}</span>
               <div className="flex space-x-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
@@ -671,9 +677,15 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     return `${dateStr} (${weekday})`
   }
 
-  const getMoodEmoji = (mood: number) => {
-    const emojis = ["😫", "😔", "😐", "😊", "😄"]
-    return emojis[mood - 1] || "😐"
+  const getMoodIcon = (mood: number) => {
+    const icons = [
+      <CloudRain key="1" className="w-5 h-5 text-gray-400" />,
+      <Cloud key="2" className="w-5 h-5 text-gray-400" />,
+      <Minus key="3" className="w-5 h-5 text-gray-400" />,
+      <Sun key="4" className="w-5 h-5 text-gray-400" />,
+      <Sparkles key="5" className="w-5 h-5 text-gray-400" />
+    ]
+    return icons[mood - 1] || icons[2]
   }
 
   const getMoodText = (mood: number) => {
@@ -817,7 +829,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
               <span className="text-xs font-medium opacity-70">{t('session_detail.mood')}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-lg">{getMoodEmoji(session.mood || 3)}</span>
+              <span className="flex items-center">{getMoodIcon(session.mood || 3)}</span>
               <div className="flex space-x-0.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star

@@ -1,9 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { BarChart3, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import { Progress } from "@/components/ui/common/progress"
 import { formatDuration } from "@/lib/format-duration"
 import { useTimezone } from "@/contexts/timezone-context"
 import { useTranslations } from 'next-intl'
@@ -17,6 +17,7 @@ interface WeeklyProgressProps {
 
 export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
   const t = useTranslations()
+  const [isAnimated, setIsAnimated] = useState(false)
   // タイムゾーンを取得
   const { timezone } = useTimezone()
   
@@ -63,6 +64,15 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
 
   const totalWeekSeconds = weekData.reduce((sum, day) => sum + day.totalSeconds, 0)
 
+  // マウント時にアニメーションを開始
+  useEffect(() => {
+    // 少し遅延を入れてからアニメーション開始（ページ表示後に動き出す）
+    const timer = setTimeout(() => {
+      setIsAnimated(true)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div id="weekly-progress">
       <Card className="bg-transparent border-0 shadow-none">
@@ -88,17 +98,20 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       <CardContent className="px-0">
         <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
            <div className="space-y-3 lg:space-y-4">
-            {weekData.map((day) => (
+            {weekData.map((day, index) => (
               <div key={day.day} className="flex items-center group">
                 <span className="text-gray-400 w-8 lg:w-10 text-xs lg:text-sm font-medium group-hover:text-gray-200 transition-colors">{day.day}</span>
                 
                 <div className="flex-1 mx-2">
-                  <Progress 
-                    value={day.progress} 
-                    max={100} 
-                    className="h-2 lg:h-2.5 bg-gray-800/80" 
-                    variant="liquid"
-                  />
+                  <div className="relative h-2 lg:h-2.5 w-full overflow-hidden rounded-full bg-gray-800/80">
+                    <div
+                      className="h-full bg-emerald-700 rounded-full"
+                      style={{
+                        width: isAnimated ? `${day.progress}%` : '0%',
+                        transition: `width 1.2s cubic-bezier(0.4, 0, 0.2, 1) ${index * 100}ms`,
+                      }}
+                    />
+                  </div>
                 </div>
                 
                 <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right font-mono ${

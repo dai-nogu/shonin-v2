@@ -68,9 +68,9 @@ export function ActiveActivitySidebar({
         </div>
 
         {/* 経過時間 */}
-        <div className="text-center py-2 bg-secondary/20 rounded-lg backdrop-blur-sm border border-white/5">
+        <div className="text-center py-2">
           <div className={cn("text-3xl font-mono font-bold tabular-nums",
-             sessionState === "paused" ? "text-yellow-500" : "text-primary"
+             sessionState === "paused" ? "text-yellow-500" : "text-emerald-600"
           )}>
             {formattedTime}
           </div>

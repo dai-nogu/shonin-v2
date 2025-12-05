@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X } from "lucide-react"
+import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X, CloudRain, Cloud, Minus, Sun, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Badge } from "@/components/ui/common/badge"
@@ -250,33 +250,11 @@ export function ActiveSession({
     }
   }, [session, elapsedTime, notes, mood, achievements, challenges, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage])
 
-  const getStatusInfo = () => {
-    switch (sessionState) {
-      case "active":
-        return { color: "bg-emerald-700", text: t('active_session.recording') }
-      case "paused":
-        return { color: "bg-yellow-500", text: t('active_session.paused') }
-      case "ended":
-        return { color: "bg-blue-500", text: t('active_session.reflecting') }
-    }
-  }
-
-  const statusInfo = getStatusInfo()
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* メインタイマーカード */}
       <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl">
         <CardHeader className="text-center pb-4">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div
-              className={`w-3 h-3 ${statusInfo.color} rounded-full shadow-[0_0_10px_currentColor] ${sessionState === "active" ? "animate-pulse" : ""}`}
-            />
-            <span className={cn("font-medium tracking-wide", 
-              sessionState === "active" ? "text-emerald-500" : 
-              sessionState === "paused" ? "text-yellow-500" : "text-blue-500"
-            )}>{statusInfo.text}</span>
-          </div>
           <h2 className="text-4xl font-bold tracking-tight mb-2">{session.activityName}</h2>
           {session.location && (
             <Badge variant="secondary" className="text-muted-foreground bg-secondary/50">
@@ -289,9 +267,7 @@ export function ActiveSession({
           {/* 経過時間表示 */}
           <div className="space-y-2">
             <div
-              className={cn("text-7xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums transition-colors py-4", 
-                sessionState === "ended" ? "text-blue-500" : "text-foreground"
-              )}
+              className="text-7xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
             >
               {formattedTime}
             </div>
@@ -396,7 +372,7 @@ export function ActiveSession({
 
           {/* 状態別メッセージ */}
           {sessionState === "paused" && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="text-center p-4">
               <p className="text-yellow-500 text-sm font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.paused_message') }} />
             </div>
           )}
@@ -571,17 +547,17 @@ export function ActiveSession({
                         onClick={() => setMood(rating)}
                         variant={mood === rating ? "default" : "outline"}
                         className={cn(
-                          "h-14 w-14 text-2xl p-0 flex items-center justify-center rounded-xl transition-all",
+                          "h-14 w-14 p-0 flex items-center justify-center rounded-xl transition-all",
                           mood === rating
                             ? "bg-emerald-700 text-white scale-110 shadow-lg shadow-emerald-900/20 ring-2 ring-emerald-700 ring-offset-2 ring-offset-background"
-                            : "hover:bg-secondary hover:scale-105"
+                            : "text-gray-400 hover:bg-secondary hover:scale-105"
                         )}
                       >
-                        {rating === 1 && "😞"}
-                        {rating === 2 && "😐"}
-                        {rating === 3 && "🙂"}
-                        {rating === 4 && "😊"}
-                        {rating === 5 && "😄"}
+                        {rating === 1 && <CloudRain className="w-6 h-6" />}
+                        {rating === 2 && <Cloud className="w-6 h-6" />}
+                        {rating === 3 && <Minus className="w-6 h-6" />}
+                        {rating === 4 && <Sun className="w-6 h-6" />}
+                        {rating === 5 && <Sparkles className="w-6 h-6" />}
                       </Button>
                     ))}
                   </div>
