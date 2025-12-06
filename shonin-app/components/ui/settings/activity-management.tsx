@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Activity, Trash2 } from "lucide-react"
+import { Activity, Trash2, X } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { Card, CardContent } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
@@ -116,8 +116,25 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
 
       {/* 削除確認ダイアログ */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
+        <AlertDialogContent 
+          className="bg-gray-800 border-gray-700 text-white"
+          onOverlayClick={() => setDeleteDialogOpen(false)}
+          onInteractOutside={(e) => {
+            e.preventDefault()
+            setDeleteDialogOpen(false)
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault()
+            setDeleteDialogOpen(false)
+          }}
+        >
           <AlertDialogHeader>
+            <button
+              onClick={() => setDeleteDialogOpen(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
             <AlertDialogTitle className="text-red-400">
               {t('settings.delete_activity_confirmation_title')}
             </AlertDialogTitle>
@@ -125,16 +142,11 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
               {t('settings.delete_activity_confirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500 hover:text-white"
-            >
-              {t('settings.cancel')}
-            </AlertDialogCancel>
+          <AlertDialogFooter className="flex justify-end">
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-500 hover:bg-destructive text-white transition-colors"
             >
               {isDeleting ? (
                 <div className="flex items-center space-x-2">

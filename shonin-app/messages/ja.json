@@ -269,7 +269,6 @@
     "important_warning": "⚠️ 重要なお知らせ",
     "warning_irreversible": "この操作は取り消すことができません。",
     "warning_activity_data": "すべてのアクティビティデータが削除されます。",
-    "warning_session_history": "セッション履歴が完全に削除されます。",
     "warning_goals_ai": "目標設定とAI分析データも削除されます。",
     "confirm_deletion": "本当にアカウントを削除しますか？",
     "no": "いいえ",

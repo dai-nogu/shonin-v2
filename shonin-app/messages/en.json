@@ -273,7 +273,6 @@
     "important_warning": "⚠️ Important Notice",
     "warning_irreversible": "• This action cannot be undone.",
     "warning_activity_data": "• All activity data will be deleted.",
-    "warning_session_history": "• Session history will be permanently deleted.",
     "warning_goals_ai": "• Goals and AI analysis data will be removed.",
     "confirm_deletion": "Are you sure you want to delete your account?",
     "no": "No",

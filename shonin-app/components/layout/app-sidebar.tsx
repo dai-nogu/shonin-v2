@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, MessageSquare, Settings, CreditCard, LogOut, User } from "lucide-react"
+import { Home, Calendar, Target, MessageSquare, Settings, CreditCard, LogOut, User, X } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -230,8 +230,25 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
       {/* ログアウト確認ダイアログ */}
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
+        <AlertDialogContent 
+          className="bg-gray-800 border-gray-700 text-white"
+          onOverlayClick={() => setLogoutDialogOpen(false)}
+          onInteractOutside={(e) => {
+            e.preventDefault()
+            setLogoutDialogOpen(false)
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault()
+            setLogoutDialogOpen(false)
+          }}
+        >
           <AlertDialogHeader>
+            <button
+              onClick={() => setLogoutDialogOpen(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
             <AlertDialogTitle className="text-red-400">
               {t('settings.logout_confirmation')}
             </AlertDialogTitle>
@@ -253,15 +270,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500 hover:text-white"
-            >
-              {t('settings.no')}
-            </AlertDialogCancel>
+          <AlertDialogFooter className="flex justify-end">
             <AlertDialogAction
               onClick={handleLogoutConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-500 hover:bg-destructive text-white transition-colors"
             >
               {t('settings.logout')}
             </AlertDialogAction>

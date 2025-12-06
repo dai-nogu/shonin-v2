@@ -10,6 +10,10 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-zen-kaku)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+  			mono: ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', 'monospace'],
+  		},
   		colors: {
   			white: '#fffffC',
   			background: 'hsl(var(--background))',

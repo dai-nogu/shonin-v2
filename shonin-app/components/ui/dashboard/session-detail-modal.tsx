@@ -88,6 +88,8 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     // アニメーション完了後に実際に閉じる
     setTimeout(() => {
       setIsClosing(false)
+      // モーダルが完全に閉じた後にスライドを1ページ目にリセット（ユーザーには見えない）
+      setCurrentPage(1)
       onClose()
     }, 300)
   }
@@ -650,6 +652,8 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     // アニメーション完了後に実際に閉じる
     setTimeout(() => {
       setIsClosing(false)
+      // モーダルが完全に閉じた後にスライドを1ページ目にリセット（ユーザーには見えない）
+      setCurrentPage(1)
       onClose()
     }, 300)
   }

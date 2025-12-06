@@ -352,7 +352,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   {t('session_start.select_goal')}
                 </Label>
                 <Select value={selectedGoal} onValueChange={setSelectedGoal}>
-                  <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white focus:ring-emerald-700/20 focus:border-emerald-700/50 h-11">
+                  <SelectTrigger className="bg-gray-900/50 border-gray-700 text-white hover:border-gray-600 focus:ring-0 focus:ring-offset-0 focus:border-emerald-700/50 h-11 data-[placeholder]:text-gray-400 transition-all">
                     <SelectValue placeholder={t('session_start.goal_placeholder')} />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900/95 border-gray-800 backdrop-blur-2xl shadow-2xl rounded-xl min-w-[280px]">
@@ -453,7 +453,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                         <button
                           type="button"
                           onClick={handleClearSelection}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors bg-gray-800 rounded-full p-0.5"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors bg-gray-800 rounded-lg p-0.5"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -523,7 +523,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                                   }
                                   deleteActivity(activity.id)
                                 }}
-                                className="absolute -top-2 -right-2 z-10 w-5 h-5 bg-gray-700 hover:bg-red-500/80 text-gray-300 hover:text-white rounded-full flex items-center justify-center transition-all shadow-lg scale-in"
+                                className="absolute -top-2 -right-2 z-10 w-5 h-5 bg-gray-700 hover:bg-red-500/80 text-gray-300 hover:text-white rounded-lg flex items-center justify-center transition-all shadow-lg scale-in"
                               >
                                 <X className="w-3 h-3" />
                               </button>
