@@ -11,7 +11,9 @@ const config: Config = {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['var(--font-zen-kaku)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+  			sans: ['var(--font-noto-serif)', 'serif'],
+  			serif: ['var(--font-noto-serif)', 'serif'],
+  			'serif-jp': ['var(--font-noto-serif-jp)', 'serif'],
   			mono: ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', 'monospace'],
   		},
   		colors: {

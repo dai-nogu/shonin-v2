@@ -93,7 +93,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
             <div className={`bg-opacity-50 rounded p-3 space-y-2 ${isMobile ? 'space-y-1' : ''}`}>
               <div className={`flex items-center justify-between text-sm ${isMobile ? 'text-xs' : ''}`}>
                 <span>前回の記録時間:</span>
-                <span className="text-emerald-400 font-mono">{activity.duration}</span>
+                <span className="text-emerald-400">{activity.duration}</span>
               </div>
               <div className={`flex items-center justify-between text-sm ${isMobile ? 'text-xs' : ''}`}>
                 <span>前回の実施日:</span>

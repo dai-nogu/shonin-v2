@@ -116,9 +116,9 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return `${hours}h ${minutes}m`
+      return `${hours}\u2009h ${minutes}\u2009m`
     }
-    return `${minutes}m`
+    return `${minutes}\u2009m`
   }
 
   const formatDate = (date: Date) => {

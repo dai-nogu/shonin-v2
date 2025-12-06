@@ -123,9 +123,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return forMobile ? `${hours}h ${minutes}m` : `${hours}h ${minutes}m`
+      return forMobile ? `${hours}\u2009h ${minutes}\u2009m` : `${hours}\u2009h ${minutes}\u2009m`
     }
-    return forMobile ? `${minutes}m` : `${minutes}m`
+    return forMobile ? `${minutes}\u2009m` : `${minutes}\u2009m`
   }
 
   const formatDate = (date: Date) => {

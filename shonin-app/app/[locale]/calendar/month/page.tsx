@@ -205,7 +205,7 @@ function MonthCalendarSSR({
                   <div className="text-2xl md:text-3xl font-bold text-emerald-500 mb-1">
                     {formatDuration(totalMonthTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.month_stats.total_time')}
                   </div>
                 </>
@@ -229,7 +229,7 @@ function MonthCalendarSSR({
                   <div className="text-2xl md:text-3xl font-bold text-[#96514d] mb-1">
                     {formatDuration(averageMonthTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.month_stats.average_time')}
                   </div>
                 </>

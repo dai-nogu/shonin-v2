@@ -274,7 +274,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-300 text-xs uppercase tracking-wider">{t('session_start.activity_name')}</Label>
+                  <Label className="text-gray-300 text-xs tracking-wider">{t('session_start.activity_name')}</Label>
                   <CharacterCounter current={newActivityName.length} max={limits.activityName} />
                 </div>
                 <Input
@@ -288,7 +288,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-300 text-xs uppercase tracking-wider">{t('session_start.activity_color')}</Label>
+                <Label className="text-gray-300 text-xs tracking-wider">{t('session_start.activity_color')}</Label>
                 <div className="grid grid-cols-6 gap-3 relative bg-gray-900/30 p-3 rounded-lg border border-white/5">
                   {colorOptions.map((color) => (
                     <div key={color.value} className="relative flex justify-center">
@@ -348,7 +348,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             <div className="space-y-6">
               {/* 目標選択 */}
               <div className="space-y-2">
-                <Label className="text-gray-300 text-xs uppercase tracking-wider pl-1">
+                <Label className="text-gray-300 text-xs tracking-wider pl-1">
                   {t('session_start.select_goal')}
                 </Label>
                 <Select value={selectedGoal} onValueChange={setSelectedGoal}>
@@ -405,7 +405,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
               {/* 行動選択 - 直接入力 + サジェスト + タグ */}
               <div className="space-y-3">
-                <Label className="text-gray-300 text-xs uppercase tracking-wider pl-1">{t('session_start.select_activity')}</Label>
+                <Label className="text-gray-300 text-xs tracking-wider pl-1">{t('session_start.select_activity')}</Label>
                 
                 {/* 入力フィールド + 追加ボタン + サジェスト */}
                 <div ref={inputContainerRef} className="relative">
@@ -555,7 +555,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               {/* 場所設定 */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-300 text-xs uppercase tracking-wider pl-1">
+                  <Label className="text-gray-300 text-xs tracking-wider pl-1">
                     {t('session_start.location')}
                   </Label>
                   <CharacterCounter current={location.length} max={limits.location} />

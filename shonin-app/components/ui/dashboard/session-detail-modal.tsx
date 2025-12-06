@@ -287,7 +287,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     <div className="space-y-2">
       {/* 振り返り・メモ */}
       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
-        <h3 className="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center">
+        <h3 className="text-gray-400 text-xs tracking-wider font-semibold flex items-center">
           <span className="w-0.5 h-3 bg-emerald-700 rounded-full mr-1.5"></span>
           {t('session_detail.reflection_and_notes')}
         </h3>
@@ -405,7 +405,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                 {session.activityName}
               </h2>
               <div className="flex items-center text-emerald-400">
-                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} font-mono`}>
+                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`}>
                   {formatDuration(session.duration)}
                 </span>
               </div>
@@ -858,7 +858,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     <div className="space-y-2">
       {/* 振り返り・メモ */}
       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
-        <h3 className="text-gray-400 text-xs uppercase tracking-wider font-semibold flex items-center">
+        <h3 className="text-gray-400 text-xs tracking-wider font-semibold flex items-center">
           <span className="w-0.5 h-3 bg-emerald-700 rounded-full mr-1.5"></span>
           {t('session_detail.reflection_and_notes')}
         </h3>
@@ -1031,7 +1031,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                 {session.activityName}
               </h2>
               <div className="flex items-center text-emerald-400">
-                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} font-mono`}>
+                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`}>
                   {formatDuration(session.duration)}
                 </span>
               </div>

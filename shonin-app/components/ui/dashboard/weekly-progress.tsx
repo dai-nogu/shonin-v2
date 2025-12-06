@@ -123,7 +123,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                   </div>
                 </div>
                 
-                <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right font-mono ${
+                <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right ${
                    day.totalSeconds > 0 ? "text-white font-medium" : "text-gray-600"
                 }`}>
                   {formatDuration(day.totalSeconds)}
@@ -142,8 +142,8 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                   </div>
                 ) : (
                   <div className="animate-fade-in-up">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-widest">{t('common.total')}</div>
-                    <div className="text-2xl lg:text-3xl font-bold text-emerald-500 drop-shadow-sm font-mono">
+                    <div className="text-xs text-gray-400 mb-1 tracking-widest">{t('common.total')}</div>
+                    <div className="text-2xl lg:text-3xl font-bold text-emerald-500 drop-shadow-sm">
                       {formatDuration(totalWeekSeconds)}
                     </div>
                   </div>

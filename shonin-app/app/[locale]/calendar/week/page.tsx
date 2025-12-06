@@ -230,7 +230,7 @@ function WeekCalendarSSR({
                   <div className="text-2xl md:text-3xl font-bold text-emerald-500 mb-1">
                     {formatDuration(totalWeekTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.week_stats.total_time')}
                   </div>
                 </>
@@ -254,7 +254,7 @@ function WeekCalendarSSR({
                   <div className="text-2xl md:text-3xl font-bold text-[#96514d] mb-1">
                     {formatDuration(averageWeekTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.week_stats.average_time')}
                   </div>
                 </>

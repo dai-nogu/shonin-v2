@@ -93,9 +93,9 @@ export function Goals({ initialGoals }: GoalsProps) {
     const minutes = Math.floor((seconds % 3600) / 60)
     
     if (hours > 0) {
-      return `${hours}h ${minutes}m`
+      return `${hours}\u2009h ${minutes}\u2009m`
     }
-    return `${minutes}m`
+    return `${minutes}\u2009m`
   }
 
   // エラーが発生したらモーダルを表示
@@ -307,15 +307,15 @@ export function Goals({ initialGoals }: GoalsProps) {
                       {((goal.weekdayHours && goal.weekdayHours > 0) || (goal.weekendHours && goal.weekendHours > 0)) && (
                         <div className="grid grid-cols-3 gap-2 mt-3">
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekday')}</span>
+                            <span className="text-[10px] tracking-wider text-gray-500 block mb-0.5">{t('goals.weekday')}</span>
                             <span className="text-sm font-medium text-white">{goal.weekdayHours}h</span>
                           </div>
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekend')}</span>
+                            <span className="text-[10px] tracking-wider text-gray-500 block mb-0.5">{t('goals.weekend')}</span>
                             <span className="text-sm font-medium text-white">{goal.weekendHours}h</span>
                           </div>
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekly')}</span>
+                            <span className="text-[10px] tracking-wider text-gray-500 block mb-0.5">{t('goals.weekly')}</span>
                             <span className="text-sm font-medium text-white">{weeklyHours}h</span>
                           </div>
                         </div>

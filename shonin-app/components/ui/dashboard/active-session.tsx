@@ -267,7 +267,7 @@ export function ActiveSession({
           {/* 経過時間表示 */}
           <div className="space-y-2">
             <div
-              className="text-7xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
+              className="text-7xl md:text-8xl font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
             >
               {formattedTime}
             </div>

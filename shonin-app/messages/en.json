@@ -19,9 +19,9 @@
     "no": "No",
     "seeMore": "See More",
     "times": " times",
-    "no_records": "No records yet",
-    "no_records_past": "No records",
-    "no_records_future": "Looking forward to your records",
+    "no_records": "No record",
+    "no_records_past": "No record",
+    "no_records_future": "Looking forward to your record",
     "start": "Start",
     "starting": "Starting...",
     "details": "Details",
@@ -116,8 +116,8 @@
   "quick_start": {
     "start_activity": "Quick Start",
     "complete_first_session": "Once you complete your first record, it'll appear here.",
+    "most_recorded": "Frequency",
     "latest": "Latest",
-    "most_recorded": "Most Recorded",
     "yesterday": "Yesterday",
     "not_enough_data": "Not enough data yet",
     "see_more": "See More",
@@ -133,16 +133,16 @@
     "noEvents": "No events",
     "sessionDetails": "Session Details",
     "activities_on_date": "{date}",
-    "month_view": "Month View",
-    "week_view": "Week View",
+    "month_view": "Monthly View",
+    "week_view": "Weekly View",
     "others_count": "+{count} more",
     "month_stats": {
-      "total_time": "This Month's Total",
-      "average_time": "This Month's Average"
+      "total_time": "Monthly Total",
+      "average_time": "Monthly Average"
     },
     "week_stats": {
-      "total_time": "This Week's Total",
-      "average_time": "This Week's Average"
+      "total_time": "Weekly Total",
+      "average_time": "Weekly Average"
     }
   },
   "goals": {
@@ -324,8 +324,8 @@
     "duration": "Duration",
     "startTime": "Start Time",
     "endTime": "End Time",
-    "hours_unit": "h",
-    "minutes_unit": "min",
+    "hours_unit": "\u2009h",
+    "minutes_unit": "\u2009m",
     "today": "Today",
     "yesterday": "Yesterday",
     "days_ago": " days ago",
@@ -377,7 +377,7 @@
   },
   "session_start": {
     "title": "Start Recording",
-    "select_activity": "Choose an Activity",
+    "select_activity": "Select an Activity",
     "activity_placeholder": "No activity yet",
     "activity_input_placeholder": "Type what you're working on...",
     "recent_activities": "Recent activities",
@@ -385,7 +385,7 @@
     "add_new": "Add",
     "location": "Location",
     "location_placeholder": "home",
-    "select_goal": "Choose a Goal",
+    "select_goal": "Select a Goal",
     "goal_placeholder": "No goal yet",
     "no_goal": "No goal selected",
     "target_time": "Target Time",
