@@ -8,7 +8,16 @@
     "lint": "next lint",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "test:ai": "tsx scripts/test-ai-feedback.ts"
+    "test:ai": "tsx scripts/test-ai-feedback.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:auth": "playwright test e2e/auth.spec.ts",
+    "test:e2e:stripe": "playwright test e2e/stripe.spec.ts",
+    "test:e2e:email": "playwright test e2e/email.spec.ts",
+    "test:e2e:ai": "playwright test e2e/ai-feedback.spec.ts",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
@@ -77,10 +86,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^24.0.3",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
+    "dotenv-cli": "^11.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",

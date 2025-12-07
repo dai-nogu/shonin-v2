@@ -13,14 +13,30 @@ export const PLAN_HIERARCHY: Record<PlanType, number> = {
   premium: 2,
 } as const;
 
+// 課金サイクルの型
+export type BillingCycle = 'monthly' | 'yearly';
+
 // Stripe Price IDとプランタイプのマッピング
 export const PRICE_ID_TO_PLAN: Record<string, PlanType> = {
-  'price_1SELBSIaAOyL3ERQzh3nDxnr': 'standard',
+  'price_1SELBSIaAOyL3ERQzh3nDxnr': 'standard', // 月額
+  'price_1SabtaIaAOyL3ERQmoX2SwRo': 'standard', // 年額
   // プレミアムプラン追加時はここに追加
   // 'price_xxxxxxxxxxxxxxxxxxxxx': 'premium',
 } as const;
 
-// プランタイプからStripe Price IDへの逆マッピング
+// プランタイプ・課金サイクル別のStripe Price ID
+export const PLAN_PRICE_IDS: Record<Exclude<PlanType, 'free'>, Record<BillingCycle, string>> = {
+  standard: {
+    monthly: 'price_1SELBSIaAOyL3ERQzh3nDxnr',
+    yearly: 'price_1SabtaIaAOyL3ERQmoX2SwRo',
+  },
+  premium: {
+    monthly: '', // 未実装
+    yearly: '',  // 未実装
+  },
+} as const;
+
+// プランタイプからStripe Price IDへの逆マッピング（月額のデフォルト値）
 // Partialを使って未実装のプランをオプショナルに
 export const PLAN_TO_PRICE_ID: Partial<Record<Exclude<PlanType, 'free'>, string>> = {
   standard: 'price_1SELBSIaAOyL3ERQzh3nDxnr',

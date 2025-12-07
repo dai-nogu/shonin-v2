@@ -1,4 +1,4 @@
-import { ChevronRight, User, Globe, Languages, Activity } from "lucide-react"
+import { ChevronRight, User, Languages, Activity } from "lucide-react"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { DeleteAccountButton } from "@/components/ui/settings/delete-account-button"
@@ -17,12 +17,6 @@ export default async function SettingsPage({
       title: t("settings.categories.profile"),
       href: `/${locale}/settings/profile`,
       icon: User
-    },
-    {
-      id: "timezone",
-      title: t("settings.categories.timezone"),
-      href: `/${locale}/settings/timezone`,
-      icon: Globe
     },
     {
       id: "language",

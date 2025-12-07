@@ -24,8 +24,8 @@ export function CalendarViewToggle({ viewMode }: CalendarViewToggleProps) {
           size="sm"
           className={
             viewMode === "month"
-              ? "bg-green-600 hover:bg-green-600 text-white"
-              : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+              ? "bg-emerald-700 text-white"
+              : "bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
           }
         >
           <Calendar className="w-4 h-4 mr-1" />
@@ -37,8 +37,8 @@ export function CalendarViewToggle({ viewMode }: CalendarViewToggleProps) {
           size="sm"
           className={
             viewMode === "week"
-              ? "bg-green-600 hover:bg-green-600 text-white"
-              : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+              ? "bg-emerald-700 text-white"
+              : "bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
           }
         >
           <Calendar className="w-4 h-4 mr-1" />

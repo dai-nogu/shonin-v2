@@ -56,7 +56,7 @@ export function GoalLimitModal({ isOpen, onClose, currentPlan, currentGoalCount 
         <DialogFooter className="mt-6">
           <Button
             onClick={handleViewPlans}
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 h-12"
+            className="w-full bg-emerald-700 text-white font-semibold py-3 h-12 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             {t('view_plans')}
           </Button>

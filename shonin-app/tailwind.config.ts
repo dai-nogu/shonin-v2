@@ -10,7 +10,14 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-noto-serif)', 'serif'],
+  			serif: ['var(--font-noto-serif)', 'serif'],
+  			'serif-jp': ['var(--font-noto-serif-jp)', 'serif'],
+  			mono: ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', 'monospace'],
+  		},
   		colors: {
+  			white: '#fffffC',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

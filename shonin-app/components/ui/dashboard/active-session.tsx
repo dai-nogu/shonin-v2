@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X } from "lucide-react"
+import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X, CloudRain, Cloud, Minus, Sun, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Badge } from "@/components/ui/common/badge"
@@ -13,10 +13,9 @@ import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useSessions } from "@/contexts/sessions-context"
-import { useTimezone } from "@/contexts/timezone-context"
 import { useAuth } from "@/contexts/auth-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
-import { getTimeStringInTimezone } from "@/lib/timezone-utils"
+import { getTimeString } from "@/lib/timezone-utils"
 import { getInputLimits } from "@/lib/input-limits"
 import { cn } from "@/lib/utils"
 
@@ -49,9 +48,6 @@ export function ActiveSession({
 
   // セッションコンテキストから一元化された時間データを取得
   const { formattedTime, elapsedTime } = useSessions()
-  
-  // タイムゾーンコンテキスト
-  const { timezone } = useTimezone()
 
   // 振り返り関連の状態
   const [mood, setMood] = useState(3)
@@ -250,33 +246,11 @@ export function ActiveSession({
     }
   }, [session, elapsedTime, notes, mood, achievements, challenges, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage])
 
-  const getStatusInfo = () => {
-    switch (sessionState) {
-      case "active":
-        return { color: "bg-green-500", text: t('active_session.recording') }
-      case "paused":
-        return { color: "bg-yellow-500", text: t('active_session.paused') }
-      case "ended":
-        return { color: "bg-blue-500", text: t('active_session.reflecting') }
-    }
-  }
-
-  const statusInfo = getStatusInfo()
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* メインタイマーカード */}
       <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl">
         <CardHeader className="text-center pb-4">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div
-              className={`w-3 h-3 ${statusInfo.color} rounded-full shadow-[0_0_10px_currentColor] ${sessionState === "active" ? "animate-pulse" : ""}`}
-            />
-            <span className={cn("font-medium tracking-wide", 
-              sessionState === "active" ? "text-green-500" : 
-              sessionState === "paused" ? "text-yellow-500" : "text-blue-500"
-            )}>{statusInfo.text}</span>
-          </div>
           <h2 className="text-4xl font-bold tracking-tight mb-2">{session.activityName}</h2>
           {session.location && (
             <Badge variant="secondary" className="text-muted-foreground bg-secondary/50">
@@ -289,15 +263,13 @@ export function ActiveSession({
           {/* 経過時間表示 */}
           <div className="space-y-2">
             <div
-              className={cn("text-7xl md:text-8xl font-mono font-bold tracking-tighter tabular-nums transition-colors py-4", 
-                sessionState === "ended" ? "text-blue-500" : "text-foreground"
-              )}
+              className="text-7xl md:text-8xl font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
             >
               {formattedTime}
             </div>
             <div className="text-muted-foreground text-sm font-medium">
               {t('active_session.start_time')}:{" "}
-              {getTimeStringInTimezone(session.startTime, timezone, '24h').substring(0, 5)}
+              {getTimeString(session.startTime, '24h').substring(0, 5)}
             </div>
             
             {/* 目標時間と進捗表示 */}
@@ -316,7 +288,7 @@ export function ActiveSession({
                   <div
                     className={cn("h-full rounded-full transition-all duration-500",
                       elapsedTime >= session.targetTime * 60
-                        ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]"
+                        ? "bg-emerald-700 shadow-[0_0_15px_rgba(4,120,87,0.6)]"
                         : elapsedTime >= session.targetTime * 60 * 0.8
                         ? "bg-yellow-500"
                         : "bg-blue-500"
@@ -327,7 +299,7 @@ export function ActiveSession({
                   />
                 </div>
                 {elapsedTime >= session.targetTime * 60 && (
-                  <div className="text-sm text-green-500 font-medium animate-pulse flex items-center justify-center gap-1">
+                  <div className="text-sm text-emerald-500 font-medium animate-pulse flex items-center justify-center gap-1">
                      🎉 {t('active_session.goal_achieved')}
                   </div>
                 )}
@@ -352,7 +324,7 @@ export function ActiveSession({
                 <Button 
                   onClick={handleSave} 
                   size="lg" 
-                  className="h-14 px-8 text-base bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-green-900/20 transition-all hover:-translate-y-0.5"
+                  className="h-14 px-8 text-base bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
                   disabled={isSaving || isReflectionLoading || isUploading}
                 >
                   <Save className="w-5 h-5 mr-2" />
@@ -396,7 +368,7 @@ export function ActiveSession({
 
           {/* 状態別メッセージ */}
           {sessionState === "paused" && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="text-center p-4">
               <p className="text-yellow-500 text-sm font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.paused_message') }} />
             </div>
           )}
@@ -460,7 +432,7 @@ export function ActiveSession({
                 variant={showNotes ? "default" : "outline"}
                 className={cn("h-12 text-base transition-all",
                   showNotes
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    ? "bg-emerald-700 text-white shadow-md"
                     : "hover:bg-secondary"
                 )}
               >
@@ -476,7 +448,7 @@ export function ActiveSession({
                 variant={showPhotos ? "default" : "outline"}
                 className={cn("h-12 text-base transition-all",
                   showPhotos
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                    ? "bg-emerald-700 text-white shadow-md"
                     : "hover:bg-secondary"
                 )}
               >
@@ -571,17 +543,17 @@ export function ActiveSession({
                         onClick={() => setMood(rating)}
                         variant={mood === rating ? "default" : "outline"}
                         className={cn(
-                          "h-14 w-14 text-2xl p-0 flex items-center justify-center rounded-xl transition-all",
+                          "h-14 w-14 p-0 flex items-center justify-center rounded-xl transition-all",
                           mood === rating
-                            ? "bg-green-500 hover:bg-green-600 text-white scale-110 shadow-lg shadow-green-900/20 ring-2 ring-green-500 ring-offset-2 ring-offset-background"
-                            : "hover:bg-secondary hover:scale-105"
+                            ? "bg-emerald-700 text-white scale-110 shadow-lg shadow-emerald-900/20 ring-2 ring-emerald-700 ring-offset-2 ring-offset-background"
+                            : "text-gray-400 hover:bg-secondary hover:scale-105"
                         )}
                       >
-                        {rating === 1 && "😞"}
-                        {rating === 2 && "😐"}
-                        {rating === 3 && "🙂"}
-                        {rating === 4 && "😊"}
-                        {rating === 5 && "😄"}
+                        {rating === 1 && <CloudRain className="w-6 h-6" />}
+                        {rating === 2 && <Cloud className="w-6 h-6" />}
+                        {rating === 3 && <Minus className="w-6 h-6" />}
+                        {rating === 4 && <Sun className="w-6 h-6" />}
+                        {rating === 5 && <Sparkles className="w-6 h-6" />}
                       </Button>
                     ))}
                   </div>

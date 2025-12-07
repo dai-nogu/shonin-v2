@@ -98,19 +98,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       }
     }
 
-    // 保存されていない場合は従来のマッピングを使用
-    const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
-      "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
-      "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
-      "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
-      "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
-      "英語学習": { icon: "🌍", color: "bg-green-500", category: "学習" },
-      "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
-    }
-
-    return activityIcons[session.activityName] || {
+    // 保存されていない場合はデフォルト値を返す
+    return {
       icon: "",
-      color: "bg-gray-500",
+      color: "bg-usuzumi",
       category: ""
     }
   }
@@ -132,9 +123,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return forMobile ? `${hours}h ${minutes}m` : `${hours}h ${minutes}m`
+      return forMobile ? `${hours}\u2009h ${minutes}\u2009m` : `${hours}\u2009h ${minutes}\u2009m`
     }
-    return forMobile ? `${minutes}m` : `${minutes}m`
+    return forMobile ? `${minutes}\u2009m` : `${minutes}\u2009m`
   }
 
   const formatDate = (date: Date) => {
@@ -424,14 +415,12 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                 handleActivityDetailClick(activity)
               }
             }}
-            className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 bg-card/40 backdrop-blur-md transition-all duration-300 group hover:bg-card/60 hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-0.5 ${isMobile ? 'cursor-pointer' : ''}`}
+            className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-0.5 ${isMobile ? 'cursor-pointer' : ''}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            {/* 背景の光るエフェクト - より強く */}
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${activity.color.replace('bg-', 'bg-gradient-to-r from-transparent via-').replace('-500', '-400 to-transparent')}`} />
             
             <div className="flex items-center space-x-4 flex-1 min-w-0 relative z-10">
-              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} shadow-lg shadow-black/30 text-xl ring-1 ring-white/10`}>
+              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} text-xl`}>
                 {activity.icon || activity.name.charAt(0)}
               </div>
 
@@ -444,14 +433,14 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   {activeTab === "most-recorded" ? (
                     <>
                       <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
-                        <span className="font-bold text-green-400">{activity.sessionCount}</span>
+                        <span className="font-bold text-emerald-400">{activity.sessionCount}</span>
                         <span className="text-xs text-gray-300 opacity-90">{t('common.times')}</span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex items-center bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
-                        <span className="text-green-400 font-medium">{activity.date}</span>
+                        <span className="text-emerald-400 font-medium">{activity.date}</span>
                       </div>
                     </>
                   )}
@@ -504,10 +493,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     <Button
                       size="icon"
                       disabled={isStarting}
-                      className={`h-10 w-10 rounded-full shadow-lg shadow-green-900/30 transition-all duration-300 hover:scale-110 hover:shadow-green-500/30 active:scale-95 ${
+                      className={`h-10 w-10 rounded-full shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-110 active:scale-95 ${
                         startingActivityId === activity.id 
                           ? "bg-gray-700 cursor-wait" 
-                          : "bg-gradient-to-br from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white"
+                          : "bg-emerald-700 text-white"
                       }`}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -561,10 +550,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     <Button
                       size="sm"
                       disabled={isStarting}
-                      className={`font-semibold px-5 shadow-lg shadow-green-900/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-green-500/30 active:translate-y-0 active:scale-95 ${
+                      className={`px-5 shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
                         startingActivityId === activity.id 
                           ? "bg-gray-700 cursor-wait" 
-                          : "bg-gradient-to-br from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0"
+                          : "bg-emerald-700 text-white border-0"
                       }`}
                       onClick={(e) => {
                         e.stopPropagation()
@@ -595,15 +584,19 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
   if (completedSessions.length === 0) {
     return (
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center text-[1.25rem] md:text-2xl">
-            {t('quick_start.start_activity')}
+      <Card className="bg-transparent border-0 shadow-none">
+        <CardHeader className="px-0 pt-0 pb-4">
+          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+            <span className="text-[#fffffC]">
+              {t('quick_start.start_activity')}
+            </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-sm mt-2">{t('quick_start.complete_first_session')}</p>
+        <CardContent className="px-0">
+          <div className="rounded-xl border border-white/10 p-5">
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm mt-2">{t('quick_start.complete_first_session')}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -616,7 +609,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         <CardHeader className="px-0 pt-0 pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              <span className="text-[#fffffC]">
                 {t('quick_start.start_activity')}
               </span>
             </CardTitle>

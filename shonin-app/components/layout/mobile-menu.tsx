@@ -125,7 +125,7 @@ export function MobileMenu({ currentPage, onPageChange }: MobileMenuProps) {
                     className={cn(
                       "w-full justify-start h-12 text-left transition-all duration-200",
                       isActive 
-                        ? "bg-green-600 text-white hover:bg-green-700" 
+                        ? "bg-emerald-700 text-white" 
                         : "text-gray-300 hover:text-white hover:bg-gray-800"
                     )}
                   >

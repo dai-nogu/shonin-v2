@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { X } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/common/button"
 import {
@@ -116,8 +117,25 @@ export function DeleteAccountButton() {
           {t('settings.account_deletion')}
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl">
+      <AlertDialogContent 
+        className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl"
+        onOverlayClick={() => setDeleteDialogOpen(false)}
+        onInteractOutside={(e) => {
+          e.preventDefault()
+          setDeleteDialogOpen(false)
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault()
+          setDeleteDialogOpen(false)
+        }}
+      >
         <AlertDialogHeader>
+          <button
+            onClick={() => setDeleteDialogOpen(false)}
+            className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
           <AlertDialogTitle className="text-red-400 text-xl font-bold">
             {t('settings.account_deletion_confirmation')}
           </AlertDialogTitle>
@@ -151,7 +169,7 @@ export function DeleteAccountButton() {
               </p>
               <p className="text-sm text-gray-300">
                 {t('settings.cancel_plan_only_hint_prefix')}
-                <strong className="text-green-400">{t('settings.cancel_plan_only_hint_bold')}</strong>
+                <strong className="text-emerald-400">{t('settings.cancel_plan_only_hint_bold')}</strong>
                 <span className="text-white">{t('settings.cancel_plan_only_hint_suffix')}</span>
               </p>
             </div>
@@ -162,10 +180,9 @@ export function DeleteAccountButton() {
               {t('settings.important_warning')}
             </div>
             <ul className="text-sm space-y-1 text-gray-300">
-              <li>{t('settings.warning_irreversible')}</li>
-              <li>{t('settings.warning_activity_data')}</li>
-              <li>{t('settings.warning_session_history')}</li>
-              <li>{t('settings.warning_goals_ai')}</li>
+              <li>・{t('settings.warning_irreversible')}</li>
+              <li>・{t('settings.warning_activity_data')}</li>
+              <li>・{t('settings.warning_goals_ai')}</li>
             </ul>
           </div>
           <div className="text-sm text-gray-300">
@@ -173,17 +190,11 @@ export function DeleteAccountButton() {
           </div>
         </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel 
-            className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500 hover:text-white"
-            disabled={isDeleting}
-          >
-            {t('settings.no')}
-          </AlertDialogCancel>
+        <AlertDialogFooter className="flex justify-end">
           <Button
             onClick={handleDeleteAccount}
             disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-red-500 hover:bg-destructive text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isDeleting ? (
               <div className="flex items-center space-x-2">

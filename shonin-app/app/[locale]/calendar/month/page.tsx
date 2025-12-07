@@ -36,8 +36,8 @@ function MonthCalendarSSR({
   currentDate, 
   completedSessions, 
   onNavigate, 
-  onTodayClick, 
-  onDateClick 
+  onTodayClick,
+  onDateClick
 }: MonthCalendarSSRProps) {
   const t = useTranslations()
   const locale = useLocale()
@@ -82,26 +82,26 @@ function MonthCalendarSSR({
               <CardTitle className="text-white">{monthName}</CardTitle>
               <div className="flex items-center space-x-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => onNavigate("prev")}
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="text-gray-300 hover:bg-white/10"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={onTodayClick}
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="text-gray-300 hover:bg-white/10"
                 >
                   {t('calendar.today')}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => onNavigate("next")}
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="text-gray-300 hover:bg-white/10"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -133,23 +133,25 @@ function MonthCalendarSSR({
                 const daySessions = getSessionsForDate(day, currentDate, sessions)
                 const todayCheck = isToday(day, currentDate)
 
+                const hasMoreSessions = daySessions.length > 2
+
                 return (
                   <div
                     key={index}
-                    onClick={day ? () => onDateClick(day, daySessions) : undefined}
+                    onClick={day && hasMoreSessions ? () => onDateClick(day, daySessions) : undefined}
                     className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-xl transition-colors ${
-                      day ? `bg-gray-900 border border-gray-800/50 hover:bg-gray-800/80 cursor-pointer` : "bg-gray-950/50"
-                    } ${todayCheck ? "relative overflow-hidden" : ""}`}
+                      day ? `bg-gray-900 border border-gray-800/50` : "bg-gray-950/50"
+                    } ${hasMoreSessions ? "hover:bg-gray-800/80 cursor-pointer" : ""} ${todayCheck ? "relative overflow-hidden" : ""}`}
                   >
                     {todayCheck && (
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50" />
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-700/0 via-emerald-700/50 to-emerald-700/0 opacity-50" />
                     )}
                     {day && (
                       <>
                         <div className="mb-1 md:mb-2 flex justify-center md:justify-start">
                           <span className={`text-xs md:text-sm font-medium w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full ${
                             todayCheck 
-                              ? "bg-green-500 text-black font-bold shadow-[0_0_10px_rgba(34,197,94,0.4)]" 
+                              ? "bg-emerald-700 text-white font-bold shadow-[0_0_10px_rgba(4,120,87,0.4)]" 
                               : "text-gray-400"
                           }`}>
                             {day}
@@ -200,10 +202,10 @@ function MonthCalendarSSR({
                 </>
               ) : (
                 <>
-                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-1">
+                  <div className="text-2xl md:text-3xl font-bold text-emerald-500 mb-1">
                     {formatDuration(totalMonthTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.month_stats.total_time')}
                   </div>
                 </>
@@ -224,10 +226,10 @@ function MonthCalendarSSR({
                 </>
               ) : (
                 <>
-                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-1">
+                  <div className="text-2xl md:text-3xl font-bold text-[#96514d] mb-1">
                     {formatDuration(averageMonthTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.month_stats.average_time')}
                   </div>
                 </>

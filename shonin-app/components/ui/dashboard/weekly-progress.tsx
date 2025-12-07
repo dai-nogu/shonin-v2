@@ -1,13 +1,12 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { BarChart3, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import { Progress } from "@/components/ui/common/progress"
 import { formatDuration } from "@/lib/format-duration"
-import { useTimezone } from "@/contexts/timezone-context"
 import { useTranslations } from 'next-intl'
-import { getWeekStartInTimezone, getCurrentTimeInTimezone, getDateStringInTimezone } from "@/lib/timezone-utils"
+import { getWeekStart, getCurrentTime, getDateString } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {
@@ -17,12 +16,15 @@ interface WeeklyProgressProps {
 
 export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
   const t = useTranslations()
-  // タイムゾーンを取得
-  const { timezone } = useTimezone()
+  const [isAnimated, setIsAnimated] = useState(false)
   
-  // 今週の開始日（月曜日）を取得（タイムゾーン考慮）
-  const today = getCurrentTimeInTimezone(timezone)
-  const weekStart = getWeekStartInTimezone(today, timezone)
+  // 今週の開始日（月曜日）を取得
+  const today = getCurrentTime()
+  const weekStart = getWeekStart(today)
+  
+  // 今日の曜日インデックス（月曜日=0, 日曜日=6）
+  const todayDayOfWeek = today.getDay()
+  const todayIndex = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1
   
   // 今週の各日のデータを計算
   const weekData = []
@@ -39,11 +41,11 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart)
     date.setDate(weekStart.getDate() + i)
-    const dateString = getDateStringInTimezone(date, timezone)
+    const dateString = getDateString(date)
     
-    // その日のセッションを取得（タイムゾーン考慮）
+    // その日のセッションを取得
     const daySessions = completedSessions.filter(session => {
-      const sessionDateString = getDateStringInTimezone(session.startTime, timezone)
+      const sessionDateString = getDateString(session.startTime)
       return sessionDateString === dateString
     })
 
@@ -63,13 +65,22 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
 
   const totalWeekSeconds = weekData.reduce((sum, day) => sum + day.totalSeconds, 0)
 
+  // マウント時にアニメーションを開始
+  useEffect(() => {
+    // 少し遅延を入れてからアニメーション開始（ページ表示後に動き出す）
+    const timer = setTimeout(() => {
+      setIsAnimated(true)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div id="weekly-progress">
       <Card className="bg-transparent border-0 shadow-none">
       <CardHeader className="px-0 pt-0 pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center text-xl font-bold tracking-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+            <span className="text-[#fffffC]">
                {t('weekly_progress.title')}
             </span>
           </CardTitle>
@@ -77,7 +88,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
             onClick={onWeekViewClick}
             variant="ghost"
             size="sm"
-            className="text-green-400 hover:text-green-300 hover:bg-white/5 text-xs lg:text-sm rounded-full px-3"
+            className="text-emerald-500 hover:bg-white/5 text-xs lg:text-sm rounded-full px-3 transition-all duration-300 hover:scale-[1.02]"
           >
             <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5" />
             {t('weekly_progress.week_view')}
@@ -86,22 +97,30 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       </CardHeader>
       
       <CardContent className="px-0">
-        <div className="rounded-xl border border-white/10 bg-card/30 backdrop-blur-md p-5 shadow-lg transition-all duration-300 hover:border-white/20">
+        <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
            <div className="space-y-3 lg:space-y-4">
-            {weekData.map((day) => (
+            {weekData.map((day, index) => (
               <div key={day.day} className="flex items-center group">
                 <span className="text-gray-400 w-8 lg:w-10 text-xs lg:text-sm font-medium group-hover:text-gray-200 transition-colors">{day.day}</span>
                 
                 <div className="flex-1 mx-2">
-                  <Progress 
-                    value={day.progress} 
-                    max={100} 
-                    className="h-2 lg:h-2.5 bg-gray-800/80" 
-                    variant="liquid"
-                  />
+                  <div className="relative h-2 lg:h-2.5 w-full overflow-hidden rounded-full bg-gray-800/80">
+                    <div
+                      className="h-full bg-emerald-700 rounded-full"
+                      style={{
+                        // 今日だけアニメーション、他の日は最初から表示
+                        width: index === todayIndex 
+                          ? (isAnimated ? `${day.progress}%` : '0%')
+                          : `${day.progress}%`,
+                        transition: index === todayIndex 
+                          ? 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                          : 'none',
+                      }}
+                    />
+                  </div>
                 </div>
                 
-                <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right font-mono ${
+                <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right ${
                    day.totalSeconds > 0 ? "text-white font-medium" : "text-gray-600"
                 }`}>
                   {formatDuration(day.totalSeconds)}
@@ -120,8 +139,8 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                   </div>
                 ) : (
                   <div className="animate-fade-in-up">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-widest">{t('common.total')}</div>
-                    <div className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300 shadow-green-500/20 drop-shadow-sm font-mono">
+                    <div className="text-xs text-gray-400 mb-1 tracking-widest">{t('common.total')}</div>
+                    <div className="text-2xl lg:text-3xl font-bold text-emerald-500 drop-shadow-sm">
                       {formatDuration(totalWeekSeconds)}
                     </div>
                   </div>

@@ -130,13 +130,13 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
               className={cn(
                 "relative z-10 flex flex-col items-center justify-center h-16 w-16 rounded-xl transition-all duration-300 ease-out active:scale-95",
                 isActive 
-                  ? "text-green-500" 
+                  ? "text-emerald-500" 
                   : "text-gray-400 hover:text-white"
               )}
             >
               <Icon className={cn(
                 "w-7 h-7 transition-all duration-300 ease-out",
-                isActive ? "text-green-500 scale-110" : "text-gray-400 scale-100"
+                isActive ? "text-emerald-500 scale-110" : "text-gray-400 scale-100"
               )} />
               {/* 通知バッジ */}
               {item.badge && unreadCount > 0 && (
@@ -146,7 +146,7 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
               )}
               {/* アクティブインジケーターのドット */}
               <div className={cn(
-                "absolute bottom-1 w-1 h-1 rounded-full bg-green-500 transition-all duration-300",
+                "absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500 transition-all duration-300",
                 isActive ? "opacity-100 scale-100" : "opacity-0 scale-0"
               )} />
             </button>

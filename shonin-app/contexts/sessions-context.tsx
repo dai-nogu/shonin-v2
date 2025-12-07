@@ -5,9 +5,8 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
-import { useTimezone } from "@/contexts/timezone-context"
 import { useToast } from "@/contexts/toast-context"
-import { splitSessionByDateInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
+import { splitSessionByDate, getCurrentTime } from "@/lib/timezone-utils"
 import { getSessionStartMessage } from "@/lib/encouragement-messages"
 import type { ActivityStat } from "@/app/actions/sessions"
 import { safeWarn } from "@/lib/safe-logger"
@@ -86,9 +85,6 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   
   // 振り返りデータ管理フック
   const { saveReflection } = useReflectionsDb()
-  
-  // タイムゾーンフック
-  const { timezone } = useTimezone()
   
   // トースト通知フック
   const { showSuccess } = useToast()
@@ -369,7 +365,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     // データベースに進行中セッションを保存
     try {
       // タイムゾーンを考慮した開始時刻を使用
-      const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
+      const startTimeInTimezone = getCurrentTime()
       const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
       
       // その日の既存セッション数を取得（進行中のものを除く）
@@ -422,7 +418,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       
     } catch (error) {
       // エラーが発生してもセッションは開始する
-      const startTimeInTimezone = getCurrentTimeInTimezone(timezone)
+      const startTimeInTimezone = getCurrentTime()
       const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
       const updatedSessionData = {
         ...sessionData,
@@ -449,7 +445,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
   // 日付跨ぎを考慮したセッション分割関数（タイムゾーン対応）
   const splitSessionByDate = (startTime: Date, endTime: Date, totalDuration: number) => {
-    return splitSessionByDateInTimezone(startTime, endTime, totalDuration, timezone)
+    return splitSessionByDate(startTime, endTime, totalDuration)
   }
 
   // 保存処理の重複実行を防ぐフラグ

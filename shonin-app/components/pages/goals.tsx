@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { Plus, Target, Calendar, Clock, Edit2, Trash2, Calculator } from "lucide-react"
+import { Plus, Target, Calendar, Clock, Edit2, Trash2, Calculator, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Progress } from "@/components/ui/common/progress"
@@ -93,9 +93,9 @@ export function Goals({ initialGoals }: GoalsProps) {
     const minutes = Math.floor((seconds % 3600) / 60)
     
     if (hours > 0) {
-      return `${hours}h ${minutes}m`
+      return `${hours}\u2009h ${minutes}\u2009m`
     }
-    return `${minutes}m`
+    return `${minutes}\u2009m`
   }
 
   // エラーが発生したらモーダルを表示
@@ -209,7 +209,7 @@ export function Goals({ initialGoals }: GoalsProps) {
           <div className="fixed bottom-24 right-6 z-[60] md:hidden">
             <Button
               onClick={handleAddGoal}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 text-white hover:from-green-500 hover:to-emerald-600 shadow-lg shadow-green-900/20 w-14 h-14 rounded-full p-0 transition-all duration-300 hover:scale-110 active:scale-95"
+              className="bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 w-14 h-14 rounded-2xl p-0 transition-all duration-300 hover:scale-110 active:scale-95"
             >
               <Plus className="w-8 h-8" />
             </Button>
@@ -245,7 +245,7 @@ export function Goals({ initialGoals }: GoalsProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditGoal(goal.id)}
-                        className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -253,7 +253,7 @@ export function Goals({ initialGoals }: GoalsProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteClick(goal.id)}
-                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-full"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -270,12 +270,12 @@ export function Goals({ initialGoals }: GoalsProps) {
                             <span className="text-gray-400">{t('goals.progress_status')}</span>
                             <span className="text-white">
                               {goal.currentValueSeconds ? formatSecondsToTimeString(goal.currentValueSeconds) : `${goal.currentValue}h`} / {goal.targetDurationSeconds ? formatSecondsToTimeString(goal.targetDurationSeconds) : `${goal.targetValue}h`} 
-                              <span className="ml-1 text-green-400">({progressPercentage.toFixed(1)}%)</span>
+                              <span className="ml-1 text-emerald-400">({progressPercentage.toFixed(1)}%)</span>
                             </span>
                           </div>
                           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                              className="h-full bg-emerald-700 rounded-full transition-all duration-500 ease-out"
                               style={{ width: `${progressPercentage}%` }}
                             />
                           </div>
@@ -307,15 +307,15 @@ export function Goals({ initialGoals }: GoalsProps) {
                       {((goal.weekdayHours && goal.weekdayHours > 0) || (goal.weekendHours && goal.weekendHours > 0)) && (
                         <div className="grid grid-cols-3 gap-2 mt-3">
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekday')}</span>
+                            <span className="text-[10px] tracking-wider text-gray-500 block mb-0.5">{t('goals.weekday')}</span>
                             <span className="text-sm font-medium text-white">{goal.weekdayHours}h</span>
                           </div>
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekend')}</span>
+                            <span className="text-[10px] tracking-wider text-gray-500 block mb-0.5">{t('goals.weekend')}</span>
                             <span className="text-sm font-medium text-white">{goal.weekendHours}h</span>
                           </div>
                           <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-                            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-0.5">{t('goals.weekly')}</span>
+                            <span className="text-[10px] tracking-wider text-gray-500 block mb-0.5">{t('goals.weekly')}</span>
                             <span className="text-sm font-medium text-white">{weeklyHours}h</span>
                           </div>
                         </div>
@@ -333,7 +333,7 @@ export function Goals({ initialGoals }: GoalsProps) {
           <div className="mt-8 text-center hidden md:block">
             <Button
               onClick={handleAddGoal}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-green-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0"
+              className="bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-900/20 px-8 py-6 text-lg rounded-2xl transition-all duration-300 hover:-translate-y-1 active:translate-y-0 active:scale-[0.98]"
             >
               <Plus className="w-6 h-6 mr-2" />
               {t('goals.add_goal')}
@@ -342,7 +342,7 @@ export function Goals({ initialGoals }: GoalsProps) {
         )}
 
         {!loading && goals.length === 0 && (
-          <div className="text-center py-16 bg-card/20 rounded-2xl border border-dashed border-white/10 backdrop-blur-sm">
+          <div className="text-center py-16 rounded-2xl border border-white/10">
             <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <Target className="w-10 h-10 text-gray-400" />
             </div>
@@ -352,7 +352,7 @@ export function Goals({ initialGoals }: GoalsProps) {
             </p>
             <Button
               onClick={handleAddGoal}
-              className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-green-900/20 px-8 py-6 text-lg rounded-full transition-all duration-300 hover:-translate-y-1 active:translate-y-0"
+              className="bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-900/20 px-8 py-6 text-lg rounded-2xl transition-all duration-300 hover:-translate-y-1 active:translate-y-0 active:scale-[0.98]"
             >
               <Plus className="w-5 h-5 mr-2" />
               {t('goals.set_goal')}
@@ -363,25 +363,37 @@ export function Goals({ initialGoals }: GoalsProps) {
 
       {/* 削除確認ダイアログ */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-white border-gray-300 text-gray-900">
+        <AlertDialogContent 
+          className="bg-gray-800 border-gray-700 text-white"
+          onOverlayClick={() => setDeleteDialogOpen(false)}
+          onInteractOutside={(e) => {
+            e.preventDefault()
+            setDeleteDialogOpen(false)
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault()
+            setDeleteDialogOpen(false)
+          }}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-600">
+            <button
+              onClick={() => setDeleteDialogOpen(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <AlertDialogTitle className="text-red-400">
               {t('goals.delete_confirmation_title')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-700">
+            <AlertDialogDescription className="text-gray-300">
               {t('goals.delete_confirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900"
-            >
-              {t('goals.cancel')}
-            </AlertDialogCancel>
+          <AlertDialogFooter className="flex justify-end">
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-500 hover:bg-destructive text-white transition-colors"
             >
               {isDeleting ? (
                 <div className="flex items-center space-x-2">

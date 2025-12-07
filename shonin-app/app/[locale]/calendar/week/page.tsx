@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
-import { getWeekStartInTimezone } from "@/lib/timezone-utils"
+import { getWeekStart } from "@/lib/timezone-utils"
 import { useTranslations } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { 
@@ -41,7 +41,7 @@ function WeekCalendarSSR({
   completedSessions, 
   timezone, 
   onNavigate, 
-  onTodayClick, 
+  onTodayClick,
   onDateClick,
   userPlan = 'free',
   subscriptionLoading = false
@@ -55,7 +55,7 @@ function WeekCalendarSSR({
   const sessions = convertToCalendarSessions(completedSessions, timezone)
   
   // タイムゾーンを考慮した週の範囲を計算
-  const weekStart = getWeekStartInTimezone(currentDate, timezone)
+  const weekStart = getWeekStart(currentDate)
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6)
   
@@ -96,26 +96,26 @@ function WeekCalendarSSR({
             <div className="flex items-center justify-end">
               <div className="flex items-center space-x-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => onNavigate("prev")}
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="text-gray-300 hover:bg-white/10"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={onTodayClick}
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="text-gray-300 hover:bg-white/10"
                 >
                   {t('calendar.this_week')}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => onNavigate("next")}
-                  className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="text-gray-300 hover:bg-white/10"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -164,22 +164,24 @@ function WeekCalendarSSR({
                   )
                 }
 
+                const hasMoreSessions = daySessions.length > 2
+
                 return (
                   <div
                     key={index}
-                    onClick={() => onDateClick(day, daySessions)}
-                    className={`min-h-[150px] p-0 md:p-3 rounded-xl transition-colors cursor-pointer border border-gray-800/50 ${
-                      todayCheck ? "bg-gray-900/80 relative overflow-hidden" : "bg-gray-900 hover:bg-gray-800/80"
-                    }`}
+                    onClick={hasMoreSessions ? () => onDateClick(day, daySessions) : undefined}
+                    className={`min-h-[150px] p-0 md:p-3 rounded-xl transition-colors border border-gray-800/50 ${
+                      todayCheck ? "bg-gray-900/80 relative overflow-hidden" : "bg-gray-900"
+                    } ${hasMoreSessions ? "hover:bg-gray-800/80 cursor-pointer" : ""}`}
                   >
                     {todayCheck && (
-                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50" />
+                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-700/0 via-emerald-700/50 to-emerald-700/0 opacity-50" />
                     )}
                     <div className="text-center mb-3 flex flex-col items-center">
                       <div className="text-gray-400 text-sm mb-1">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
                       <div className={`w-8 h-8 flex items-center justify-center rounded-full text-lg font-medium ${
                         todayCheck 
-                          ? "bg-green-500 text-black shadow-[0_0_10px_rgba(34,197,94,0.4)]" 
+                          ? "bg-emerald-700 text-white shadow-[0_0_10px_rgba(4,120,87,0.4)]" 
                           : "text-white"
                       }`}>
                         {day.getDate()}
@@ -225,10 +227,10 @@ function WeekCalendarSSR({
                 </>
               ) : (
                 <>
-                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-1">
+                  <div className="text-2xl md:text-3xl font-bold text-emerald-500 mb-1">
                     {formatDuration(totalWeekTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.week_stats.total_time')}
                   </div>
                 </>
@@ -249,10 +251,10 @@ function WeekCalendarSSR({
                 </>
               ) : (
                 <>
-                  <div className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-1">
+                  <div className="text-2xl md:text-3xl font-bold text-[#96514d] mb-1">
                     {formatDuration(averageWeekTime)}
                   </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide uppercase">
+                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
                     {t('calendar.week_stats.average_time')}
                   </div>
                 </>

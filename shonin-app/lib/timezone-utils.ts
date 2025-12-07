@@ -1,193 +1,100 @@
 /**
- * タイムゾーン関連のユーティリティ関数
+ * 日付関連のユーティリティ関数
+ * ブラウザのローカルタイムゾーンを使用
  */
-
-// 主要なタイムゾーンのリスト（valueのみ）
-export const TIMEZONES = [
-  { value: 'Asia/Tokyo', offset: '+09:00' },
-  { value: 'America/New_York', offset: '-05:00' },
-  { value: 'America/Los_Angeles', offset: '-08:00' },
-  { value: 'America/Chicago', offset: '-06:00' },
-  { value: 'America/Denver', offset: '-07:00' },
-  { value: 'Europe/London', offset: '+00:00' },
-  { value: 'Europe/Paris', offset: '+01:00' },
-  { value: 'Europe/Berlin', offset: '+01:00' },
-  { value: 'Asia/Shanghai', offset: '+08:00' },
-  { value: 'Asia/Seoul', offset: '+09:00' },
-  { value: 'Asia/Singapore', offset: '+08:00' },
-  { value: 'Asia/Hong_Kong', offset: '+08:00' },
-  { value: 'Asia/Bangkok', offset: '+07:00' },
-  { value: 'Asia/Dubai', offset: '+04:00' },
-  { value: 'Asia/Kolkata', offset: '+05:30' },
-  { value: 'Australia/Sydney', offset: '+10:00' },
-  { value: 'Australia/Melbourne', offset: '+10:00' },
-  { value: 'Pacific/Auckland', offset: '+12:00' },
-  { value: 'UTC', offset: '+00:00' },
-] as const
 
 /**
- * ブラウザのタイムゾーンを自動検出
+ * 現在時刻を取得
  */
-export function detectUserTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone
-  } catch (error) {
-    return 'Asia/Tokyo' // デフォルト値
-  }
-}
-
-/**
- * 指定したタイムゾーンでの現在時刻を取得
- * 注意: この関数は単純に現在時刻を返すだけで、タイムゾーン変換は行いません
- */
-export function getCurrentTimeInTimezone(timezone: string): Date {
+export function getCurrentTime(): Date {
   return new Date()
 }
 
 /**
- * 日付を指定したタイムゾーンに変換
- * 注意: この関数は表示用途のみで、実際の時刻変換は行いません
+ * 日付文字列を取得 (YYYY-MM-DD形式)
  */
-export function convertToTimezone(date: Date, timezone: string): Date {
-  // 実際のタイムゾーン変換は不要
-  // 時刻の表示はtoLocaleString等で行う
-  return date
+export function getDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**
- * タイムゾーンのオフセット（分）を取得
- * 注意: この関数は使用されていないため、0を返します
+ * 時刻文字列を取得
  */
-export function getTimezoneOffset(timezone: string): number {
-  return 0
+export function getTimeString(date: Date, format: '12h' | '24h' = '24h'): string {
+  return date.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: format === '12h'
+  })
 }
 
 /**
- * 指定したタイムゾーンでの日付文字列を取得 (YYYY-MM-DD形式)
+ * 日付時刻文字列を取得
  */
-export function getDateStringInTimezone(date: Date, timezone: string): string {
-  try {
-    // タイムゾーンを考慮した日付文字列を直接取得
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    })
-    return formatter.format(date)
-  } catch (error) {
-    return date.toISOString().split('T')[0]
-  }
+export function getDateTimeString(date: Date): string {
+  return date.toLocaleString('ja-JP')
 }
 
 /**
- * 指定したタイムゾーンでの時刻文字列を取得
+ * 週の開始日（月曜日）を取得
  */
-export function getTimeStringInTimezone(date: Date, timezone: string, format: '12h' | '24h' = '24h'): string {
-  try {
-    const options: Intl.DateTimeFormatOptions = {
-      timeZone: timezone,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: format === '12h'
-    }
-    return date.toLocaleTimeString('ja-JP', options)
-  } catch (error) {
-    return date.toLocaleTimeString('ja-JP', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: format === '12h'
-    })
-  }
-}
-
-/**
- * 指定したタイムゾーンでの日付時刻文字列を取得
- */
-export function getDateTimeStringInTimezone(date: Date, timezone: string): string {
-  try {
-    const options: Intl.DateTimeFormatOptions = {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    }
-    return date.toLocaleString('ja-JP', options)
-  } catch (error) {
-    return date.toLocaleString('ja-JP')
-  }
-}
-
-/**
- * 指定したタイムゾーンでの週の開始日（月曜日）を取得
- */
-export function getWeekStartInTimezone(date: Date, timezone: string): Date {
-  // タイムゾーンを考慮した日付から週の開始日を計算
-  const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: timezone }))
-  const day = dateInTimezone.getDay()
-  const diff = dateInTimezone.getDate() - day + (day === 0 ? -6 : 1) // 月曜日を週の開始とする
-  const weekStart = new Date(dateInTimezone)
+export function getWeekStart(date: Date = new Date()): Date {
+  const day = date.getDay()
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1) // 月曜日を週の開始とする
+  const weekStart = new Date(date)
   weekStart.setDate(diff)
   weekStart.setHours(0, 0, 0, 0)
   return weekStart
 }
 
 /**
- * 指定したタイムゾーンでの月の開始日を取得
+ * 月の開始日を取得
  */
-export function getMonthStartInTimezone(date: Date, timezone: string): Date {
-  // タイムゾーンを考慮した日付から月の開始日を計算
-  const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: timezone }))
-  const monthStart = new Date(dateInTimezone)
+export function getMonthStart(date: Date = new Date()): Date {
+  const monthStart = new Date(date)
   monthStart.setDate(1)
   monthStart.setHours(0, 0, 0, 0)
   return monthStart
 }
 
 /**
- * 指定したタイムゾーンでの日付の開始時刻（00:00:00）を取得
+ * 日付の開始時刻（00:00:00）を取得
  */
-export function getDayStartInTimezone(date: Date, timezone: string): Date {
-  // タイムゾーンを考慮した日付から日の開始時刻を計算
-  const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: timezone }))
-  const dayStart = new Date(dateInTimezone)
+export function getDayStart(date: Date): Date {
+  const dayStart = new Date(date)
   dayStart.setHours(0, 0, 0, 0)
   return dayStart
 }
 
 /**
- * 指定したタイムゾーンでの日付の終了時刻（23:59:59）を取得
+ * 日付の終了時刻（23:59:59）を取得
  */
-export function getDayEndInTimezone(date: Date, timezone: string): Date {
-  // タイムゾーンを考慮した日付から日の終了時刻を計算
-  const dateInTimezone = new Date(date.toLocaleString('en-US', { timeZone: timezone }))
-  const dayEnd = new Date(dateInTimezone)
+export function getDayEnd(date: Date): Date {
+  const dayEnd = new Date(date)
   dayEnd.setHours(23, 59, 59, 999)
   return dayEnd
 }
 
 /**
- * 連続日数を計算（タイムゾーン考慮）
+ * 連続日数を計算
  */
-export function calculateStreakDays(sessions: Array<{ startTime: Date }>, timezone: string): number {
+export function calculateStreakDays(sessions: Array<{ startTime: Date }>): number {
   if (sessions.length === 0) return 0
 
-  // セッションを日付ごとにグループ化（指定したタイムゾーンで）
+  // セッションを日付ごとにグループ化
   const sessionsByDate = new Map<string, boolean>()
   sessions.forEach(session => {
-    const dateKey = getDateStringInTimezone(session.startTime, timezone)
+    const dateKey = getDateString(session.startTime)
     sessionsByDate.set(dateKey, true)
   })
 
   // 今日から遡って連続日数を計算
   const today = new Date()
-  const todayKey = getDateStringInTimezone(today, timezone)
+  const todayKey = getDateString(today)
   
   // 今日にセッションがあるかチェック
   const hasTodaySession = sessionsByDate.has(todayKey)
@@ -196,7 +103,7 @@ export function calculateStreakDays(sessions: Array<{ startTime: Date }>, timezo
   for (let i = 0; i < 365; i++) { // 最大365日まで遡る
     const checkDate = new Date(today)
     checkDate.setDate(today.getDate() - i)
-    const dateKey = getDateStringInTimezone(checkDate, timezone)
+    const dateKey = getDateString(checkDate)
     
     if (sessionsByDate.has(dateKey)) {
       streakCount++
@@ -215,60 +122,43 @@ export function calculateStreakDays(sessions: Array<{ startTime: Date }>, timezo
 }
 
 /**
- * 指定したタイムゾーンでの今日のセッションをフィルタリング
+ * 今日のセッションをフィルタリング
  */
-export function getTodaySessionsInTimezone<T extends { startTime: Date }>(
-  sessions: T[], 
-  timezone: string
-): T[] {
-  const today = new Date()
-  const todayString = getDateStringInTimezone(today, timezone)
+export function getTodaySessions<T extends { startTime: Date }>(sessions: T[]): T[] {
+  const todayString = getDateString(new Date())
   
   return sessions.filter(session => {
-    const sessionDateString = getDateStringInTimezone(session.startTime, timezone)
+    const sessionDateString = getDateString(session.startTime)
     return sessionDateString === todayString
   })
 }
 
 /**
- * 指定したタイムゾーンでの今週のセッションをフィルタリング
+ * 今週のセッションをフィルタリング
  */
-export function getWeekSessionsInTimezone<T extends { startTime: Date }>(
-  sessions: T[], 
-  timezone: string
-): T[] {
+export function getWeekSessions<T extends { startTime: Date }>(sessions: T[]): T[] {
   const today = new Date()
-  const weekStart = getWeekStartInTimezone(today, timezone)
+  const weekStart = getWeekStart(today)
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6)
   weekEnd.setHours(23, 59, 59, 999)
   
-  // 週の開始日と終了日の日付文字列を取得
-  const weekStartString = getDateStringInTimezone(weekStart, timezone)
-  const weekEndString = getDateStringInTimezone(weekEnd, timezone)
+  const weekStartString = getDateString(weekStart)
+  const weekEndString = getDateString(weekEnd)
   
   return sessions.filter(session => {
-    const sessionDateString = getDateStringInTimezone(session.startTime, timezone)
+    const sessionDateString = getDateString(session.startTime)
     return sessionDateString >= weekStartString && sessionDateString <= weekEndString
   })
 }
 
 /**
- * タイムゾーン情報を表示用文字列に変換
- * @deprecated 多言語対応のため、コンポーネント側でuseTranslationsを使用してください
+ * 日付跨ぎセッションを分割
  */
-export function getTimezoneDisplayName(timezone: string): string {
-  return timezone
-}
-
-/**
- * 日付跨ぎセッションを分割（タイムゾーン考慮）
- */
-export function splitSessionByDateInTimezone(
+export function splitSessionByDate(
   startTime: Date,
   endTime: Date,
-  totalDuration: number,
-  timezone: string
+  totalDuration: number
 ): Array<{
   startTime: Date
   endTime: Date
@@ -282,9 +172,8 @@ export function splitSessionByDateInTimezone(
     date: string
   }> = []
 
-  // 開始日と終了日をタイムゾーンで取得
-  const startDateString = getDateStringInTimezone(startTime, timezone)
-  const endDateString = getDateStringInTimezone(endTime, timezone)
+  const startDateString = getDateString(startTime)
+  const endDateString = getDateString(endTime)
   
   // 同じ日の場合は分割不要
   if (startDateString === endDateString) {
@@ -302,8 +191,7 @@ export function splitSessionByDateInTimezone(
   const sessionEndTime = new Date(endTime)
   
   while (currentStart < sessionEndTime) {
-    // 現在の日付をタイムゾーンで取得
-    const currentDateString = getDateStringInTimezone(currentStart, timezone)
+    const currentDateString = getDateString(currentStart)
     
     // 現在の日付の終了時刻（23:59:59.999）を計算
     const currentDateEnd = new Date(currentStart)
@@ -331,4 +219,4 @@ export function splitSessionByDateInTimezone(
   }
 
   return sessions
-} 
+}

@@ -99,7 +99,7 @@ export function GoalHoursInputs({
           onClick={() => setIsExpanded(true)}
           className="bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all h-10 px-4"
         >
-          <Plus className="h-4 w-4 mr-2 text-green-400" />
+          <Plus className="h-4 w-4 mr-2 text-emerald-500" />
           {t('goals.add_deadline_and_time_settings')}
         </Button>
       </div>
@@ -113,8 +113,8 @@ export function GoalHoursInputs({
         <div className="space-y-4 border border-white/10 rounded-xl p-5 bg-black/20 backdrop-blur-sm relative">
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center space-x-2">
-              <div className="p-1.5 rounded-lg bg-green-500/10">
-                <Clock className="w-4 h-4 text-green-400" />
+              <div className="p-1.5 rounded-lg bg-emerald-700/10">
+                <Clock className="w-4 h-4 text-emerald-500" />
               </div>
               <Label className="text-white font-medium">{t('goals.deadline_and_time_settings_label')}</Label>
             </div>
@@ -123,7 +123,7 @@ export function GoalHoursInputs({
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(false)}
-              className="text-gray-400 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-full"
+              className="text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200 h-8 w-8 p-0 rounded-lg"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -135,7 +135,7 @@ export function GoalHoursInputs({
             <div className="grid grid-cols-3 gap-2">
               {/* 年 */}
               <Select value={year} onValueChange={handleYearChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-green-500/20 hover:bg-white/10 transition-colors">
+                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
                   <SelectValue placeholder="年" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-950 border-gray-800">
@@ -149,7 +149,7 @@ export function GoalHoursInputs({
 
               {/* 月 */}
               <Select value={month} onValueChange={handleMonthChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-green-500/20 hover:bg-white/10 transition-colors">
+                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
                   <SelectValue placeholder="月" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-950 border-gray-800">
@@ -163,7 +163,7 @@ export function GoalHoursInputs({
 
               {/* 日 */}
               <Select value={day} onValueChange={handleDayChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-green-500/20 hover:bg-white/10 transition-colors">
+                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
                   <SelectValue placeholder="日" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-950 border-gray-800">
@@ -186,7 +186,7 @@ export function GoalHoursInputs({
                 value={weekdayHours}
                 onChange={(e) => onWeekdayHoursChange(e.target.value)}
                 placeholder="2"
-                className="bg-white/5 border-white/10 text-white text-xs h-8 focus:border-green-500/50 focus:bg-white/10 transition-all duration-300 placeholder:text-gray-400"
+                className="bg-white/5 border-white/10 text-white text-xs h-8 focus:border-emerald-700/50 focus:bg-white/10 transition-all duration-300 placeholder:text-gray-400"
               />
               {validationErrors.weekdayHours && (
                 <div className="text-xs text-red-400">{validationErrors.weekdayHours}</div>
@@ -199,7 +199,7 @@ export function GoalHoursInputs({
                 value={weekendHours}
                 onChange={(e) => onWeekendHoursChange(e.target.value)}
                 placeholder="5"
-                className="bg-white/5 border-white/10 text-white text-xs h-8 focus:border-green-500/50 focus:bg-white/10 transition-all duration-300 placeholder:text-gray-400"
+                className="bg-white/5 border-white/10 text-white text-xs h-8 focus:border-emerald-700/50 focus:bg-white/10 transition-all duration-300 placeholder:text-gray-400"
               />
               {validationErrors.weekendHours && (
                 <div className="text-xs text-red-400">{validationErrors.weekendHours}</div>

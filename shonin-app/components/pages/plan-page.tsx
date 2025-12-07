@@ -3,10 +3,10 @@
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Minus, Circle } from "lucide-react";
 import { getPlanConfigs } from "@/lib/plan-config";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { PlanType } from "@/types/subscription";
+import type { PlanType, BillingCycle } from "@/types/subscription";
 import { safeError } from "@/lib/safe-logger";
 
 type ActionState = {
@@ -26,6 +26,7 @@ interface PlanPageClientProps {
 
 export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
   const t = useTranslations("plan");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   
   const [state, formAction, isPending] = useActionState(async (prevState: ActionState, formData: FormData) => {
     const result = await createStripeSession(prevState, formData);
@@ -63,13 +64,27 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
 
   // ユーザーのプランに基づいてプランデータを取得し、翻訳を適用
   const planConfigs = getPlanConfigs(userPlan);
-  const plans = planConfigs.map(plan => ({
-    ...plan,
-    name: t(plan.name as any),
-    priceLabel: plan.priceLabel ? t(plan.priceLabel as any) : "",
-    features: plan.features.map(feature => t(feature as any)),
-    buttonText: t(plan.buttonText as any),
-  }));
+  const plans = planConfigs.map(plan => {
+    // 年額の場合は価格とpriceIdを切り替え
+    const isYearly = billingCycle === 'yearly';
+    const displayPrice = isYearly && plan.yearlyPrice ? plan.yearlyPrice : plan.price;
+    const displayPriceLabel = isYearly && plan.yearlyPriceLabel ? plan.yearlyPriceLabel : plan.priceLabel;
+    const displayPriceId = isYearly && plan.yearlyPriceId ? plan.yearlyPriceId : plan.priceId;
+    // 通常の年額（月額×12）- Standardプランのみ
+    const originalYearlyPrice = plan.id === 'standard' && isYearly ? '$119.88' : null;
+    
+    return {
+      ...plan,
+      name: t(plan.name as any),
+      price: displayPrice,
+      priceLabel: displayPriceLabel ? t(displayPriceLabel as any) : "",
+      priceId: displayPriceId,
+      originalYearlyPrice,
+      showYearlySavings: plan.id === 'standard' && isYearly,
+      features: plan.features.map(feature => t(feature as any)),
+      buttonText: t(plan.buttonText as any),
+    };
+  });
 
   // 機能比較データも翻訳を適用
   const featureComparisonData = [
@@ -111,6 +126,30 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
           <p className="text-sm lg:text-base text-gray-400">
             {t("description")}
           </p>
+
+          {/* 月額/年額 トグルスイッチ */}
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <span className={`text-sm font-medium transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500'}`}>
+              {t("monthly")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+              className={`relative w-14 h-8 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2 focus:ring-offset-gray-950 ${
+                billingCycle === 'yearly' ? 'bg-emerald-700' : 'bg-gray-600'
+              }`}
+              aria-label="Toggle billing cycle"
+            >
+              <span
+                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                  billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            <span className={`text-sm font-medium transition-colors ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-500'}`}>
+              {t("yearly")}
+            </span>
+          </div>
           
           {/* エラーメッセージ */}
           {state.status === "error" && state.error && (
@@ -128,12 +167,12 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                 key={plan.id}
                 className={`relative bg-gray-800 rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl md:flex-1 flex flex-col ${
                   plan.isPopular
-                    ? "ring-2 ring-green-500 transform md:scale-105"
+                    ? "ring-2 ring-emerald-700 transform md:scale-105"
                     : "ring-1 ring-gray-700"
                 }`}
               >
                 {plan.isPopular && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-l from-green-500 to-green-600 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg shadow-lg">
+                  <div className="absolute top-0 right-0 bg-emerald-700 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg shadow-lg">
                     {t("popular")}
                   </div>
                 )}
@@ -144,23 +183,35 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                     <h2 className="text-lg lg:text-xl font-bold text-white mb-2 lg:mb-3">
                       {plan.isCurrent ? t("current_plan") : plan.name}
                     </h2>
-                    <div className="flex items-baseline justify-center gap-1 mb-2">
+                    <div className="flex items-baseline justify-center gap-2 mb-1">
                       <span className="text-3xl lg:text-4xl font-extrabold text-white">
                         {plan.price}
                       </span>
                       {plan.priceLabel && (
-                        <span className="text-sm lg:text-base text-gray-400 ml-1">
+                        <span className="text-sm lg:text-base text-gray-400">
                           {plan.priceLabel}
                         </span>
                       )}
+                      {/* 通常年額（取り消し線） */}
+                      {plan.originalYearlyPrice && (
+                        <span className="text-sm text-gray-500 line-through">
+                          {plan.originalYearlyPrice}
+                        </span>
+                      )}
                     </div>
+                    {/* 2ヶ月分お得バッジ */}
+                    {plan.showYearlySavings && (
+                      <span className="inline-block text-xs bg-emerald-700/20 text-emerald-400 px-2 py-0.5 rounded-full font-medium">
+                        {t("yearly_savings")}
+                      </span>
+                    )}
                   </div>
 
                   {/* Features List */}
                   <ul className="space-y-3 mb-6 lg:mb-8">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2.5">
-                        <Circle className="w-4 h-4 lg:w-5 lg:h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <Circle className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                         <span className="text-xs lg:text-sm text-gray-300">
                           {feature}
                         </span>
@@ -205,7 +256,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                               <button
                                 type="button"
                                 disabled
-                                className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed"
+                                className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-emerald-700 text-white cursor-not-allowed"
                               >
                                 {plan.buttonText}
                               </button>
@@ -222,7 +273,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                         <button
                           type="submit"
                           disabled={isPending}
-                          className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                          className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-emerald-700 text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
                         >
                           {isPending ? "処理中..." : plan.buttonText}
                         </button>
@@ -250,12 +301,12 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                 key={plan.id}
                 className={`relative bg-gray-800 rounded-xl shadow-xl overflow-visible transition-all duration-300 hover:shadow-2xl flex flex-col border w-full max-w-sm ${
                   plan.isPopular
-                    ? "border-green-500 transform scale-105"
+                    ? "border-emerald-700 transform scale-105"
                     : "border-white/30"
                 }`}
               >
                   {plan.isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-1.5 text-sm font-bold rounded-full shadow-lg z-10">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-5 py-1.5 text-sm font-bold rounded-full shadow-lg z-10">
                       {t("popular")}
                     </div>
                   )}
@@ -266,16 +317,28 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                     <h2 className={`text-xl font-bold text-white mb-3 ${plan.isPopular ? "mt-1" : ""}`}>
                       {plan.isCurrent ? t("current_plan") : plan.name}
                     </h2>
-                    <div className="flex items-baseline justify-center gap-1 mb-4">
-                      <span className={`text-4xl font-extrabold ${plan.isPopular ? "text-green-400" : "text-white"}`}>
+                    <div className="flex items-baseline justify-center gap-2 mb-1">
+                      <span className={`text-4xl font-extrabold ${plan.isPopular ? "text-emerald-400" : "text-white"}`}>
                         {plan.price}
                       </span>
                       {plan.priceLabel && (
-                        <span className={`text-base ${plan.isPopular ? "text-green-400/80" : "text-gray-400"}`}>
+                        <span className={`text-base ${plan.isPopular ? "text-emerald-400/80" : "text-gray-400"}`}>
                           {plan.priceLabel}
                         </span>
                       )}
+                      {/* 通常年額（取り消し線） */}
+                      {plan.originalYearlyPrice && (
+                        <span className="text-sm text-gray-500 line-through">
+                          {plan.originalYearlyPrice}
+                        </span>
+                      )}
                     </div>
+                    {/* 2ヶ月分お得バッジ */}
+                    {plan.showYearlySavings && (
+                      <span className="inline-block text-xs bg-emerald-700/20 text-emerald-400 px-2.5 py-1 rounded-full font-medium mt-1">
+                        {t("yearly_savings")}
+                      </span>
+                    )}
                   </div>
 
                   {/* Features List */}
@@ -288,12 +351,12 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                         <div className="flex items-center gap-2">
                           {typeof (plan.id === "free" ? feature.free : feature.standard) === "boolean" ? (
                             (plan.id === "free" ? feature.free : feature.standard) ? (
-                              <Circle className={`${index === 3 ? "w-5 h-5" : "w-4 h-4"} ${plan.isPopular ? "text-green-400" : "text-green-500"}`} />
+                              <Circle className={`${index === 3 ? "w-5 h-5" : "w-4 h-4"} ${plan.isPopular ? "text-emerald-400" : "text-emerald-500"}`} />
                             ) : (
                               <Minus className={`${index === 3 ? "w-5 h-5" : "w-4 h-4"} text-gray-300`} />
                             )
                           ) : (
-                            <span className={`text-sm font-semibold ${plan.isPopular ? "text-green-300" : "text-white"}`}>
+                            <span className={`text-sm font-semibold ${plan.isPopular ? "text-emerald-300" : "text-white"}`}>
                               {plan.id === "free" ? feature.free : feature.standard}
                             </span>
                           )}
@@ -339,7 +402,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                               <button
                                 type="button"
                                 disabled
-                                className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed"
+                                className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-emerald-700 text-white cursor-not-allowed"
                               >
                                 {plan.buttonText}
                               </button>
@@ -356,7 +419,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                         <button
                           type="submit"
                           disabled={isPending}
-                          className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-95 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed disabled:transform-none"
+                          className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-emerald-700 text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
                         >
                           {isPending ? "処理中..." : plan.buttonText}
                         </button>
