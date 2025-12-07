@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { getDateString } from '@/lib/timezone-utils';
+import { getDateString } from '@/lib/date-utils';
 import { useParams } from 'next/navigation';
 
 interface FeedbackContent {

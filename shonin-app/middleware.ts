@@ -16,11 +16,9 @@ const intlMiddleware = createMiddleware({
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
-  // ルートパスへのアクセスは /ja/ にリダイレクト
+  // ルートパス（HP）はそのまま通す
   if (pathname === '/') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/ja/'
-    return NextResponse.redirect(url)
+    return NextResponse.next()
   }
   
   // 静的ファイルやAPIルート、callbackはスキップ（認証チェックなし）

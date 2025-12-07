@@ -60,8 +60,7 @@ export async function getProfile(): Promise<UserProfile | null> {
         const newProfile: Database['public']['Tables']['users']['Insert'] = {
           id: user.id,
           email: user.email || '',
-          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-          timezone: 'Asia/Tokyo'
+          name: user.user_metadata?.full_name || user.user_metadata?.name || null
         }
 
         const { data: insertData, error: insertError } = await supabase
@@ -123,9 +122,4 @@ export async function updateProfile(updates: Partial<UserProfileUpdate>): Promis
 // ユーザー名を更新
 export async function updateUserName(name: string): Promise<boolean> {
   return await updateProfile({ name })
-}
-
-// タイムゾーンを更新
-export async function updateTimezone(timezone: string): Promise<boolean> {
-  return await updateProfile({ timezone })
 } 

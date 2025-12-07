@@ -343,13 +343,7 @@ export function Goals({ initialGoals }: GoalsProps) {
 
         {!loading && goals.length === 0 && (
           <div className="text-center py-16 rounded-2xl border border-white/10">
-            <div className="bg-white/5 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Target className="w-10 h-10 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-medium text-white mb-2">{t('goals.set_goal_message')}</h3>
-            <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm">
-              {t('goals.goals_description_placeholder')}
-            </p>
+            <h3 className="text-xl font-medium text-white mb-6">{t('goals.set_goal_message')}</h3>
             <Button
               onClick={handleAddGoal}
               className="bg-emerald-700 text-white border-0 shadow-lg shadow-emerald-900/20 px-8 py-6 text-lg rounded-2xl transition-all duration-300 hover:-translate-y-1 active:translate-y-0 active:scale-[0.98]"

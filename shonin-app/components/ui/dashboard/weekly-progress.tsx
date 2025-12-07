@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 import { formatDuration } from "@/lib/format-duration"
 import { useTranslations } from 'next-intl'
-import { getWeekStart, getCurrentTime, getDateString } from "@/lib/timezone-utils"
+import { getWeekStart, getCurrentTime, getDateString } from "@/lib/date-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {

@@ -94,7 +94,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem('app-user-email')
         localStorage.removeItem('app-auth')
         localStorage.removeItem('app-goal-reminders')
-        localStorage.removeItem('app-timezone')
         // 訪問履歴をクリア（古い形式と新しい形式両方）
         localStorage.removeItem('lastVisitDate')
         localStorage.removeItem('lastVisit_morning')

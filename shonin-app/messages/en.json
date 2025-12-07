@@ -35,7 +35,7 @@
     "dashboard": "Dashboard",
     "calendar": "Calendar",
     "goals": "Goals",
-    "feedback": "Feedback",
+    "feedback": "Message",
     "plan": "Plan",
     "settings": "Settings",
     "home": "Home"
@@ -60,7 +60,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcomeMessage": "Good work! Let's keep pushing forward today.",
+    "welcomeMessage": "Good work. Let's keep pushing forward today.",
     "activeSession": "Active Session",
     "recentSessions": "Recent Sessions",
     "weeklyProgress": "Weekly Progress",
@@ -95,19 +95,19 @@
     "reflection_and_notes": "Reflection & Notes"
   },
   "ai_feedback": {
-    "feedback": "Feedback",
+    "feedback": "Message",
     "weekly": "Weekly ",
     "monthly": "Monthly ",
-    "weekly_default_message": "Keep logging your activities to receive weekly feedback.",
-    "monthly_default_message": "Stay consistent to unlock your monthly feedback.",
-    "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly feedback.",
-    "monthly_no_data_message": "Consistent recording will unlock monthly feedback. Keep building your daily progress.",
-    "next_weekly_feedback": "Next weekly feedback",
-    "next_monthly_feedback": "Next monthly feedback",
+    "weekly_default_message": "Keep logging your activities to receive weekly message.",
+    "monthly_default_message": "Stay consistent to unlock your monthly message.",
+    "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly message.",
+    "monthly_no_data_message": "Consistent recording will unlock monthly message. Keep building your daily progress.",
+    "next_weekly_feedback": "Next weekly message",
+    "next_monthly_feedback": "Next monthly message",
     "scheduled": "scheduled",
-    "generating": "Generating feedback...",
-    "generate_error": "An error occurred while generating feedback",
-    "fetch_error": "An error occurred while fetching feedback",
+    "generating": "Generating message...",
+    "generate_error": "An error occurred while generating message",
+    "fetch_error": "An error occurred while fetching message",
     "new_badge": "New"
   },
   "feedback": {
@@ -178,8 +178,7 @@
     "notStarted": "Not Started",
     "add_goal": "Add Goal",
     "set_goal": "Add Goal",
-    "set_goal_message": "Let's add a goal",
-    "goals_description_placeholder": "Set goals and visualize your progress.",
+    "set_goal_message": "Let's set your goal and visualize your progress.",
     "delete_confirmation_title": "Delete Goal Confirmation",
     "delete_confirmation": "Are you sure you want to delete this goal?",
     "delete_error": "Failed to delete goal",
@@ -204,7 +203,6 @@
     "description": "Manage your preferences",
     "categories": {
       "profile": "Profile",
-      "timezone": "Timezone",
       "language": "Language",
       "activity": "Activities",
       "account": "Account"
@@ -217,13 +215,6 @@
     "save": "Save",
     "saving": "Saving...",
     "cancel": "Cancel",
-    "timezone_settings": "Timezone",
-    "timezone": "Timezone",
-    "timezone_notice_title": "About Timezone",
-    "timezone_notice_1": "Affects time tracking, statistics, and streak calculations",
-    "timezone_notice_2": "Changes take effect immediately",
-    "timezone_notice_3": "Past data will be shown in the new timezone",
-    "timezone_disabled_message": "Cannot change timezone while an activity is in progress. Please end the activity first.",
     "language_settings": "Language",
     "language_change_notice": "The app will refresh in the new language",
     "language_disabled_message": "Cannot change language while an activity is in progress. Please end the activity first.",
@@ -244,7 +235,6 @@
     "privacy": "Privacy",
     "deleteAccount": "Delete Account",
     "profile_tab": "Profile",
-    "timezone_tab": "Timezone",
     "activities_tab": "Activities",
     "account_tab": "Account",
     "account_management": "Account",
@@ -278,27 +268,6 @@
     "no": "No",
     "delete": "Delete",
     "deleting": "Deleting..."
-  },
-  "timezones": {
-    "Asia/Tokyo": "Japan (JST)",
-    "America/New_York": "Eastern United States (EST)",
-    "America/Los_Angeles": "Western United States (PST)",
-    "America/Chicago": "Central United States (CST)",
-    "America/Denver": "Mountain United States (MST)",
-    "Europe/London": "United Kingdom (GMT)",
-    "Europe/Paris": "France (CET)",
-    "Europe/Berlin": "Germany (CET)",
-    "Asia/Shanghai": "China (CST)",
-    "Asia/Seoul": "South Korea (KST)",
-    "Asia/Singapore": "Singapore (SGT)",
-    "Asia/Hong_Kong": "Hong Kong (HKT)",
-    "Asia/Bangkok": "Thailand (ICT)",
-    "Asia/Dubai": "UAE (GST)",
-    "Asia/Kolkata": "India (IST)",
-    "Australia/Sydney": "Eastern Australia (AEST)",
-    "Australia/Melbourne": "Southeastern Australia (AEST)",
-    "Pacific/Auckland": "New Zealand (NZST)",
-    "UTC": "Coordinated Universal Time (UTC)"
   },
   "languages": {
     "ja": "Japanese (JP)",
@@ -421,7 +390,7 @@
     "start_time": "Start Time",
     "target": "Target",
     "progress": "Progress",
-    "goal_achieved": "Goal Achieved!",
+    "goal_achieved": "Goal Achieved.",
     "resume": "Resume",
     "pause": "Pause",
     "end": "End",
@@ -429,7 +398,7 @@
     "saving": "Saving...",
     "photo_uploading": "Uploading photos...",
     "paused_message": "⏸ Session is paused.",
-    "completed_message": "Good work!",
+    "completed_message": "Good work.",
     "mood_question": "How are you feeling?",
     "achievements_label": "Today's Notes",
     "achievements_placeholder": "How was your activity?",
@@ -467,21 +436,21 @@
     "per_year": "/year",
     "monthly": "Monthly",
     "yearly": "Yearly",
-    "yearly_savings": "Save 2 months!",
+    "yearly_savings": "Save 2 months.",
     "current_plan_tooltip": "This is your current plan",
     "features": {
       "activity_limit": "Up to 3 activities",
       "unlimited_activities": "Unlimited activities",
       "goal_limit": "Up to 3 goals",
       "no_past_calendar": "No past calendar access",
-      "no_ai": "No AI feedback",
+      "no_ai": "No Shonin message",
       "unlimited_goals": "Unlimited goals",
       "full_calendar": "Full calendar access",
-      "ai_feedback": "AI feedback included",
+      "ai_feedback": "Shonin message included",
       "activity_label": "Activity Addition",
       "goal_label": "Add Goals",
       "calendar_label": "Calendar Access",
-      "ai_label": "AI Feedback Feature",
+      "ai_label": "Shonin Message Feature",
       "current_month_only": "This month only",
       "all_days": "Full access",
       "up_to_1": "1",
@@ -494,7 +463,7 @@
       "goal_standard": "To add more goals, you need to\nupgrade to the Premium plan",
       "goal_default": "Limit reached",
       "calendar_past": "Upgrade to the Standard plan to view past calendars.",
-      "ai_feedback_line1": "Weekly and monthly AI feedback is available",
+      "ai_feedback_line1": "Weekly and monthly Shonin message is available",
       "ai_feedback_line2": "with the Standard plan.",
       "view_plans": "View Plans"
     },
@@ -503,61 +472,61 @@
   "encouragement": {
     "session_start": {
       "first": [
-        "Let's get started today!",
-        "Alright, let's begin!",
-        "A new day, let's do this!",
-        "One step forward today!",
-        "Let's start!"
+        "Let's get started today.",
+        "Alright, let's begin.",
+        "A new day, let's do this.",
+        "One step forward today.",
+        "Let's start."
       ],
       "second": [
-        "2nd session today! Looking good!",
-        "You're doing great today!",
-        "Second time today. Amazing!",
-        "You're keeping up the pace!",
-        "2nd challenge! Keep it up!"
+        "2nd session today. Looking good.",
+        "You're doing great today.",
+        "Second time today. Amazing.",
+        "You're keeping up the pace.",
+        "2nd challenge. Keep it up."
       ],
       "third": [
-        "3rd session! Excellent pace!",
-        "You're really pushing today!",
-        "3rd time! Your focus is incredible!",
-        "Amazing consistency!",
-        "Today's been productive!"
+        "3rd session. Excellent pace.",
+        "You're really pushing today.",
+        "3rd time. Your focus is incredible.",
+        "Amazing consistency.",
+        "Today's been productive."
       ],
       "fourth": [
-        "4th time today! Full of energy!",
-        "4th session! Incredible!",
-        "Today's effort is remarkable!",
-        "You're unstoppable! Amazing!",
-        "4th time! Love your passion!"
+        "4th time today. Full of energy.",
+        "4th session. Incredible.",
+        "Today's effort is remarkable.",
+        "You're unstoppable. Amazing.",
+        "4th time. Love your passion."
       ],
       "fifth_plus": [
-        "{count}th session! Consistency is key!",
-        "{count}th time! Phenomenal dedication!",
-        "{count}th today! Your effort is admirable!",
-        "{count}th challenge! You are amazing!",
-        "{count}th session! Going above and beyond!"
+        "{count}th session. Consistency is key.",
+        "{count}th time. Phenomenal dedication.",
+        "{count}th today. Your effort is admirable.",
+        "{count}th challenge. You are amazing.",
+        "{count}th session. Going above and beyond."
       ]
     },
     "fifteen_minutes": [
-      "15 minutes! Great focus!",
-      "You're doing well!",
-      "Excellent concentration!",
-      "You're making progress!",
-      "Love your focus!"
+      "15 minutes. Great focus.",
+      "You're doing well.",
+      "Excellent concentration.",
+      "You're making progress.",
+      "Love your focus."
     ],
     "goal_achieved": [
-      "🎉 Goal achieved!",
-      "✨ Goal reached! Amazing!",
-      "🌟 You did it! Goal cleared!",
-      "👏 Goal achieved! Well done!",
-      "🎊 Wonderful! Goal completed!"
+      "Goal achieved.",
+      "Goal reached. Amazing.",
+      "You did it. Goal cleared.",
+      "Goal achieved. Well done.",
+      "Wonderful. Goal completed."
     ],
     "streak": [
-      "🔥 {days} day streak!",
-      "⭐ {days} days! Consistency is key!",
-      "💪 {days} days strong! Amazing!",
-      "🎯 {days} days achieved! Incredible!",
-      "✨ {days} days and counting! Keep going!"
+      "{days} day streak.",
+      "{days} days. Consistency is key.",
+      "{days} days strong. Amazing.",
+      "{days} days achieved. Incredible.",
+      "{days} days and counting. Keep going."
     ],
     "session_completion": {
       "range_0_5": "Even {minutes} minutes is real progress. Be proud of yourself for taking that first step.",

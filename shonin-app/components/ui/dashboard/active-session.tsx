@@ -15,7 +15,7 @@ import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useSessions } from "@/contexts/sessions-context"
 import { useAuth } from "@/contexts/auth-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
-import { getTimeString } from "@/lib/timezone-utils"
+import { getTimeString } from "@/lib/date-utils"
 import { getInputLimits } from "@/lib/input-limits"
 import { cn } from "@/lib/utils"
 

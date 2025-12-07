@@ -71,7 +71,6 @@ export function CalendarCommon({
         <CalendarComponent
           currentDate={currentDate}
           completedSessions={completedSessions}
-          timezone={timezone}
           onNavigate={onNavigate}
           onTodayClick={onTodayClick}
         />

@@ -51,10 +51,7 @@ export default defineConfig({
     
     // ロケール
     locale: 'ja-JP',
-    
-    // タイムゾーン
-    timezoneId: 'Asia/Tokyo',
-  },
+    },
 
   // プロジェクト設定（異なるブラウザでテスト可能）
   projects: [

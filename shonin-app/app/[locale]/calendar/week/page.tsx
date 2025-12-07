@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
-import { getWeekStart } from "@/lib/timezone-utils"
+import { getWeekStart } from "@/lib/date-utils"
 import { useTranslations } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { 
@@ -26,7 +26,6 @@ import {
 interface WeekCalendarSSRProps {
   currentDate: Date
   completedSessions: CompletedSession[]
-  timezone: string
   onNavigate: (direction: "prev" | "next") => void
   onTodayClick: () => void
   onDateClick: (date: Date, sessions: CalendarSession[]) => void
@@ -39,7 +38,6 @@ interface WeekCalendarSSRProps {
 function WeekCalendarSSR({ 
   currentDate, 
   completedSessions, 
-  timezone, 
   onNavigate, 
   onTodayClick,
   onDateClick,
@@ -52,7 +50,7 @@ function WeekCalendarSSR({
   const currentYear = today.getFullYear()
   
   // セッションデータの変換（SSR側で実行）
-  const sessions = convertToCalendarSessions(completedSessions, timezone)
+  const sessions = convertToCalendarSessions(completedSessions)
   
   // タイムゾーンを考慮した週の範囲を計算
   const weekStart = getWeekStart(currentDate)
@@ -82,11 +80,11 @@ function WeekCalendarSSR({
   }
   
   // 週間統計の計算
-  const currentWeekSessions = getCurrentWeekSessions(currentDate, sessions, timezone)
+  const currentWeekSessions = getCurrentWeekSessions(currentDate, sessions)
   const totalWeekTime = currentWeekSessions.reduce((total, session) => total + session.duration, 0)
   
   // 週の平均時間計算
-  const averageWeekTime = calculateWeekAverageTime(currentDate, sessions, timezone)
+  const averageWeekTime = calculateWeekAverageTime(currentDate, sessions)
 
   return (
     <div className="bg-gray-950 text-white">

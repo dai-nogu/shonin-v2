@@ -10,7 +10,6 @@ export default getRequestConfig(async ({ locale }) => {
   
   return {
     locale: validLocale,
-    messages: (await import(`../messages/${validLocale}.json`)).default,
-    timeZone: validLocale === 'ja' ? 'Asia/Tokyo' : 'UTC'
+    messages: (await import(`../messages/${validLocale}.json`)).default
   }
 }) 

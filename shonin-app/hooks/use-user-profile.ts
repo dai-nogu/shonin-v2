@@ -95,11 +95,6 @@ export function useUserProfile() {
     return await updateProfile({ name })
   }, [updateProfile])
 
-  // タイムゾーンを更新
-  const updateTimezone = useCallback(async (timezone: string): Promise<Result<void>> => {
-    return await updateProfile({ timezone })
-  }, [updateProfile])
-
   // 初期化
   useEffect(() => {
     // アンマウント後のsetState防止フラグ
@@ -154,7 +149,6 @@ export function useUserProfile() {
     error,
     fetchProfile,
     updateProfile,
-    updateUserName,
-    updateTimezone
+    updateUserName
   }
 } 

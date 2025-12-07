@@ -6,7 +6,7 @@ import { useSessionsDb, type SessionWithActivity } from "@/hooks/use-sessions-db
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useToast } from "@/contexts/toast-context"
-import { splitSessionByDate, getCurrentTime } from "@/lib/timezone-utils"
+import { splitSessionByDate, getCurrentTime, getDateString } from "@/lib/date-utils"
 import { getSessionStartMessage } from "@/lib/encouragement-messages"
 import type { ActivityStat } from "@/app/actions/sessions"
 import { safeWarn } from "@/lib/safe-logger"
@@ -364,9 +364,9 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
 
     // データベースに進行中セッションを保存
     try {
-      // タイムゾーンを考慮した開始時刻を使用
-      const startTimeInTimezone = getCurrentTime()
-      const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
+      // 開始時刻を取得
+      const startTime = getCurrentTime()
+      const sessionDate = getDateString(startTime)
       
       // その日の既存セッション数を取得（進行中のものを除く）
       const todaysSessions = sessions.filter(session => {
@@ -385,7 +385,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       
       const result = await addSession({
         activity_id: sessionData.activityId,
-        start_time: startTimeInTimezone.toISOString(),
+        start_time: startTime.toISOString(),
         end_time: null, // 進行中なのでend_timeはnull
         duration: 0,
         session_date: sessionDate, // セッション日付を設定
@@ -401,10 +401,10 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       // 手動でrefetch
       await refetch()
       
-      // セッションデータの開始時刻もタイムゾーンを考慮
+      // セッションデータの開始時刻を設定
       const updatedSessionData = {
         ...sessionData,
-        startTime: startTimeInTimezone
+        startTime: startTime
       }
       
       // 新規セッションの初期化
@@ -418,11 +418,10 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       
     } catch (error) {
       // エラーが発生してもセッションは開始する
-      const startTimeInTimezone = getCurrentTime()
-      const sessionDate = startTimeInTimezone.toLocaleDateString('sv-SE', { timeZone: timezone })
+      const startTime = getCurrentTime()
       const updatedSessionData = {
         ...sessionData,
-        startTime: startTimeInTimezone
+        startTime: startTime
       }
       initializeNewSession(updatedSessionData)
       setCurrentSession(updatedSessionData)
@@ -465,15 +464,15 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       // 進行中セッションがあるかチェック
       const activeSession = sessions.find(session => !session.end_time)
       
-      // セッションが日付を跨ぐかチェック（タイムゾーン考慮）
-      const startDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
-      const endDate = completedSession.endTime.toLocaleDateString('sv-SE', { timeZone: timezone })
+      // セッションが日付を跨ぐかチェック
+      const startDate = getDateString(completedSession.startTime)
+      const endDate = getDateString(completedSession.endTime)
       
       if (startDate === endDate) {
         // 同じ日のセッション（従来の処理）
         if (activeSession) {
           // 既存の進行中セッションを更新
-          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
+          const sessionDate = getDateString(completedSession.startTime)
           const result = await updateSession(activeSession.id, {
             end_time: completedSession.endTime.toISOString(),
             duration: completedSession.duration,
@@ -500,7 +499,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
           }
         } else {
           // 新規セッションとして保存
-          const sessionDate = completedSession.startTime.toLocaleDateString('sv-SE', { timeZone: timezone })
+          const sessionDate = getDateString(completedSession.startTime)
           const result = await addSession({
             activity_id: completedSession.activityId,
             start_time: completedSession.startTime.toISOString(),

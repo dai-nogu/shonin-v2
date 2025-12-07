@@ -35,7 +35,7 @@
     "dashboard": "ダッシュボード",
     "calendar": "カレンダー",
     "goals": "目標",
-    "feedback": "フィードバック",
+    "feedback": "メッセージ",
     "plan": "プラン",
     "settings": "設定",
     "home": "ホーム"
@@ -60,7 +60,7 @@
   },
   "dashboard": {
     "title": "ダッシュボード",
-    "welcomeMessage": "お疲れ様です！今日も頑張りましょう。",
+    "welcomeMessage": "お疲れ様です。今日も頑張りましょう。",
     "activeSession": "進行中のセッション",
     "recentSessions": "最近のセッション",
     "weeklyProgress": "今週の進捗",
@@ -95,19 +95,19 @@
     "reflection_and_notes": "振り返り・メモ"
   },
   "ai_feedback": {
-    "feedback": "フィードバック",
+    "feedback": "メッセージ",
     "weekly": "週次",
     "monthly": "月次",
-    "weekly_default_message": "活動を記録し続けて、週次フィードバックを受け取りましょう。",
-    "monthly_default_message": "継続して記録し、月次フィードバックを解放しましょう。",
-    "weekly_no_data_message": "まだ十分なデータが蓄積されていません。行動を記録すると、週次フィードバックが受け取れるようになります。",
-    "monthly_no_data_message": "継続的な記録により、月次フィードバックが受け取れます。日々の積み重ねを続けましょう。",
-    "next_weekly_feedback": "次回の週次フィードバック",
-    "next_monthly_feedback": "次回の月次フィードバック",
+    "weekly_default_message": "活動を記録し続けて、週次メッセージを受け取りましょう。",
+    "monthly_default_message": "継続して記録し、月次メッセージを解放しましょう。",
+    "weekly_no_data_message": "まだ十分なデータが蓄積されていません。行動を記録すると、週次メッセージが受け取れるようになります。",
+    "monthly_no_data_message": "継続的な記録により、月次メッセージが受け取れます。日々の積み重ねを続けましょう。",
+    "next_weekly_feedback": "次回の週次メッセージ",
+    "next_monthly_feedback": "次回の月次メッセージ",
     "scheduled": "予定",
-    "generating": "フィードバックを生成中...",
-    "generate_error": "フィードバック生成中にエラーが発生しました",
-    "fetch_error": "フィードバック取得中にエラーが発生しました"
+    "generating": "メッセージを生成中...",
+    "generate_error": "メッセージ生成中にエラーが発生しました",
+    "fetch_error": "メッセージ取得中にエラーが発生しました"
   },
   "quick_start": {
     "start_activity": "クイックスタート",
@@ -175,7 +175,6 @@
     "add_goal": "目標を追加",
     "set_goal": "目標を設定する",
     "set_goal_message": "目標を設定しよう",
-    "goals_description_placeholder": "目標を設定して、進捗を可視化しましょう。",
     "delete_confirmation_title": "目標削除の確認",
     "delete_confirmation": "この目標を削除しますか？",
     "delete_error": "目標の削除に失敗しました",
@@ -200,7 +199,6 @@
     "description": "各種設定を管理できます",
     "categories": {
       "profile": "プロフィール",
-      "timezone": "タイムゾーン",
       "language": "言語",
       "activity": "履歴",
       "account": "アカウント"
@@ -213,13 +211,6 @@
     "save": "保存",
     "saving": "保存中...",
     "cancel": "キャンセル",
-    "timezone_settings": "タイムゾーン",
-    "timezone": "タイムゾーン",
-    "timezone_notice_title": "タイムゾーン設定について",
-    "timezone_notice_1": "時間記録、統計、連続日数の計算に影響します",
-    "timezone_notice_2": "変更は即座に反映されます",
-    "timezone_notice_3": "過去のデータも新しいタイムゾーンで表示されます",
-    "timezone_disabled_message": "進行中のアクティビティがあるため、タイムゾーンを変更できません。先に終了してから変更してください。",
     "language_settings": "言語",
     "language_change_notice": "言語を更新すると新しい言語でアプリが再読み込みされます。",
     "language_disabled_message": "進行中のアクティビティがあるため、言語を変更できません。先に終了してから変更してください。",
@@ -240,7 +231,6 @@
     "privacy": "プライバシー",
     "deleteAccount": "アカウントを削除",
     "profile_tab": "プロフィール",
-    "timezone_tab": "タイムゾーン",
     "activities_tab": "アクティビティ管理",
     "account_tab": "アカウント",
     "account_management": "アカウント",
@@ -274,27 +264,6 @@
     "no": "いいえ",
     "delete": "削除する",
     "deleting": "削除中..."
-  },
-  "timezones": {
-    "Asia/Tokyo": "日本 (JST)",
-    "America/New_York": "アメリカ東部 (EST)",
-    "America/Los_Angeles": "アメリカ西部 (PST)",
-    "America/Chicago": "アメリカ中部 (CST)",
-    "America/Denver": "アメリカ山地 (MST)",
-    "Europe/London": "イギリス (GMT)",
-    "Europe/Paris": "フランス (CET)",
-    "Europe/Berlin": "ドイツ (CET)",
-    "Asia/Shanghai": "中国 (CST)",
-    "Asia/Seoul": "韓国 (KST)",
-    "Asia/Singapore": "シンガポール (SGT)",
-    "Asia/Hong_Kong": "香港 (HKT)",
-    "Asia/Bangkok": "タイ (ICT)",
-    "Asia/Dubai": "UAE (GST)",
-    "Asia/Kolkata": "インド (IST)",
-    "Australia/Sydney": "オーストラリア東部 (AEST)",
-    "Australia/Melbourne": "オーストラリア南東部 (AEST)",
-    "Pacific/Auckland": "ニュージーランド (NZST)",
-    "UTC": "協定世界時 (UTC)"
   },
   "languages": {
     "ja": "日本語 (JP)",
@@ -417,7 +386,7 @@
     "start_time": "開始時刻",
     "target": "目標",
     "progress": "進捗",
-    "goal_achieved": "🎉 目標達成！",
+    "goal_achieved": "目標達成。",
     "resume": "再開",
     "pause": "一時停止",
     "end": "終了",
@@ -425,7 +394,7 @@
     "saving": "保存中...",
     "photo_uploading": "写真アップロード中...",
     "paused_message": "⏸一時停止中です。",
-    "completed_message": "お疲れさまでした！",
+    "completed_message": "お疲れさまでした。",
     "mood_question": "今の気分はどうですか？",
     "achievements_label": "振り返り",
     "achievements_placeholder": "成果や学びはありましたか？",
@@ -463,21 +432,21 @@
     "per_year": "/年",
     "monthly": "月額",
     "yearly": "年額",
-    "yearly_savings": "2ヶ月分お得！",
+    "yearly_savings": "2ヶ月分お得。",
     "current_plan_tooltip": "現在ご利用中のプランです",
     "features": {
       "activity_limit": "アクティビティ追加3つまで",
       "unlimited_activities": "アクティビティ追加無制限",
       "goal_limit": "目標3個追加まで",
       "no_past_calendar": "過去のカレンダー閲覧不可",
-      "no_ai": "AIによるFB機能なし",
+      "no_ai": "Shoninによるメッセージ機能なし",
       "unlimited_goals": "目標追加無制限",
       "full_calendar": "カレンダー全日表示",
-      "ai_feedback": "AIによるFB機能あり",
+      "ai_feedback": "Shoninによるメッセージ機能あり",
       "activity_label": "アクティビティ追加",
       "goal_label": "目標追加",
       "calendar_label": "カレンダー閲覧",
-      "ai_label": "AIによるFB機能",
+      "ai_label": "Shoninによるメッセージ機能",
       "current_month_only": "当月のみ",
       "all_days": "全期間表示",
       "up_to_1": "1つ",
@@ -490,7 +459,7 @@
       "goal_standard": "目標を追加するには\nPremiumプランへの登録が必要です",
       "goal_default": "制限に達しました",
       "calendar_past": "過去のカレンダーを見るには\nStandardプランへの登録が必要です",
-      "ai_feedback_line1": "AIによる週次・月次フィードバック機能は",
+      "ai_feedback_line1": "Shoninによる週次・月次メッセージ機能は",
       "ai_feedback_line2": "Standardプランへの登録が必要です。",
       "view_plans": "詳しくみる"
     },
@@ -499,61 +468,61 @@
   "encouragement": {
     "session_start": {
       "first": [
-        "今日も始められましたね！",
-        "よし、スタートです！",
-        "新しい一日、頑張りましょう！",
-        "今日も一歩前進ですね！",
-        "さあ、始めましょう！"
+        "今日も始められましたね。",
+        "よし、スタートです。",
+        "新しい一日、頑張りましょう。",
+        "今日も一歩前進ですね。",
+        "さあ、始めましょう。"
       ],
       "second": [
-        "本日2回目の記録です！調子いいですね",
-        "今日も頑張ってますね！",
-        "2回目ですね。素晴らしいです！",
-        "いい調子で継続できてますね！",
-        "2回目の挑戦！その調子です"
+        "本日2回目の記録です。調子いいですね",
+        "今日も頑張ってますね。",
+        "2回目ですね。素晴らしいです。",
+        "いい調子で継続できてますね。",
+        "2回目の挑戦。その調子です"
       ],
       "third": [
-        "本日3回目です！素晴らしいペースです",
-        "今日は特に頑張ってますね！",
-        "3回目の記録！集中力が凄いです",
-        "素晴らしい継続力ですね！",
-        "今日も充実してますね！"
+        "本日3回目です。素晴らしいペースです",
+        "今日は特に頑張ってますね。",
+        "3回目の記録。集中力が凄いです",
+        "素晴らしい継続力ですね。",
+        "今日も充実してますね。"
       ],
       "fourth": [
-        "本日4回目！やる気に満ちてますね",
-        "4回目の挑戦！凄いです",
-        "今日の頑張り、すごいですね！",
-        "止まらないですね！素晴らしい",
-        "4回目！その情熱、素敵です"
+        "本日4回目。やる気に満ちてますね",
+        "4回目の挑戦。凄いです",
+        "今日の頑張り、すごいですね。",
+        "止まらないですね。素晴らしい",
+        "4回目。その情熱、素敵です"
       ],
       "fifth_plus": [
-        "本日{count}回目の記録！継続は力なりです",
-        "{count}回目！驚異的な継続力です",
-        "今日{count}回目！その努力、尊敬します",
-        "{count}回目の挑戦！あなたは素晴らしい",
-        "本日{count}回目！誰よりも頑張ってます"
+        "本日{count}回目の記録。継続は力なりです",
+        "{count}回目。驚異的な継続力です",
+        "今日{count}回目。その努力、尊敬します",
+        "{count}回目の挑戦。あなたは素晴らしい",
+        "本日{count}回目。誰よりも頑張ってます"
       ]
     },
     "fifteen_minutes": [
-      "15分経過！集中できていますね",
-      "いい調子で続いてますね！",
-      "集中力、素晴らしいです！",
-      "順調に進んでいますね！",
-      "その集中力、素敵です！"
+      "15分経過。集中できていますね",
+      "いい調子で続いてますね。",
+      "集中力、素晴らしいです。",
+      "順調に進んでいますね。",
+      "その集中力、素敵です。"
     ],
     "goal_achieved": [
-      "🎉 今日の目標を達成しました！",
-      "✨ 目標達成！素晴らしいです",
-      "🌟 やりました！目標クリアです",
-      "👏 目標達成！お疲れ様でした",
-      "🎊 素晴らしい！目標を達成しました"
+      "今日の目標を達成しました。",
+      "目標達成。素晴らしいです",
+      "やりました。目標クリアです",
+      "目標達成。お疲れ様でした",
+      "素晴らしい。目標を達成しました"
     ],
     "streak": [
-      "🔥 {days}日連続で記録しています！",
-      "⭐ {days}日連続！継続は力なり",
-      "💪 {days}日連続の頑張り！素晴らしい",
-      "🎯 {days}日連続達成！あなたは凄い",
-      "✨ {days}日連続記録中！その調子"
+      "{days}日連続で記録しています。",
+      "{days}日連続。継続は力なり",
+      "{days}日連続の頑張り。素晴らしい",
+      "{days}日連続達成。あなたは凄い",
+      "{days}日連続記録中。その調子"
     ],
     "session_completion": {
       "range_0_5": "たとえ{minutes}分でも、「始めた」という事実は確かな前進です。行動した自分を誇ってください。",

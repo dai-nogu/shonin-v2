@@ -73,7 +73,6 @@ export function CalendarContainer({
         <CalendarComponent
           currentDate={currentDate}
           completedSessions={completedSessions}
-          timezone={timezone}
           onNavigate={onNavigate}
           onTodayClick={onTodayClick}
           onDateClick={handleDateClick}

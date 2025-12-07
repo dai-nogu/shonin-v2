@@ -1,5 +1,5 @@
 // カレンダーのデータ処理変更
-import { getWeekStartInTimezone, getCurrentTimeInTimezone } from "@/lib/timezone-utils"
+import { getWeekStart, getCurrentTime, getDateString } from "@/lib/date-utils"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 
 export interface CalendarSession {
@@ -13,8 +13,7 @@ export interface CalendarSession {
 
 // セッション変換関数（月・週共通）
 export const convertToCalendarSessions = (
-  sessions: CompletedSession[], 
-  timezone: string = 'Asia/Tokyo'
+  sessions: CompletedSession[]
 ): CalendarSession[] => {
   return sessions.map((session) => {
     // セッションデータの安全性チェック
@@ -75,9 +74,8 @@ export const convertToCalendarSessions = (
       // データベースに保存されたsession_dateを使用（最も確実）
       dateStr = session.sessionDate
     } else {
-      // フォールバック：startTimeから計算（従来の方法）
-      const sessionDate = new Date(session.startTime)
-      dateStr = sessionDate.toLocaleDateString('sv-SE', { timeZone: timezone })
+      // フォールバック：startTimeから計算（ローカルタイムゾーン使用）
+      dateStr = getDateString(new Date(session.startTime))
     }
 
     return {
@@ -217,9 +215,9 @@ export const getCurrentMonthSessions = (currentDate: Date, sessions: CalendarSes
 }
 
 // 週間セッション集計
-export const getCurrentWeekSessions = (currentDate: Date, sessions: CalendarSession[], timezone: string) => {
-  // タイムゾーンを考慮した週の範囲を計算
-  const weekStart = getWeekStartInTimezone(currentDate, timezone)
+export const getCurrentWeekSessions = (currentDate: Date, sessions: CalendarSession[]) => {
+  // 週の範囲を計算
+  const weekStart = getWeekStart(currentDate)
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6)
   
@@ -246,17 +244,16 @@ export const getCurrentWeekSessions = (currentDate: Date, sessions: CalendarSess
 // 週の平均時間計算
 export const calculateWeekAverageTime = (
   currentDate: Date, 
-  sessions: CalendarSession[], 
-  timezone: string
+  sessions: CalendarSession[]
 ): number => {
-  const currentWeekSessions = getCurrentWeekSessions(currentDate, sessions, timezone)
+  const currentWeekSessions = getCurrentWeekSessions(currentDate, sessions)
   if (currentWeekSessions.length === 0) return 0
   
   const totalTime = currentWeekSessions.reduce((total, session) => total + session.duration, 0)
 
-  // タイムゾーンを考慮した正確な今日の日付と週の開始日を取得
-  const today = getCurrentTimeInTimezone(timezone)
-  const currentWeekStart = getWeekStartInTimezone(currentDate, timezone)
+  // 今日の日付と週の開始日を取得
+  const today = getCurrentTime()
+  const currentWeekStart = getWeekStart(currentDate)
   const currentWeekEnd = new Date(currentWeekStart)
   currentWeekEnd.setDate(currentWeekStart.getDate() + 6)
   
