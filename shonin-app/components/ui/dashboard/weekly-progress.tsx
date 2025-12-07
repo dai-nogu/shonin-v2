@@ -5,9 +5,8 @@ import { BarChart3, Calendar } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { formatDuration } from "@/lib/format-duration"
-import { useTimezone } from "@/contexts/timezone-context"
 import { useTranslations } from 'next-intl'
-import { getWeekStartInTimezone, getCurrentTimeInTimezone, getDateStringInTimezone } from "@/lib/timezone-utils"
+import { getWeekStart, getCurrentTime, getDateString } from "@/lib/timezone-utils"
 import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {
@@ -18,12 +17,10 @@ interface WeeklyProgressProps {
 export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
   const t = useTranslations()
   const [isAnimated, setIsAnimated] = useState(false)
-  // タイムゾーンを取得
-  const { timezone } = useTimezone()
   
-  // 今週の開始日（月曜日）を取得（タイムゾーン考慮）
-  const today = getCurrentTimeInTimezone(timezone)
-  const weekStart = getWeekStartInTimezone(today, timezone)
+  // 今週の開始日（月曜日）を取得
+  const today = getCurrentTime()
+  const weekStart = getWeekStart(today)
   
   // 今日の曜日インデックス（月曜日=0, 日曜日=6）
   const todayDayOfWeek = today.getDay()
@@ -44,11 +41,11 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
   for (let i = 0; i < 7; i++) {
     const date = new Date(weekStart)
     date.setDate(weekStart.getDate() + i)
-    const dateString = getDateStringInTimezone(date, timezone)
+    const dateString = getDateString(date)
     
-    // その日のセッションを取得（タイムゾーン考慮）
+    // その日のセッションを取得
     const daySessions = completedSessions.filter(session => {
-      const sessionDateString = getDateStringInTimezone(session.startTime, timezone)
+      const sessionDateString = getDateString(session.startTime)
       return sessionDateString === dateString
     })
 

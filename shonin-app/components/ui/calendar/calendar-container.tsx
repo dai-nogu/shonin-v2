@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useTimezone } from "@/contexts/timezone-context"
 import { useLocale } from 'next-intl'
 import { formatDateForLocale } from '@/lib/i18n-utils'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
@@ -35,7 +34,6 @@ export function CalendarContainer({
   userPlan = 'free',
   subscriptionLoading = false
 }: CalendarContainerProps) {
-  const { timezone } = useTimezone()
   const locale = useLocale()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")

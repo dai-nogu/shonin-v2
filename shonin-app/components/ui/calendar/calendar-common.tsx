@@ -5,7 +5,6 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/common/button"
 import { Calendar } from "lucide-react"
-import { useTimezone } from "@/contexts/timezone-context"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import type { CalendarSession } from "@/lib/calendar-utils"
 
@@ -32,7 +31,6 @@ export function CalendarCommon({
   currentDate
 }: CalendarCommonProps) {
   const router = useRouter()
-  const { timezone } = useTimezone()
 
   return (
     <div className="bg-gray-950 text-white">

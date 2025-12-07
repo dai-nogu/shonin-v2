@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation'
 import "../globals.css"
 import { ActivitiesProvider } from "@/contexts/activities-context"
 import { SessionsProvider } from "@/contexts/sessions-context"
-import { TimezoneProvider } from "@/contexts/timezone-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ToastProvider } from "@/contexts/toast-context"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
@@ -54,21 +53,19 @@ export default async function LocaleLayout({
       <body className={`${fontClass} dark`} suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
-            <TimezoneProvider>
-              <ToastProvider>
-                <SubscriptionProvider>
-                  <FeedbackProvider>
-                    <ActivitiesProvider>
-                      <SessionsProvider>
-                        <ConditionalSidebarProvider>
-                          {children}
-                        </ConditionalSidebarProvider>
-                      </SessionsProvider>
-                    </ActivitiesProvider>
-                  </FeedbackProvider>
-                </SubscriptionProvider>
-              </ToastProvider>
-            </TimezoneProvider>
+            <ToastProvider>
+              <SubscriptionProvider>
+                <FeedbackProvider>
+                  <ActivitiesProvider>
+                    <SessionsProvider>
+                      <ConditionalSidebarProvider>
+                        {children}
+                      </ConditionalSidebarProvider>
+                    </SessionsProvider>
+                  </ActivitiesProvider>
+                </FeedbackProvider>
+              </SubscriptionProvider>
+            </ToastProvider>
           </AuthProvider>
         </NextIntlClientProvider>
       </body>

@@ -2,8 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { getDateStringInTimezone } from '@/lib/timezone-utils';
-import { useTimezone } from '@/contexts/timezone-context';
+import { getDateString } from '@/lib/timezone-utils';
 import { useParams } from 'next/navigation';
 
 interface FeedbackContent {
@@ -32,7 +31,6 @@ export function useAIFeedback() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations();
-  const { timezone } = useTimezone();
   const params = useParams();
   const locale = (params?.locale as string) || 'ja';
 
@@ -56,10 +54,10 @@ export function useAIFeedback() {
     lastWeekSunday.setDate(lastWeekMonday.getDate() + 6);
     
     return {
-      start: getDateStringInTimezone(lastWeekMonday, timezone),
-      end: getDateStringInTimezone(lastWeekSunday, timezone),
+      start: getDateString(lastWeekMonday),
+      end: getDateString(lastWeekSunday),
     };
-  }, [timezone]);
+  }, []);
 
   // 先月の日付範囲を計算（前月1日〜前月末日）
   const getLastMonthRange = useCallback(() => {
@@ -72,10 +70,10 @@ export function useAIFeedback() {
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
     
     return {
-      start: getDateStringInTimezone(lastMonthStart, timezone),
-      end: getDateStringInTimezone(lastMonthEnd, timezone),
+      start: getDateString(lastMonthStart),
+      end: getDateString(lastMonthEnd),
     };
-  }, [timezone]);
+  }, []);
 
   // APIルート経由で既存フィードバックを取得
   const getExistingFeedback = useCallback(async (

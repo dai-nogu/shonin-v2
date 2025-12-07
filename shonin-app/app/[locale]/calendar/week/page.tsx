@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
 import { formatDuration } from "@/lib/format-duration"
-import { getWeekStartInTimezone } from "@/lib/timezone-utils"
+import { getWeekStart } from "@/lib/timezone-utils"
 import { useTranslations } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { 
@@ -55,7 +55,7 @@ function WeekCalendarSSR({
   const sessions = convertToCalendarSessions(completedSessions, timezone)
   
   // タイムゾーンを考慮した週の範囲を計算
-  const weekStart = getWeekStartInTimezone(currentDate, timezone)
+  const weekStart = getWeekStart(currentDate)
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6)
   

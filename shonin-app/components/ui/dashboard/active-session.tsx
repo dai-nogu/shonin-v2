@@ -13,10 +13,9 @@ import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
 import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useSessions } from "@/contexts/sessions-context"
-import { useTimezone } from "@/contexts/timezone-context"
 import { useAuth } from "@/contexts/auth-context"
 import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
-import { getTimeStringInTimezone } from "@/lib/timezone-utils"
+import { getTimeString } from "@/lib/timezone-utils"
 import { getInputLimits } from "@/lib/input-limits"
 import { cn } from "@/lib/utils"
 
@@ -49,9 +48,6 @@ export function ActiveSession({
 
   // セッションコンテキストから一元化された時間データを取得
   const { formattedTime, elapsedTime } = useSessions()
-  
-  // タイムゾーンコンテキスト
-  const { timezone } = useTimezone()
 
   // 振り返り関連の状態
   const [mood, setMood] = useState(3)
@@ -273,7 +269,7 @@ export function ActiveSession({
             </div>
             <div className="text-muted-foreground text-sm font-medium">
               {t('active_session.start_time')}:{" "}
-              {getTimeStringInTimezone(session.startTime, timezone, '24h').substring(0, 5)}
+              {getTimeString(session.startTime, '24h').substring(0, 5)}
             </div>
             
             {/* 目標時間と進捗表示 */}

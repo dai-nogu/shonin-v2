@@ -6,7 +6,6 @@ export interface Database {
           id: string
           email: string
           name: string | null
-          timezone: string | null
           created_at: string
           updated_at: string
         }
@@ -14,7 +13,6 @@ export interface Database {
           id: string
           email: string
           name?: string | null
-          timezone?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -22,7 +20,6 @@ export interface Database {
           id?: string
           email?: string
           name?: string | null
-          timezone?: string | null
           created_at?: string
           updated_at?: string
         }
