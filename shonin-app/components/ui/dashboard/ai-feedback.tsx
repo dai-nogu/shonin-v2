@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslations } from 'next-intl'
 import { useRouter } from "next/navigation"
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
@@ -15,10 +15,18 @@ interface AIFeedbackProps {
   completedSessions: CompletedSession[]
 }
 
+interface FeedbackContent {
+  overview: string;
+  principle_application?: string | null;
+  insight?: string;
+  closing?: string;
+  principle_definition?: string | null;
+}
+
 interface FeedbackData {
   type: string
   date: string
-  message: string
+  message: string | FeedbackContent
 }
 
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
@@ -40,6 +48,105 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     getWeeklyFeedback, 
     getMonthlyFeedback
   } = useAIFeedback()
+  
+  // 開発用モックデータ（テスト結果から）
+  const DEV_MOCK_DATA = {
+    weekly: {
+      overview: "13.6時間にわたって3つの大切な目標に着実に取り組まれた一週間でした。ジムでの新記録や英語での成長実感、LP制作の完了まで、それぞれの分野で具体的な進歩を重ねられました。",
+      principle_application: "According to Confirmation Bias, あなたが「聞き取れる単語が増えてきた」「理解が深まってる実感」と感じられているのは、成長への意識が高まることで、以前なら見逃していた小さな進歩にも気づけるようになったからかもしれません。",
+      insight: "月曜の朝のキツさを感じながらも「短時間でもやれた自分を褒めたい」と振り返られたその瞬間に、あなたの成長への真摯な姿勢が表れています。完璧でなくても続けることの価値を、あなた自身が一番よく理解されているのですね。",
+      closing: "疲れや集中力の波を受け入れながらも、それでも歩み続けるあなたの姿勢が、確実に実を結んでいます。",
+      principle_definition: "(人は自分の信念に合致する情報に注意を向け、矛盾する情報を無視する傾向)"
+    },
+    monthly: {
+      overview: "This November, you dedicated nearly 52 hours across 46 sessions to building a stronger, more capable version of yourself. Your commitment showed up consistently in the gym, in your web development work, and in daily language learning moments.",
+      principle_application: null,
+      insight: "That moment when you successfully pressed 70kg for 8 reps speaks to something deeper than physical strength. You'd been building toward it session by session, and when the weight went up, it wasn't just your muscles that had grown stronger - it was your belief in what becomes possible through patient, persistent effort. The same quiet determination showed in your language learning, where you noticed more words becoming clear in podcasts during your commute, and in your web work, where you delivered projects that earned your clients' trust and brought repeat business.",
+      closing: "As November closes with your body fat down 2% and your listening scores up 30 points, you're living proof that transformation happens not in dramatic leaps, but in showing up, even on those tired Monday mornings.",
+      principle_definition: null
+    }
+  }
+
+  // フィードバックを取得
+  useEffect(() => {
+    const loadFeedbacks = async () => {
+      if (!planLimits.hasAIFeedback) return
+      
+      // 開発環境では自動的にdev-feedback.jsonを使用、本番では実際のAPIを使用
+      const USE_DEV_FILE = process.env.NODE_ENV === 'development'
+      
+      if (USE_DEV_FILE) {
+        try {
+          // public/dev-feedback.jsonを読み込む
+          const response = await fetch('/dev-feedback.json')
+          if (response.ok) {
+            const devData = await response.json()
+            
+            setFeedbacks([
+              { 
+                type: t('ai_feedback.weekly'), 
+                date: devData.weekly_date || "2024-11-04", 
+                message: devData.weekly || DEV_MOCK_DATA.weekly
+              },
+              { 
+                type: t('ai_feedback.monthly'), 
+                date: devData.monthly_date || "2024-11-01", 
+                message: devData.monthly || DEV_MOCK_DATA.monthly
+              }
+            ])
+            return
+          }
+        } catch (error) {
+          console.warn('dev-feedback.jsonの読み込みに失敗、モックデータを使用します')
+        }
+        
+        // ファイルが読み込めなかった場合はモックデータを使用
+        setFeedbacks([
+          { 
+            type: t('ai_feedback.weekly'), 
+            date: "2024-11-04", 
+            message: DEV_MOCK_DATA.weekly
+          },
+          { 
+            type: t('ai_feedback.monthly'), 
+            date: "2024-11-01", 
+            message: DEV_MOCK_DATA.monthly
+          }
+        ])
+        return
+      }
+      
+      // 実際のAPIからフィードバックを取得
+      const [weeklyData, monthlyData] = await Promise.all([
+        getWeeklyFeedback(),
+        getMonthlyFeedback()
+      ])
+      
+      setFeedbacks([
+        { 
+          type: t('ai_feedback.weekly'), 
+          date: weeklyData?.period_start || "", 
+          message: weeklyData?.feedback || t('ai_feedback.weekly_default_message')
+        },
+        { 
+          type: t('ai_feedback.monthly'), 
+          date: monthlyData?.period_start || "", 
+          message: monthlyData?.feedback || t('ai_feedback.monthly_default_message')
+        }
+      ])
+    }
+    
+    loadFeedbacks()
+    
+    // 開発環境でのみファイル変更を監視（5秒ごとにリロード）
+    if (process.env.NODE_ENV === 'development') {
+      const interval = setInterval(() => {
+        loadFeedbacks()
+      }, 5000) // 5秒ごとにリロード
+      
+      return () => clearInterval(interval)
+    }
+  }, [planLimits.hasAIFeedback, getWeeklyFeedback, getMonthlyFeedback, t])
   
   // サブスクリプション情報のローディング中はスケルトンを表示
   if (subscriptionLoading) {
@@ -127,6 +234,36 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
 
   const currentFeedback = feedbacks[currentIndex]
 
+  // フィードバック内容をフォーマットする関数
+  const formatFeedbackMessage = (message: string | FeedbackContent): string => {
+    // 文字列の場合はそのまま返す
+    if (typeof message === 'string') {
+      return message
+    }
+
+    // オブジェクトの場合は、構造化フィードバックとして整形
+    const parts: string[] = []
+    
+    if (message.overview) {
+      parts.push(message.overview)
+    }
+    
+    if (message.principle_application) {
+      parts.push(message.principle_application)
+    }
+    
+    if (message.insight) {
+      parts.push(message.insight)
+    }
+    
+    if (message.closing) {
+      parts.push(message.closing)
+    }
+
+    // 段落ごとに空行を入れて結合
+    return parts.filter(Boolean).join('\n\n')
+  }
+
   return (
       <Card className="bg-transparent border-0 shadow-none">
         <CardHeader className="px-0 pt-0 pb-4">
@@ -154,7 +291,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
                     key={index}
                     onClick={() => handleTransition(index)}
                     className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentIndex ? 'bg-blue-400 w-3' : 'bg-gray-600 hover:bg-gray-500'
+                      index === currentIndex ? 'bg-emerald-500 w-3' : 'bg-gray-600 hover:bg-gray-500'
                     }`}
                     aria-label={`${index === 0 ? '週次' : '月次'}フィードバックに切り替え`}
                   />
@@ -185,7 +322,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
                 </div>
               ) : (
                 <p className="text-gray-300 leading-relaxed text-sm lg:text-base whitespace-pre-wrap">
-                  {currentFeedback.message}
+                  {formatFeedbackMessage(currentFeedback.message)}
                 </p>
               )}
             </div>

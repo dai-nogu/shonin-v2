@@ -80,8 +80,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch feedback' }, { status: 500 });
     }
 
+    // JSONパースしてフィードバック内容を構造化
+    let feedbackContent;
+    try {
+      feedbackContent = JSON.parse(data.content);
+    } catch (parseError) {
+      // パースに失敗した場合は生の文字列を返す
+      safeWarn('フィードバックJSONパースエラー', parseError);
+      feedbackContent = { overview: data.content };
+    }
+
     return NextResponse.json({
-      feedback: data.content,
+      feedback: feedbackContent,
       period_type: data.feedback_type,
       period_start: data.period_start,
       period_end: data.period_end,

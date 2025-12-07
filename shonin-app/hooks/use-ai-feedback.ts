@@ -6,8 +6,16 @@ import { getDateStringInTimezone } from '@/lib/timezone-utils';
 import { useTimezone } from '@/contexts/timezone-context';
 import { useParams } from 'next/navigation';
 
+interface FeedbackContent {
+  overview: string;
+  principle_application?: string | null;
+  insight?: string;
+  closing?: string;
+  principle_definition?: string | null;
+}
+
 interface AIFeedbackResponse {
-  feedback: string;
+  feedback: FeedbackContent | string; // JSON構造またはフォールバック文字列
   period_type: 'weekly' | 'monthly';
   period_start: string;
   period_end: string;

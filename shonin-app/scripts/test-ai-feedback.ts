@@ -2,19 +2,24 @@
  * AI Feedback生成テストスクリプト
  * 
  * 使い方:
- * npm run test:ai weekly      # 週次フィードバックをテスト（第1週）
- * npm run test:ai weekly 1    # 第1週（11/4-11/10）
- * npm run test:ai weekly 2    # 第2週（11/11-11/17）
- * npm run test:ai weekly 3    # 第3週（11/18-11/24）
- * npm run test:ai weekly 4    # 第4週（11/25-11/30）
- * npm run test:ai weekly all  # 全週を順番にテスト
- * npm run test:ai monthly     # 月次フィードバックをテスト
+ * npm run test:ai weekly         # 週次フィードバックをテスト（第1週・日本語）
+ * npm run test:ai weekly 1       # 第1週（11/4-11/10・日本語）
+ * npm run test:ai weekly 2       # 第2週（11/11-11/17・日本語）
+ * npm run test:ai weekly en      # 第1週（英語）
+ * npm run test:ai weekly 1 en    # 第1週（英語）
+ * npm run test:ai weekly 2 ja    # 第2週（日本語）
+ * npm run test:ai weekly all     # 全週を順番にテスト（日本語）
+ * npm run test:ai weekly all en  # 全週を順番にテスト（英語）
+ * npm run test:ai monthly        # 月次フィードバックをテスト（日本語）
+ * npm run test:ai monthly en     # 月次フィードバックをテスト（英語）
  */
 
 import { analyzeSessionData, type RawSessionData } from '../lib/session-analyzer';
 import { generatePrompts, type PromptGenerationConfig } from '../lib/prompt-generator';
 import Anthropic from '@anthropic-ai/sdk';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // 環境変数を読み込む
 dotenv.config({ path: '.env.local' });
@@ -576,6 +581,34 @@ async function testAIFeedback(periodType: 'weekly' | 'monthly', locale: string =
     const feedback = message.content[0]?.type === 'text' ? message.content[0].text : '';
     const usage = message.usage;
 
+    // 開発用: フィードバックをファイルに保存（UIで表示するため）
+    try {
+      const feedbackJson = JSON.parse(feedback);
+      const devFeedbackPath = path.join(process.cwd(), 'public', 'dev-feedback.json');
+      
+      // 既存のフィードバックを読み込む
+      let existingData: any = { weekly: null, monthly: null };
+      if (fs.existsSync(devFeedbackPath)) {
+        const existing = fs.readFileSync(devFeedbackPath, 'utf-8');
+        existingData = JSON.parse(existing);
+      }
+      
+      // 新しいフィードバックを追加
+      if (periodType === 'weekly') {
+        existingData.weekly = feedbackJson;
+        existingData.weekly_date = periodStart;
+      } else {
+        existingData.monthly = feedbackJson;
+        existingData.monthly_date = periodStart;
+      }
+      
+      // ファイルに保存
+      fs.writeFileSync(devFeedbackPath, JSON.stringify(existingData, null, 2), 'utf-8');
+      console.log(`\n💾 フィードバックを public/dev-feedback.json に保存しました`);
+    } catch (parseError) {
+      console.warn('⚠️  フィードバックのJSON解析に失敗（ファイル保存をスキップ）');
+    }
+
     console.log('========================================');
     console.log('✨ 生成されたフィードバック');
     console.log('========================================\n');
@@ -632,21 +665,24 @@ if (!['weekly', 'monthly'].includes(periodType)) {
   console.error('❌ エラー: 期間タイプは "weekly" または "monthly" を指定してください');
   console.log('');
   console.log('使い方:');
-  console.log('  npm run test:ai weekly      # 週次フィードバックをテスト（第1週・日本語）');
-  console.log('  npm run test:ai weekly 1    # 第1週（11/4-11/10）');
-  console.log('  npm run test:ai weekly 2    # 第2週（11/11-11/17）');
-  console.log('  npm run test:ai weekly 3    # 第3週（11/18-11/24）');
-  console.log('  npm run test:ai weekly 4    # 第4週（11/25-11/30）');
-  console.log('  npm run test:ai weekly all  # 全週を順番にテスト');
-  console.log('  npm run test:ai monthly     # 月次フィードバックをテスト（日本語）');
-  console.log('  npm run test:ai weekly 1 en # 第1週（英語）');
+  console.log('  npm run test:ai weekly         # 週次フィードバックをテスト（第1週・日本語）');
+  console.log('  npm run test:ai weekly 1       # 第1週（11/4-11/10・日本語）');
+  console.log('  npm run test:ai weekly 2       # 第2週（11/11-11/17・日本語）');
+  console.log('  npm run test:ai weekly en      # 第1週（英語）');
+  console.log('  npm run test:ai weekly 1 en    # 第1週（英語）');
+  console.log('  npm run test:ai weekly 2 ja    # 第2週（日本語）');
+  console.log('  npm run test:ai weekly all     # 全週を順番にテスト（日本語）');
+  console.log('  npm run test:ai weekly all en  # 全週を順番にテスト（英語）');
+  console.log('  npm run test:ai monthly        # 月次フィードバックをテスト（日本語）');
+  console.log('  npm run test:ai monthly en     # 月次フィードバックをテスト（英語）');
   process.exit(1);
 }
 
-// 週次の場合、週番号を解析
+// 引数解析の改善: 週次・月次で柔軟に対応
 if (periodType === 'weekly' && weekOrLocale) {
   if (weekOrLocale === 'all') {
     // 全週をテスト
+    locale = args[2] || 'ja'; // 言語指定があればそれを使用
     (async () => {
       console.log('\n🔄 全週のフィードバックを順番に生成します...\n');
       for (let week = 1; week <= 4; week++) {
@@ -658,24 +694,25 @@ if (periodType === 'weekly' && weekOrLocale) {
       }
     })();
   } else if (['1', '2', '3', '4'].includes(weekOrLocale)) {
+    // 週番号が指定された場合
     weekNumber = parseInt(weekOrLocale);
     locale = args[2] || 'ja';
-    // テスト実行
     testAIFeedback(periodType, locale, weekNumber);
   } else if (['ja', 'en'].includes(weekOrLocale)) {
+    // 言語のみ指定された場合（週番号はデフォルトの1）
     locale = weekOrLocale;
-    // テスト実行
+    weekNumber = 1;
     testAIFeedback(periodType, locale, weekNumber);
   } else {
-    console.error('❌ エラー: 週番号は 1, 2, 3, 4, または "all" を指定してください');
+    console.error('❌ エラー: 週番号は 1, 2, 3, 4, または "all"、言語は "ja" または "en" を指定してください');
     process.exit(1);
   }
 } else if (periodType === 'monthly' && weekOrLocale) {
+  // 月次の場合、第2引数は言語
   locale = weekOrLocale;
-  // テスト実行
   testAIFeedback(periodType, locale, weekNumber);
 } else {
-  // テスト実行
+  // 引数なしの場合はデフォルト（日本語）
   testAIFeedback(periodType, locale, weekNumber);
 }
 
