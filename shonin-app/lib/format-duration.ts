@@ -12,11 +12,11 @@ export function formatDuration(totalSeconds: number): string {
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   
   if (hours > 0 && minutes > 0) {
-    return `${hours}\u2009h ${minutes}\u2009m`
+    return `${hours}\u2009h ${minutes}\u2009min`
   } else if (hours > 0) {
     return `${hours}\u2009h`
   } else {
-    return `${minutes}\u2009m`
+    return `${minutes}\u2009min`
   }
 }
 
@@ -31,10 +31,10 @@ export function formatTime(hours: number, minutes: number): string {
     return ""
   }
   if (hours > 0 && minutes > 0) {
-    return `${hours}\u2009h ${minutes}\u2009m`
+    return `${hours}\u2009h ${minutes}\u2009min`
   } else if (hours > 0) {
     return `${hours}\u2009h`
   } else {
-    return `${minutes}\u2009m`
+    return `${minutes}\u2009min`
   }
 } 

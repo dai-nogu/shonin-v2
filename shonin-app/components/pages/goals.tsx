@@ -93,9 +93,9 @@ export function Goals({ initialGoals }: GoalsProps) {
     const minutes = Math.floor((seconds % 3600) / 60)
     
     if (hours > 0) {
-      return `${hours}\u2009h ${minutes}\u2009m`
+      return `${hours}\u2009h ${minutes}\u2009min`
     }
-    return `${minutes}\u2009m`
+    return `${minutes}\u2009min`
   }
 
   // エラーが発生したらモーダルを表示

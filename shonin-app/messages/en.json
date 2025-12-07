@@ -18,16 +18,17 @@
     "yes": "Yes",
     "no": "No",
     "seeMore": "See More",
+    "time": " time",
     "times": " times",
-    "no_records": "No record",
-    "no_records_past": "No record",
-    "no_records_future": "Looking forward to your record",
+    "no_records": "Stillness",
+    "no_records_past": "Stillness",
+    "no_records_future": "Looking forward to your focus",
     "start": "Start",
     "starting": "Starting...",
     "details": "Details",
     "not_set": "None",
     "reload_and_retry": "Please reload the page and try again.",
-    "recording_in_progress": "Cannot start recording while another session is active",
+    "recording_in_progress": "Cannot start focus while another focus is active",
     "total": "Total",
     "read_more": "Read more"
   },
@@ -35,9 +36,9 @@
     "dashboard": "Dashboard",
     "calendar": "Calendar",
     "goals": "Goals",
-    "feedback": "Message",
+    "feedback": "Letters",
     "plan": "Plan",
-    "settings": "Settings",
+    "settings": "Setting",
     "home": "Home"
   },
   "auth": {
@@ -61,14 +62,14 @@
   "dashboard": {
     "title": "Dashboard",
     "welcomeMessage": "Good work. Let's keep pushing forward today.",
-    "activeSession": "Active Session",
-    "recentSessions": "Recent Sessions",
+    "activeSession": "Active focus",
+    "recentSessions": "Recent focuses",
     "weeklyProgress": "Weekly Progress",
-    "startActivity": "Quick Start",
+    "startActivity": "History",
     "stopActivity": "Stop Activity",
-    "noActiveSessions": "No active sessions",
+    "noActiveSessions": "No active focuses",
     "totalTime": "Total Time",
-    "sessionsCount": "Sessions",
+    "sessionsCount": "focuses",
     "greeting": {
       "morning": "Good morning",
       "afternoon": "Good afternoon",
@@ -76,7 +77,7 @@
       "userSuffix": ""
     },
     "quickStart": {
-      "description": "Quick start from recent activities",
+      "description": "History from recent activities",
       "noRecentActivities": "No recent activities",
       "noYesterdayActivities": "No activities from yesterday"
     }
@@ -95,27 +96,27 @@
     "reflection_and_notes": "Reflection & Notes"
   },
   "ai_feedback": {
-    "feedback": "Message",
+    "feedback": "Letters",
     "weekly": "Weekly ",
     "monthly": "Monthly ",
-    "weekly_default_message": "Keep logging your activities to receive weekly message.",
-    "monthly_default_message": "Stay consistent to unlock your monthly message.",
-    "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly message.",
-    "monthly_no_data_message": "Consistent recording will unlock monthly message. Keep building your daily progress.",
-    "next_weekly_feedback": "Next weekly message",
-    "next_monthly_feedback": "Next monthly message",
+    "weekly_default_message": "Keep logging your activities to receive weekly letter.",
+    "monthly_default_message": "Stay consistent to unlock your monthly letter.",
+    "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly letter.",
+    "monthly_no_data_message": "Consistent starting will unlock monthly message. Keep building your daily progress.",
+    "next_weekly_feedback": "Next weekly letter",
+    "next_monthly_feedback": "Next monthly letter",
     "scheduled": "scheduled",
-    "generating": "Generating message...",
-    "generate_error": "An error occurred while generating message",
-    "fetch_error": "An error occurred while fetching message",
+    "generating": "Generating letter...",
+    "generate_error": "An error occurred while generating letter",
+    "fetch_error": "An error occurred while fetching letter",
     "new_badge": "New"
   },
   "feedback": {
     "description": "Reflect on your efforts and feel your growth"
   },
   "quick_start": {
-    "start_activity": "Quick Start",
-    "complete_first_session": "Once you complete your first record, it'll appear here.",
+    "start_activity": "History",
+    "complete_first_session": "Your journey begins here.",
     "most_recorded": "Frequency",
     "latest": "Latest",
     "yesterday": "Yesterday",
@@ -131,18 +132,18 @@
     "today": "Today",
     "this_week": "This Week",
     "noEvents": "No events",
-    "sessionDetails": "Session Details",
+    "sessionDetails": "Focus Details",
     "activities_on_date": "{date}",
-    "month_view": "Monthly View",
-    "week_view": "Weekly View",
+    "month_view": "Month",
+    "week_view": "Week",
     "others_count": "+{count} more",
     "month_stats": {
-      "total_time": "Monthly Total",
-      "average_time": "Monthly Average"
+      "total_time": "Monthly Focus",
+      "average_time": "Daily Average"
     },
     "week_stats": {
-      "total_time": "Weekly Total",
-      "average_time": "Weekly Average"
+      "total_time": "Weekly Focus",
+      "average_time": "Daily Average"
     }
   },
   "goals": {
@@ -152,15 +153,14 @@
     "goalTitle": "Goal Title",
     "goal_label": "Goal",
     "goal_placeholder": "Improve my focus and reduce distractions.",
-    "motivation_label": "Reason",
+    "motivation_label": "Purpose",
     "motivation_placeholder": "To feel more in control of my time and attention.",
-    "deadline_label_required": "Deadline",
-    "weekday_hours_label": "Weekday Hours",
-    "weekend_hours_label": "Weekend Hours",
+    "deadline_label_required": "Target Date",
+    "weekday_hours_label": "Weekday Target (hours)",
+    "weekend_hours_label": "Weekend Target (hours)",
     "add_time_settings": "Add Time Settings",
-    "add_deadline_and_time_settings": "Add Deadline and Time",
+    "add_deadline_and_time_settings": "Target Date and Time",
     "time_settings_label": "Time Settings",
-    "deadline_and_time_settings_label": "Deadline and Time Settings",
     "weekly_calculation": "Weekly",
     "monthly_calculation": "Monthly",
     "total_goal": "Total Goal",
@@ -170,7 +170,7 @@
     "loading": "Loading...",
     "goal_not_found": "Goal not found",
     "description": "Description",
-    "deadline": "Deadline",
+    "deadline": "Target Date",
     "progress": "Progress",
     "progress_status": "Progress",
     "completed": "Completed",
@@ -196,7 +196,12 @@
     "weekend": "Weekends",
     "weekly": "Weekly",
     "hours_unit": " hours",
-    "deadline_label": "Deadline"
+    "deadline_label": "Target Date",
+    "date_picker": {
+      "year_placeholder": "Year",
+      "month_placeholder": "Month",
+      "day_placeholder": "Day"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -224,7 +229,7 @@
     "in_progress": "In Progress",
     "delete_activity_warning": "Cannot delete while in progress. Please end the activity first.",
     "delete_activity_confirmation_title": "Delete Activity",
-    "delete_activity_confirmation": "Are you sure you want to delete this activity?\n\nThis will also remove related session data.",
+    "delete_activity_confirmation": "Are you sure you want to delete this activity?\n\nThis will also remove related focus data.",
     "no_custom_activities": "No activities yet",
     "add_activities_hint": "Add a new activity from your dashboard to get started.",
     "tip": "Tip",
@@ -294,7 +299,7 @@
     "startTime": "Start Time",
     "endTime": "End Time",
     "hours_unit": "\u2009h",
-    "minutes_unit": "\u2009m",
+    "minutes_unit": "\u2009min",
     "today": "Today",
     "yesterday": "Yesterday",
     "days_ago": " days ago",
@@ -310,14 +315,14 @@
     "unauthorized": "Access denied",
     "authentication_required": "Authentication required. Please log in.",
     "generic_retry": "An error occurred. Please try again.",
-    "session_start_failed": "Failed to start recording",
+    "session_start_failed": "Failed to focus",
     "activity_add_failed": "Failed to add activity.",
     "AUTH_REQUIRED": "Authentication required. Please log in.",
     "AUTH_FAILED": "Authentication failed",
     "UNAUTHORIZED": "Access denied",
     "GOAL_NOT_FOUND": "Goal not found",
     "GOAL_LIMIT_REACHED": "Goal limit reached. Please upgrade your plan.",
-    "SESSION_NOT_FOUND": "Session not found",
+    "SESSION_NOT_FOUND": "Focus not found",
     "ACTIVITY_NOT_FOUND": "Activity not found",
     "GENERIC_ERROR": "An error occurred. Please try again.",
     "NETWORK_ERROR": "Network error occurred",
@@ -330,11 +335,11 @@
     "created": "Created"
   },
   "sessions": {
-    "fetch_error": "Failed to fetch sessions",
-    "add_error": "Failed to add session",
-    "update_error": "Failed to update session",
-    "delete_error": "Failed to delete session",
-    "fetch_period_error": "Failed to fetch sessions for period",
+    "fetch_error": "Failed to fetch focuses",
+    "add_error": "Failed to add focus",
+    "update_error": "Failed to update focus",
+    "delete_error": "Failed to delete focus",
+    "fetch_period_error": "Failed to fetch focuses for period",
     "fetch_stats_error": "Failed to fetch statistics"
   },
   "profile": {
@@ -345,18 +350,18 @@
     "fetch_error": "Failed to fetch subscription information"
   },
   "session_start": {
-    "title": "Start Recording",
-    "select_activity": "Select an Activity",
+    "title": "Start Focus",
+    "select_activity": "Select a Focus",
     "activity_placeholder": "No activity yet",
-    "activity_input_placeholder": "Type what you're working on...",
-    "recent_activities": "Recent activities",
+    "activity_input_placeholder": "What are you working on...",
+    "recent_activities": "Recent Focuses",
     "add_as_new": "add as new",
     "add_new": "Add",
     "location": "Location",
-    "location_placeholder": "home",
+    "location_placeholder": "Home",
     "select_goal": "Select a Goal",
-    "goal_placeholder": "No goal yet",
-    "no_goal": "No goal selected",
+    "goal_placeholder": "None",
+    "no_goal": "None",
     "target_time": "Target Time",
     "hours": "hours",
     "minutes": "minutes",
@@ -384,7 +389,7 @@
     }
   },
   "active_session": {
-    "recording": "Recording...",
+    "recording": "Starting...",
     "reflecting": "Reflecting",
     "paused": "Paused",
     "start_time": "Start Time",
@@ -397,7 +402,7 @@
     "save": "Save",
     "saving": "Saving...",
     "photo_uploading": "Uploading photos...",
-    "paused_message": "⏸ Session is paused.",
+    "paused_message": "⏸ Focus is paused.",
     "completed_message": "Good work.",
     "mood_question": "How are you feeling?",
     "achievements_label": "Today's Notes",
@@ -417,8 +422,8 @@
     "save_error": "An error occurred during save process."
   },
   "session_page": {
-    "not_found_title": "Session Not Found",
-    "not_found_description": "There are no active sessions.",
+    "not_found_title": "Focus Not Found",
+    "not_found_description": "There are no active focuses.",
     "back_to_dashboard": "Back to Dashboard",
     "save_failed": "Failed to save"
   },
@@ -443,16 +448,16 @@
       "unlimited_activities": "Unlimited activities",
       "goal_limit": "Up to 3 goals",
       "no_past_calendar": "No past calendar access",
-      "no_ai": "No Shonin message",
+      "no_ai": "No Shonin letter",
       "unlimited_goals": "Unlimited goals",
-      "full_calendar": "Full calendar access",
-      "ai_feedback": "Shonin message included",
+      "full_calendar": "Unlimited History",
+      "ai_feedback": "Shonin letter included",
       "activity_label": "Activity Addition",
       "goal_label": "Add Goals",
       "calendar_label": "Calendar Access",
-      "ai_label": "Shonin Message Feature",
+      "ai_label": "Weekly & Monthly Letters",
       "current_month_only": "This month only",
-      "all_days": "Full access",
+      "all_days": "Unlimited History",
       "up_to_1": "1",
       "up_to_3": "3",
       "unlimited": "Unlimited"
@@ -463,9 +468,8 @@
       "goal_standard": "To add more goals, you need to\nupgrade to the Premium plan",
       "goal_default": "Limit reached",
       "calendar_past": "Upgrade to the Standard plan to view past calendars.",
-      "ai_feedback_line1": "Weekly and monthly Shonin message is available",
-      "ai_feedback_line2": "with the Standard plan.",
-      "view_plans": "View Plans"
+      "ai_feedback_line1": "Would you like to receive letters from Shonin?",
+      "view_plans": "View Plan"
     },
     "premium_coming_soon": "※ Premium plan is coming soon."
   },
@@ -479,14 +483,14 @@
         "Let's start."
       ],
       "second": [
-        "2nd session today. Looking good.",
+        "2nd focus today. Looking good.",
         "You're doing great today.",
         "Second time today. Amazing.",
         "You're keeping up the pace.",
         "2nd challenge. Keep it up."
       ],
       "third": [
-        "3rd session. Excellent pace.",
+        "3rd focus. Excellent pace.",
         "You're really pushing today.",
         "3rd time. Your focus is incredible.",
         "Amazing consistency.",
@@ -494,17 +498,17 @@
       ],
       "fourth": [
         "4th time today. Full of energy.",
-        "4th session. Incredible.",
+        "4th focus. Incredible.",
         "Today's effort is remarkable.",
         "You're unstoppable. Amazing.",
         "4th time. Love your passion."
       ],
       "fifth_plus": [
-        "{count}th session. Consistency is key.",
+        "{count}th focus. Consistency is key.",
         "{count}th time. Phenomenal dedication.",
         "{count}th today. Your effort is admirable.",
         "{count}th challenge. You are amazing.",
-        "{count}th session. Going above and beyond."
+        "{count}th focus. Going above and beyond."
       ]
     },
     "fifteen_minutes": [
@@ -554,7 +558,7 @@
     },
     "deadline": {
       "invalid_date": "Please enter a valid date",
-      "too_small": "Please enter a deadline"
+      "too_small": "Please enter a target date"
     },
     "weekdayHours": {
       "too_small": "Please enter a value of 0 or more",

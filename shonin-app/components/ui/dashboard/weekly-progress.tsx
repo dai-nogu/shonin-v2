@@ -120,7 +120,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
                   </div>
                 </div>
                 
-                <span className={`text-xs lg:text-sm w-12 lg:w-14 text-right ${
+                <span className={`text-[10px] lg:text-xs w-16 lg:w-20 text-right whitespace-nowrap ${
                    day.totalSeconds > 0 ? "text-white font-medium" : "text-gray-600"
                 }`}>
                   {formatDuration(day.totalSeconds)}

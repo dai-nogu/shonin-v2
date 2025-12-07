@@ -96,27 +96,29 @@ function WeekCalendarSSR({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onNavigate("prev")}
-                  className="text-gray-300 hover:bg-white/10"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
                   onClick={onTodayClick}
                   className="text-gray-300 hover:bg-white/10"
                 >
                   {t('calendar.this_week')}
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onNavigate("next")}
-                  className="text-gray-300 hover:bg-white/10"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onNavigate("prev")}
+                    className="text-gray-300 hover:bg-white/10"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onNavigate("next")}
+                    className="text-gray-300 hover:bg-white/10"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </CardHeader>

@@ -123,9 +123,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return forMobile ? `${hours}\u2009h ${minutes}\u2009m` : `${hours}\u2009h ${minutes}\u2009m`
+      return forMobile ? `${hours}\u2009h ${minutes}\u2009min` : `${hours}\u2009h ${minutes}\u2009min`
     }
-    return forMobile ? `${minutes}\u2009m` : `${minutes}\u2009m`
+    return forMobile ? `${minutes}\u2009min` : `${minutes}\u2009min`
   }
 
   const formatDate = (date: Date) => {
@@ -434,7 +434,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     <>
                       <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
                         <span className="font-bold text-emerald-400">{activity.sessionCount}</span>
-                        <span className="text-xs text-gray-300 opacity-90">{t('common.times')}</span>
+                        <span className="text-xs text-gray-300 opacity-90">
+                          {activity.sessionCount === 1 ? t('common.time') : t('common.times')}
+                        </span>
                       </div>
                     </>
                   ) : (

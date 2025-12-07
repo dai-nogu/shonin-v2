@@ -178,10 +178,9 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       <Card className="bg-transparent border-white/10">
         <CardContent className="pt-6">
           <div className="text-center py-8 space-y-4">
-            <div className="text-gray-400">
-              <p className="mb-2">{t('plan.limit_modal.ai_feedback_line1')}</p>
-              <p className="font-bold text-lg text-white">{t('plan.limit_modal.ai_feedback_line2')}</p>
-            </div>
+            <>
+              <p className="font-bold text-lg text-white">{t('plan.limit_modal.ai_feedback_line1')}</p>
+            </>
             <Button
               onClick={() => router.push('/plan')}
               className="bg-emerald-700 text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"

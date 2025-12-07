@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/common/input"
 import { Label } from "@/components/ui/common/label"
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useState, useMemo } from "react"
 import { Plus, X, Clock } from "lucide-react"
 import { Button } from "@/components/ui/common/button"
@@ -33,6 +33,7 @@ export function GoalHoursInputs({
   validationErrors
 }: GoalHoursInputsProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const [isExpanded, setIsExpanded] = useState(false)
   
   // deadlineから年月日を分解（先頭ゼロを削除してSelectItemのvalueと一致させる）
@@ -111,13 +112,7 @@ export function GoalHoursInputs({
         }`}
       >
         <div className="space-y-4 border border-white/10 rounded-xl p-5 bg-black/20 backdrop-blur-sm relative">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 rounded-lg bg-emerald-700/10">
-                <Clock className="w-4 h-4 text-emerald-500" />
-              </div>
-              <Label className="text-white font-medium">{t('goals.deadline_and_time_settings_label')}</Label>
-            </div>
+          <div className="flex justify-end">
             <Button
               type="button"
               variant="ghost"
@@ -133,47 +128,91 @@ export function GoalHoursInputs({
           <div className="space-y-1.5">
             <Label className="text-gray-300 text-xs">{t('goals.deadline_label')}</Label>
             <div className="grid grid-cols-3 gap-2">
-              {/* 年 */}
-              <Select value={year} onValueChange={handleYearChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
-                  <SelectValue placeholder="年" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-950 border-gray-800">
-                  {years.map((y) => (
-                    <SelectItem key={y} value={y.toString()} className="text-white hover:bg-gray-700 text-xs">
-                      {y}年
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {locale === 'ja' ? (
+                <>
+                  {/* 日本語: 年 / 月 / 日 */}
+                  <Select value={year} onValueChange={handleYearChange}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
+                      <SelectValue placeholder={t('goals.date_picker.year_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-950 border-gray-800">
+                      {years.map((y) => (
+                        <SelectItem key={y} value={y.toString()} className="text-white hover:bg-gray-700 text-xs">
+                          {y}年
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-              {/* 月 */}
-              <Select value={month} onValueChange={handleMonthChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
-                  <SelectValue placeholder="月" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-950 border-gray-800">
-                  {months.map((m) => (
-                    <SelectItem key={m} value={m.toString()} className="text-white hover:bg-gray-700 text-xs">
-                      {m}月
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <Select value={month} onValueChange={handleMonthChange}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
+                      <SelectValue placeholder={t('goals.date_picker.month_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-950 border-gray-800">
+                      {months.map((m) => (
+                        <SelectItem key={m} value={m.toString()} className="text-white hover:bg-gray-700 text-xs">
+                          {m}月
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-              {/* 日 */}
-              <Select value={day} onValueChange={handleDayChange}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
-                  <SelectValue placeholder="日" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-950 border-gray-800">
-                  {days.map((d) => (
-                    <SelectItem key={d} value={d.toString()} className="text-white hover:bg-gray-700 text-xs">
-                      {d}日
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <Select value={day} onValueChange={handleDayChange}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
+                      <SelectValue placeholder={t('goals.date_picker.day_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-950 border-gray-800">
+                      {days.map((d) => (
+                        <SelectItem key={d} value={d.toString()} className="text-white hover:bg-gray-700 text-xs">
+                          {d}日
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              ) : (
+                <>
+                  {/* 英語: Month / Day / Year */}
+                  <Select value={month} onValueChange={handleMonthChange}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
+                      <SelectValue placeholder={t('goals.date_picker.month_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-950 border-gray-800">
+                      {months.map((m) => (
+                        <SelectItem key={m} value={m.toString()} className="text-white hover:bg-gray-700 text-xs">
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={day} onValueChange={handleDayChange}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
+                      <SelectValue placeholder={t('goals.date_picker.day_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-950 border-gray-800">
+                      {days.map((d) => (
+                        <SelectItem key={d} value={d.toString()} className="text-white hover:bg-gray-700 text-xs">
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={year} onValueChange={handleYearChange}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8 focus:ring-emerald-700/20 hover:bg-white/10 transition-colors">
+                      <SelectValue placeholder={t('goals.date_picker.year_placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-950 border-gray-800">
+                      {years.map((y) => (
+                        <SelectItem key={y} value={y.toString()} className="text-white hover:bg-gray-700 text-xs">
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
             </div>
           </div>
 

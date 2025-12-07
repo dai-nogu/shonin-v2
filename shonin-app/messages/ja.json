@@ -18,6 +18,7 @@
     "yes": "はい",
     "no": "いいえ",
     "seeMore": "もっと見る",
+    "time": "回",
     "times": "回",
     "no_records": "まだ記録がありません",
     "no_records_past": "記録がありませんでした",
@@ -148,15 +149,14 @@
     "goalTitle": "目標タイトル",
     "goal_label": "目標",
     "goal_placeholder": "転職を成功させる",
-    "motivation_label": "動機・理由",
+    "motivation_label": "目的",
     "motivation_placeholder": "家族との時間を大事にしたいから",
-    "deadline_label_required": "期限",
+    "deadline_label_required": "終了日",
     "weekday_hours_label": "平日（月〜金）の時間",
     "weekend_hours_label": "土日の時間",
     "add_time_settings": "時間を追加",
-    "add_deadline_and_time_settings": "期限と時間を追加",
+    "add_deadline_and_time_settings": "終了日と時間を追加",
     "time_settings_label": "時間設定",
-    "deadline_and_time_settings_label": "期限と時間設定",
     "weekly_calculation": "週間",
     "monthly_calculation": "月間",
     "total_goal": "総目標",
@@ -166,7 +166,7 @@
     "loading": "読み込み中...",
     "goal_not_found": "目標が見つかりません",
     "description": "説明",
-    "deadline": "期限",
+    "deadline": "目標日",
     "progress": "進捗",
     "progress_status": "進捗状況",
     "completed": "完了",
@@ -192,7 +192,12 @@
     "weekend": "土日",
     "weekly": "週間",
     "hours_unit": "時間",
-    "deadline_label": "期限"
+    "deadline_label": "終了日",
+    "date_picker": {
+      "year_placeholder": "年",
+      "month_placeholder": "月",
+      "day_placeholder": "日"
+    }
   },
   "settings": {
     "title": "設定",
@@ -459,8 +464,7 @@
       "goal_standard": "目標を追加するには\nPremiumプランへの登録が必要です",
       "goal_default": "制限に達しました",
       "calendar_past": "過去のカレンダーを見るには\nStandardプランへの登録が必要です",
-      "ai_feedback_line1": "Shoninによる週次・月次メッセージ機能は",
-      "ai_feedback_line2": "Standardプランへの登録が必要です。",
+      "ai_feedback_line1": "Shoninからの手紙を受け取ってみませんか？",
       "view_plans": "詳しくみる"
     },
     "premium_coming_soon": "※ プレミアムプランは近日公開予定です。"
@@ -550,7 +554,7 @@
     },
     "deadline": {
       "invalid_date": "正しい日付を入力してください",
-      "too_small": "期限を入力してください"
+      "too_small": "終了日を入力してください"
     },
     "weekdayHours": {
       "too_small": "0以上の数値を入力してください",

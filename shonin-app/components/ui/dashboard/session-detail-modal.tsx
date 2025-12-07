@@ -351,7 +351,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] text-gray-400 mb-0.5">
-              <span>0m</span>
+              <span>0min</span>
               <span>{formatDuration(session.targetTime * 60)}</span>
             </div>
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -922,7 +922,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] text-gray-400 mb-0.5">
-              <span>0m</span>
+              <span>0min</span>
               <span>{formatDuration(session.targetTime * 60)}</span>
             </div>
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">

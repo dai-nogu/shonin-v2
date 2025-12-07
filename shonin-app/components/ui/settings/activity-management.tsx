@@ -64,7 +64,7 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
       <CardContent className="space-y-4 px-0 pt-0">
         {activitiesLoading ? (
           <div className="text-center py-8 text-gray-300">
-            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p>{t('settings.loading_activities')}</p>
           </div>
         ) : (
@@ -105,7 +105,6 @@ export function ActivityManagement({ currentSession, isSessionActive }: Activity
             
             {customActivities.length === 0 && (
               <div className="text-center py-8 text-gray-400">
-                <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>{t('settings.no_custom_activities')}</p>
                 <p className="text-sm">{t('settings.add_activities_hint')}</p>
               </div>

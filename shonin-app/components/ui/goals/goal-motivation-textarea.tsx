@@ -24,7 +24,7 @@ export function GoalMotivationTextarea({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <Label className="text-gray-300">{t('goals.motivation_label')} *</Label>
+        <Label className="text-gray-300 mb-2">{t('goals.motivation_label')} *</Label>
         <CharacterCounter current={value.length} max={limits.goalMotivation} />
       </div>
       <Textarea

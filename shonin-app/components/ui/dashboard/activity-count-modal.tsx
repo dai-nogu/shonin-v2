@@ -113,9 +113,9 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
     if (hours > 0) {
-      return `${hours}\u2009h ${minutes}\u2009m`
+      return `${hours}\u2009h ${minutes}\u2009min`
     }
-    return `${minutes}\u2009m`
+    return `${minutes}\u2009min`
   }
 
   const formatDate = (date: Date) => {
@@ -299,7 +299,9 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                       <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
                         <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
                           <span className="font-bold text-emerald-400">{activity.sessionCount}</span>
-                          <span className="text-xs text-gray-300 opacity-90">{t('common.times')}</span>
+                          <span className="text-xs text-gray-300 opacity-90">
+                            {activity.sessionCount === 1 ? t('common.time') : t('common.times')}
+                          </span>
                         </div>
                         {activity.goalTitle && (
                           <div className="hidden sm:flex items-center text-xs text-purple-200 bg-purple-500/20 border border-purple-500/20 px-2.5 py-0.5 rounded-full truncate max-w-[150px]">
