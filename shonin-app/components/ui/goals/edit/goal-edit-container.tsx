@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useParams } from "next/navigation"
-import { useEffect, useState, use } from "react"
+import { useEffect, useState, use, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
 import { GoalMotivationTextarea } from "../goal-motivation-textarea"
@@ -19,6 +19,15 @@ interface GoalEditContainerProps {
   }>
 }
 
+// 初期データの型定義
+interface InitialGoalData {
+  title: string
+  motivation: string
+  deadline: string
+  weekdayHours: string
+  weekendHours: string
+}
+
 export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const router = useRouter()
   const routerParams = useParams()
@@ -26,6 +35,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const { updateGoal } = useGoalsDb()
   const { handleAuthError } = useAuthRedirect()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [initialGoalData, setInitialGoalData] = useState<InitialGoalData | null>(null)
   const t = useTranslations()
   
   // paramsをunwrap
@@ -48,15 +58,30 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   // 目標データが取得できたらフォームに設定
   useEffect(() => {
     if (goal) {
-      setInitialData({
+      const initial = {
         title: goal.title,
         motivation: goal.description || '',
         deadline: goal.deadline || '',
         weekdayHours: (goal.weekday_hours || 0).toString(),
         weekendHours: (goal.weekend_hours || 0).toString()
-      })
+      }
+      setInitialData(initial)
+      setInitialGoalData(initial)
     }
   }, [goal, setInitialData])
+
+  // フォームデータが変更されたかを判定
+  const hasChanges = useMemo(() => {
+    if (!initialGoalData) return false
+    
+    return (
+      formData.title !== initialGoalData.title ||
+      formData.motivation !== initialGoalData.motivation ||
+      formData.deadline !== initialGoalData.deadline ||
+      formData.weekdayHours !== initialGoalData.weekdayHours ||
+      formData.weekendHours !== initialGoalData.weekendHours
+    )
+  }, [formData, initialGoalData])
 
   const handleUpdateGoal = async () => {
     if (!validateForm()) return
@@ -145,7 +170,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
             onSubmit={handleUpdateGoal}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
-            isValid={formData.title.trim() !== ""}
+            isValid={formData.title.trim() !== "" && hasChanges}
           />
         </CardContent>
       </Card>

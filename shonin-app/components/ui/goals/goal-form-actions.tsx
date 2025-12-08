@@ -33,9 +33,12 @@ export function GoalFormActions({
       <Button 
         onClick={onSubmit} 
         disabled={isSubmitting || !isValid}
-        className="bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 border-0 px-8 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+        className="bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 border-0 px-8 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:bg-gray-700 disabled:text-gray-300 disabled:shadow-none disabled:cursor-not-allowed disabled:hover:translate-y-0"
       >
-        {mode === "create" ? t('goals.create') : t('goals.save')}
+        {isSubmitting 
+          ? (mode === "create" ? t('goals.creating') : t('goals.saving'))
+          : (mode === "create" ? t('goals.create') : t('goals.save'))
+        }
       </Button>
     </div>
   )

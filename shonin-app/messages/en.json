@@ -95,7 +95,7 @@
     "reflection_and_notes": "Reflection & Notes"
   },
   "ai_feedback": {
-    "feedback": "Letters",
+    "feedback": "Letter",
     "weekly": "Weekly ",
     "monthly": "Monthly ",
     "weekly_default_message": "Keep logging your activities to receive weekly letter.",
@@ -164,8 +164,10 @@
     "monthly_calculation": "Monthly",
     "total_goal": "Total Goal",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "create": "Add Goal",
+    "creating": "Creating...",
     "loading": "Loading...",
     "goal_not_found": "Goal not found",
     "description": "Description",

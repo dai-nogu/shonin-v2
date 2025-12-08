@@ -213,7 +213,7 @@ export async function updateGoal(id: string, goalData: Partial<GoalFormData>): P
     if (goalData.title !== undefined) updateData.title = truncateRequiredForDb(goalData.title, JA_INPUT_LIMITS.goalTitle)
     if (goalData.motivation !== undefined) updateData.description = truncateForDb(goalData.motivation, JA_INPUT_LIMITS.goalMotivation)
     if (goalData.calculatedHours !== undefined) updateData.target_duration = goalData.calculatedHours * 3600 // 時間を秒に変換
-    if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline
+    if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline || null // 空文字列の場合はnullに変換
     if (goalData.weekdayHours !== undefined) updateData.weekday_hours = goalData.weekdayHours
     if (goalData.weekendHours !== undefined) updateData.weekend_hours = goalData.weekendHours
 

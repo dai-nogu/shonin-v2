@@ -9,11 +9,18 @@
 
 .font-serif-jp {
   font-family: var(--font-noto-serif-jp), serif;
+  font-feature-settings: 'palt' 1; /* 約物詰め */
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* 約物詰め用ユーティリティ */
+  .text-yakumono-tight {
+    font-feature-settings: 'palt' 1, 'halt' 1;
+    letter-spacing: -0.02em;
   }
 }
 

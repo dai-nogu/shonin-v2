@@ -1,9 +1,8 @@
 "use client"
 
-import { Play, Pause, Clock, Target, Square } from "lucide-react"
+import { Play, Pause, Square } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
-import { Badge } from "@/components/ui/common/badge"
 import { useTranslations } from 'next-intl'
 import { useSessions } from "@/contexts/sessions-context"
 import type { SessionData } from "./time-tracker"
@@ -32,29 +31,14 @@ export function ActiveActivitySidebar({
   // セッションコンテキストから一元化された時間データを取得
   const { elapsedTime, formattedTime } = useSessions()
 
-  const getStatusInfo = () => {
-    switch (sessionState) {
-      case "active":
-        return { color: "bg-emerald-700", text: t('active_session.recording'), icon: "🟢" }
-      case "paused":
-        return { color: "bg-yellow-500", text: t('active_session.paused'), icon: "⏸️" }
-      case "ended":
-        return { color: "bg-blue-500", text: t('active_session.reflecting'), icon: "✏️" }
-    }
-  }
-
   if (!isActive || !activeSession) {
     return null
   }
-
-  const statusInfo = getStatusInfo()
 
   return (
     <Card className="backdrop-blur-md bg-card/50 border-white/10 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center text-base font-medium text-foreground/80">
-          <Clock className="w-4 h-4 mr-2 text-primary" />
-          {t('active_session.recording')}...
         </CardTitle>
       </CardHeader>
       
