@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { useAIFeedback } from "@/hooks/use-ai-feedback"
 import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { getPlanLimits } from "@/types/subscription"
+import { clientLogger } from "@/lib/client-logger"
 import type { CompletedSession } from "./time-tracker"
 
 interface AIFeedbackProps {
@@ -97,7 +98,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
             return
           }
         } catch (error) {
-          console.warn('dev-feedback.jsonの読み込みに失敗、モックデータを使用します')
+          clientLogger.warn('dev-feedback.jsonの読み込みに失敗、モックデータを使用します')
         }
         
         // ファイルが読み込めなかった場合はモックデータを使用

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase';
+import { clientLogger } from '@/lib/client-logger';
 import { 
   SessionReflection, 
   SessionMedia, 
@@ -25,7 +26,7 @@ export function useReflectionsDb() {
       const sanitizedChallenges = truncateForDb(reflection.challenges, JA_INPUT_LIMITS.sessionChallenges);
       const sanitizedNotes = truncateForDb(reflection.additionalNotes, JA_INPUT_LIMITS.sessionNotes);
 
-      console.log('[saveReflection] Saving reflection data:', {
+      clientLogger.log('[saveReflection] Saving reflection data:', {
         sessionId,
         moodScore: reflection.moodScore,
         achievements: sanitizedAchievements?.substring(0, 50),
@@ -52,7 +53,7 @@ export function useReflectionsDb() {
         .single();
 
       if (error) {
-        console.error('[saveReflection] Update error:', {
+        clientLogger.error('[saveReflection] Update error:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -62,10 +63,10 @@ export function useReflectionsDb() {
         return null;
       }
 
-      console.log('[saveReflection] Success:', data);
+      clientLogger.log('[saveReflection] Success:', data);
       return sessionId;
     } catch (err) {
-      console.error('[saveReflection] Exception:', err);
+      clientLogger.error('[saveReflection] Exception:', err);
       setError('振り返りの保存中にエラーが発生しました');
       return null;
     } finally {

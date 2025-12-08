@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { ActiveSession } from "@/components/active-session"
 import { useSessions } from "@/contexts/sessions-context"
+import { clientLogger } from "@/lib/client-logger"
 import type { CompletedSession } from "@/components/time-tracker"
 
 export default function SessionPage() {
@@ -49,7 +50,7 @@ export default function SessionPage() {
       router.push('/dashboard') // ダッシュボードに戻る
       return sessionId
     } catch (error) {
-      console.error("セッション保存エラー:", error)
+      clientLogger.error("セッション保存エラー:", error)
       return null
     }
   }

@@ -385,7 +385,7 @@
     }
   },
   "active_session": {
-    "recording": "Starting...",
+    "recording": "Saving...",
     "reflecting": "Reflecting",
     "paused": "Paused",
     "start_time": "Start Time",

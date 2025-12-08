@@ -1,4 +1,5 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr'
+import { clientLogger } from '@/lib/client-logger'
 import type { Database } from '@/types/database'
 
 // 環境変数
@@ -37,7 +38,7 @@ export const createServerComponentClient = () => {
 //
 // この関数は後方互換性のために残していますが、新しいコードでは使用しないでください。
 export const createRouteHandlerClient = (request: Request) => {
-  console.warn('createRouteHandlerClient is deprecated. Use cookies() from next/headers instead.')
+  clientLogger.warn('createRouteHandlerClient is deprecated. Use cookies() from next/headers instead.')
   
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {

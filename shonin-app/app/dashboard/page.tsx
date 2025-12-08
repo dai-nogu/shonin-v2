@@ -4,14 +4,15 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { TimeTracker } from "@/components/time-tracker"
-import { ActiveActivitySidebar } from "@/components/active-activity-sidebar"
-import { AIFeedback } from "@/components/ai-feedback"
-import { WeeklyProgress } from "@/components/weekly-progress"
-import { Header } from "@/components/header"
+import { TimeTracker } from "@/components/ui/dashboard/time-tracker"
+import { ActiveActivitySidebar } from "@/components/ui/dashboard/active-activity-sidebar"
+import { AIFeedback } from "@/components/ui/dashboard/ai-feedback"
+import { WeeklyProgress } from "@/components/ui/dashboard/weekly-progress"
+import { Header } from "@/components/layout/header"
 import { useSessions } from "@/contexts/sessions-context"
 import { hasSessionPhotosMultiple, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
-import type { SessionData, CompletedSession } from "@/components/time-tracker"
+import { clientLogger } from "@/lib/client-logger"
+import type { SessionData, CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { useTranslations } from 'next-intl'
 
 export default function Dashboard() {
@@ -54,7 +55,7 @@ export default function Dashboard() {
         await refetch()
         setIsInitialized(true)
       } catch (error) {
-        console.error('初期化エラー:', error)
+        clientLogger.error('初期化エラー:', error)
         setIsInitialized(true)
       }
     }

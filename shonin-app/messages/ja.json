@@ -381,7 +381,7 @@
     }
   },
   "active_session": {
-    "recording": "記録中...",
+    "recording": "保存中...",
     "reflecting": "振り返り中",
     "paused": "一時停止中",
     "start_time": "開始時刻",

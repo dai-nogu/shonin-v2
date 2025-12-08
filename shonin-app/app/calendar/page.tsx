@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { CalendarView } from "@/components/calendar-view"
 import { useSessions } from "@/contexts/sessions-context"
 import { hasSessionPhotosMultiple } from "@/lib/upload-photo"
+import { clientLogger } from "@/lib/client-logger"
 import type { CompletedSession } from "@/components/time-tracker"
 import { useTranslations } from 'next-intl'
 
@@ -52,7 +53,7 @@ export default function Calendar() {
         await refetch()
         setIsInitialized(true)
       } catch (error) {
-        console.error('初期化エラー:', error)
+        clientLogger.error('初期化エラー:', error)
         setIsInitialized(true)
       }
     }
