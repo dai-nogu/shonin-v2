@@ -89,7 +89,7 @@ export function DeleteAccountButton() {
 
       if (response.ok) {
         await signOut()
-        showSuccess('ご利用ありがとうございました。')
+        showSuccess(t('settings.account_deleted_message'))
         // アカウント削除後にログインページにリダイレクト（ロケール対応）
         router.push(`/${locale}/login`)
       } else {
@@ -164,25 +164,18 @@ export function DeleteAccountButton() {
               <p className="text-sm text-gray-300">
                 {t('settings.deletion_immediate_effect')}
               </p>
-              <p className="text-sm font-semibold">
-                {t('settings.subscription_will_be_cancelled')}
-              </p>
               <p className="text-sm text-gray-300">
-                {t('settings.cancel_plan_only_hint_prefix')}
                 <strong className="text-emerald-400">{t('settings.cancel_plan_only_hint_bold')}</strong>
-                <span className="text-white">{t('settings.cancel_plan_only_hint_suffix')}</span>
               </p>
             </div>
           )}
           
           <div className="border-t border-gray-600 pt-4">
-            <div className="text-red-400 font-medium mb-2">
+            <div className="text-red-400 font-medium mb-1">
               {t('settings.important_warning')}
             </div>
             <ul className="text-sm space-y-1 text-gray-300">
-              <li>・{t('settings.warning_irreversible')}</li>
-              <li>・{t('settings.warning_activity_data')}</li>
-              <li>・{t('settings.warning_goals_ai')}</li>
+              <li>{t('settings.warning_irreversible')}</li>
             </ul>
           </div>
           <div className="text-sm text-gray-300">
