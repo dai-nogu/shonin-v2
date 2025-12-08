@@ -118,6 +118,14 @@ const config: Config = {
 			'shimmer': {
 				'0%': { backgroundPosition: '-200% 0' },
 				'100%': { backgroundPosition: '200% 0' }
+			},
+			'glow': {
+				'0%, 100%': { 
+					opacity: '0.7',
+				},
+				'50%': { 
+					opacity: '1',
+				}
 			}
 		},
 		animation: {
@@ -129,7 +137,8 @@ const config: Config = {
 			'scale-in': 'scale-in 0.2s ease-out',
 			'slide-in-right': 'slide-in-right 0.3s ease-out',
 			'slide-in-left': 'slide-in-left 0.3s ease-out',
-			'shimmer': 'shimmer 2s linear infinite'
+			'shimmer': 'shimmer 2s linear infinite',
+			'glow': 'glow 3s ease-in-out infinite'
 		}
   	}
   },

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, MessageSquare, Settings, CreditCard, LogOut, User, X } from "lucide-react"
+import { Home, Calendar, Target, Mail, Settings, CreditCard, LogOut, User, X } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -79,9 +79,9 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     {
       title: t('navigation.feedback'),
       url: `/${locale}/feedback`,
-      icon: MessageSquare,
+      icon: Mail,
       id: "feedback",
-      badge: true, // 通知バッジ表示フラグ
+      glow: true, // glow効果表示フラグ
     },
   ]
 
@@ -145,28 +145,38 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item, index) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => handlePageChange(item.id, item.url)}
-                    isActive={activePage === item.id}
-                    className="text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 ease-out active:scale-[0.98]"
-                  >
-                    <item.icon className={`w-4 h-4 transition-all duration-200 ${activePage === item.id ? 'text-emerald-500 scale-110' : ''}`} />
-                    <span>{item.title}</span>
-                    {/* 通知バッジ */}
-                    {item.badge && unreadCount > 0 && (
-                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                        {unreadCount}
+              {menuItems.map((item, index) => {
+                const hasGlow = item.glow && unreadCount > 0
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      onClick={() => handlePageChange(item.id, item.url)}
+                      isActive={activePage === item.id}
+                      className="text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 ease-out active:scale-[0.98]"
+                    >
+                      <item.icon 
+                        className={`w-4 h-4 ${
+                          !hasGlow ? 'transition-all duration-200' : ''
+                        } ${
+                          activePage === item.id ? 'text-emerald-500 scale-110' : ''
+                        } ${
+                          hasGlow ? 'text-amber-300 animate-glow' : ''
+                        }`}
+                        style={hasGlow ? {
+                          filter: 'drop-shadow(0 0 10px rgb(252 211 77 / 0.7))',
+                        } : undefined}
+                      />
+                      <span className={hasGlow ? 'animate-glow' : ''}>
+                        {item.title}
                       </span>
-                    )}
-                    {/* アクティブインジケーター */}
-                    {activePage === item.id && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-700 rounded-r-full transition-all duration-300" />
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      {/* アクティブインジケーター */}
+                      {activePage === item.id && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-700 rounded-r-full transition-all duration-300" />
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -230,18 +240,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
       {/* ログアウト確認ダイアログ */}
       <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-        <AlertDialogContent 
-          className="bg-gray-800 border-gray-700 text-white"
-          onOverlayClick={() => setLogoutDialogOpen(false)}
-          onInteractOutside={(e) => {
-            e.preventDefault()
-            setLogoutDialogOpen(false)
-          }}
-          onEscapeKeyDown={(e) => {
-            e.preventDefault()
-            setLogoutDialogOpen(false)
-          }}
-        >
+        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
           <AlertDialogHeader>
             <button
               onClick={() => setLogoutDialogOpen(false)}

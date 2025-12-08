@@ -1,4 +1,4 @@
-import { ChevronRight, ChevronLeft, User, Languages, Activity } from "lucide-react"
+import { ChevronRight, ChevronLeft, User, Languages } from "lucide-react"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { DeleteAccountButton } from "@/components/ui/settings/delete-account-button"
@@ -23,12 +23,6 @@ export default async function SettingsPage({
       title: t("settings.categories.language"),
       href: `/${locale}/settings/language`,
       icon: Languages
-    },
-    {
-      id: "activity",
-      title: t("settings.categories.activity"),
-      href: `/${locale}/settings/activity`,
-      icon: Activity
     }
   ]
 
@@ -56,7 +50,7 @@ export default async function SettingsPage({
             <span className="text-sm font-medium">Dashboard</span>
         </Link>
       </div>
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-0 md:py-8 max-w-3xl">
         {/* ダッシュボードに戻るリンク */}
 
         <div className="mb-10">

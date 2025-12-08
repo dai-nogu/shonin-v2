@@ -102,16 +102,6 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
 
   if (!isOpen && !isClosing) return null
 
-  // アクティビティアイコンマッピング
-  const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
-    "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
-    "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
-    "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
-    "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
-    "英語学習": { icon: "🌍", color: "bg-emerald-600", category: "学習" },
-    "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
-  }
-
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
@@ -160,12 +150,6 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .slice(0, 100) // 最大100件に制限
       .map(session => {
-        const activityInfo = activityIcons[session.activityName] || {
-          icon: session.activityIcon,
-          color: session.activityColor,
-          category: "その他"
-        }
-        
         const goalInfo = session.goalId ? getGoal(session.goalId) : null
 
         return {
@@ -174,9 +158,9 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
           duration: formatDuration(session.duration),
           date: formatRelativeTime(new Date(session.endTime)),
           rating: session.mood || 0,
-          category: activityInfo.category,
-          icon: activityInfo.icon,
-          color: activityInfo.color,
+          category: "その他",
+          icon: session.activityIcon || session.activityName.charAt(0),
+          color: session.activityColor || "bg-gray-500",
           location: session.location,
           goalId: session.goalId,
           goalTitle: goalInfo?.title,

@@ -99,16 +99,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
   if (!isOpen && !isClosing) return null
 
-  // 行動アイコンマッピング
-  const activityIcons: Record<string, { icon: string; color: string; category: string }> = {
-    "読書": { icon: "📚", color: "bg-blue-500", category: "学習" },
-    "プログラミング": { icon: "💻", color: "bg-purple-500", category: "学習" },
-    "運動": { icon: "🏃", color: "bg-red-500", category: "健康" },
-    "音楽練習": { icon: "🎵", color: "bg-yellow-500", category: "趣味" },
-    "英語学習": { icon: "🌍", color: "bg-emerald-600", category: "学習" },
-    "瞑想": { icon: "🧘", color: "bg-indigo-500", category: "健康" },
-  }
-
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
@@ -152,12 +142,6 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
       .sort((a, b) => b[1].sessionCount - a[1].sessionCount)
       .slice(0, 100) // 最大100活動に制限
       .map(([activityName, stats]) => {
-        const activityInfo = activityIcons[activityName] || {
-          icon: stats.latestSession.activityIcon,
-          color: stats.latestSession.activityColor,
-          category: "その他"
-        }
-        
         const goalInfo = stats.latestSession.goalId ? getGoal(stats.latestSession.goalId) : null
 
         return {
@@ -165,9 +149,9 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
           name: activityName,
           sessionCount: stats.sessionCount,
           totalTime: stats.totalTime,
-          category: activityInfo.category,
-          icon: activityInfo.icon,
-          color: activityInfo.color,
+          category: "その他",
+          icon: stats.latestSession.activityIcon,
+          color: stats.latestSession.activityColor,
           goalId: stats.latestSession.goalId,
           goalTitle: goalInfo?.title,
           latestSession: stats.latestSession
