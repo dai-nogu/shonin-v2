@@ -16,7 +16,7 @@ export function Header({
           <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">?</span>
           </div>
-          <h1 className="text-xl font-bold text-white">No Name yet</h1>
+          <h1 className="text-xl font-bold text-white">Shonin</h1>
         </div>
         
         {/* SP専用：ハンバーガーメニュー（ボトムナビゲーション実装により非表示） */}

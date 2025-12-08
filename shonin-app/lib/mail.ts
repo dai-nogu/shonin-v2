@@ -11,7 +11,7 @@ import React from 'react';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // メール送信元アドレス
-const EMAIL_FROM = 'No Name yet <no-reply@account-shonin.com>';
+const EMAIL_FROM = 'Shonin <no-reply@account-shonin.com>';
 
 // 型定義
 export type EmailCategory = 'auth' | 'subscription';

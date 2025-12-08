@@ -7,11 +7,13 @@ import { CalendarView } from "@/components/calendar-view"
 import { useSessions } from "@/contexts/sessions-context"
 import { hasSessionPhotosMultiple } from "@/lib/upload-photo"
 import type { CompletedSession } from "@/components/time-tracker"
+import { useTranslations } from 'next-intl'
 
 export default function Calendar() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useTranslations()
   
   const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
   const [calendarViewMode, setCalendarViewMode] = useState<"month" | "week">("month")
@@ -131,7 +133,7 @@ export default function Calendar() {
       <div className="fixed inset-0 bg-gray-950 text-white flex items-center justify-center z-50">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">読み込み中...</p>
+          <p className="text-gray-400">{t('common.loading')}</p>
         </div>
       </div>
     )

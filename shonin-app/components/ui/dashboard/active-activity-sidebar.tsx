@@ -62,9 +62,6 @@ export function ActiveActivitySidebar({
         {/* 行動名 */}
         <div>
           <h3 className="text-foreground font-bold text-lg leading-tight mb-1">{activeSession.activityName}</h3>
-          {activeSession.location && (
-            <p className="text-muted-foreground text-xs flex items-center gap-1">📍 {activeSession.location}</p>
-          )}
         </div>
 
         {/* 経過時間 */}

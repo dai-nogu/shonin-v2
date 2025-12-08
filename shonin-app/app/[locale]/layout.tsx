@@ -89,7 +89,7 @@ export async function generateMetadata({
   const { locale } = await params
   
   return {
-    title: locale === 'ja' ? "No Name yet" : "No Name yet",
+    title: locale === 'ja' ? "Shonin" : "Shonin",
     description: locale === 'ja' 
       ? "あなたの成長を見つめ、証明する" 
       : "Be a witness to your growth",

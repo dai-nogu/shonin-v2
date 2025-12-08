@@ -41,7 +41,7 @@ export default async function SettingsPage({
             <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/20">
               <span className="text-white font-bold text-lg">?</span>
             </div>
-            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">No Name yet</span>
+            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Shonin</span>
           </Link>
         </div>
       </header>

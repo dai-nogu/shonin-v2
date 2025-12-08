@@ -136,7 +136,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
             <span className="text-white font-bold text-sm">?</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">No Name yet</h1>
+            <h1 className="text-lg font-bold text-white">Shonin</h1>
           </div>
         </div>
       </SidebarHeader>

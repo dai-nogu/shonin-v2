@@ -252,11 +252,6 @@ export function ActiveSession({
       <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl">
         <CardHeader className="text-center pb-4">
           <h2 className="text-4xl font-bold tracking-tight mb-2">{session.activityName}</h2>
-          {session.location && (
-            <Badge variant="secondary" className="text-muted-foreground bg-secondary/50">
-              📍 {session.location}
-            </Badge>
-          )}
         </CardHeader>
 
         <CardContent className="text-center space-y-8">

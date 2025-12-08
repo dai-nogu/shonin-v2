@@ -12,10 +12,12 @@ import { Header } from "@/components/header"
 import { useSessions } from "@/contexts/sessions-context"
 import { hasSessionPhotosMultiple, preloadImages, getSessionPhotos } from "@/lib/upload-photo"
 import type { SessionData, CompletedSession } from "@/components/time-tracker"
+import { useTranslations } from 'next-intl'
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const t = useTranslations()
 
   const [completedSessions, setCompletedSessions] = useState<CompletedSession[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
@@ -204,7 +206,7 @@ export default function Dashboard() {
       <div className="fixed inset-0 bg-gray-950 text-white flex items-center justify-center z-50">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">読み込み中...</p>
+          <p className="text-gray-400">{t('common.loading')}</p>
         </div>
       </div>
     )

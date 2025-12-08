@@ -32,7 +32,7 @@ test.describe('認証機能', () => {
     await waitForPageLoad(page);
 
     // ページタイトルの確認
-    await expect(page.locator('h2')).toContainText('No Name yet');
+    await expect(page.locator('h2')).toContainText('Shonin');
 
     // Googleログインボタンの確認
     const googleButton = page.locator('button:has-text("Googleでログイン")');

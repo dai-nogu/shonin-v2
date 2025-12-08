@@ -945,7 +945,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       {loadingPhotos ? (
         <div className="flex flex-col justify-center items-center py-8 bg-gray-800/30 rounded-lg border border-gray-800/50">
           <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-          <div className="text-gray-400 text-xs">読み込み中...</div>
+          <div className="text-gray-400 text-xs">{t('common.loading')}</div>
         </div>
       ) : sessionPhotos.length > 0 ? (
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">

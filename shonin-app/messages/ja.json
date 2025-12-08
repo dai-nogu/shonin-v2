@@ -53,7 +53,6 @@
     },
   "login": {
     "tagline": "孤独な努力に、確かな証人を",
-    "description": "あなたの努力は、ここで確かに残ります。",
     "loginWithGoogle": "Googleで続ける",
     "authenticating": "認証中...",
     "termsAgreement": "ログインすることで、利用規約とプライバシーポリシーに同意したものとみなされます",
@@ -422,6 +421,7 @@
   },
   "plan": {
     "title": "プラン",
+    "processing": "処理中...",
     "free": "Free",
     "standard": "Standard",
     "premium": "Premium",

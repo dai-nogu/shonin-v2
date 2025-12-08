@@ -14,7 +14,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "plan" });
 
   return {
-    title: `${t("title")} - No Name yet`,
+    title: `${t("title")} - Shonin`,
   };
 }
 

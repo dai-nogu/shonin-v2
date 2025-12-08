@@ -275,7 +275,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                           disabled={isPending}
                           className="w-full py-2.5 lg:py-3 px-5 rounded-lg font-semibold text-xs lg:text-sm transition-all duration-200 transform mt-auto bg-emerald-700 text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                          {isPending ? "処理中..." : plan.buttonText}
+                          {isPending ? t("processing") : plan.buttonText}
                         </button>
                       </form>
                     )
@@ -421,7 +421,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                           disabled={isPending}
                           className="w-full py-3 px-5 rounded-lg font-semibold text-base transition-all duration-200 transform mt-auto bg-emerald-700 text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                          {isPending ? "処理中..." : plan.buttonText}
+                          {isPending ? t("processing") : plan.buttonText}
                         </button>
                       </form>
                     )

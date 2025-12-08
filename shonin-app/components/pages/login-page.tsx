@@ -38,7 +38,7 @@ export function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-white">
-            No Name yet
+            Shonin
           </CardTitle>
           <CardDescription className="text-gray-200">
             {t('login.tagline')}
@@ -46,12 +46,6 @@ export function LoginPage() {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <div className="text-center">
-            <p className="text-gray-200 text-sm">
-              {t('login.description')}
-            </p>
-          </div>
-
           <Button
             onClick={handleGoogleLogin}
             disabled={isLoading}
