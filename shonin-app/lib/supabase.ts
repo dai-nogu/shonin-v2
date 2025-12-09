@@ -8,7 +8,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // ブラウザ用のクライアント（クライアントコンポーネント用）
 export const createClient = () =>
-  createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+  createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // セッションの自動リフレッシュを有効化（デフォルトは true）
+      autoRefreshToken: true,
+      // セッションの永続化を有効化（デフォルトは true）
+      persistSession: true,
+      // セッション検出を有効化（デフォルトは true）
+      detectSessionInUrl: true,
+    },
+  })
 
 // サーバー用のクライアント（Server Components、Route Handlers、Server Actions用）
 export const createServerComponentClient = () => {
