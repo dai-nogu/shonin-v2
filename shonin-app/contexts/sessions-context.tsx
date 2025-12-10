@@ -81,7 +81,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   } = useSessionsDb()
   
   // 目標管理フック
-  const { updateGoal } = useGoalsDb()
+  const { updateGoal, goals } = useGoalsDb()
   
   // 振り返りデータ管理フック
   const { saveReflection } = useReflectionsDb()
@@ -383,6 +383,17 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       
       const encouragementMessage = getSessionStartMessage(sessionCount, { session_start: encouragementMessages })
       
+      // 目標IDが未設定の場合、自動選択ロジックを実行
+      let goalIdToSave = sessionData.goalId
+      if (!goalIdToSave) {
+        const activeGoals = goals.filter(goal => goal.status === 'active')
+        // アクティブな目標が1つだけの場合、自動的に紐づける
+        if (activeGoals.length === 1) {
+          goalIdToSave = activeGoals[0].id
+        }
+        // 複数の目標がある場合は今後AIで判断（現状はnull）
+      }
+      
       const result = await addSession({
         activity_id: sessionData.activityId,
         start_time: startTime.toISOString(),
@@ -391,7 +402,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         session_date: sessionDate, // セッション日付を設定
         location: sessionData.location || null,
         notes: sessionData.notes || null, // セッション開始時のメモを保存
-        goal_id: sessionData.goalId || null, // 目標IDを保存
+        goal_id: goalIdToSave || null, // 自動判定された目標IDを保存
       }, true) // refetchをスキップ
       
       if (!result.success) {
@@ -401,10 +412,11 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       // 手動でrefetch
       await refetch()
       
-      // セッションデータの開始時刻を設定
+      // セッションデータの開始時刻を設定（自動判定された目標IDも含める）
       const updatedSessionData = {
         ...sessionData,
-        startTime: startTime
+        startTime: startTime,
+        goalId: goalIdToSave || sessionData.goalId
       }
       
       // 新規セッションの初期化
