@@ -74,94 +74,66 @@ export function ActiveSession({
   // 画面サイズ判定（SPかPCか）
   const [isMobile, setIsMobile] = useState(false)
   
-  // プレースホルダーを動的に生成
+  // プレースホルダー（開始時1回 + 終了時1回 = 最大2回）
   const [notesPlaceholder, setNotesPlaceholder] = useState(t('active_session.notes_placeholder'))
+  const [isPreparingReflection, setIsPreparingReflection] = useState(false)
+  const [hasGeneratedPlaceholder, setHasGeneratedPlaceholder] = useState(false) // 開始時
+  const [hasGeneratedFinalPlaceholder, setHasGeneratedFinalPlaceholder] = useState(false) // 終了時
   
+  // 画面サイズ判定
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768) // md breakpoint
-    }
-    
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
-    
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
+  // セッション開始時に目標を自動設定
   useEffect(() => {
-    if (sessionState === 'ended' && selectedGoalForSession) {
-      // 同じ目標・同じ行動の過去セッションを探す
-      const previousSessions = sessions
-        .filter(s => 
-          s.goal_id === selectedGoalForSession && 
-          s.activity_id === session.activityId &&
-          s.session_date // 保存済みのセッションのみ
-        )
-        .sort((a, b) => new Date(b.session_date!).getTime() - new Date(a.session_date!).getTime())
-      
-      if (previousSessions.length > 0) {
-        const lastSession = previousSessions[0]
-        
-        // 前回の気分を取得（リフレクションデータが必要）
-        // ここでは簡易的に mood がセッションに保存されていると仮定
-        if (lastSession.mood && mood) {
-          if (mood > lastSession.mood) {
-            setNotesPlaceholder('前回より気分が上がりましたね！どんな変化がありましたか？')
-          } else if (mood < lastSession.mood) {
-            setNotesPlaceholder('前回より気分が下がったようです。何か気になることはありますか？')
-          } else {
-            setNotesPlaceholder('前回と同じ気分ですね。今日はどんな感じでしたか？')
-          }
-        } else {
-          setNotesPlaceholder('同じ活動での2回目ですね！前回との違いなど、気づいたことはありますか？')
-        }
-      } else {
-        // 同じ目標だが違う行動の場合
-        const sameGoalSessions = sessions.filter(s => 
-          s.goal_id === selectedGoalForSession && 
-          s.session_date
-        )
-        
-        if (sameGoalSessions.length > 0) {
-          const goalName = activeGoals.find(g => g.id === selectedGoalForSession)?.title || '目標'
-          setNotesPlaceholder(`「${goalName}」に向けた新しい取り組みですね！今日の学びや感想を記録しましょう。`)
-        } else {
-          // 初回
-          setNotesPlaceholder('最初の記録です！今日の取り組みについて、自由に書いてみましょう。')
-        }
-      }
-    } else {
-      setNotesPlaceholder(t('active_session.notes_placeholder'))
-    }
-  }, [sessionState, selectedGoalForSession, session.activityId, sessions, mood, activeGoals, t])
-  
-  // セッション開始時に目標を判断（マウント時に一度だけ実行）
-  useEffect(() => {
-    // 既に目標が設定されている場合（自動選択 or 手動選択）
     if (session.goalId) {
       setSelectedGoalForSession(session.goalId)
       setSuggestedGoalId(session.goalId)
+    } else if (activeGoals.length === 1) {
+      setSuggestedGoalId(activeGoals[0].id)
+      setSelectedGoalForSession(activeGoals[0].id)
+    } else {
+      setSuggestedGoalId(null)
+      setSelectedGoalForSession(null)
     }
-    // 目標が設定されていない場合、自動判断
-    else {
-      // 目標が1つしかない場合は自動的にそれを紐づける
-      if (activeGoals.length === 1) {
-        setSuggestedGoalId(activeGoals[0].id)
-        setSelectedGoalForSession(activeGoals[0].id)
+  }, [session.goalId, activeGoals.length])
+  
+  // セッション開始時にプレースホルダーを事前生成（シンプル版）
+  const startTimeMs = session.startTime.getTime()
+  useEffect(() => {
+    if (hasGeneratedPlaceholder || sessionState === 'ended') return
+    
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/ai/generate-placeholder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activity_id: session.activityId,
+            goal_id: session.goalId,
+            is_pre_generation: true,
+            locale: locale
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.placeholder) {
+            setNotesPlaceholder(data.placeholder)
+            setHasGeneratedPlaceholder(true)
+          }
+        }
+      } catch (e) {
+        console.error('Error generating placeholder:', e)
       }
-      // 複数ある場合はAIで判断（後で実装）
-      else if (activeGoals.length > 1) {
-        // TODO: AI判断ロジック
-        setSuggestedGoalId(null)
-        setSelectedGoalForSession(null)
-      }
-      // 目標がない場合
-      else {
-        setSuggestedGoalId(null)
-        setSelectedGoalForSession(null)
-      }
-    }
-  }, [session.goalId, activeGoals.length]) // activeGoals.lengthのみ監視（配列全体を監視すると無限ループの危険）
+    }, 500)
+    
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.activityId, startTimeMs])
   const [isUploading, setIsUploading] = useState(false)
   const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
   const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
@@ -180,11 +152,15 @@ export function ActiveSession({
       const savedMood = localStorage.getItem(getStorageKey('mood'))
       const savedAchievements = localStorage.getItem(getStorageKey('achievements'))
       const savedChallenges = localStorage.getItem(getStorageKey('challenges'))
+      const savedPlaceholder = localStorage.getItem(getStorageKey('placeholder'))
+      const savedHasGenerated = localStorage.getItem(getStorageKey('hasGeneratedPlaceholder'))
 
       if (savedNotes) setNotes(savedNotes)
       if (savedMood) setMood(parseInt(savedMood))
       if (savedAchievements) setAchievements(savedAchievements)
       if (savedChallenges) setChallenges(savedChallenges)
+      if (savedPlaceholder) setNotesPlaceholder(savedPlaceholder)
+      if (savedHasGenerated === 'true') setHasGeneratedPlaceholder(true)
     }
   }, [session.activityId, session.startTime])
 
@@ -213,6 +189,33 @@ export function ActiveSession({
     }
   }, [challenges, session.activityId, session.startTime])
 
+  // プレースホルダーと生成フラグをローカルストレージに自動保存
+  const isInitialMountForPlaceholder = useRef(true)
+  useEffect(() => {
+    // 初回マウント時はスキップ（復元用のuseEffectが先に実行されるため）
+    if (isInitialMountForPlaceholder.current) {
+      isInitialMountForPlaceholder.current = false
+      return
+    }
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('placeholder'), notesPlaceholder)
+    }
+  }, [notesPlaceholder, session.activityId, session.startTime])
+
+  const isInitialMountForFlag = useRef(true)
+  useEffect(() => {
+    // 初回マウント時はスキップ（復元用のuseEffectが先に実行されるため）
+    if (isInitialMountForFlag.current) {
+      isInitialMountForFlag.current = false
+      return
+    }
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('hasGeneratedPlaceholder'), hasGeneratedPlaceholder.toString())
+    }
+  }, [hasGeneratedPlaceholder, session.activityId, session.startTime])
+
   // ローカルストレージをクリアする関数
   const clearLocalStorage = () => {
     if (typeof window !== 'undefined') {
@@ -220,15 +223,10 @@ export function ActiveSession({
       localStorage.removeItem(getStorageKey('mood'))
       localStorage.removeItem(getStorageKey('achievements'))
       localStorage.removeItem(getStorageKey('challenges'))
+      localStorage.removeItem(getStorageKey('placeholder'))
+      localStorage.removeItem(getStorageKey('hasGeneratedPlaceholder'))
     }
   }
-
-  // セッションが終了状態になった時にメモ欄を自動表示
-  useEffect(() => {
-    if (sessionState === "ended") {
-      setShowNotes(true)
-    }
-  }, [sessionState])
 
   // 終了画面に遷移した時にメモ入力欄にフォーカス
   useEffect(() => {
@@ -244,18 +242,61 @@ export function ActiveSession({
     onTogglePause()
   }
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     // 終了時点の経過時間を分単位で保存
     setCompletedDurationMinutes(elapsedTime / 60)
-    setShowNotes(true) // 終了時に自動でメモ欄を表示
-    onEnd() // 外部の終了処理を呼び出し
+    
+    // 外部の終了処理を呼び出し
+    onEnd()
+    
+    // 終了時のプレースホルダーを1回だけ生成（再開→再終了しても再生成しない）
+    if (!hasGeneratedFinalPlaceholder) {
+      setIsPreparingReflection(true)
+      const startTime = Date.now()
+      const minimumLoadingTime = 2500
+      
+      try {
+        const res = await fetch('/api/ai/generate-placeholder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activity_id: session.activityId,
+            goal_id: selectedGoalForSession || session.goalId,
+            current_mood: mood,
+            current_duration: elapsedTime,
+            is_pre_generation: false,
+            locale: locale
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.placeholder) setNotesPlaceholder(data.placeholder)
+        }
+      } catch (e) {
+        console.error('Error generating final placeholder:', e)
+      }
+      
+      setHasGeneratedFinalPlaceholder(true)
+      
+      // 最低ローディング時間を確保
+      const elapsed = Date.now() - startTime
+      if (elapsed < minimumLoadingTime) {
+        await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsed))
+      }
+      
+      setIsPreparingReflection(false)
+    }
+    
+    setShowNotes(true)
   }
 
   const handleResume = () => {
     setShowNotes(false)
     setShowPhotos(false)
+    setIsPreparingReflection(false)
     // 完了時間をリセット（再開後に新しい時間で計算し直すため）
     setCompletedDurationMinutes(0)
+    // プレースホルダー生成フラグはリセットしない（同じセッションで再利用）
     // セッション状態をactiveに戻す
     onResume() // 終了状態からアクティブ状態に戻る
   }
@@ -344,25 +385,29 @@ export function ActiveSession({
       // 保存が成功したらローカルストレージをクリア
       clearLocalStorage()
       
+      // プレースホルダー生成フラグもリセット（次のセッション用）
+      setHasGeneratedPlaceholder(false)
+      setNotesPlaceholder(t('active_session.notes_placeholder'))
+      
     } catch (error) {
               setLocalReflectionError(t('active_session.save_error'))
     } finally {
       setIsSaving(false)
       saveInProgressRef.current = false // 保存処理完了フラグをリセット
     }
-  }, [session, elapsedTime, notes, mood, achievements, challenges, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage])
+  }, [session, elapsedTime, notes, mood, achievements, challenges, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage, t])
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* メインタイマーカード */}
-      <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl">
+      <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl rounded-lg">
         <CardHeader className="text-center pb-4">
-          <h2 className="text-4xl font-bold tracking-tight mb-2">{session.activityName}</h2>
+          <h2 className="text-4xl font-bold tracking-tight">{session.activityName}</h2>
         </CardHeader>
 
-        <CardContent className="text-center space-y-8">
+        <CardContent className="text-center">
           {/* 経過時間表示 */}
-          <div className="space-y-2">
+          <>
             <div
               className="text-7xl md:text-8xl font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
             >
@@ -401,37 +446,26 @@ export function ActiveSession({
                 </div>
                 {elapsedTime >= session.targetTime * 60 && (
                   <div className="text-sm text-emerald-500 font-medium animate-pulse flex items-center justify-center gap-1">
-                     🎉 {t('active_session.goal_achieved')}
+                     {t('active_session.goal_achieved')}
                   </div>
                 )}
               </div>
             )}
-          </div>
+          </>
 
           {/* 制御ボタン */}
           <div className="flex justify-center items-center gap-4 pt-4">
             {sessionState === "ended" ? (
               // 終了後のボタン
-              <>
-                <Button
-                  onClick={handleResume}
-                  variant="outline"
-                  size="lg"
-                  className="h-14 px-8 text-base hover:bg-secondary/80 border-white/10"
-                >
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  {t('active_session.resume')}
-                </Button>
-                <Button 
-                  onClick={handleSave} 
-                  size="lg" 
-                  className="h-14 px-8 text-base bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 transition-all hover:-translate-y-0.5 active:scale-[0.98]"
-                  disabled={isSaving || isReflectionLoading || isUploading}
-                >
-                  <Save className="w-5 h-5 mr-2" />
-                  {isUploading ? t('active_session.photo_uploading') : (isSaving || isReflectionLoading ? t('active_session.saving') : t('active_session.save'))}
-                </Button>
-              </>
+              <Button
+                onClick={handleResume}
+                variant="outline"
+                size="lg"
+                className="h-20 px-12 text-xl font-semibold hover:bg-secondary/80 border-white/10 rounded-full w-full max-w-md shadow-lg"
+              >
+                <RotateCcw className="w-7 h-7 mr-3" />
+                {t('active_session.resume')}
+              </Button>
             ) : (
               // 通常の制御ボタン
               <>
@@ -475,8 +509,9 @@ export function ActiveSession({
           )}
 
           {sessionState === "ended" && completedDurationMinutes > 0 && (
-            <div className="space-y-4 bg-secondary/30 rounded-xl p-6 backdrop-blur-sm border border-white/5">
+            <div className="space-y-2 mt-2">
               <p className="text-foreground font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
+              
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {(() => {
                   const minutes = Math.floor(completedDurationMinutes)
@@ -508,6 +543,21 @@ export function ActiveSession({
                   }
                 })()}
               </p>
+              
+              {/* プレースホルダー生成中のローディング表示 */}
+              {isPreparingReflection && (
+                <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 border-4 border-emerald-700/20 border-t-emerald-700 rounded-full animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-emerald-700 animate-pulse" />
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-sm font-medium animate-pulse">
+                    {t('active_session.preparing_reflection')}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -520,10 +570,10 @@ export function ActiveSession({
         </CardContent>
       </Card>
 
-      {/* アクション・メモカード（終了時のみ表示） */}
-      {sessionState === "ended" && (
-        <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-xl animate-in slide-in-from-bottom-4 duration-500">
-          <CardContent className="p-6 space-y-6">
+      {/* アクション・メモカード（終了時かつローディング完了後に表示） */}
+      {sessionState === "ended" && !isPreparingReflection && (
+        <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-xl rounded-lg">
+          <CardContent className="p-6">
             {/* 隠しファイル入力 */}
             <input
               ref={fileInputRef}
@@ -551,9 +601,6 @@ export function ActiveSession({
                               return goal ? `「${goal.title}」のための時間でしたか？` : t('active_session.goal_match_question')
                             })()}
                           </h3>
-                          <p className="text-muted-foreground text-sm">
-                            {t('active_session.goal_match_description')}
-                          </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -760,7 +807,6 @@ export function ActiveSession({
                   <div className="space-y-6 animate-in fade-in duration-300">
                     {/* メモ入力 */}
                     <div className="space-y-3">
-                      <Label className="text-base font-medium">{t('active_session.notes_label')}</Label>
                       <div className="flex items-center justify-end mb-2">
                         <CharacterCounter current={notes.length} max={limits.sessionNotes} />
                       </div>
@@ -853,150 +899,184 @@ export function ActiveSession({
                 )}
               </>
             ) : (
-              /* PC: 従来のUI */
-              <>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <Button
-                    onClick={() => {
-                      setShowNotes(!showNotes)
-                      setShowPhotos(false) // 写真タブを閉じる
-                    }}
-                    variant={showNotes ? "default" : "outline"}
-                    className={cn("h-12 text-base transition-all",
-                      showNotes
-                        ? "bg-emerald-700 text-white shadow-md"
-                        : "hover:bg-secondary"
-                    )}
-                  >
-                    <MessageSquare className="w-5 h-5 mr-2" />
-                    {t('active_session.memo_label')}
-                  </Button>
+              /* PC: 1画面完結型UI */
+              <div className="animate-in fade-in duration-300">
+                {/* 1. 目標確認セクション */}
+                {session.goalId ? (
+                  <div className="space-y-3 pb-6">
+                    <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-xl p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-700/20 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">
+                            {(() => {
+                              const goal = activeGoals.find(g => g.id === session.goalId)
+                              return goal ? goal.title : t('active_session.no_goal')
+                            })()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : activeGoals.length > 0 ? (
+                  <div className="space-y-3 pb-6">
+                    <Label className="text-base font-medium">{t('active_session.select_goal_optional')}</Label>
+                    <div className="space-y-2">
+                      {activeGoals.map((goal) => (
+                        <Button
+                          key={goal.id}
+                          onClick={() => setSelectedGoalForSession(goal.id)}
+                          variant={selectedGoalForSession === goal.id ? "default" : "outline"}
+                          className={cn(
+                            "w-full h-14 justify-start gap-3 text-base transition-all",
+                            selectedGoalForSession === goal.id
+                              ? "bg-emerald-700 text-white border-2 border-emerald-500"
+                              : "hover:bg-secondary"
+                          )}
+                        >
+                          <span className="font-semibold truncate flex-1 text-left">{goal.title}</span>
+                          {selectedGoalForSession === goal.id && (
+                            <Check className="w-5 h-5 ml-auto flex-shrink-0" />
+                          )}
+                        </Button>
+                      ))}
+                      <Button
+                        onClick={() => setSelectedGoalForSession(null)}
+                        variant={selectedGoalForSession === null ? "default" : "outline"}
+                        className={cn(
+                          "w-full h-12 text-sm",
+                          selectedGoalForSession === null
+                            ? "bg-gray-700 text-white"
+                            : "hover:bg-secondary"
+                        )}
+                      >
+                        {t('active_session.no_goal')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
 
-                  <Button 
-                    onClick={() => {
-                      setShowPhotos(!showPhotos)
-                      setShowNotes(false) // メモタブを閉じる
-                    }}
-                    variant={showPhotos ? "default" : "outline"}
-                    className={cn("h-12 text-base transition-all",
-                      showPhotos
-                        ? "bg-emerald-700 text-white shadow-md"
-                        : "hover:bg-secondary"
-                    )}
+                {/* 2. 気分評価セクション */}
+                <div className="space-y-3 pb-6">
+                  <Label className="text-base font-medium">{t('active_session.mood_question')}</Label>
+                  <div className="flex justify-between sm:justify-start sm:gap-4">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <Button
+                        key={rating}
+                        onClick={() => setMood(rating)}
+                        variant={mood === rating ? "default" : "outline"}
+                        className={cn(
+                          "h-14 w-14 p-0 flex items-center justify-center rounded-xl transition-all",
+                          mood === rating
+                            ? "bg-emerald-700 text-white scale-110 shadow-lg shadow-emerald-900/20 ring-2 ring-emerald-700 ring-offset-2 ring-offset-background"
+                            : "text-gray-400 hover:bg-secondary hover:scale-105"
+                        )}
+                      >
+                        {rating === 1 && <CloudRain className="w-6 h-6" />}
+                        {rating === 2 && <Cloud className="w-6 h-6" />}
+                        {rating === 3 && <Minus className="w-6 h-6" />}
+                        {rating === 4 && <Sun className="w-6 h-6" />}
+                        {rating === 5 && <Sparkles className="w-6 h-6" />}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. メモ入力セクション */}
+                <div className="space-y-3 pb-6">
+                  <div className="flex items-center justify-between">
+                    <CharacterCounter current={notes.length} max={limits.sessionNotes} />
+                  </div>
+                  <Textarea
+                    placeholder={notesPlaceholder}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
+                    maxLength={limits.sessionNotes}
+                    className="bg-secondary/20 border-white/10 min-h-[120px] focus-visible:ring-primary resize-none text-base"
+                  />
+                </div>
+
+                {/* 4. 写真アップロードセクション（アコーディオン） */}
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPhotoAccordion(!showPhotoAccordion)}
+                    className="flex items-center space-x-2 text-left group w-full"
                   >
-                    <Camera className="w-5 h-5 mr-2" />
-                    {t('active_session.photos_label')}
-                    {(photos.length) > 0 && (
-                      <span className="ml-2 bg-blue-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
+                      <Plus className={`w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-200 ${showPhotoAccordion ? 'rotate-45' : ''}`} />
+                    </div>
+                    <Label className="text-sm text-gray-400 cursor-pointer group-hover:text-gray-300 transition-colors">
+                      {t('active_session.photos_label')} (オプション)
+                    </Label>
+                    {photos.length > 0 && (
+                      <span className="ml-2 bg-emerald-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
                         {photos.length}
                       </span>
                     )}
-                  </Button>
+                  </button>
+
+                  {/* 写真アップロードエリア */}
+                  {showPhotoAccordion && (
+                    <div className="space-y-4 animate-in fade-in duration-300">
+                      {/* アップロードされた写真のプレビュー */}
+                      {photos.length > 0 && (
+                        <div className="grid grid-cols-3 gap-3">
+                          {photos.map((photo, index) => (
+                            <div key={`pending-${index}`} className="relative group rounded-lg overflow-hidden shadow-md">
+                              <img
+                                src={URL.createObjectURL(photo)}
+                                alt={`写真 ${index + 1}`}
+                                className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              <Button
+                                onClick={() => handlePhotoRemove(index)}
+                                size="icon"
+                                variant="destructive"
+                                className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-all"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handlePhotoButtonClick}
+                        variant="outline"
+                        className="w-full h-12 border-dashed border-2 hover:bg-secondary"
+                      >
+                        <Camera className="w-5 h-5 mr-2" />
+                        {photos.length > 0 ? '写真を追加' : '写真を選択'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                {/* 写真アップロードエリア */}
-                {showPhotos && (
-                  <div className="space-y-6 animate-in fade-in duration-300">
-                    <div className="mb-4">
-                      <Label className="text-base font-medium">{t('active_session.add_photos')}</Label>
-                    </div>
-
-                    {/* アップロードされた写真のプレビュー */}
-                    {(photos.length > 0) && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {photos.map((photo, index) => (
-                          <div key={`pending-${index}`} className="relative group rounded-xl overflow-hidden shadow-md">
-                            <img
-                              src={URL.createObjectURL(photo)}
-                              alt={`アップロード予定写真 ${index + 1}`}
-                              className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <Button
-                              onClick={() => handlePhotoRemove(index)}
-                              size="icon"
-                              variant="destructive"
-                              className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                            <div className="absolute top-2 left-2 bg-yellow-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
-                              {t('active_session.waiting_save')}
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                              <p className="text-white text-xs truncate px-1">
-                                {photo.name}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                {/* 5. 保存ボタン */}
+                <div className="pt-2">
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving || isUploading}
+                    className="w-full h-14 text-base font-bold bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 shadow-lg"
+                  >
+                    {isSaving || isUploading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        {isUploading ? t('active_session.uploading') : t('active_session.saving')}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5 mr-2" />
+                        {t('active_session.save_button')}
+                      </>
                     )}
-
-                    {photos.length === 0 && (
-                      <div className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors rounded-xl p-10 text-center bg-secondary/20">
-                        <div className="bg-secondary/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Camera className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-muted-foreground text-sm mb-4">{t('active_session.upload_photos_description')}</p>
-                        <Button
-                          onClick={handlePhotoButtonClick}
-                          variant="outline"
-                          className="bg-background hover:bg-secondary"
-                        >
-                          {t('active_session.select_photos')}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* メモ・振り返り入力エリア */}
-                {showNotes && !showPhotos && (
-                  <div className="space-y-6 animate-in fade-in duration-300">
-                    {/* 気分評価 */}
-                    <div className="space-y-3">
-                      <Label className="text-base font-medium">{t('active_session.mood_question')}</Label>
-                      <div className="flex justify-between sm:justify-start sm:gap-4">
-                        {[1, 2, 3, 4, 5].map((rating) => (
-                          <Button
-                            key={rating}
-                            onClick={() => setMood(rating)}
-                            variant={mood === rating ? "default" : "outline"}
-                            className={cn(
-                              "h-14 w-14 p-0 flex items-center justify-center rounded-xl transition-all",
-                              mood === rating
-                                ? "bg-emerald-700 text-white scale-110 shadow-lg shadow-emerald-900/20 ring-2 ring-emerald-700 ring-offset-2 ring-offset-background"
-                                : "text-gray-400 hover:bg-secondary hover:scale-105"
-                            )}
-                          >
-                            {rating === 1 && <CloudRain className="w-6 h-6" />}
-                            {rating === 2 && <Cloud className="w-6 h-6" />}
-                            {rating === 3 && <Minus className="w-6 h-6" />}
-                            {rating === 4 && <Sun className="w-6 h-6" />}
-                            {rating === 5 && <Sparkles className="w-6 h-6" />}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 自由記述メモ（その他） */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium">{t('active_session.notes_label')}</Label>
-                        <CharacterCounter current={notes.length} max={limits.sessionNotes} />
-                      </div>
-                      <Textarea
-                        placeholder={t('active_session.notes_placeholder')}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
-                        maxLength={limits.sessionNotes}
-                        className="bg-secondary/20 border-white/10 min-h-[100px] focus-visible:ring-primary resize-none"
-                      />
-                    </div>
-                  </div>
-                )}
-              </>
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -1,0 +1,384 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import type { Database } from '@/types/database';
+import { validateOrigin } from '@/lib/csrf-protection';
+import { safeWarn, safeError } from '@/lib/safe-logger';
+import Anthropic from '@anthropic-ai/sdk';
+
+interface GeneratePlaceholderRequest {
+  activity_id: string;
+  goal_id: string | null;
+  current_mood?: number;
+  current_duration?: number; // 秒単位
+  is_pre_generation?: boolean; // true: 開始時の7割生成, false: 終了時の残り3割で完成
+  locale?: string;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // CSRF保護: Origin/Refererチェック
+    if (!validateOrigin(request)) {
+      safeWarn('CSRF attempt detected: Invalid origin', {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      });
+      return NextResponse.json(
+        { error: 'Invalid origin' },
+        { status: 403 }
+      );
+    }
+
+    const cookieStore = await cookies();
+    
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // ユーザー認証確認
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { 
+      activity_id, 
+      goal_id, 
+      current_mood,
+      current_duration,
+      is_pre_generation = false,
+      locale = 'ja' 
+    }: GeneratePlaceholderRequest = await request.json();
+
+    // 過去のセッション情報を取得（同じアクティビティで同じ目標）
+    let query = supabase
+      .from('sessions_reflections_decrypted')
+      .select(`
+        id,
+        duration,
+        session_date,
+        mood,
+        achievements,
+        challenges,
+        notes,
+        activities!inner(name)
+      `)
+      .eq('user_id', user.id)
+      .eq('activity_id', activity_id)
+      .not('session_date', 'is', null) // 保存済みのセッションのみ
+      .order('session_date', { ascending: false })
+      .limit(5);
+
+    // 目標IDが指定されている場合のみフィルタリング
+    if (goal_id) {
+      query = query.eq('goal_id', goal_id);
+    }
+
+    const { data: sessions, error: sessionsError } = await query;
+
+    if (sessionsError) {
+      safeError('セッション取得エラー', sessionsError);
+      return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
+    }
+
+    // アクティビティ名を取得
+    const { data: activity } = await supabase
+      .from('activities')
+      .select('name')
+      .eq('id', activity_id)
+      .single();
+
+    // 目標名を取得（目標IDがある場合）
+    let goalTitle = null;
+    if (goal_id) {
+      const { data: goal } = await supabase
+        .from('goals')
+        .select('title')
+        .eq('id', goal_id)
+        .single();
+      goalTitle = goal?.title;
+    }
+
+    // プレースホルダーを生成
+    const placeholder = await generatePlaceholder({
+      sessions: sessions || [],
+      activityName: activity?.name || 'アクティビティ',
+      goalTitle,
+      currentMood: current_mood,
+      currentDuration: current_duration,
+      isPreGeneration: is_pre_generation,
+      locale
+    });
+
+    return NextResponse.json({ placeholder });
+
+  } catch (error) {
+    safeError('プレースホルダー生成エラー', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+interface GeneratePlaceholderParams {
+  sessions: any[];
+  activityName: string;
+  goalTitle: string | null;
+  currentMood?: number;
+  currentDuration?: number;
+  isPreGeneration: boolean; // true: 7割完成版（draft）, false: 残り3割で完成版（final）
+  locale: string;
+}
+
+// メモからキーワードを抽出する簡易関数
+function extractKeywords(text: string): string[] {
+  if (!text) return [];
+  
+  // 簡易的なキーワード抽出（名詞っぽい単語を抽出）
+  const keywords: string[] = [];
+  const sentences = text.split(/[。．\n]/);
+  
+  for (const sentence of sentences) {
+    // 15文字以上の文から重要そうな部分を抽出
+    if (sentence.length >= 15) {
+      keywords.push(sentence.trim().substring(0, 30));
+    }
+  }
+  
+  return keywords.slice(0, 3); // 最大3つまで
+}
+
+async function generatePlaceholder({
+  sessions,
+  activityName,
+  goalTitle,
+  currentMood,
+  currentDuration,
+  isPreGeneration,
+  locale
+}: GeneratePlaceholderParams): Promise<string> {
+  // セッション回数
+  const sessionCount = sessions.length;
+
+  // 初回の場合
+  if (sessionCount === 0) {
+    return locale === 'ja' 
+      ? '最初の記録です。今日の取り組みについて、何か思ったことはありましたか？'
+      : 'Your first focus on this activity. What did you feel about it today?';
+  }
+
+  // 前回のセッション情報
+  const lastSession = sessions[0];
+  const lastMood = lastSession.mood;
+  const lastDuration = lastSession.duration; // 秒単位
+
+  // 分析データを構築
+  const analysisData: Record<string, any> = {
+    sessionCount: sessionCount + 1, // 今回を含む
+    isFirstTime: sessionCount === 0,
+    activityName,
+    goalTitle,
+    isPreGeneration,
+    generationType: isPreGeneration ? 'draft' : 'final',
+    completionLevel: isPreGeneration ? '70%' : '100%', // 完成度を明示
+  };
+
+  // 【draft（開始時）】過去のメモ、気分、時間を詳細に分析して7割完成の具体的な問いかけを作る
+  // 【final（終了時）】draftで作った内容に、今回との比較データを加えて残り3割を完成させる
+  
+  // === 過去データの詳細分析（draft、final両方で使用） ===
+  
+  // 前回の気分を詳細に記録
+  if (lastMood) {
+    analysisData.previousMood = {
+      score: lastMood,
+      label: lastMood === 5 ? '最高' : lastMood === 4 ? '良い' : lastMood === 3 ? 'ふつう' : lastMood === 2 ? 'イマイチ' : 'つらい'
+    };
+  }
+  
+  // 前回の時間を詳細に記録
+  if (lastDuration) {
+    const lastMinutes = Math.round(lastDuration / 60);
+    analysisData.previousDuration = {
+      seconds: lastDuration,
+      minutes: lastMinutes,
+      hours: Math.floor(lastMinutes / 60),
+      displayText: lastMinutes >= 60 
+        ? `${Math.floor(lastMinutes / 60)}時間${lastMinutes % 60}分`
+        : `${lastMinutes}分`
+    };
+  }
+
+  // 前回のメモ内容（draft用に詳細に）
+  if (lastSession.notes) {
+    analysisData.previousNotes = {
+      full: lastSession.notes,
+      preview: lastSession.notes.substring(0, 200), // より長く
+      keywords: extractKeywords(lastSession.notes), // キーワード抽出
+    };
+  }
+
+  // 前回の達成内容
+  if (lastSession.achievements) {
+    analysisData.previousAchievements = {
+      full: lastSession.achievements,
+      preview: lastSession.achievements.substring(0, 150),
+    };
+  }
+  
+  // 前回の課題
+  if (lastSession.challenges) {
+    analysisData.previousChallenges = {
+      full: lastSession.challenges,
+      preview: lastSession.challenges.substring(0, 150),
+    };
+  }
+
+  // === 今回のデータとの比較（finalのみ） ===
+  if (!isPreGeneration) {
+    // 気分の比較
+    if (currentMood && lastMood) {
+      const moodDiff = currentMood - lastMood;
+      analysisData.moodComparison = {
+        previous: lastMood,
+        current: currentMood,
+        difference: moodDiff,
+        trend: moodDiff > 0 ? 'improved' : moodDiff < 0 ? 'declined' : 'same',
+        trendText: moodDiff > 0 ? '向上' : moodDiff < 0 ? '低下' : '同じ'
+      };
+    }
+
+    // 時間の比較
+    if (currentDuration && lastDuration) {
+      const durationDiff = currentDuration - lastDuration;
+      const minutesDiff = Math.round(durationDiff / 60);
+      analysisData.durationComparison = {
+        previous: Math.round(lastDuration / 60),
+        current: Math.round(currentDuration / 60),
+        differenceMinutes: minutesDiff,
+        trend: durationDiff > 300 ? 'longer' : durationDiff < -300 ? 'shorter' : 'similar',
+        trendText: durationDiff > 300 ? '長い' : durationDiff < -300 ? '短い' : '同じくらい'
+      };
+    }
+  }
+
+  // Anthropic APIでプレースホルダーを生成
+  try {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    const systemPrompt = locale === 'ja' 
+      ? `あなたは努力を見守るShoninです。ユーザーがセッション終了後に振り返りを書く際のプレースホルダーテキストを生成します。
+
+【重要な生成タイプの違い】
+generationType が "draft" の場合：
+  - セッション開始時の先行生成（7割の完成度）
+  - 過去のデータ（メモ内容、気分の傾向、時間の傾向、達成・課題）をしっかり分析
+  - 過去のパターンから具体的な内容を生成
+  - 前回の気分や時間、メモの具体的な内容を織り込む
+  - 例：「前回は〇〇分取り組んでいましたね。」「前回のメモに書いていた〇〇、今日はどうでしたか？」「前回は〇〇な気分でしたが、」
+
+generationType が "final" の場合：
+  - セッション終了時の完成生成（残り3割で10割完成）
+  - draftで作った文章に、今回の気分・時間などの比較文を入れて微調整
+  - moodComparisonやdurationComparisonを活用して、違いを追加
+
+要件：
+- 1文のみ、40文字以内の簡潔な文章
+- ユーザーの状況に合わせた励ましや問いかけ。絶対にポジティブ。
+- 親しみやすく、優しい口調
+- draftでは過去データを具体的に織り込む（7割完成を目指す）
+- finalではdraftの内容に今回との比較を加える（残り3割）
+- 絶対に一文で、句点は一つのみ
+
+禁止事項：
+- 何回目の〜ですね。みたいなのは絶対にしないでください
+- 〜しませんでしたが、みたいなのは禁止。できたことに目を向けよう
+- 体験、経験、学び、発見、気づき、気持ち、変わらず、普通、ネガティブ、イマイチなどのワードは禁止
+`
+
+      : `You are Shonin, witnessing users' efforts. Generate a placeholder text for the reflection input field.
+
+【Important Generation Type Differences】
+When generationType is "draft":
+  - Pre-generation at session start (70% complete)
+  - Thoroughly analyze past data (notes content, mood trends, time trends, achievements/challenges)
+  - Generate specific questions from past patterns
+  - Incorporate previous mood, time, and specific note contents
+  - Example: "Last time you spent X minutes." "About that X from last notes, how was it today?" "Last time your mood was Y,"
+
+When generationType is "final":
+  - Complete generation at session end (remaining 30% for 100% complete)
+  - Build on draft, fine-tune with current mood/time comparison
+  - Use moodComparison and durationComparison to add today's differences
+  - Example: "Your mood improved from last time. What changed?" "10 minutes longer than last time. How was it?"
+
+Requirements:
+- One sentence only, within 50 characters
+- Encouraging or questioning based on user's situation
+- Friendly and gentle tone
+- For draft: incorporate specific past data (aim for 70% complete)
+- For final: add current comparison to draft content (remaining 30%)
+- Must be a single sentence with one period
+
+Prohibitions:
+- Never mention session counts like "third session" or "nth time"
+- Focus on what was accomplished, not what wasn't
+- Banned words: experience, learning, discovery, insight, feeling, unchanged`;
+
+    const userPrompt = JSON.stringify(analysisData, null, 2);
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: isPreGeneration ? 200 : 150, // draftは詳細に、finalは微調整のみ
+      temperature: isPreGeneration ? 0.8 : 0.75, // draftはしっかり分析、finalは比較に集中
+      system: systemPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: userPrompt
+        }
+      ],
+    });
+
+    const content = message.content[0]?.type === 'text' 
+      ? message.content[0].text 
+      : '';
+
+    // 生成されたテキストをクリーンアップ（改行や余分な句点を削除）
+    const placeholder = content.trim().replace(/\n/g, '').replace(/。。+/g, '。');
+
+    return placeholder || getDefaultPlaceholder(sessionCount, locale);
+
+  } catch (error) {
+    safeError('Anthropic API エラー', error);
+    return getDefaultPlaceholder(sessionCount, locale);
+  }
+}
+
+function getDefaultPlaceholder(sessionCount: number, locale: string): string {
+  if (locale === 'ja') {
+    if (sessionCount === 0) {
+      return '最初の記録です。今日の取り組みについて、何か思ったことはありましたか？';
+    } else if (sessionCount === 1) {
+      return '前回との違いなど、気づいたことはありますか？';
+    } else {
+      return '今日の発見を残しておきましょう。';
+    }
+  } else {
+    if (sessionCount === 0) {
+      return 'Your first focus on this activity. What did you feel about it today?';
+    } else if (sessionCount === 1) {
+      return 'Notice any differences from last time?';
+    } else {
+      return `Let's capture today's insights.`;
+    }
+  }
+}

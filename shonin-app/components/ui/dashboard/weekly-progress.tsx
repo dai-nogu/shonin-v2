@@ -52,8 +52,8 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
     // その日の合計時間を計算（秒単位で保持）
     const totalSeconds = daySessions.reduce((sum, session) => sum + session.duration, 0)
 
-    // 進捗率を計算（1日4時間=14400秒を目標とする）
-    const targetSeconds = 4 * 3600 // 4時間を秒に変換
+    // 進捗率を計算（1日24時間=86400秒を最大値とする）
+    const targetSeconds = 24 * 3600 // 24時間を秒に変換
     const progress = Math.min((totalSeconds / targetSeconds) * 100, 100)
 
     weekData.push({
