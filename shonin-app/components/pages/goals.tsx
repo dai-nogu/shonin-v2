@@ -105,13 +105,24 @@ export function Goals({ initialGoals }: GoalsProps) {
     }
   }, [error, operationError])
 
+  // dont_listをパースする関数
+  const parseDontList = (dontList: string | null): string[] => {
+    if (!dontList) return []
+    try {
+      const parsed = JSON.parse(dontList)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+
   // データベースからの目標を変換
   useEffect(() => {
     if (dbGoals) {
       const convertedGoals: Goal[] = dbGoals.map(goal => ({
         id: goal.id,
         title: goal.title,
-        motivation: goal.description || '',
+        motivation: goal.dont_list || '',
         targetValue: formatSecondsToDecimalHours(goal.target_duration || 0), // 秒から小数時間に変換
         currentValue: formatSecondsToDecimalHours(goal.current_value || 0), // 秒から小数時間に変換
         unit: goal.unit || '時間',
@@ -236,9 +247,21 @@ export function Goals({ initialGoals }: GoalsProps) {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-white mb-1 tracking-tight">{goal.title}</h3>
-                      {goal.motivation && (
-                        <p className="text-sm text-gray-400 line-clamp-2">{goal.motivation}</p>
-                      )}
+                      {goal.motivation && (() => {
+                        const dontDoTags = parseDontList(goal.motivation)
+                        return dontDoTags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {dontDoTags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-900/40 border border-gray-700 text-gray-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )
+                      })()}
                     </div>
                     <div className="flex space-x-1 ml-4">
                       <Button

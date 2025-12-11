@@ -107,11 +107,19 @@ export async function POST(request: NextRequest) {
       goalTitle = goal?.title;
     }
 
+    // ユーザー名を取得
+    const { data: userData } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+
     // プレースホルダーを生成
     const placeholder = await generatePlaceholder({
       sessions: sessions || [],
       activityName: activity?.name || 'アクティビティ',
       goalTitle,
+      userName: userData?.name || null,
       currentMood: current_mood,
       currentDuration: current_duration,
       isPreGeneration: is_pre_generation,
@@ -130,6 +138,7 @@ interface GeneratePlaceholderParams {
   sessions: any[];
   activityName: string;
   goalTitle: string | null;
+  userName: string | null;
   currentMood?: number;
   currentDuration?: number;
   isPreGeneration: boolean; // true: 7割完成版（draft）, false: 残り3割で完成版（final）
@@ -158,6 +167,7 @@ async function generatePlaceholder({
   sessions,
   activityName,
   goalTitle,
+  userName,
   currentMood,
   currentDuration,
   isPreGeneration,
@@ -168,9 +178,10 @@ async function generatePlaceholder({
 
   // 初回の場合
   if (sessionCount === 0) {
+    const namePrefix = userName ? `${userName}さん、` : '';
     return locale === 'ja' 
-      ? '最初の記録です。今日の取り組みについて、何か思ったことはありましたか？'
-      : 'Your first focus on this activity. What did you feel about it today?';
+      ? `${namePrefix}最初の記録です。今日の取り組みについて、何か思ったことはありましたか？`
+      : `${userName ? userName + ', ' : ''}Your first focus on this activity. What did you feel about it today?`;
   }
 
   // 前回のセッション情報
@@ -180,6 +191,7 @@ async function generatePlaceholder({
 
   // 分析データを構築
   const analysisData: Record<string, any> = {
+    userName: userName || null, // ユーザー名を追加
     sessionCount: sessionCount + 1, // 今回を含む
     isFirstTime: sessionCount === 0,
     activityName,
@@ -292,6 +304,8 @@ generationType が "final" の場合：
 
 要件：
 - 1文のみ、40文字以内の簡潔な文章
+- userNameが提供されている場合は必ず「〇〇さん、」から始める（例：「太郎さん、前回は...」「花子さん、今日は...」）
+- userNameがnullの場合は名前なしで始める
 - ユーザーの状況に合わせた励ましや問いかけ。絶対にポジティブ。
 - 親しみやすく、優しい口調
 - draftでは過去データを具体的に織り込む（7割完成を目指す）
@@ -322,6 +336,8 @@ When generationType is "final":
 
 Requirements:
 - One sentence only, within 50 characters
+- If userName is provided, always start with "userName, " (e.g., "Taro, last time..." "Hanako, today...")
+- If userName is null, start without name
 - Encouraging or questioning based on user's situation
 - Friendly and gentle tone
 - For draft: incorporate specific past data (aim for 70% complete)
@@ -355,30 +371,32 @@ Prohibitions:
     // 生成されたテキストをクリーンアップ（改行や余分な句点を削除）
     const placeholder = content.trim().replace(/\n/g, '').replace(/。。+/g, '。');
 
-    return placeholder || getDefaultPlaceholder(sessionCount, locale);
+    return placeholder || getDefaultPlaceholder(sessionCount, userName, locale);
 
   } catch (error) {
     safeError('Anthropic API エラー', error);
-    return getDefaultPlaceholder(sessionCount, locale);
+    return getDefaultPlaceholder(sessionCount, userName, locale);
   }
 }
 
-function getDefaultPlaceholder(sessionCount: number, locale: string): string {
+function getDefaultPlaceholder(sessionCount: number, userName: string | null, locale: string): string {
+  const namePrefix = userName ? (locale === 'ja' ? `${userName}さん、` : `${userName}, `) : '';
+  
   if (locale === 'ja') {
     if (sessionCount === 0) {
-      return '最初の記録です。今日の取り組みについて、何か思ったことはありましたか？';
+      return `${namePrefix}最初の記録です。今日の取り組みについて、何か思ったことはありましたか？`;
     } else if (sessionCount === 1) {
-      return '前回との違いなど、気づいたことはありますか？';
+      return `${namePrefix}前回との違いなど、気づいたことはありますか？`;
     } else {
-      return '今日の発見を残しておきましょう。';
+      return `${namePrefix}今日の発見を残しておきましょう。`;
     }
   } else {
     if (sessionCount === 0) {
-      return 'Your first focus on this activity. What did you feel about it today?';
+      return `${namePrefix}Your first focus on this activity. What did you feel about it today?`;
     } else if (sessionCount === 1) {
-      return 'Notice any differences from last time?';
+      return `${namePrefix}Notice any differences from last time?`;
     } else {
-      return `Let's capture today's insights.`;
+      return `${namePrefix}Let's capture today's insights.`;
     }
   }
 }

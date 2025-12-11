@@ -55,7 +55,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     id: goal.id,
     title: goal.title,
     deadline: goal.deadline,
-    description: goal.description,
+    dont_list: goal.dont_list,
     status: goal.status,
     target_duration: goal.target_duration,
     current_value: goal.current_value,
@@ -122,14 +122,14 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   // アクティビティをタグから選択
   const handleTagClick = useCallback((activity: typeof customActivities[0]) => {
     setSelectedActivity(activity.id)
-    setActivityInput(activity.name)
+    setActivityInput("")
     setShowSuggestions(false)
   }, [])
 
   // サジェストから選択
   const handleSuggestionClick = useCallback((activity: typeof customActivities[0]) => {
     setSelectedActivity(activity.id)
-    setActivityInput(activity.name)
+    setActivityInput("")
     setShowSuggestions(false)
   }, [])
 
@@ -169,7 +169,6 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     if (result.success) {
       // 追加した行動を自動選択
       setSelectedActivity(result.data)
-      setActivityInput(newActivityName.trim())
 
       // フォームをリセット
       setNewActivityName("")
@@ -194,6 +193,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
     if (result.success) {
       setSelectedActivity(result.data)
+      setActivityInput("")
       setShowSuggestions(false)
     } else {
       setOperationError(t('errors.activity_add_failed'))
@@ -347,10 +347,65 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
         {!showAddForm && (
           <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
             <div className="space-y-6">
-              {/* 行動選択 - 直接入力 + サジェスト + タグ */}
+              {/* 行動選択 - タグ + 直接入力 + サジェスト */}
               <div className="space-y-3">
                 <Label className="text-gray-300 text-xs tracking-wider pl-1">{t('session_start.select_activity')}</Label>
                 
+                {/* 過去のアクティビティをタグとして表示（最初に配置） */}
+                {allActivities.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {allActivities.slice(0, 8).map((activity) => {
+                        const isSelected = selectedActivity === activity.id
+                        const isHovered = hoveredTagId === activity.id
+                        return (
+                          <div
+                            key={activity.id}
+                            className="relative"
+                            onMouseEnter={() => setHoveredTagId(activity.id)}
+                            onMouseLeave={() => setHoveredTagId(null)}
+                          >
+                            {/* 削除ボタン（ホバー時のみ表示） */}
+                            {isHovered && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  // 選択中のものを削除した場合はクリア
+                                  if (selectedActivity === activity.id) {
+                                    setSelectedActivity("")
+                                    setActivityInput("")
+                                  }
+                                  deleteActivity(activity.id)
+                                }}
+                                className="absolute -top-2 -right-2 z-10 w-5 h-5 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg flex items-center justify-center transition-all shadow-lg scale-in"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleTagClick(activity)}
+                              className={`group inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 border ${
+                                isSelected
+                                  ? "bg-gray-900/40 border-emerald-700/50 shadow-[0_0_10px_rgba(4,120,87,0.1)]"
+                                  : "bg-gray-900/40 border-gray-700 hover:border-gray-500"
+                              }`}
+                            >
+                              <div className={`w-2.5 h-2.5 ${activity.color} rounded-full flex-shrink-0 transition-transform group-hover:scale-110`} />
+                              <span className={`text-xs font-medium truncate max-w-[100px] ${
+                                isSelected ? "text-white" : "text-gray-300 group-hover:text-white"
+                              }`}>
+                                {activity.name}
+                              </span>
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* 入力フィールド + 追加ボタン + サジェスト */}
                 <div ref={inputContainerRef} className="relative">
                   <div className="flex gap-2">
@@ -439,61 +494,6 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     </div>
                   )}
                 </div>
-
-                {/* 過去のアクティビティをタグとして表示 */}
-                {allActivities.length > 0 && (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex flex-wrap gap-2">
-                      {allActivities.slice(0, 8).map((activity) => {
-                        const isSelected = selectedActivity === activity.id
-                        const isHovered = hoveredTagId === activity.id
-                        return (
-                          <div
-                            key={activity.id}
-                            className="relative"
-                            onMouseEnter={() => setHoveredTagId(activity.id)}
-                            onMouseLeave={() => setHoveredTagId(null)}
-                          >
-                            {/* 削除ボタン（ホバー時のみ表示） */}
-                            {isHovered && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  // 選択中のものを削除した場合はクリア
-                                  if (selectedActivity === activity.id) {
-                                    setSelectedActivity("")
-                                    setActivityInput("")
-                                  }
-                                  deleteActivity(activity.id)
-                                }}
-                                className="absolute -top-2 -right-2 z-10 w-5 h-5 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-lg flex items-center justify-center transition-all shadow-lg scale-in"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleTagClick(activity)}
-                              className={`group inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-all duration-200 border ${
-                                isSelected
-                                  ? "bg-gray-900/40 border-emerald-700/50 shadow-[0_0_10px_rgba(4,120,87,0.1)]"
-                                  : "bg-gray-900/40 border-gray-700 hover:border-gray-500"
-                              }`}
-                            >
-                              <div className={`w-2.5 h-2.5 ${activity.color} rounded-full flex-shrink-0 transition-transform group-hover:scale-110`} />
-                              <span className={`text-xs font-medium truncate max-w-[100px] ${
-                                isSelected ? "text-white" : "text-gray-300 group-hover:text-white"
-                              }`}>
-                                {activity.name}
-                              </span>
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* オプション: 場所入力（アコーディオン） */}

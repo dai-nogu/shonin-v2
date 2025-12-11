@@ -36,7 +36,7 @@
     "dashboard": "ダッシュボード",
     "calendar": "カレンダー",
     "goals": "目標",
-    "feedback": "レター",
+    "feedback": "手紙",
     "plan": "プラン",
     "settings": "設定",
     "home": "ホーム"
@@ -150,6 +150,9 @@
     "goal_placeholder": "転職を成功させる",
     "motivation_label": "目的",
     "motivation_placeholder": "家族との時間を大事にしたいから",
+    "dont_do_label": "Shoninと約束してください。この目標中あなたは何をやめますか？",
+    "dont_do_custom_placeholder": "その他やめること...",
+    "dont_do_count": "{current}/{max}個選択中",
     "deadline_label_required": "終了日",
     "weekday_hours_label": "平日（月〜金）の時間",
     "weekend_hours_label": "土日の時間",

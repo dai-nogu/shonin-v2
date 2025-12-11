@@ -4,7 +4,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState, use, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
-import { GoalMotivationTextarea } from "../goal-motivation-textarea"
+import { GoalDontDoSelector } from "../goal-dont-do-selector"
 import { GoalHoursInputs } from "../goal-hours-inputs"
 import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
@@ -22,10 +22,21 @@ interface GoalEditContainerProps {
 // 初期データの型定義
 interface InitialGoalData {
   title: string
-  motivation: string
+  dontDoTags: string[]
   deadline: string
   weekdayHours: string
   weekendHours: string
+}
+
+// dont_listからdontDoTagsをパースするヘルパー関数
+function parseDontDoTags(dontList: string | null): string[] {
+  if (!dontList) return []
+  try {
+    const parsed = JSON.parse(dontList)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
 }
 
 export function GoalEditContainer({ params }: GoalEditContainerProps) {
@@ -36,6 +47,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const { handleAuthError } = useAuthRedirect()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [initialGoalData, setInitialGoalData] = useState<InitialGoalData | null>(null)
+  const [dontDoTags, setDontDoTags] = useState<string[]>([])
   const t = useTranslations()
   
   // paramsをunwrap
@@ -58,14 +70,22 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   // 目標データが取得できたらフォームに設定
   useEffect(() => {
     if (goal) {
+      const parsedDontDoTags = parseDontDoTags(goal.dont_list)
       const initial = {
         title: goal.title,
-        motivation: goal.description || '',
+        dontDoTags: parsedDontDoTags,
         deadline: goal.deadline || '',
         weekdayHours: (goal.weekday_hours || 0).toString(),
         weekendHours: (goal.weekend_hours || 0).toString()
       }
-      setInitialData(initial)
+      setInitialData({
+        title: goal.title,
+        motivation: '',
+        deadline: goal.deadline || '',
+        weekdayHours: (goal.weekday_hours || 0).toString(),
+        weekendHours: (goal.weekend_hours || 0).toString()
+      })
+      setDontDoTags(parsedDontDoTags)
       setInitialGoalData(initial)
     }
   }, [goal, setInitialData])
@@ -74,14 +94,16 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const hasChanges = useMemo(() => {
     if (!initialGoalData) return false
     
+    const dontDoTagsChanged = JSON.stringify(dontDoTags) !== JSON.stringify(initialGoalData.dontDoTags)
+    
     return (
       formData.title !== initialGoalData.title ||
-      formData.motivation !== initialGoalData.motivation ||
+      dontDoTagsChanged ||
       formData.deadline !== initialGoalData.deadline ||
       formData.weekdayHours !== initialGoalData.weekdayHours ||
       formData.weekendHours !== initialGoalData.weekendHours
     )
-  }, [formData, initialGoalData])
+  }, [formData, initialGoalData, dontDoTags])
 
   const handleUpdateGoal = async () => {
     if (!validateForm()) return
@@ -90,7 +112,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
     try {
       const goalData: DbGoalFormData = {
         title: formData.title,
-        motivation: formData.motivation,
+        motivation: JSON.stringify(dontDoTags),
         deadline: formData.deadline,
         weekdayHours: parseInt(formData.weekdayHours),
         weekendHours: parseInt(formData.weekendHours),
@@ -120,14 +142,11 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   // ローディング中またはエラーの場合
   if (loading || error || !goal) {
     return (
-      <div className="container mx-auto max-w-3xl">
-        <Card className="bg-card/30 border-white/10 backdrop-blur-md shadow-2xl">
-          <CardContent className="p-6">
-            <div className="text-center text-white">
-              {loading ? t('goals.loading') : error || t('goals.goal_not_found')}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto max-w-3xl flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 border-4 border-emerald-700/30 border-t-emerald-700 rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm">{t('common.loading')}</p>
+        </div>
       </div>
     )
   }
@@ -144,9 +163,9 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
             onChange={(value) => updateField("title", value)}
           />
 
-          <GoalMotivationTextarea
-            value={formData.motivation}
-            onChange={(value) => updateField("motivation", value)}
+          <GoalDontDoSelector
+            selectedTags={dontDoTags}
+            onChange={setDontDoTags}
           />
 
           <GoalHoursInputs

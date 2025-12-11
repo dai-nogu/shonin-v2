@@ -65,6 +65,7 @@ export function ActiveSession({
   const [isSaving, setIsSaving] = useState(false)
   
   // 3ステップフロー管理（SPのみ）
+  // 目標が1つの場合はステップ1（目標確認）をスキップしてステップ2から開始
   const [currentStep, setCurrentStep] = useState(1) // 1: 目標確認, 2: 気分評価, 3: メモ入力
   const [goalMatched, setGoalMatched] = useState<boolean | null>(null) // 目標と一致したか
   const [showPhotoAccordion, setShowPhotoAccordion] = useState(false) // 写真アコーディオンの開閉
@@ -102,6 +103,13 @@ export function ActiveSession({
     }
   }, [session.goalId, activeGoals.length])
   
+  // 目標が1つの場合、セッション終了時にステップ1をスキップしてステップ2から開始
+  useEffect(() => {
+    if (sessionState === "ended" && activeGoals.length === 1) {
+      setCurrentStep(2)
+    }
+  }, [sessionState, activeGoals.length])
+  
   // セッション開始時にプレースホルダーを事前生成（シンプル版）
   const startTimeMs = session.startTime.getTime()
   useEffect(() => {
@@ -137,7 +145,7 @@ export function ActiveSession({
   const [isUploading, setIsUploading] = useState(false)
   const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
   const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
-  const achievementsRef = useRef<HTMLTextAreaElement>(null)
+  const notesRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // ローカルストレージのキー生成
@@ -230,13 +238,19 @@ export function ActiveSession({
 
   // 終了画面に遷移した時にメモ入力欄にフォーカス
   useEffect(() => {
-    if (sessionState === "ended" && showNotes && achievementsRef.current) {
-      // 少し遅延させてフォーカス
-      setTimeout(() => {
-        achievementsRef.current?.focus()
-      }, 100)
+    if (sessionState === "ended" && !isPreparingReflection) {
+      // PC版: showNotesがtrueの時
+      // SP版: currentStep === 3の時
+      const shouldFocus = (!isMobile && showNotes) || (isMobile && currentStep === 3)
+      
+      if (shouldFocus && notesRef.current) {
+        // 少し遅延させてフォーカス
+        setTimeout(() => {
+          notesRef.current?.focus()
+        }, 100)
+      }
     }
-  }, [sessionState, showNotes])
+  }, [sessionState, showNotes, currentStep, isMobile, isPreparingReflection])
 
   const handleTogglePause = () => {
     onTogglePause()
@@ -752,6 +766,26 @@ export function ActiveSession({
                 {/* ステップ2: 気分評価 */}
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-in fade-in duration-300">
+                    {/* 目標表示（目標が設定されている場合） */}
+                    {(session.goalId || (activeGoals.length === 1 && selectedGoalForSession)) && (
+                      <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-xl p-4 mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-700/20 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold">
+                              {(() => {
+                                const goalId = session.goalId || selectedGoalForSession
+                                const goal = activeGoals.find(g => g.id === goalId)
+                                return goal ? goal.title : t('active_session.no_goal')
+                              })()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="text-center space-y-2">
                       <h3 className="text-xl font-bold text-white">
                         {t('active_session.mood_question')}
@@ -805,12 +839,33 @@ export function ActiveSession({
                 {/* ステップ3: メモ入力 */}
                 {currentStep === 3 && (
                   <div className="space-y-6 animate-in fade-in duration-300">
+                    {/* 目標表示（目標が設定されている場合） */}
+                    {(session.goalId || (activeGoals.length === 1 && selectedGoalForSession)) && (
+                      <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-xl p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-700/20 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold">
+                              {(() => {
+                                const goalId = session.goalId || selectedGoalForSession
+                                const goal = activeGoals.find(g => g.id === goalId)
+                                return goal ? goal.title : t('active_session.no_goal')
+                              })()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* メモ入力 */}
                     <div className="space-y-3">
                       <div className="flex items-center justify-end mb-2">
                         <CharacterCounter current={notes.length} max={limits.sessionNotes} />
                       </div>
                       <Textarea
+                        ref={notesRef}
                         placeholder={notesPlaceholder}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
@@ -990,6 +1045,7 @@ export function ActiveSession({
                     <CharacterCounter current={notes.length} max={limits.sessionNotes} />
                   </div>
                   <Textarea
+                    ref={notesRef}
                     placeholder={notesPlaceholder}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}

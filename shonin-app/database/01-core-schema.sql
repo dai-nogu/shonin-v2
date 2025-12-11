@@ -38,7 +38,7 @@ CREATE TABLE public.goals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     title TEXT NOT NULL,
-    description TEXT,
+    dont_list TEXT, -- この目標中にやめること（JSON配列として保存）
     deadline DATE,
     
     -- 目標時間設定

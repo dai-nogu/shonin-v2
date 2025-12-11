@@ -290,7 +290,7 @@ function analyzeGoalProgress(sessions: RawSessionData[]): Record<string, any> {
       goalMap[goalId] = {
         goalId,
         title: sanitizeXssNullable(session.goals.title) || '',
-        description: sanitizeXssNullable(session.goals.description) || '',
+        description: sanitizeXssNullable(session.goals.dont_list) || '',
         deadline: session.goals.deadline,
         targetDuration: session.goals.target_duration || 0,
         currentValue: session.goals.current_value || 0,

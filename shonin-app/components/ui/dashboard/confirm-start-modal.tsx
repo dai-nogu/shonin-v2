@@ -121,8 +121,8 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
               {goalInfo ? (
                 <>
                   <div className={`text-white font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{goalInfo.title}</div>
-                  {goalInfo.description && (
-                    <div className={`text-gray-300 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>{goalInfo.description}</div>
+                  {goalInfo.dont_list && (
+                    <div className={`text-gray-300 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>{goalInfo.dont_list}</div>
                   )}
                 </>
               ) : (

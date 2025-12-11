@@ -74,20 +74,18 @@ export function useReflectionsDb() {
     }
   };
 
-  // 振り返り情報を復号化して取得（統合版）
+  // 振り返り情報を取得（統合版）
   const getReflection = async (sessionId: string): Promise<SessionReflection | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // 復号化ビューから振り返りデータを取得
+      // sessionsテーブルから振り返りデータを取得
       const { data, error } = await supabase
-        .from('sessions_reflections_decrypted')
+        .from('sessions')
         .select(`
           mood_score,
-          detailed_achievements,
-          detailed_challenges,
-          reflection_notes
+          notes
         `)
         .eq('id', sessionId)
         .single();
@@ -95,24 +93,47 @@ export function useReflectionsDb() {
       if (error) {
         if (error.code === 'PGRST116') {
           // データが見つからない場合
+          clientLogger.log('[getReflection] Session not found:', sessionId);
           return null;
         }
+        clientLogger.error('[getReflection] Error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
         setError('振り返りの取得に失敗しました');
         return null;
+      }
+
+      // notesカラムからJSONをパース
+      let reflectionData = {
+        achievements: '',
+        challenges: '',
+        additionalNotes: undefined as string | undefined,
+      };
+
+      if (data.notes) {
+        try {
+          reflectionData = JSON.parse(data.notes);
+        } catch (parseError) {
+          clientLogger.error('[getReflection] Failed to parse notes JSON:', parseError);
+        }
       }
 
       // データを変換
       const reflection: SessionReflection = {
         moodScore: data.mood_score || 3,
-        achievements: data.detailed_achievements || '',
+        achievements: reflectionData.achievements || '',
         achievementsRating: undefined, // UI未実装のため削除
-        challenges: data.detailed_challenges || '',
+        challenges: reflectionData.challenges || '',
         challengesSeverity: undefined, // UI未実装のため削除
-        additionalNotes: data.reflection_notes || undefined,
+        additionalNotes: reflectionData.additionalNotes || undefined,
       };
 
       return reflection;
     } catch (err) {
+      clientLogger.error('[getReflection] Exception:', err);
       setError('振り返りの取得中にエラーが発生しました');
       return null;
     } finally {

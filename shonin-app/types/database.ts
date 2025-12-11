@@ -173,7 +173,7 @@ export interface Database {
           id: string
           user_id: string
           title: string
-          description: string | null
+          dont_list: string | null
           deadline: string | null
           target_duration: number | null
           weekday_hours: number | null
@@ -188,7 +188,7 @@ export interface Database {
           id?: string
           user_id: string
           title: string
-          description?: string | null
+          dont_list?: string | null
           deadline?: string | null
           target_duration?: number | null
           weekday_hours?: number | null
@@ -203,7 +203,7 @@ export interface Database {
           id?: string
           user_id?: string
           title?: string
-          description?: string | null
+          dont_list?: string | null
           deadline?: string | null
           target_duration?: number | null
           weekday_hours?: number | null

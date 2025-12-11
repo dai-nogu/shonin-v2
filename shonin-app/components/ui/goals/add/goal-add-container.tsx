@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
-import { GoalMotivationTextarea } from "../goal-motivation-textarea"
+import { GoalDontDoSelector } from "../goal-dont-do-selector"
 import { GoalHoursInputs } from "../goal-hours-inputs"
 import { GoalCalculationDisplay } from "../goal-calculation-display"
 import { GoalFormActions } from "../goal-form-actions"
@@ -22,6 +22,7 @@ export function GoalAddContainer() {
   const { addGoal } = useGoalsDb()
   const { handleAuthError } = useAuthRedirect()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [dontDoTags, setDontDoTags] = useState<string[]>([])
   const t = useTranslations()
   
   const {
@@ -40,7 +41,7 @@ export function GoalAddContainer() {
     try {
       const goalData: DbGoalFormData = {
         title: formData.title,
-        motivation: formData.motivation,
+        motivation: JSON.stringify(dontDoTags),
         deadline: formData.deadline,
         weekdayHours: parseInt(formData.weekdayHours),
         weekendHours: parseInt(formData.weekendHours),
@@ -91,9 +92,9 @@ export function GoalAddContainer() {
             onChange={(value) => updateField("title", value)}
           />
 
-          <GoalMotivationTextarea
-            value={formData.motivation}
-            onChange={(value) => updateField("motivation", value)}
+          <GoalDontDoSelector
+            selectedTags={dontDoTags}
+            onChange={setDontDoTags}
           />
 
           <GoalHoursInputs

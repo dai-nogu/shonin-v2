@@ -159,7 +159,7 @@ export async function addGoal(goalData: GoalFormData): Promise<Result<string>> {
     // サーバー側で文字数制限を適用（UIバイパス対策）
     const goalInsert: Omit<GoalInsert, 'user_id'> = {
       title: truncateRequiredForDb(goalData.title, JA_INPUT_LIMITS.goalTitle),
-      description: truncateForDb(goalData.motivation, JA_INPUT_LIMITS.goalMotivation),
+      dont_list: goalData.motivation || null, // やめることリスト（JSON配列）
       target_duration: targetDurationSeconds, // 秒単位で保存
       current_value: 0, // 初期値は0
       unit: '時間', // 固定値
@@ -211,7 +211,7 @@ export async function updateGoal(id: string, goalData: Partial<GoalFormData>): P
     const updateData: Partial<GoalUpdate> = {}
     
     if (goalData.title !== undefined) updateData.title = truncateRequiredForDb(goalData.title, JA_INPUT_LIMITS.goalTitle)
-    if (goalData.motivation !== undefined) updateData.description = truncateForDb(goalData.motivation, JA_INPUT_LIMITS.goalMotivation)
+    if (goalData.motivation !== undefined) updateData.dont_list = goalData.motivation || null // やめることリスト（JSON配列）
     if (goalData.calculatedHours !== undefined) updateData.target_duration = goalData.calculatedHours * 3600 // 時間を秒に変換
     if (goalData.deadline !== undefined) updateData.deadline = goalData.deadline || null // 空文字列の場合はnullに変換
     if (goalData.weekdayHours !== undefined) updateData.weekday_hours = goalData.weekdayHours
