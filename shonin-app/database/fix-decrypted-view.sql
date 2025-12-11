@@ -28,31 +28,6 @@ SELECT
     END AS mood,
     
     CASE 
-        WHEN achievements_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(achievements_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS achievements,
-    
-    CASE 
-        WHEN challenges_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(challenges_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS challenges,
-    
-    -- 詳細振り返りデータ（暗号化カラムのみ使用）
-    CASE 
-        WHEN detailed_achievements_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(detailed_achievements_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS detailed_achievements,
-    
-    CASE 
-        WHEN detailed_challenges_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(detailed_challenges_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS detailed_challenges,
-    
-    CASE 
         WHEN reflection_notes_encrypted IS NOT NULL THEN
             pgp_sym_decrypt(reflection_notes_encrypted, auth.uid()::text)
         ELSE NULL

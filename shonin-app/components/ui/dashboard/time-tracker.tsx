@@ -31,8 +31,6 @@ export interface CompletedSession extends SessionData {
   endTime: Date
   sessionDate?: string // セッション日付（YYYY-MM-DD形式）
   mood?: number
-  achievements?: string
-  challenges?: string
   // アクティビティ情報
   activityColor?: string
   activityIcon?: string

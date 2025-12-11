@@ -87,12 +87,9 @@
     "location": "Location",
     "related_goal": "Related Goal",
     "mood": "Mood",
-    "achievements": "Today's Notes",
-    "improvements": "Tomorrow's Plan",
     "no_content": "None",
     "start_session": "Start",
-    "close": "Close",
-    "reflection_and_notes": "Reflection & Notes"
+    "close": "Close"
   },
   "ai_feedback": {
     "feedback": "Letter",
@@ -397,10 +394,6 @@
     "goal_match_question": "Was this for your goal?",
     "no_goal_session": "Would you like to set a goal?",
     "mood_question": "How are you feeling?",
-    "achievements_label": "Today's Notes",
-    "achievements_placeholder": "How was your activity?",
-    "challenges_label": "Tomorrow's Plan",
-    "challenges_placeholder": "What will you do tomorrow?",
     "notes_placeholder": "Anything else on your mind?",
     "photos_label": "Photos",
     "memo_label": "Memo",

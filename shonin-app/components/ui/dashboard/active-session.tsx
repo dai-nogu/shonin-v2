@@ -56,8 +56,6 @@ export function ActiveSession({
   
   // 振り返り関連の状態
   const [mood, setMood] = useState(3)
-  const [achievements, setAchievements] = useState("")
-  const [challenges, setChallenges] = useState("")
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
   const [showPhotos, setShowPhotos] = useState(false)
@@ -158,15 +156,11 @@ export function ActiveSession({
     if (typeof window !== 'undefined') {
       const savedNotes = localStorage.getItem(getStorageKey('notes'))
       const savedMood = localStorage.getItem(getStorageKey('mood'))
-      const savedAchievements = localStorage.getItem(getStorageKey('achievements'))
-      const savedChallenges = localStorage.getItem(getStorageKey('challenges'))
       const savedPlaceholder = localStorage.getItem(getStorageKey('placeholder'))
       const savedHasGenerated = localStorage.getItem(getStorageKey('hasGeneratedPlaceholder'))
 
       if (savedNotes) setNotes(savedNotes)
       if (savedMood) setMood(parseInt(savedMood))
-      if (savedAchievements) setAchievements(savedAchievements)
-      if (savedChallenges) setChallenges(savedChallenges)
       if (savedPlaceholder) setNotesPlaceholder(savedPlaceholder)
       if (savedHasGenerated === 'true') setHasGeneratedPlaceholder(true)
     }
@@ -184,18 +178,6 @@ export function ActiveSession({
       localStorage.setItem(getStorageKey('mood'), mood.toString())
     }
   }, [mood, session.activityId, session.startTime])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getStorageKey('achievements'), achievements)
-    }
-  }, [achievements, session.activityId, session.startTime])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getStorageKey('challenges'), challenges)
-    }
-  }, [challenges, session.activityId, session.startTime])
 
   // プレースホルダーと生成フラグをローカルストレージに自動保存
   const isInitialMountForPlaceholder = useRef(true)
@@ -229,8 +211,6 @@ export function ActiveSession({
     if (typeof window !== 'undefined') {
       localStorage.removeItem(getStorageKey('notes'))
       localStorage.removeItem(getStorageKey('mood'))
-      localStorage.removeItem(getStorageKey('achievements'))
-      localStorage.removeItem(getStorageKey('challenges'))
       localStorage.removeItem(getStorageKey('placeholder'))
       localStorage.removeItem(getStorageKey('hasGeneratedPlaceholder'))
     }
@@ -354,8 +334,6 @@ export function ActiveSession({
         endTime: new Date(),
         notes,
         mood,
-        achievements,
-        challenges,
         // 目標IDを更新（ユーザーが選択した目標 or 元の目標）
         goalId: selectedGoalForSession || session.goalId,
       }
@@ -381,8 +359,6 @@ export function ActiveSession({
       if (savedSessionId) {
         const reflectionData: SessionReflection = {
           moodScore: mood,
-          achievements: achievements.trim() || '特になし',
-          challenges: challenges.trim() || '特になし',
           additionalNotes: notes.trim() || undefined,
         }
         
@@ -409,7 +385,7 @@ export function ActiveSession({
       setIsSaving(false)
       saveInProgressRef.current = false // 保存処理完了フラグをリセット
     }
-  }, [session, elapsedTime, notes, mood, achievements, challenges, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage, t])
+  }, [session, elapsedTime, notes, mood, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage, t])
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

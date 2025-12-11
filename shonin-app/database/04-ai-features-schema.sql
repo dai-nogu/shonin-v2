@@ -154,10 +154,6 @@ SELECT
     -- 振り返りデータ（復号化ビューから取得）
     srd.mood,
     s.mood_score,  -- mood_score は暗号化されていないので sessions テーブルから直接取得
-    srd.achievements,
-    srd.challenges,
-    srd.detailed_achievements,
-    srd.detailed_challenges,
     srd.reflection_notes,
     
     -- AI分析結果
@@ -178,8 +174,7 @@ WHERE
     -- 振り返りデータまたはAI分析データがあるセッション
     (s.mood_score IS NOT NULL 
      OR s.mood_encrypted IS NOT NULL
-     OR s.detailed_achievements_encrypted IS NOT NULL 
-     OR s.detailed_challenges_encrypted IS NOT NULL
+     OR s.reflection_notes_encrypted IS NOT NULL
      OR s.ai_analyzed_at IS NOT NULL)
     AND s.user_id = auth.uid(); -- RLS適用
 

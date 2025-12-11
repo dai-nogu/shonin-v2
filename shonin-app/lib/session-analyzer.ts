@@ -18,10 +18,10 @@ import { sanitizeXssNullable } from './xss-sanitize';
 
 /**
  * 個別セッションフィールドの文字数制限
- * 日本語基準（1000文字）を適用
+ * 日本語基準（500文字）を適用
  * フロントエンドで制限されているので、ここではそれに準拠
  */
-const PER_SESSION_FIELD_LIMIT = JA_INPUT_LIMITS.sessionAchievements;
+const PER_SESSION_FIELD_LIMIT = JA_INPUT_LIMITS.sessionNotes;
 
 /**
  * 文字数制限を適用
@@ -50,8 +50,6 @@ export interface RawSessionData {
   duration: number;
   session_date: string;
   mood?: number;
-  achievements?: string;
-  challenges?: string;
   notes?: string;
   location?: string;
   goal_id?: string;
@@ -100,8 +98,6 @@ export interface AnalyzedSessionData {
   }>;
   
   // 振り返り分析
-  achievements: string;         // 結合された成果テキスト
-  challenges: string;           // 結合された課題テキスト
   notes: string;                // 結合されたメモテキスト
   reflectionQuality: 'detailed' | 'moderate' | 'minimal' | 'none';
   
@@ -186,17 +182,7 @@ export function analyzeSessionData(
     }));
   
   // 振り返り分析（XSS対策 + 個別セッションの文字数制限を適用）
-  // ユーザー入力をAIに渡す前にサニタイズし、<achievements>などのタグを誤認しないようにする
-  const achievements = sessions
-    .filter(s => s.achievements)
-    .map(s => truncateField(sanitizeXssNullable(s.achievements) || ''))
-    .join('\n');
-  
-  const challenges = sessions
-    .filter(s => s.challenges)
-    .map(s => truncateField(sanitizeXssNullable(s.challenges) || ''))
-    .join('\n');
-  
+  // ユーザー入力をAIに渡す前にサニタイズ
   const notes = sessions
     .filter(s => s.notes)
     .map(s => truncateField(sanitizeXssNullable(s.notes) || ''))
@@ -219,8 +205,6 @@ export function analyzeSessionData(
     moodTrend,
     activities,
     topActivities,
-    achievements,
-    challenges,
     notes,
     reflectionQuality,
     goalProgress,
@@ -258,14 +242,13 @@ function calculateMoodTrend(sessions: RawSessionData[]): 'improving' | 'stable' 
  * 振り返りの質を評価
  */
 function calculateReflectionQuality(sessions: RawSessionData[]): 'detailed' | 'moderate' | 'minimal' | 'none' {
-  const reflections = sessions.filter(s => s.achievements || s.challenges);
+  const reflections = sessions.filter(s => s.notes);
   
   if (reflections.length === 0) return 'none';
   
   const avgLength = reflections.reduce((sum, s) => {
-    const achievementLength = (s.achievements || '').length;
-    const challengeLength = (s.challenges || '').length;
-    return sum + achievementLength + challengeLength;
+    const notesLength = (s.notes || '').length;
+    return sum + notesLength;
   }, 0) / reflections.length;
   
   const reflectionRate = reflections.length / sessions.length;

@@ -107,8 +107,6 @@ export default function Dashboard() {
         location: session.location || '',
         notes: session.notes || '',
         mood: session.mood || undefined,
-        achievements: session.achievements || undefined,
-        challenges: session.challenges || undefined,
         activityColor: session.activities?.color,
         activityIcon: session.activities?.icon || undefined,
         goalId: session.goal_id || undefined,

@@ -87,13 +87,10 @@
     "location": "場所",
     "related_goal": "関連する目標",
     "mood": "気分",
-    "achievements": "今日のメモ",
-    "improvements": "明日の予定",
     "no_content": "特になし",
     "start_session": "記録",
-    "close": "閉じる",
-    "reflection_and_notes": "振り返り・メモ"
-  },
+    "close": "閉じる"
+    },
   "ai_feedback": {
     "feedback": "メッセージ",
     "weekly": "週次",
@@ -393,10 +390,6 @@
     "goal_match_question": "この目標のための時間でしたか？",
     "no_goal_session": "目標を設定しますか？",
     "mood_question": "今の気分はどうですか？",
-    "achievements_label": "振り返り",
-    "achievements_placeholder": "成果や学びはありましたか？",
-    "challenges_label": "明日の予定",
-    "challenges_placeholder": "明日は何に取り組みますか？",
     "notes_placeholder": "どんなことでも構いません。自由に記入してください。",
     "photos_label": "写真",
     "memo_label": "メモ",

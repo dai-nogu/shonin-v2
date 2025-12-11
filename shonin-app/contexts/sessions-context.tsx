@@ -29,8 +29,6 @@ export interface CompletedSession extends SessionData {
   duration: number
   sessionDate?: string // セッション日付（YYYY-MM-DD形式）
   mood?: number
-  achievements?: string
-  challenges?: string
   // 目標ID（SessionDataから継承されるが明示的に記載）
   goalId?: string
 }

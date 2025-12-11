@@ -16,10 +16,6 @@ export interface InputLimits {
   goalTitle: number;
   /** 目標の理由（motivation） */
   goalMotivation: number;
-  /** セッション振り返り（achievements） */
-  sessionAchievements: number;
-  /** 明日の予定（challenges） */
-  sessionChallenges: number;
   /** その他（notes） */
   sessionNotes: number;
 }
@@ -32,8 +28,6 @@ export const JA_INPUT_LIMITS: InputLimits = {
   activityName: 50,
   goalTitle: 30,
   goalMotivation: 150,
-  sessionAchievements: 500,
-  sessionChallenges: 500,
   sessionNotes: 500,
 };
 
@@ -45,8 +39,6 @@ export const EN_INPUT_LIMITS: InputLimits = {
   activityName: 200,
   goalTitle: 120,
   goalMotivation: 600,
-  sessionAchievements: 2000,
-  sessionChallenges: 2000,
   sessionNotes: 2000,
 };
 

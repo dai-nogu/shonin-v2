@@ -22,23 +22,17 @@ export function useReflectionsDb() {
 
     try {
       // サーバー側で文字数制限を適用（UIバイパス対策）
-      const sanitizedAchievements = truncateForDb(reflection.achievements, JA_INPUT_LIMITS.sessionAchievements);
-      const sanitizedChallenges = truncateForDb(reflection.challenges, JA_INPUT_LIMITS.sessionChallenges);
       const sanitizedNotes = truncateForDb(reflection.additionalNotes, JA_INPUT_LIMITS.sessionNotes);
 
       clientLogger.log('[saveReflection] Saving reflection data:', {
         sessionId,
         moodScore: reflection.moodScore,
-        achievements: sanitizedAchievements?.substring(0, 50),
-        challenges: sanitizedChallenges?.substring(0, 50),
         notes: sanitizedNotes?.substring(0, 50),
       });
 
       // 直接sessionsテーブルを更新（mood_scoreと振り返りデータ）
       // notesカラムに振り返りデータをJSON形式で保存
       const reflectionJson = JSON.stringify({
-        achievements: sanitizedAchievements || null,
-        challenges: sanitizedChallenges || null,
         additionalNotes: sanitizedNotes || null,
       });
 
@@ -108,8 +102,6 @@ export function useReflectionsDb() {
 
       // notesカラムからJSONをパース
       let reflectionData = {
-        achievements: '',
-        challenges: '',
         additionalNotes: undefined as string | undefined,
       };
 
@@ -124,10 +116,6 @@ export function useReflectionsDb() {
       // データを変換
       const reflection: SessionReflection = {
         moodScore: data.mood_score || 3,
-        achievements: reflectionData.achievements || '',
-        achievementsRating: undefined, // UI未実装のため削除
-        challenges: reflectionData.challenges || '',
-        challengesSeverity: undefined, // UI未実装のため削除
         additionalNotes: reflectionData.additionalNotes || undefined,
       };
 
@@ -261,8 +249,6 @@ export function useReflectionsDb() {
     sessionId: string, 
     analysis: {
       overall_sentiment?: number;
-      achievements_sentiment?: number;
-      challenges_sentiment?: number;
       notes_sentiment?: number;
       positive_keywords?: string[];
       negative_keywords?: string[];

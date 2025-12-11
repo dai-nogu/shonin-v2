@@ -83,8 +83,6 @@ export async function GET(request: NextRequest) {
             duration,
             session_date,
             mood,
-            achievements,
-            challenges,
             notes,
             location,
             goal_id,

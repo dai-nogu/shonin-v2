@@ -68,17 +68,11 @@ export interface Database {
           session_date: string | null
           notes: string | null
           mood: number | null
-          achievements: string | null
-          challenges: string | null
           location: string | null
           
           // 詳細振り返り情報
           mood_score: number | null
           mood_notes: string | null
-          detailed_achievements: string | null
-          achievement_satisfaction: number | null
-          detailed_challenges: string | null
-          challenge_severity: number | null
           reflection_notes: string | null
           reflection_duration: number | null
           
@@ -106,16 +100,10 @@ export interface Database {
           session_date?: string | null
           notes?: string | null
           mood?: number | null
-          achievements?: string | null
-          challenges?: string | null
           location?: string | null
           
           // 詳細振り返り情報
           mood_score?: number | null
-          detailed_achievements?: string | null
-          achievement_satisfaction?: number | null
-          detailed_challenges?: string | null
-          challenge_severity?: number | null
           reflection_notes?: string | null
           
           // AI分析結果
@@ -142,16 +130,10 @@ export interface Database {
           session_date?: string | null
           notes?: string | null
           mood?: number | null
-          achievements?: string | null
-          challenges?: string | null
           location?: string | null
           
           // 詳細振り返り情報
           mood_score?: number | null
-          detailed_achievements?: string | null
-          achievement_satisfaction?: number | null
-          detailed_challenges?: string | null
-          challenge_severity?: number | null
           reflection_notes?: string | null
           
           // AI分析結果
@@ -300,14 +282,8 @@ export interface Database {
           location: string | null
           notes: string | null
           mood: number | null
-          achievements: string | null
-          challenges: string | null
           mood_score: number | null
           mood_notes: string | null
-          detailed_achievements: string | null
-          achievement_satisfaction: number | null
-          detailed_challenges: string | null
-          challenge_severity: number | null
           reflection_notes: string | null
           reflection_duration: number | null
           ai_sentiment_score: number | null
@@ -350,16 +326,10 @@ export interface Session {
   session_date?: string | null;
   notes?: string;
   mood?: number;
-  achievements?: string;
-  challenges?: string;
   location?: string;
   
   // 詳細振り返り情報（統合済み）
   mood_score?: number;
-  detailed_achievements?: string;
-  achievement_satisfaction?: number;
-  detailed_challenges?: string;
-  challenge_severity?: number;
   reflection_notes?: string;
   
   // AI分析結果（統合済み）
@@ -428,9 +398,5 @@ export interface SessionMedia {
 
 export interface SessionReflection {
   moodScore: number;
-  achievements: string;
-  achievementsRating?: number;
-  challenges: string;
-  challengesSeverity?: number;
   additionalNotes?: string;
 } 

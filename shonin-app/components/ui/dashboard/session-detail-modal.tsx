@@ -38,7 +38,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const [slideOffset, setSlideOffset] = useState(0)
   
   // メモがあるかどうかをチェック
-  const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
+  const hasContent = !!(session?.notes || session?.targetTime)
   const totalPages = hasContent ? 2 : 1 // メモがある場合は2ページ、ない場合は1ページ
   
   // 固定高さが必要かどうか（複数ページ or スタートボタンがある場合）
@@ -287,44 +287,17 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     <div className="space-y-2">
       {/* 振り返り・メモ */}
       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
-        <h3 className="text-gray-400 text-xs tracking-wider font-semibold flex items-center">
-          <span className="w-0.5 h-3 bg-emerald-700 rounded-full mr-1.5"></span>
-          {t('session_detail.reflection_and_notes')}
-        </h3>
-
         <div className="space-y-3">
-          {/* 学びや成果 */}
-          {session.achievements && (
-            <div className="relative pl-3 border-l-2 border-emerald-700/30">
-              <span className="text-xs font-medium text-emerald-400 mb-0.5 block">{t('session_detail.achievements')}</span>
-              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
-                {session.achievements}
-              </div>
-            </div>
-          )}
-
-          {/* 課題や改善点 */}
-          {session.challenges && (
-            <div className="relative pl-3 border-l-2 border-orange-500/30">
-              <span className="text-xs font-medium text-orange-400 mb-0.5 block">{t('session_detail.improvements')}</span>
-              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
-                {session.challenges}
-              </div>
-            </div>
-          )}
-
-          {/* その他のメモ */}
           {session.notes && (
-            <div className="relative pl-3 border-l-2 border-blue-500/30">
-              <span className="text-xs font-medium text-blue-400 mb-0.5 block">その他のメモ</span>
+            <>
               <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
                 {session.notes}
               </div>
-            </div>
+            </>
           )}
           
           {/* メモがない場合 */}
-          {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
+          {!session.notes && !session.targetTime && (
             <div className="text-center py-3 text-gray-500 text-xs italic">
               メモはありません
             </div>
@@ -564,7 +537,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [slideOffset, setSlideOffset] = useState(0)
   
   // メモがあるかどうかをチェック
-  const hasContent = !!(session?.achievements || session?.challenges || session?.notes || session?.targetTime)
+  const hasContent = !!(session?.notes || session?.targetTime)
   // 写真がある場合は3ページ（基本情報、メモ、写真）、メモがない場合は2ページ（基本情報、写真）、写真もメモもない場合は1ページ
   const totalPages = sessionPhotos.length > 0 ? (hasContent ? 3 : 2) : (hasContent ? 2 : 1)
   
@@ -858,44 +831,18 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     <div className="space-y-2">
       {/* 振り返り・メモ */}
       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50 space-y-2.5">
-        <h3 className="text-gray-400 text-xs tracking-wider font-semibold flex items-center">
-          <span className="w-0.5 h-3 bg-emerald-700 rounded-full mr-1.5"></span>
-          {t('session_detail.reflection_and_notes')}
-        </h3>
 
         <div className="space-y-3">
-          {/* 学びや成果 */}
-          {session.achievements && (
-            <div className="relative pl-3 border-l-2 border-emerald-700/30">
-              <span className="text-xs font-medium text-emerald-400 mb-0.5 block">{t('session_detail.achievements')}</span>
-              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
-                {session.achievements}
-              </div>
-            </div>
-          )}
-
-          {/* 課題や改善点 */}
-          {session.challenges && (
-            <div className="relative pl-3 border-l-2 border-orange-500/30">
-              <span className="text-xs font-medium text-orange-400 mb-0.5 block">{t('session_detail.improvements')}</span>
-              <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
-                {session.challenges}
-              </div>
-            </div>
-          )}
-
-          {/* その他のメモ */}
           {session.notes && (
-            <div className="relative pl-3 border-l-2 border-blue-500/30">
-              <span className="text-xs font-medium text-blue-400 mb-0.5 block">その他のメモ</span>
+            <>
               <div className="text-gray-200 text-xs whitespace-pre-wrap leading-relaxed">
                 {session.notes}
               </div>
-            </div>
+            </>
           )}
           
           {/* メモがない場合 */}
-          {!session.achievements && !session.challenges && !session.notes && !session.targetTime && (
+          {!session.notes && !session.targetTime && (
             <div className="text-center py-3 text-gray-500 text-xs italic">
               メモはありません
             </div>

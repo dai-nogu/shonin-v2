@@ -48,14 +48,10 @@ export function useSessionList() {
       const convertedSessions: CompletedSession[] = completedSessionsData.map(session => {
         // notesがJSON形式の場合はパースして振り返りデータを取り出す
         let parsedNotes = session.notes || ''
-        let achievements = session.achievements || undefined
-        let challenges = session.challenges || undefined
         
         if (session.notes && session.notes.startsWith('{')) {
           try {
             const parsed = JSON.parse(session.notes)
-            achievements = parsed.achievements || achievements
-            challenges = parsed.challenges || challenges
             parsedNotes = parsed.additionalNotes || ''
           } catch {
             // JSONパースに失敗した場合はそのまま使用
@@ -73,8 +69,6 @@ export function useSessionList() {
           location: session.location || '',
           notes: parsedNotes,
           mood: session.mood || session.mood_score || undefined,
-          achievements,
-          challenges,
           activityColor: session.activities?.color,
           activityIcon: session.activities?.icon || undefined,
           goalId: session.goal_id || undefined,

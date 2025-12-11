@@ -236,3 +236,27 @@
 .bg-aotake { background-color: #7ebeab; } /* 青竹色 */
 .bg-susutake { background-color: #5b5248; } /* 煤竹色 */
 .bg-rikyu-nezu { background-color: #6b7b6e; } /* 利休鼠 */
+
+/* ===== デフォルトスクロールバー（カスタムスタイル削除） ===== */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+*::-webkit-scrollbar {
+  width: auto;
+  height: auto;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: auto;
+  border-radius: auto;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: auto;
+}

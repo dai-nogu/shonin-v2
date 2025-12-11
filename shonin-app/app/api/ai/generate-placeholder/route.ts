@@ -86,7 +86,9 @@ export async function POST(request: NextRequest) {
 
     if (sessionsError) {
       safeError('セッション取得エラー', sessionsError);
-      return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
+      // エラー時はセッションなしとしてプレースホルダーを生成
+      const placeholder = getDefaultPlaceholder(0, null, locale);
+      return NextResponse.json({ placeholder });
     }
 
     // アクティビティ名を取得

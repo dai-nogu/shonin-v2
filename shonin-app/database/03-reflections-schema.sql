@@ -16,16 +16,6 @@ BEGIN
         ALTER TABLE public.sessions ADD COLUMN mood_encrypted BYTEA;
     END IF;
     
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'sessions' AND column_name = 'achievements_encrypted') THEN
-        ALTER TABLE public.sessions ADD COLUMN achievements_encrypted BYTEA;
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'sessions' AND column_name = 'challenges_encrypted') THEN
-        ALTER TABLE public.sessions ADD COLUMN challenges_encrypted BYTEA;
-    END IF;
-    
     -- 詳細振り返りカラムを安全に追加
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                    WHERE table_name = 'sessions' AND column_name = 'mood_score') THEN
@@ -55,6 +45,12 @@ BEGIN
     END IF;
     
     IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'sessions' AND column_name = 'reflection_notes') THEN
+        ALTER TABLE public.sessions DROP COLUMN reflection_notes;
+    END IF;
+    
+    -- achievements と challenges 関連カラムを削除
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
                WHERE table_name = 'sessions' AND column_name = 'achievements') THEN
         ALTER TABLE public.sessions DROP COLUMN achievements;
     END IF;
@@ -62,6 +58,16 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns 
                WHERE table_name = 'sessions' AND column_name = 'challenges') THEN
         ALTER TABLE public.sessions DROP COLUMN challenges;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'sessions' AND column_name = 'achievements_encrypted') THEN
+        ALTER TABLE public.sessions DROP COLUMN achievements_encrypted;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'sessions' AND column_name = 'challenges_encrypted') THEN
+        ALTER TABLE public.sessions DROP COLUMN challenges_encrypted;
     END IF;
     
     IF EXISTS (SELECT 1 FROM information_schema.columns 
@@ -75,8 +81,13 @@ BEGIN
     END IF;
     
     IF EXISTS (SELECT 1 FROM information_schema.columns 
-               WHERE table_name = 'sessions' AND column_name = 'reflection_notes') THEN
-        ALTER TABLE public.sessions DROP COLUMN reflection_notes;
+               WHERE table_name = 'sessions' AND column_name = 'detailed_achievements_encrypted') THEN
+        ALTER TABLE public.sessions DROP COLUMN detailed_achievements_encrypted;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'sessions' AND column_name = 'detailed_challenges_encrypted') THEN
+        ALTER TABLE public.sessions DROP COLUMN detailed_challenges_encrypted;
     END IF;
 EXCEPTION
     WHEN others THEN
@@ -109,31 +120,6 @@ SELECT
     END AS mood,
     
     CASE 
-        WHEN achievements_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(achievements_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS achievements,
-    
-    CASE 
-        WHEN challenges_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(challenges_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS challenges,
-    
-    -- 詳細振り返りデータ（暗号化カラムのみ使用）
-    CASE 
-        WHEN detailed_achievements_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(detailed_achievements_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS detailed_achievements,
-    
-    CASE 
-        WHEN detailed_challenges_encrypted IS NOT NULL THEN
-            pgp_sym_decrypt(detailed_challenges_encrypted, auth.uid()::text)
-        ELSE NULL
-    END AS detailed_challenges,
-    
-    CASE 
         WHEN reflection_notes_encrypted IS NOT NULL THEN
             pgp_sym_decrypt(reflection_notes_encrypted, auth.uid()::text)
         ELSE NULL
@@ -150,19 +136,11 @@ WHERE auth.uid() = user_id; -- RLS適用（ORDER BYを削除）
 CREATE OR REPLACE FUNCTION public.update_session_reflections_encrypted(
     p_session_id UUID,
     p_mood INTEGER DEFAULT NULL,
-    p_achievements TEXT DEFAULT NULL,
-    p_challenges TEXT DEFAULT NULL,
     p_mood_score INTEGER DEFAULT NULL,
-    p_detailed_achievements TEXT DEFAULT NULL,
-    p_detailed_challenges TEXT DEFAULT NULL,
     p_reflection_notes TEXT DEFAULT NULL
 ) RETURNS BOOLEAN AS $$
 DECLARE
     encrypted_mood BYTEA;
-    encrypted_achievements BYTEA;
-    encrypted_challenges BYTEA;
-    encrypted_detailed_achievements BYTEA;
-    encrypted_detailed_challenges BYTEA;
     encrypted_notes BYTEA;
 BEGIN
     -- 権限チェック：自分のセッションのみ更新可能
@@ -178,22 +156,6 @@ BEGIN
         encrypted_mood := pgp_sym_encrypt(p_mood::text, auth.uid()::text);
     END IF;
     
-    IF p_achievements IS NOT NULL THEN
-        encrypted_achievements := pgp_sym_encrypt(p_achievements, auth.uid()::text);
-    END IF;
-    
-    IF p_challenges IS NOT NULL THEN
-        encrypted_challenges := pgp_sym_encrypt(p_challenges, auth.uid()::text);
-    END IF;
-    
-    IF p_detailed_achievements IS NOT NULL THEN
-        encrypted_detailed_achievements := pgp_sym_encrypt(p_detailed_achievements, auth.uid()::text);
-    END IF;
-    
-    IF p_detailed_challenges IS NOT NULL THEN
-        encrypted_detailed_challenges := pgp_sym_encrypt(p_detailed_challenges, auth.uid()::text);
-    END IF;
-    
     IF p_reflection_notes IS NOT NULL THEN
         encrypted_notes := pgp_sym_encrypt(p_reflection_notes, auth.uid()::text);
     END IF;
@@ -201,11 +163,7 @@ BEGIN
     -- セッションを更新（暗号化カラムのみ使用）
     UPDATE public.sessions SET
         mood_encrypted = COALESCE(encrypted_mood, mood_encrypted),
-        achievements_encrypted = COALESCE(encrypted_achievements, achievements_encrypted),
-        challenges_encrypted = COALESCE(encrypted_challenges, challenges_encrypted),
         mood_score = COALESCE(p_mood_score, mood_score),
-        detailed_achievements_encrypted = COALESCE(encrypted_detailed_achievements, detailed_achievements_encrypted),
-        detailed_challenges_encrypted = COALESCE(encrypted_detailed_challenges, detailed_challenges_encrypted),
         reflection_notes_encrypted = COALESCE(encrypted_notes, reflection_notes_encrypted),
         updated_at = NOW()
     WHERE id = p_session_id AND user_id = auth.uid();
@@ -231,9 +189,5 @@ DROP VIEW IF EXISTS public.sessions_with_reflections;
 -- ==========================================
 COMMENT ON COLUMN public.sessions.mood_score IS '気分評価（1-5段階）';
 COMMENT ON COLUMN public.sessions.mood_encrypted IS 'pgcryptoで暗号化された気分評価';
-COMMENT ON COLUMN public.sessions.achievements_encrypted IS 'pgcryptoで暗号化された成果記録';
-COMMENT ON COLUMN public.sessions.challenges_encrypted IS 'pgcryptoで暗号化された課題記録';
-COMMENT ON COLUMN public.sessions.detailed_achievements_encrypted IS 'pgcryptoで暗号化された詳細な成果記録';
-COMMENT ON COLUMN public.sessions.detailed_challenges_encrypted IS 'pgcryptoで暗号化された詳細な課題記録';
 COMMENT ON COLUMN public.sessions.reflection_notes_encrypted IS 'pgcryptoで暗号化された振り返りメモ';
 COMMENT ON VIEW public.sessions_reflections_decrypted IS '復号化された振り返りデータビュー（RLS適用）'; 
