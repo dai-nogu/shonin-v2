@@ -58,17 +58,17 @@ export async function POST(request: NextRequest) {
       locale = 'ja' 
     }: GeneratePlaceholderRequest = await request.json();
 
-    // 過去のセッション情報を取得（同じアクティビティで同じ目標）
+    // 過去のセッション情報を取得（暗号化されたデータを復号化するビューを使用）
     let query = supabase
-      .from('sessions_reflections_decrypted')
+      .from('decrypted_session')
       .select(`
         id,
         duration,
         session_date,
-        mood,
-        achievements,
-        challenges,
+        mood_score,
+        mood_notes,
         notes,
+        reflection_notes,
         activities!inner(name)
       `)
       .eq('user_id', user.id)
@@ -188,7 +188,7 @@ async function generatePlaceholder({
 
   // 前回のセッション情報
   const lastSession = sessions[0];
-  const lastMood = lastSession.mood;
+  const lastMood = lastSession.mood_score;
   const lastDuration = lastSession.duration; // 秒単位
 
   // 分析データを構築
@@ -238,19 +238,12 @@ async function generatePlaceholder({
     };
   }
 
-  // 前回の達成内容
-  if (lastSession.achievements) {
-    analysisData.previousAchievements = {
-      full: lastSession.achievements,
-      preview: lastSession.achievements.substring(0, 150),
-    };
-  }
-  
-  // 前回の課題
-  if (lastSession.challenges) {
-    analysisData.previousChallenges = {
-      full: lastSession.challenges,
-      preview: lastSession.challenges.substring(0, 150),
+  // 前回の気分メモ
+  if (lastSession.mood_notes) {
+    analysisData.previousMoodNotes = {
+      full: lastSession.mood_notes,
+      preview: lastSession.mood_notes.substring(0, 200),
+      keywords: extractKeywords(lastSession.mood_notes),
     };
   }
 
@@ -294,14 +287,13 @@ async function generatePlaceholder({
 【重要な生成タイプの違い】
 generationType が "draft" の場合：
   - セッション開始時の先行生成（7割の完成度）
-  - 過去のデータ（メモ内容、気分の傾向、時間の傾向、達成・課題）をしっかり分析
-  - 過去のパターンから具体的な内容を生成
-  - 前回の気分や時間、メモの具体的な内容を織り込む
-  - 例：「前回は〇〇分取り組んでいましたね。」「前回のメモに書いていた〇〇、今日はどうでしたか？」「前回は〇〇な気分でしたが、」
+  - 過去のデータ（メモ内容・気分・時間・課題）を分析
+  - 前回との比較を簡潔に織り込む
 
 generationType が "final" の場合：
-  - セッション終了時の完成生成（残り3割で10割完成）
+  -「前回は〇〇分取り組んでいましたね。」「前回のメモに書いていた〇〇、今日はどうでしたか？」「前回は〇〇な気分でしたが、」
   - draftで作った文章に、今回の気分・時間などの比較文を入れて微調整
+    - セッション終了時の完成
   - moodComparisonやdurationComparisonを活用して、違いを追加
 
 要件：
@@ -310,8 +302,6 @@ generationType が "final" の場合：
 - userNameがnullの場合は名前なしで始める
 - ユーザーの状況に合わせた励ましや問いかけ。絶対にポジティブ。
 - 親しみやすく、優しい口調
-- draftでは過去データを具体的に織り込む（7割完成を目指す）
-- finalではdraftの内容に今回との比較を加える（残り3割）
 - 絶対に一文で、句点は一つのみ
 
 禁止事項：

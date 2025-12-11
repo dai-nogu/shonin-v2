@@ -87,17 +87,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     // ローカルストレージをクリア
     if (typeof window !== 'undefined') {
+      // アプリケーション固有のキーを削除
       localStorage.removeItem('app-current-page')
       localStorage.removeItem('app-calendar-view-mode')
       localStorage.removeItem('app-user-name')
       localStorage.removeItem('app-user-email')
       localStorage.removeItem('app-auth')
       localStorage.removeItem('app-goal-reminders')
+      
       // 訪問履歴をクリア（古い形式と新しい形式両方）
       localStorage.removeItem('lastVisitDate')
       localStorage.removeItem('lastVisit_morning')
       localStorage.removeItem('lastVisit_afternoon')
       localStorage.removeItem('lastVisit_evening')
+      
+      // Supabaseのセッション関連のキーを全て削除
+      // session_ で始まる全てのキーを削除
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (key.startsWith('session_') || key.startsWith('sb-') || key.startsWith('supabase.'))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key))
+      
+      // その他のShonin関連のキーも削除
+      localStorage.removeItem('shonin-calendar-view-mode')
+      localStorage.removeItem('shonin-timezone')
     }
   }
 

@@ -88,6 +88,22 @@ export function DeleteAccountButton() {
       })
 
       if (response.ok) {
+        // アカウント削除時は全てのストレージをクリア
+        if (typeof window !== 'undefined') {
+          localStorage.clear()
+          sessionStorage.clear()
+          
+          // IndexedDB のクリア（Supabaseが使用している可能性がある）
+          if (window.indexedDB) {
+            const databases = await window.indexedDB.databases()
+            databases.forEach(db => {
+              if (db.name) {
+                window.indexedDB.deleteDatabase(db.name)
+              }
+            })
+          }
+        }
+        
         await signOut()
         showSuccess(t('settings.account_deleted_message'))
         // アカウント削除後にログインページにリダイレクト（ロケール対応）

@@ -114,7 +114,7 @@ function HeroSection() {
     <section id="hero" className="pt-32 pb-24 px-6">
       <div className="max-w-4xl mx-auto text-center">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight text-white text-yakumono-tight">
-        孤独は、独りではない。
+        静かに突然変わる。
         </h1>
         <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
         ただ自分の成長に没頭する時間だけが<br />
@@ -321,8 +321,8 @@ function OriginSection() {
             孤独な戦いの唯一の「証人」<br />
             </p>
             <p className="text-gray-300 leading-relaxed tracking-[0.15em]">
-            誰も見ていない場所で人は成長する。<br />
-            Shoninはあなたの努力に伴走し、歩んだ道のりの証人となる。
+            誰も見ていない場所でこそ人は成長する。<br />
+            Shoninはあなたの努力に伴走し、証人となる。
             </p>
           </div>
 
@@ -333,8 +333,8 @@ function OriginSection() {
               誰にも言わない努力の「承認」
             </p>
             <p className="text-gray-300 leading-relaxed tracking-[0.15em]">
-            誰かに褒められる必要はない。<br/>
-            昨日の自分を超えた確かな前進をShoninは知っている。
+            承認欲求は過程では必要はない。<br/>
+            結果で周りを驚かせよう。
             </p>
           </div>
         </div>

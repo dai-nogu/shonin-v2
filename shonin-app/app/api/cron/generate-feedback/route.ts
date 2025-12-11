@@ -75,23 +75,25 @@ export async function GET(request: NextRequest) {
     // 各ユーザーに対してフィードバックを生成
     for (const user of users.users) {
       try {
-        // このユーザーの対象期間のセッションを取得（復号化ビューを使用）
+        // このユーザーの対象期間のセッションを取得（暗号化されたデータを復号化するビューを使用）
         const { data: sessions, error: sessionsError } = await supabase
-          .from('sessions_reflections_decrypted')
+          .from('decrypted_session')
           .select(`
             id,
             duration,
             session_date,
-            mood,
+            mood_score,
+            mood_notes,
             notes,
             location,
             goal_id,
             activity_id,
+            reflection_notes,
             activities!inner(name),
             goals(
               id,
               title,
-              description,
+              dont_list,
               deadline,
               target_duration,
               weekday_hours,

@@ -49,7 +49,8 @@ export interface RawSessionData {
   id: string;
   duration: number;
   session_date: string;
-  mood?: number;
+  mood?: number; // 後方互換性のため残す
+  mood_score?: number; // 実際のDBカラム
   notes?: string;
   location?: string;
   goal_id?: string;
@@ -62,6 +63,7 @@ export interface RawSessionData {
     id: string;
     title: string;
     description?: string;
+    dont_list?: string;
     deadline?: string;
     target_duration?: number;
     weekday_hours?: number;
@@ -146,9 +148,9 @@ export function analyzeSessionData(
   const averageDuration = sessionsCount > 0 ? totalDuration / sessionsCount : 0;
   
   // 気分分析
-  const moodSessions = sessions.filter(s => s.mood != null);
+  const moodSessions = sessions.filter(s => (s.mood_score != null || s.mood != null));
   const averageMood = moodSessions.length > 0
-    ? moodSessions.reduce((sum, s) => sum + (s.mood || 0), 0) / moodSessions.length
+    ? moodSessions.reduce((sum, s) => sum + (s.mood_score || s.mood || 0), 0) / moodSessions.length
     : 0;
   
   const moodTrend = calculateMoodTrend(sessions);
@@ -220,7 +222,7 @@ export function analyzeSessionData(
  */
 function calculateMoodTrend(sessions: RawSessionData[]): 'improving' | 'stable' | 'declining' | 'unknown' {
   const moodSessions = sessions
-    .filter(s => s.mood != null)
+    .filter(s => (s.mood_score != null || s.mood != null))
     .sort((a, b) => new Date(a.session_date).getTime() - new Date(b.session_date).getTime());
   
   if (moodSessions.length < 2) return 'unknown';
@@ -228,8 +230,8 @@ function calculateMoodTrend(sessions: RawSessionData[]): 'improving' | 'stable' 
   const firstHalf = moodSessions.slice(0, Math.floor(moodSessions.length / 2));
   const secondHalf = moodSessions.slice(Math.floor(moodSessions.length / 2));
   
-  const firstHalfAvg = firstHalf.reduce((sum, s) => sum + (s.mood || 0), 0) / firstHalf.length;
-  const secondHalfAvg = secondHalf.reduce((sum, s) => sum + (s.mood || 0), 0) / secondHalf.length;
+  const firstHalfAvg = firstHalf.reduce((sum, s) => sum + (s.mood_score || s.mood || 0), 0) / firstHalf.length;
+  const secondHalfAvg = secondHalf.reduce((sum, s) => sum + (s.mood_score || s.mood || 0), 0) / secondHalf.length;
   
   const diff = secondHalfAvg - firstHalfAvg;
   

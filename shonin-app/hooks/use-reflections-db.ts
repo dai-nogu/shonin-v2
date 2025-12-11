@@ -68,18 +68,19 @@ export function useReflectionsDb() {
     }
   };
 
-  // 振り返り情報を取得（統合版）
+  // 振り返り情報を取得（統合版 - 暗号化された振り返りデータを復号化して取得）
   const getReflection = async (sessionId: string): Promise<SessionReflection | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // sessionsテーブルから振り返りデータを取得
+      // decrypted_sessionビューから振り返りデータを取得（暗号化されたデータが復号化される）
       const { data, error } = await supabase
-        .from('sessions')
+        .from('decrypted_session')
         .select(`
           mood_score,
-          notes
+          notes,
+          reflection_notes
         `)
         .eq('id', sessionId)
         .single();
@@ -301,7 +302,7 @@ export function useReflectionsDb() {
 
     try {
       const { data, error } = await supabase
-        .from('sessions')
+        .from('decrypted_session')
         .select(`
           ai_sentiment_score,
           ai_positive_keywords,

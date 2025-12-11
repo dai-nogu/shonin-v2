@@ -62,14 +62,14 @@ async function getCurrentUser() {
   return user
 }
 
-// セッションを取得（アクティビティ情報も含む）- 復号化ビューを使用
+// セッションを取得（アクティビティ情報も含む）
 export async function getSessions(): Promise<Result<SessionWithActivity[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
 
     const { data, error } = await supabase
-      .from('sessions_reflections_decrypted')
+      .from('decrypted_session')
       .select(`
         *,
         activities (
@@ -203,7 +203,7 @@ export async function getSessionsByDateRange(
     const supabase = await getSupabaseClient()
 
     const { data, error } = await supabase
-      .from('sessions')
+      .from('decrypted_session')
       .select(`
         *,
         activities (
@@ -236,7 +236,7 @@ export async function getActivityStats(): Promise<Result<ActivityStat[]>> {
     const supabase = await getSupabaseClient()
 
     const { data, error } = await supabase
-      .from('sessions')
+      .from('decrypted_session')
       .select(`
         activity_id,
         duration,

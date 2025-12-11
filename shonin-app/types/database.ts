@@ -67,13 +67,12 @@ export interface Database {
           duration: number
           session_date: string | null
           notes: string | null
-          mood: number | null
           location: string | null
           
           // 詳細振り返り情報
           mood_score: number | null
           mood_notes: string | null
-          reflection_notes: string | null
+          reflection_notes_encrypted: Uint8Array | null  // 暗号化された振り返り
           reflection_duration: number | null
           
           // AI分析結果
@@ -99,12 +98,12 @@ export interface Database {
           duration?: number
           session_date?: string | null
           notes?: string | null
-          mood?: number | null
           location?: string | null
           
           // 詳細振り返り情報
           mood_score?: number | null
-          reflection_notes?: string | null
+          mood_notes?: string | null
+          reflection_notes_encrypted?: Uint8Array | null  // 暗号化された振り返り
           
           // AI分析結果
           ai_sentiment_score?: number | null
@@ -129,12 +128,12 @@ export interface Database {
           duration?: number
           session_date?: string | null
           notes?: string | null
-          mood?: number | null
           location?: string | null
           
           // 詳細振り返り情報
           mood_score?: number | null
-          reflection_notes?: string | null
+          mood_notes?: string | null
+          reflection_notes_encrypted?: Uint8Array | null  // 暗号化された振り返り
           
           // AI分析結果
           ai_sentiment_score?: number | null
@@ -281,7 +280,6 @@ export interface Database {
           session_date: string | null
           location: string | null
           notes: string | null
-          mood: number | null
           mood_score: number | null
           mood_notes: string | null
           reflection_notes: string | null
@@ -294,6 +292,39 @@ export interface Database {
           ai_focus_level: number | null
           ai_satisfaction_level: number | null
           ai_analyzed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+      }
+      decrypted_session: {
+        Row: {
+          id: string
+          user_id: string
+          activity_id: string
+          goal_id: string | null
+          start_time: string
+          end_time: string | null
+          duration: number
+          session_date: string | null
+          notes: string | null
+          location: string | null
+          
+          // 詳細振り返り情報（復号化済み）
+          mood_score: number | null
+          mood_notes: string | null
+          reflection_notes: string | null  // 復号化された振り返り
+          reflection_duration: number | null
+          
+          // AI分析結果
+          ai_sentiment_score: number | null
+          ai_positive_keywords: string[] | null
+          ai_negative_keywords: string[] | null
+          ai_improvement_keywords: string[] | null
+          ai_effort_level: number | null
+          ai_focus_level: number | null
+          ai_satisfaction_level: number | null
+          ai_analyzed_at: string | null
+          
           created_at: string
           updated_at: string
         }
@@ -325,11 +356,11 @@ export interface Session {
   duration: number;
   session_date?: string | null;
   notes?: string;
-  mood?: number;
   location?: string;
   
   // 詳細振り返り情報（統合済み）
   mood_score?: number;
+  mood_notes?: string;
   reflection_notes?: string;
   
   // AI分析結果（統合済み）
