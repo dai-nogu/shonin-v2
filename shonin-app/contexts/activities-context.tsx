@@ -9,6 +9,7 @@ export interface Activity {
   name: string
   icon: string | null
   color: string
+  goal_id?: string | null
 }
 
 interface ActivitiesContextType {

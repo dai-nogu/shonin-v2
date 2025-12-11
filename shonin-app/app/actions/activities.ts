@@ -47,20 +47,33 @@ async function getCurrentUser() {
 }
 
 // アクティビティを取得（削除されていないもののみ）
-export async function getActivities(): Promise<Result<Activity[]>> {
+// goalIdを指定すると、その目標に紐づくアクティビティのみを取得
+export async function getActivities(goalId?: string | null): Promise<Result<Activity[]>> {
   try {
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('activities')
       .select('*')
       .eq('user_id', user.id)
       .is('deleted_at', null) // 論理削除されていないもののみ
-      .order('created_at', { ascending: false })
+
+    // goalIdが指定されている場合は、その目標に紐づくアクティビティのみを取得
+    if (goalId !== undefined) {
+      if (goalId === null) {
+        // goalIdがnullの場合は、目標に紐づいていないアクティビティを取得
+        query = query.is('goal_id', null)
+      } else {
+        // goalIdが指定されている場合は、その目標に紐づくアクティビティを取得
+        query = query.eq('goal_id', goalId)
+      }
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
-      safeError('アクティビティ取得エラー', { error, userId: user.id })
+      safeError('アクティビティ取得エラー', { error, userId: user.id, goalId })
       return failure('Failed to fetch activities', 'ACTIVITY_FETCH_FAILED')
     }
 
@@ -82,6 +95,7 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
       ...activity,
       name: truncateRequiredForDb(activity.name, JA_INPUT_LIMITS.activityName),
       user_id: user.id,
+      // goal_idは activity に含まれている場合はそのまま使用
     }
 
     const { data, error } = await supabase
@@ -91,7 +105,7 @@ export async function addActivity(activity: Omit<ActivityInsert, 'user_id'>): Pr
       .single()
 
     if (error) {
-      safeError('アクティビティ追加エラー', { error, userId: user.id })
+      safeError('アクティビティ追加エラー', { error, userId: user.id, goalId: activity.goal_id })
       return failure('Failed to add activity', 'ACTIVITY_ADD_FAILED')
     }
 

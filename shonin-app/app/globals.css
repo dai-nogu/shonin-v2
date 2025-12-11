@@ -22,6 +22,15 @@
     font-feature-settings: 'palt' 1, 'halt' 1;
     letter-spacing: -0.02em;
   }
+  
+  /* スクロールバー非表示 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer base {

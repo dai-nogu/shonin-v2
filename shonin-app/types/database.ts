@@ -31,6 +31,7 @@ export interface Database {
           name: string
           icon: string | null
           color: string
+          goal_id: string | null  // 目標との紐付け（NULLの場合は目標なし）
           deleted_at: string | null  // 論理削除用（NULLなら有効、値ありなら削除済み）
           created_at: string
           updated_at: string
@@ -41,6 +42,7 @@ export interface Database {
           name: string
           icon?: string | null
           color?: string
+          goal_id?: string | null
           deleted_at?: string | null
           created_at?: string
           updated_at?: string
@@ -51,6 +53,7 @@ export interface Database {
           name?: string
           icon?: string | null
           color?: string
+          goal_id?: string | null
           deleted_at?: string | null
           created_at?: string
           updated_at?: string
@@ -341,6 +344,7 @@ export interface Activity {
   name: string;
   icon?: string;
   color: string;
+  goal_id?: string | null;  // 目標との紐付け（NULLの場合は目標なし）
   deleted_at?: string | null;  // 論理削除用（NULLなら有効、値ありなら削除済み）
   created_at: string;
   updated_at: string;

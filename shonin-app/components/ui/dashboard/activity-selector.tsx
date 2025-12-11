@@ -40,16 +40,6 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   // セッション状態を取得
   const { isSessionActive } = useSessions()
 
-  // sessionStorageから追加された目標を自動選択
-  useEffect(() => {
-    const goalIdFromStorage = sessionStorage.getItem('selectedGoalFromAdd')
-    if (goalIdFromStorage) {
-      setSelectedGoal(goalIdFromStorage)
-      // 読み取り後すぐに削除
-      sessionStorage.removeItem('selectedGoalFromAdd')
-    }
-  }, [])
-  
   // 目標を選択肢として利用可能な形式に変換
   const availableGoals = goals.map(goal => ({
     id: goal.id,
@@ -69,8 +59,47 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
   // アクティブな目標のみをフィルタリング
   const activeGoals = availableGoals.filter(goal => goal.status === 'active')
+
+  // 初期化：sessionStorageから選択された目標を復元するか、最初の目標を選択
+  useEffect(() => {
+    const goalIdFromStorage = sessionStorage.getItem('selectedGoalFromAdd')
+    if (goalIdFromStorage) {
+      setSelectedGoal(goalIdFromStorage)
+      // 読み取り後すぐに削除
+      sessionStorage.removeItem('selectedGoalFromAdd')
+      // グローバルに保存
+      sessionStorage.setItem('currentSelectedGoal', goalIdFromStorage)
+    } else {
+      // sessionStorageから現在の選択目標を復元
+      const currentGoal = sessionStorage.getItem('currentSelectedGoal')
+      if (currentGoal && activeGoals.some(g => g.id === currentGoal)) {
+        setSelectedGoal(currentGoal)
+      } else if (activeGoals.length > 0) {
+        // デフォルトで最初の目標を選択
+        setSelectedGoal(activeGoals[0].id)
+        sessionStorage.setItem('currentSelectedGoal', activeGoals[0].id)
+      }
+    }
+  }, [activeGoals.length])
   
-  const { activities: customActivities, loading: activitiesLoading, addActivity, deleteActivity } = useActivities()
+  // 目標が変更されたらsessionStorageに保存
+  useEffect(() => {
+    if (selectedGoal && selectedGoal !== "none") {
+      sessionStorage.setItem('currentSelectedGoal', selectedGoal)
+    }
+  }, [selectedGoal])
+  
+  const { activities: allActivities, loading: activitiesLoading, addActivity, deleteActivity } = useActivities()
+  
+  // 現在選択されている目標に紐づくアクティビティのみをフィルタリング
+  const customActivities = allActivities.filter(activity => {
+    // goal_idがundefinedの場合は、selectedGoalと比較できないため除外
+    if (activity.goal_id === undefined) return false
+    // goal_idがnullの場合は、目標に紐づいていないアクティビティ（互換性のため残す）
+    if (activity.goal_id === null && !selectedGoal) return true
+    // goal_idが一致する場合のみ表示
+    return activity.goal_id === selectedGoal
+  })
   const [hoveredTagId, setHoveredTagId] = useState<string | null>(null) // ホバー中のタグID
   const [showAddForm, setShowAddForm] = useState(false)
   const [newActivityName, setNewActivityName] = useState("")
@@ -153,9 +182,6 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     { value: "bg-rikyu-nezu", label: "利休鼠", color: "#6b7b6e" },
   ]
 
-  // 全行動（カスタムのみ）
-  const allActivities = customActivities
-
   // 行動追加
   const handleAddActivity = async () => {
     if (!newActivityName.trim()) return
@@ -163,7 +189,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     const result = await addActivity({
       name: newActivityName.trim(),
       icon: null,
-      color: newActivityColor // 選択された色を使用
+      color: newActivityColor, // 選択された色を使用
+      goal_id: selectedGoal || null // 現在選択されている目標IDを紐付ける
     })
 
     if (result.success) {
@@ -188,7 +215,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     const result = await addActivity({
       name: activityInput.trim(),
       icon: null,
-      color: colorOptions[Math.floor(Math.random() * colorOptions.length)].value
+      color: colorOptions[Math.floor(Math.random() * colorOptions.length)].value,
+      goal_id: selectedGoal || null // 現在選択されている目標IDを紐付ける
     })
 
     if (result.success) {
@@ -210,7 +238,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     // 少し遅延を入れて開始感を演出
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    const activity = allActivities.find((a) => a.id === selectedActivity)
+    const activity = customActivities.find((a) => a.id === selectedActivity)
     if (!activity) return
 
     const sessionData: SessionData = {
@@ -221,11 +249,11 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       notes: '',
       activityColor: activity.color,
       activityIcon: activity.icon || undefined,
-      goalId: selectedGoal === "none" ? undefined : selectedGoal,
+      goalId: selectedGoal || undefined,
     }
 
     // 目標が選択されている場合、目標情報を取得
-    if (selectedGoal && selectedGoal !== "none") {
+    if (selectedGoal) {
       const selectedGoalData = activeGoals.find(goal => goal.id === selectedGoal)
       if (selectedGoalData) {
         // 平日・土日の目標時間を計算（分単位）
@@ -243,7 +271,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     setIsStarting(false)
   }
 
-  const selectedActivityData = allActivities.find((a) => a.id === selectedActivity)
+  const selectedActivityData = customActivities.find((a) => a.id === selectedActivity)
 
   return (
     <Card className="bg-transparent border-0 shadow-none">
@@ -258,11 +286,31 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       />
 
       <CardHeader className="px-0 pt-0 pb-4">
-        <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
-          <span className="text-[#fffffC]">
-             {t('session_start.title')}
-          </span>
-        </CardTitle>
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+            <span className="text-[#fffffC]">
+               {t('session_start.title')}
+            </span>
+          </CardTitle>
+          
+          {/* 目標タブ - アクティブな目標がある場合のみ表示 */}
+          {activeGoals.length > 0 && (
+            <div className="flex bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10 overflow-x-auto max-w-[60%] md:max-w-none scrollbar-hide">
+              {activeGoals.map((goal) => (
+                <button
+                  key={goal.id}
+                  onClick={() => setSelectedGoal(goal.id)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                    selectedGoal === goal.id ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
+                  }`}
+                  title={goal.title}
+                >
+                  {goal.title.length > 10 ? `${goal.title.substring(0, 10)}...` : goal.title}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="px-0 space-y-4 lg:space-y-6">
@@ -352,10 +400,10 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 <Label className="text-gray-300 text-xs tracking-wider pl-1">{t('session_start.select_activity')}</Label>
                 
                 {/* 過去のアクティビティをタグとして表示（最初に配置） */}
-                {allActivities.length > 0 && (
+                {customActivities.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
-                      {allActivities.slice(0, 8).map((activity) => {
+                      {customActivities.slice(0, 8).map((activity) => {
                         const isSelected = selectedActivity === activity.id
                         const isHovered = hoveredTagId === activity.id
                         return (

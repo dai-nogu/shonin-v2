@@ -293,10 +293,14 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           activityId = existingActivity.id
         } else {
           // 行動が存在しない場合は新規作成
+          // sessionStorageから現在選択されている目標を取得
+          const currentSelectedGoal = sessionStorage.getItem('currentSelectedGoal')
+          
           const result = await addActivity({
             name: activity.name,
             icon: activity.icon || null,
             color: activity.color,
+            goal_id: currentSelectedGoal || null, // 現在選択されている目標IDを紐付ける
           })
           
           if (result.success) {
@@ -310,6 +314,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         }
       }
       
+      // sessionStorageから現在選択されている目標を取得
+      const currentSelectedGoal = sessionStorage.getItem('currentSelectedGoal')
+      
       const sessionData: SessionData = {
         activityId: activityId,
         activityName: activity.name,
@@ -319,8 +326,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         // 行動の色とアイコン情報を保持
         activityColor: activity.color,
         activityIcon: activity.icon,
-        // 目標IDを保持
-        goalId: activity.goalId,
+        // 現在選択されている目標を使用（過去のセッションの目標ではなく）
+        goalId: currentSelectedGoal || activity.goalId,
       }
       onStartActivity(sessionData)
     }
@@ -619,20 +626,20 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             {/* タブ切り替え - よりコンパクトでモダンに */}
             <div className="flex bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10">
               <button
-                onClick={() => setActiveTab("most-recorded")}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "most-recorded" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {t('quick_start.most_recorded')}
-              </button>
-              <button
                 onClick={() => setActiveTab("recent")}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
                   activeTab === "recent" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 {t('quick_start.latest')}
+              </button>
+              <button
+                onClick={() => setActiveTab("most-recorded")}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
+                  activeTab === "most-recorded" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                {t('quick_start.most_recorded')}
               </button>
               <button
                 onClick={() => setActiveTab("yesterday")}

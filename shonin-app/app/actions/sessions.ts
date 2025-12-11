@@ -202,7 +202,7 @@ export async function getSessionsByDateRange(
     const user = await getCurrentUser()
     const supabase = await getSupabaseClient()
 
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('decrypted_session')
       .select(`
         *,
