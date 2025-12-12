@@ -306,7 +306,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
       </div>
 
       {/* 目標時間と達成度 */}
-      {session.targetTime && (
+      {session.targetTime > 0 && (
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5 text-purple-400">
@@ -851,7 +851,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       </div>
 
       {/* 目標時間と達成度 */}
-      {session.targetTime && (
+      {session.targetTime > 0 && (
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5 text-purple-400">

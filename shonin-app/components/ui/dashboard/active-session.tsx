@@ -108,9 +108,45 @@ export function ActiveSession({
     }
   }, [sessionState, activeGoals.length])
   
-  // セッション開始時にプレースホルダーを事前生成（シンプル版）
+  // 初回マウント完了フラグ（ローカルストレージ復元完了を待つ）
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
+  const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
+  const notesRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // ローカルストレージのキー生成
+  const getStorageKey = (field: string) => {
+    return `session_${session.activityId}_${session.startTime.getTime()}_${field}`
+  }
+
+  // ローカルストレージからデータを復元
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedNotes = localStorage.getItem(getStorageKey('notes'))
+      const savedMood = localStorage.getItem(getStorageKey('mood'))
+      const savedPlaceholder = localStorage.getItem(getStorageKey('placeholder'))
+      const savedHasGenerated = localStorage.getItem(getStorageKey('hasGeneratedPlaceholder'))
+      const savedHasGeneratedFinal = localStorage.getItem(getStorageKey('hasGeneratedFinalPlaceholder'))
+
+      if (savedNotes) setNotes(savedNotes)
+      if (savedMood) setMood(parseInt(savedMood))
+      if (savedPlaceholder) setNotesPlaceholder(savedPlaceholder)
+      if (savedHasGenerated === 'true') setHasGeneratedPlaceholder(true)
+      if (savedHasGeneratedFinal === 'true') setHasGeneratedFinalPlaceholder(true)
+      
+      // 復元完了をマーク
+      setIsInitialLoadComplete(true)
+    }
+  }, [session.activityId, session.startTime])
+
+  // セッション開始時にプレースホルダーを事前生成（ローカルストレージ復元後のみ）
   const startTimeMs = session.startTime.getTime()
   useEffect(() => {
+    // ローカルストレージ復元完了まで待つ
+    if (!isInitialLoadComplete) return
+    // 既に生成済み、または終了状態の場合はスキップ
     if (hasGeneratedPlaceholder || sessionState === 'ended') return
     
     const timer = setTimeout(async () => {
@@ -138,33 +174,7 @@ export function ActiveSession({
     }, 500)
     
     return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.activityId, startTimeMs])
-  const [isUploading, setIsUploading] = useState(false)
-  const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
-  const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
-  const notesRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  // ローカルストレージのキー生成
-  const getStorageKey = (field: string) => {
-    return `session_${session.activityId}_${session.startTime.getTime()}_${field}`
-  }
-
-  // ローカルストレージからデータを復元
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedNotes = localStorage.getItem(getStorageKey('notes'))
-      const savedMood = localStorage.getItem(getStorageKey('mood'))
-      const savedPlaceholder = localStorage.getItem(getStorageKey('placeholder'))
-      const savedHasGenerated = localStorage.getItem(getStorageKey('hasGeneratedPlaceholder'))
-
-      if (savedNotes) setNotes(savedNotes)
-      if (savedMood) setMood(parseInt(savedMood))
-      if (savedPlaceholder) setNotesPlaceholder(savedPlaceholder)
-      if (savedHasGenerated === 'true') setHasGeneratedPlaceholder(true)
-    }
-  }, [session.activityId, session.startTime])
+  }, [isInitialLoadComplete, hasGeneratedPlaceholder, sessionState, session.activityId, session.goalId, startTimeMs, locale])
 
   // メモ内容をローカルストレージに自動保存
   useEffect(() => {
@@ -206,15 +216,30 @@ export function ActiveSession({
     }
   }, [hasGeneratedPlaceholder, session.activityId, session.startTime])
 
+  // hasGeneratedFinalPlaceholderもローカルストレージに保存
+  const isInitialMountForFinalFlag = useRef(true)
+  useEffect(() => {
+    // 初回マウント時はスキップ（復元用のuseEffectが先に実行されるため）
+    if (isInitialMountForFinalFlag.current) {
+      isInitialMountForFinalFlag.current = false
+      return
+    }
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getStorageKey('hasGeneratedFinalPlaceholder'), hasGeneratedFinalPlaceholder.toString())
+    }
+  }, [hasGeneratedFinalPlaceholder, session.activityId, session.startTime])
+
   // ローカルストレージをクリアする関数
-  const clearLocalStorage = () => {
+  const clearLocalStorage = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(getStorageKey('notes'))
       localStorage.removeItem(getStorageKey('mood'))
       localStorage.removeItem(getStorageKey('placeholder'))
       localStorage.removeItem(getStorageKey('hasGeneratedPlaceholder'))
+      localStorage.removeItem(getStorageKey('hasGeneratedFinalPlaceholder'))
     }
-  }
+  }, [session.activityId, session.startTime])
 
   // 終了画面に遷移した時にメモ入力欄にフォーカス
   useEffect(() => {
@@ -377,6 +402,7 @@ export function ActiveSession({
       
       // プレースホルダー生成フラグもリセット（次のセッション用）
       setHasGeneratedPlaceholder(false)
+      setHasGeneratedFinalPlaceholder(false)
       setNotesPlaceholder(t('active_session.notes_placeholder'))
       
     } catch (error) {
@@ -385,7 +411,7 @@ export function ActiveSession({
       setIsSaving(false)
       saveInProgressRef.current = false // 保存処理完了フラグをリセット
     }
-  }, [session, elapsedTime, notes, mood, photos, onSave, isSaving, saveReflection, isReflectionLoading, isUploading, setLocalReflectionError, clearLocalStorage, t])
+  }, [session, elapsedTime, notes, mood, photos, selectedGoalForSession, user, onSave, saveReflection, clearLocalStorage, t])
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -409,7 +435,7 @@ export function ActiveSession({
             </div>
             
             {/* 目標時間と進捗表示 */}
-            {session.targetTime && (
+            {session.targetTime && session.targetTime > 0 && (
               <div className="space-y-3 mt-8 max-w-md mx-auto">
                 <div className="flex items-center justify-between text-sm text-muted-foreground font-medium">
                   <span>

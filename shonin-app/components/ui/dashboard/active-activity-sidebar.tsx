@@ -58,7 +58,7 @@ export function ActiveActivitySidebar({
         </div>
 
         {/* 目標時間の進捗 */}
-        {activeSession.targetTime && (
+        {activeSession.targetTime > 0 && (
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground font-medium">
               <span>{t('active_session.target')}</span>

@@ -29,8 +29,8 @@ interface ActivityItem {
   sessionCount: number
   totalTime: number
   category: string
-  icon: string
-  color: string
+  icon?: string
+  color?: string
   goalId?: string
   goalTitle?: string
   latestSession: CompletedSession
