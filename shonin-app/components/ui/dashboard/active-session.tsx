@@ -72,11 +72,10 @@ export function ActiveSession({
   // 画面サイズ判定（SPかPCか）
   const [isMobile, setIsMobile] = useState(false)
   
-  // プレースホルダー（開始時1回 + 終了時1回 = 最大2回）
+  // プレースホルダー（開始時1回のみ生成）
   const [notesPlaceholder, setNotesPlaceholder] = useState(t('active_session.notes_placeholder'))
   const [isPreparingReflection, setIsPreparingReflection] = useState(false)
-  const [hasGeneratedPlaceholder, setHasGeneratedPlaceholder] = useState(false) // 開始時
-  const [hasGeneratedFinalPlaceholder, setHasGeneratedFinalPlaceholder] = useState(false) // 終了時
+  const [hasGeneratedPlaceholder, setHasGeneratedPlaceholder] = useState(false)
   
   // 画面サイズ判定
   useEffect(() => {
@@ -121,13 +120,11 @@ export function ActiveSession({
       const savedMood = localStorage.getItem(getStorageKey('mood'))
       const savedPlaceholder = localStorage.getItem(getStorageKey('placeholder'))
       const savedHasGenerated = localStorage.getItem(getStorageKey('hasGeneratedPlaceholder'))
-      const savedHasGeneratedFinal = localStorage.getItem(getStorageKey('hasGeneratedFinalPlaceholder'))
 
       if (savedNotes) setNotes(savedNotes)
       if (savedMood) setMood(parseInt(savedMood))
       if (savedPlaceholder) setNotesPlaceholder(savedPlaceholder)
       if (savedHasGenerated === 'true') setHasGeneratedPlaceholder(true)
-      if (savedHasGeneratedFinal === 'true') setHasGeneratedFinalPlaceholder(true)
       
       // 復元完了をマーク
       setIsInitialLoadComplete(true)
@@ -150,7 +147,6 @@ export function ActiveSession({
           body: JSON.stringify({
             activity_id: session.activityId,
             goal_id: session.goalId,
-            is_pre_generation: true,
             locale: locale
           }),
         })
@@ -209,20 +205,6 @@ export function ActiveSession({
     }
   }, [hasGeneratedPlaceholder, session.activityId, session.startTime])
 
-  // hasGeneratedFinalPlaceholderもローカルストレージに保存
-  const isInitialMountForFinalFlag = useRef(true)
-  useEffect(() => {
-    // 初回マウント時はスキップ（復元用のuseEffectが先に実行されるため）
-    if (isInitialMountForFinalFlag.current) {
-      isInitialMountForFinalFlag.current = false
-      return
-    }
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getStorageKey('hasGeneratedFinalPlaceholder'), hasGeneratedFinalPlaceholder.toString())
-    }
-  }, [hasGeneratedFinalPlaceholder, session.activityId, session.startTime])
-
   // ローカルストレージをクリアする関数
   const clearLocalStorage = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -230,7 +212,6 @@ export function ActiveSession({
       localStorage.removeItem(getStorageKey('mood'))
       localStorage.removeItem(getStorageKey('placeholder'))
       localStorage.removeItem(getStorageKey('hasGeneratedPlaceholder'))
-      localStorage.removeItem(getStorageKey('hasGeneratedFinalPlaceholder'))
     }
   }, [session.activityId, session.startTime])
 
@@ -261,44 +242,14 @@ export function ActiveSession({
     // 外部の終了処理を呼び出し
     onEnd()
     
-    // 終了時のプレースホルダーを1回だけ生成（再開→再終了しても再生成しない）
-    if (!hasGeneratedFinalPlaceholder) {
-      setIsPreparingReflection(true)
-      const startTime = Date.now()
-      const minimumLoadingTime = 2500
-      
-      try {
-        const res = await fetch('/api/ai/generate-placeholder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            activity_id: session.activityId,
-            goal_id: selectedGoalForSession || session.goalId,
-            current_mood: mood,
-            current_duration: elapsedTime,
-            is_pre_generation: false,
-            locale: locale
-          }),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.placeholder) setNotesPlaceholder(data.placeholder)
-        }
-      } catch (e) {
-        console.error('Error generating final placeholder:', e)
-      }
-      
-      setHasGeneratedFinalPlaceholder(true)
-      
-      // 最低ローディング時間を確保
-      const elapsed = Date.now() - startTime
-      if (elapsed < minimumLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsed))
-      }
-      
-      setIsPreparingReflection(false)
-    }
+    // ローディング演出のみ（プレースホルダーは開始時に既に生成済み）
+    setIsPreparingReflection(true)
+    const minimumLoadingTime = 2500
     
+    // 最低ローディング時間を確保（ユーザー体験のため）
+    await new Promise(resolve => setTimeout(resolve, minimumLoadingTime))
+    
+    setIsPreparingReflection(false)
     setShowNotes(true)
   }
 
@@ -395,7 +346,6 @@ export function ActiveSession({
       
       // プレースホルダー生成フラグもリセット（次のセッション用）
       setHasGeneratedPlaceholder(false)
-      setHasGeneratedFinalPlaceholder(false)
       setNotesPlaceholder(t('active_session.notes_placeholder'))
       
     } catch (error) {

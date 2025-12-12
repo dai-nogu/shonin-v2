@@ -112,6 +112,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isComposing, setIsComposing] = useState(false) // IME変換中フラグ
   const inputContainerRef = useRef<HTMLDivElement>(null)
+  const activityAreaRef = useRef<HTMLDivElement>(null) // タグと入力欄を含むエリア全体
   
   // 行動名入力フィールドのref
   const activityNameInputRef = useRef<HTMLInputElement>(null)
@@ -137,11 +138,15 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   // 新規追加が必要かどうか（入力があり、完全一致がない場合）
   const canAddNew = activityInput.trim() && !exactMatch
 
-  // 外部クリックでサジェストを閉じる
+  // 外部クリックでサジェストを閉じる & 選択を解除
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (inputContainerRef.current && !inputContainerRef.current.contains(event.target as Node)) {
         setShowSuggestions(false)
+      }
+      // タグと入力欄のエリア外をクリックしたら選択を解除
+      if (activityAreaRef.current && !activityAreaRef.current.contains(event.target as Node)) {
+        setSelectedActivity("")
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -393,7 +398,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
         {/* フォーム表示時以外の通常の内容 */}
         {!showAddForm && (
-          <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
+          <div ref={activityAreaRef} className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
             <div className="space-y-6">
               {/* 行動選択 - タグ + 直接入力 + サジェスト */}
               <div className="space-y-3">
@@ -478,6 +483,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                         onFocus={() => {
                           setIsFocused(true)
                           setShowSuggestions(true)
+                          // 入力欄にフォーカスしたら選択を解除
+                          setSelectedActivity("")
                         }}
                         onBlur={() => setIsFocused(false)}
                         onCompositionStart={() => setIsComposing(true)}
@@ -491,9 +498,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                           }
                         }}
                         maxLength={limits.activityName}
-                        className={`bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm pr-10 h-11 transition-all ${
-                          selectedActivity ? "border-emerald-700/50 shadow-[0_0_0_1px_rgba(4,120,87,0.2)]" : "focus:border-emerald-700/50 focus:ring-emerald-700/20"
-                        }`}
+                        className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm pr-10 h-11 transition-all focus:border-emerald-700/50 focus:ring-emerald-700/20"
                       />
                       {/* 選択済みクリアボタン */}
                       {selectedActivity && (

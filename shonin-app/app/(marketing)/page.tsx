@@ -114,7 +114,7 @@ function HeroSection() {
     <section id="hero" className="pt-32 pb-24 px-6">
       <div className="max-w-4xl mx-auto text-center">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight text-white text-yakumono-tight">
-        静かに突然変わる。
+        静かに、そして突然変わる。
         </h1>
         <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
         ただ自分の成長に没頭する時間だけが<br />
