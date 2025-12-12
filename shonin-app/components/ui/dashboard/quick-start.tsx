@@ -43,7 +43,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [isStarting, setIsStarting] = useState(false)
   const [startingActivityId, setStartingActivityId] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState("most-recorded")
+  const [activeTab, setActiveTab] = useState("recent")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
