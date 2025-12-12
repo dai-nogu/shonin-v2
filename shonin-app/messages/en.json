@@ -99,8 +99,8 @@
     "monthly_default_message": "Stay consistent to unlock your monthly letter.",
     "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly letter.",
     "monthly_no_data_message": "Consistent starting will unlock monthly message. Keep building your daily progress.",
-    "next_weekly_feedback": "Next weekly letter",
-    "next_monthly_feedback": "Next monthly letter",
+    "next_weekly_feedback": "Next",
+    "next_monthly_feedback": "Next",
     "scheduled": "scheduled",
     "generating": "Generating letter...",
     "generate_error": "An error occurred while generating letter",
@@ -202,6 +202,13 @@
       "year_placeholder": "Year",
       "month_placeholder": "Month",
       "day_placeholder": "Day"
+    },
+    "preset_tags": {
+      "smartphone": "Smartphone",
+      "multitask": "Multitasking",
+      "excuses": "Making excuses",
+      "perfectionism": "Perfectionism",
+      "comparison": "Comparing with others"
     }
   },
   "settings": {
@@ -392,8 +399,14 @@
     "paused_message": "⏸ Focus is paused.",
     "completed_message": "Good work.",
     "goal_match_question": "Was this for your goal?",
+    "goal_match_question_with_title": "Was this for \"{goalTitle}\"?",
     "no_goal_session": "Would you like to set a goal?",
     "mood_question": "How are you feeling?",
+    "mood_great": "Excellent",
+    "mood_good": "Good",
+    "mood_neutral": "Okay",
+    "mood_poor": "Not Great",
+    "mood_bad": "Tough",
     "notes_placeholder": "Anything else on your mind?",
     "photos_label": "Photos",
     "memo_label": "Memo",
@@ -405,8 +418,17 @@
     "saved_photos": "Saved photos",
     "waiting_save": "Waiting to save",
     "save_button": "Save",
+    "next": "Next",
+    "remove_goal": "No goal",
+    "which_goal_question": "Which goal was this for?",
+    "link_to_goal_description": "Link this activity to a goal?",
+    "no_goals_title": "Good work!",
+    "no_goals_description": "Setting goals helps track progress more effectively",
+    "yes": "Yes",
+    "no": "No",
     "reflection_save_error": "Failed to save reflection.",
-    "save_error": "An error occurred during save process."
+    "save_error": "An error occurred during save process.",
+    "photo_alt": "Photo {number}"
   },
   "session_page": {
     "not_found_title": "Focus Not Found",

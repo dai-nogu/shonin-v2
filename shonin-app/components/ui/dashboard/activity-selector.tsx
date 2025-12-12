@@ -555,7 +555,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     <Plus className={`w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-all duration-200 ${showLocationInput ? 'rotate-45' : ''}`} />
                   </div>
                   <Label className="text-gray-400 text-xs tracking-wider cursor-pointer group-hover:text-gray-300 transition-colors">
-                    {t('session_start.location')} (オプション)
+                    {t('session_start.location')}
                   </Label>
                 </button>
 

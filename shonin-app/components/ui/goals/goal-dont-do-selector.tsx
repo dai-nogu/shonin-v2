@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/common/button"
 import { useTranslations } from 'next-intl'
 import { Plus, X } from "lucide-react"
 
-// プリセットのやらないことタグ
-const PRESET_TAGS = [
-  { id: "preset_smartphone", name: "スマホ" },
-  { id: "preset_multitask", name: "マルチタスク" },
-  { id: "preset_excuses", name: "言い訳" },
-  { id: "preset_perfectionism", name: "完璧主義" },
-  { id: "preset_comparison", name: "他人との比較" },
+// プリセットタグのキー（言語に依存しない）
+const PRESET_TAG_KEYS = [
+  "smartphone",
+  "multitask",
+  "excuses",
+  "perfectionism",
+  "comparison",
 ]
 
 const MAX_TAGS = 10
@@ -31,24 +31,30 @@ export function GoalDontDoSelector({
   const [customInput, setCustomInput] = useState("")
   const [isComposing, setIsComposing] = useState(false) // IME変換中フラグ
 
+  // プリセットタグの翻訳を取得
+  const presetTags = PRESET_TAG_KEYS.map(key => ({
+    key,
+    name: t(`goals.preset_tags.${key}`)
+  }))
+
   // selectedTagsからカスタムタグを計算（stateではなく直接計算）
   const customTags = selectedTags.filter(
-    tag => !PRESET_TAGS.some(preset => preset.name === tag)
+    tag => !presetTags.some(preset => preset.name === tag)
   )
 
   // プリセットタグの選択/解除
   const handlePresetToggle = (tagName: string) => {
-    const presetTags = selectedTags.filter(tag => 
-      PRESET_TAGS.some(preset => preset.name === tag)
+    const selectedPresetTags = selectedTags.filter(tag => 
+      presetTags.some(preset => preset.name === tag)
     )
     
-    if (presetTags.includes(tagName)) {
+    if (selectedPresetTags.includes(tagName)) {
       // 選択解除
-      const newPresetTags = presetTags.filter(tag => tag !== tagName)
+      const newPresetTags = selectedPresetTags.filter(tag => tag !== tagName)
       onChange([...newPresetTags, ...customTags])
-    } else if ((presetTags.length + customTags.length) < MAX_TAGS) {
+    } else if ((selectedPresetTags.length + customTags.length) < MAX_TAGS) {
       // 選択追加
-      onChange([...presetTags, tagName, ...customTags])
+      onChange([...selectedPresetTags, tagName, ...customTags])
     }
   }
 
@@ -66,12 +72,12 @@ export function GoalDontDoSelector({
     if (totalCount >= MAX_TAGS) return
     
     // プリセットタグとカスタムタグを分けて管理
-    const presetTags = selectedTags.filter(tag => 
-      PRESET_TAGS.some(preset => preset.name === tag)
+    const selectedPresetTags = selectedTags.filter(tag => 
+      presetTags.some(preset => preset.name === tag)
     )
     const newCustomTags = [...customTags, trimmed]
     
-    onChange([...presetTags, ...newCustomTags])
+    onChange([...selectedPresetTags, ...newCustomTags])
     setCustomInput("")
   }
 
@@ -90,11 +96,11 @@ export function GoalDontDoSelector({
       
       {/* プリセットタグ */}
       <div className="flex flex-wrap gap-2">
-        {PRESET_TAGS.map((tag) => {
+        {presetTags.map((tag) => {
           const isSelected = selectedTags.includes(tag.name)
           return (
             <button
-              key={tag.id}
+              key={tag.key}
               type="button"
               onClick={() => handlePresetToggle(tag.name)}
               disabled={!isSelected && isMaxReached}

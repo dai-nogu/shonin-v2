@@ -126,6 +126,17 @@ const config: Config = {
 				'50%': { 
 					opacity: '1',
 				}
+			},
+			'writing': {
+				'0%, 100%': { transform: 'translateX(0) translateY(0) rotate(0deg)' },
+				'25%': { transform: 'translateX(3px) translateY(3px) rotate(5deg)' },
+				'50%': { transform: 'translateX(6px) translateY(0) rotate(0deg)' },
+				'75%': { transform: 'translateX(3px) translateY(-3px) rotate(-5deg)' },
+			},
+			'line-draw': {
+				'0%': { width: '0%', opacity: '0' },
+				'50%': { width: '100%', opacity: '1' },
+				'100%': { width: '100%', opacity: '0' }
 			}
 		},
 		animation: {
@@ -138,7 +149,9 @@ const config: Config = {
 			'slide-in-right': 'slide-in-right 0.3s ease-out',
 			'slide-in-left': 'slide-in-left 0.3s ease-out',
 			'shimmer': 'shimmer 2s linear infinite',
-			'glow': 'glow 3s ease-in-out infinite'
+			'glow': 'glow 3s ease-in-out infinite',
+			'writing': 'writing 1s linear infinite',
+			'line-draw': 'line-draw 2s ease-in-out infinite',
 		}
   	}
   },

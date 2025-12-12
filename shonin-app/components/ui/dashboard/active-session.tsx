@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X, CloudRain, Cloud, Minus, Sun, Sparkles, Plus, ChevronRight, Check } from "lucide-react"
+import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X, CloudRain, Cloud, Minus, Sun, Sparkles, Plus, ChevronRight, Check, PenLine } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Badge } from "@/components/ui/common/badge"
@@ -62,10 +62,9 @@ export function ActiveSession({
   const [photos, setPhotos] = useState<File[]>([])
   const [isSaving, setIsSaving] = useState(false)
   
-  // 3ステップフロー管理（SPのみ）
-  // 目標が1つの場合はステップ1（目標確認）をスキップしてステップ2から開始
-  const [currentStep, setCurrentStep] = useState(1) // 1: 目標確認, 2: 気分評価, 3: メモ入力
-  const [goalMatched, setGoalMatched] = useState<boolean | null>(null) // 目標と一致したか
+  // 2ステップフロー管理（SPのみ）
+  // SPでは目標確認画面は表示せず、気分評価とメモ入力のみ
+  const [currentStep, setCurrentStep] = useState(2) // 2: 気分評価, 3: メモ入力
   const [showPhotoAccordion, setShowPhotoAccordion] = useState(false) // 写真アコーディオンの開閉
   const [suggestedGoalId, setSuggestedGoalId] = useState<string | null>(null) // 提案された目標ID
   const [selectedGoalForSession, setSelectedGoalForSession] = useState<string | null>(null) // セッションに紐づける目標ID
@@ -101,12 +100,6 @@ export function ActiveSession({
     }
   }, [session.goalId, activeGoals.length])
   
-  // 目標が1つの場合、セッション終了時にステップ1をスキップしてステップ2から開始
-  useEffect(() => {
-    if (sessionState === "ended" && activeGoals.length === 1) {
-      setCurrentStep(2)
-    }
-  }, [sessionState, activeGoals.length])
   
   // 初回マウント完了フラグ（ローカルストレージ復元完了を待つ）
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false)
@@ -435,7 +428,7 @@ export function ActiveSession({
             </div>
             
             {/* 目標時間と進捗表示 */}
-            {session.targetTime && session.targetTime > 0 && (
+            {!!(session.targetTime && session.targetTime > 0) && (
               <div className="space-y-3 mt-8 max-w-md mx-auto">
                 <div className="flex items-center justify-between text-sm text-muted-foreground font-medium">
                   <span>
@@ -560,13 +553,19 @@ export function ActiveSession({
                 })()}
               </p>
               
-              {/* プレースホルダー生成中のローディング表示 */}
+              {/* プレースホルダー生成してる感じのアニメーション */}
               {isPreparingReflection && (
                 <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 border-4 border-emerald-700/20 border-t-emerald-700 rounded-full animate-spin" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-emerald-700 animate-pulse" />
+                  <div className="relative w-24 h-24 mx-auto">
+                    {/* メモ帳のライン */}
+                    <div className="absolute inset-0 flex flex-col justify-center items-center gap-3 pt-2">
+                      <div className="h-1 bg-emerald-600/30 rounded-full w-12 animate-[line-draw_1.5s_ease-in-out_infinite]" />
+                      <div className="h-1 bg-emerald-600/30 rounded-full w-16 animate-[line-draw_1.5s_ease-in-out_0.3s_infinite]" />
+                      <div className="h-1 bg-emerald-600/30 rounded-full w-10 animate-[line-draw_1.5s_ease-in-out_0.6s_infinite]" />
+                    </div>
+                    {/* ペンアイコン */}
+                    <div className="absolute top-2 right-2 animate-writing">
+                      <PenLine className="w-10 h-10 text-emerald-600 fill-emerald-100/10" />
                     </div>
                   </div>
                   <p className="text-muted-foreground text-sm font-medium animate-pulse">
@@ -601,170 +600,9 @@ export function ActiveSession({
               className="hidden"
             />
 
-            {/* SP: 3ステップフロー */}
+            {/* SP: 2ステップフロー */}
             {isMobile ? (
               <>
-                {/* ステップ1: 目標確認 */}
-                {currentStep === 1 && (
-                  <div className="space-y-6 animate-in fade-in duration-300">
-                    {/* セッション開始時に目標が設定されていた場合 */}
-                    {session.goalId ? (
-                      <>
-                        <div className="text-center space-y-4">
-                          <h3 className="text-xl font-bold text-white">
-                            {(() => {
-                              const goal = activeGoals.find(g => g.id === session.goalId)
-                              return goal ? `「${goal.title}」のための時間でしたか？` : t('active_session.goal_match_question')
-                            })()}
-                          </h3>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <Button
-                            onClick={() => {
-                              setGoalMatched(true)
-                              setSelectedGoalForSession(session.goalId!)
-                              setCurrentStep(2)
-                            }}
-                            size="lg"
-                            className="h-16 text-lg font-semibold bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg"
-                          >
-                            <Check className="w-5 h-5 mr-2" />
-                            はい
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setGoalMatched(false)
-                              setSelectedGoalForSession(null)
-                              setCurrentStep(2)
-                            }}
-                            size="lg"
-                            variant="outline"
-                            className="h-16 text-lg font-semibold border-2 hover:bg-secondary"
-                          >
-                            いいえ
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      /* セッション開始時に目標が設定されていなかった場合 */
-                      <>
-                        {/* 目標が1つだけの場合：自動的に紐づけ */}
-                        {suggestedGoalId && activeGoals.length === 1 ? (
-                          <>
-                            <div className="text-center space-y-4">
-                              <h3 className="text-xl font-bold text-white">
-                                「{activeGoals[0].title}」
-                              </h3>
-                            </div>
-
-                            <div className="space-y-3">
-                              <Button
-                                onClick={() => {
-                                  setGoalMatched(true)
-                                  // selectedGoalForSessionは既にuseEffectで設定済み
-                                  setCurrentStep(2)
-                                }}
-                                size="lg"
-                                className="w-full h-16 text-lg font-semibold bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg"
-                              >
-                                次へ
-                                <ChevronRight className="w-5 h-5 ml-2" />
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setGoalMatched(false)
-                                  setSelectedGoalForSession(null) // 紐づけを解除
-                                  setCurrentStep(2)
-                                }}
-                                size="sm"
-                                variant="ghost"
-                                className="w-full h-12 text-sm text-gray-400 hover:text-white hover:bg-secondary"
-                              >
-                                目標なしにする
-                              </Button>
-                            </div>
-                          </>
-                        ) : activeGoals.length > 1 ? (
-                          /* 目標が複数ある場合：目標選択UI（AI判断は後で実装） */
-                          <>
-                            <div className="text-center space-y-4">
-                              <h3 className="text-xl font-bold text-white">
-                                どの目標のための時間でしたか？
-                              </h3>
-                              <p className="text-muted-foreground text-sm">
-                                この活動を目標に紐づけますか？
-                              </p>
-                            </div>
-
-                            <div className="space-y-3 max-w-md mx-auto">
-                              {activeGoals.map((goal) => (
-                                <Button
-                                  key={goal.id}
-                                  onClick={() => {
-                                    setGoalMatched(true)
-                                    setSelectedGoalForSession(goal.id)
-                                    setCurrentStep(2)
-                                  }}
-                                  variant={selectedGoalForSession === goal.id ? "default" : "outline"}
-                                  className={cn(
-                                    "w-full h-16 justify-start gap-3 text-base transition-all",
-                                    selectedGoalForSession === goal.id
-                                      ? "bg-emerald-700 text-white border-2 border-emerald-500"
-                                      : "hover:bg-secondary"
-                                  )}
-                                >
-                                  <span className="font-semibold truncate">{goal.title}</span>
-                                  {selectedGoalForSession === goal.id && (
-                                    <Check className="w-5 h-5 ml-auto flex-shrink-0" />
-                                  )}
-                                </Button>
-                              ))}
-                              
-                              <Button
-                                onClick={() => {
-                                  setGoalMatched(false)
-                                  setSelectedGoalForSession(null)
-                                  setCurrentStep(2)
-                                }}
-                                variant="outline"
-                                className="w-full h-14 text-base border-2 hover:bg-secondary"
-                              >
-                                目標なし
-                              </Button>
-                            </div>
-                          </>
-                        ) : (
-                          /* 目標がない場合 */
-                          <>
-                            <div className="text-center space-y-4">
-                              <h3 className="text-xl font-bold text-white">
-                                お疲れさまでした！
-                              </h3>
-                              <p className="text-muted-foreground text-sm">
-                                目標を設定すると、より効果的に進捗を管理できます
-                              </p>
-                            </div>
-
-                            <Button
-                              onClick={() => {
-                                setGoalMatched(false)
-                                setSelectedGoalForSession(null)
-                                setCurrentStep(2)
-                              }}
-                              size="lg"
-                              className="w-full h-16 text-lg font-semibold bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg"
-                            >
-                              次へ
-                              <ChevronRight className="w-5 h-5 ml-2" />
-                            </Button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-
                 {/* ステップ2: 気分評価 */}
                 {currentStep === 2 && (
                   <div className="space-y-6 animate-in fade-in duration-300">
@@ -796,12 +634,12 @@ export function ActiveSession({
 
                     <div className="space-y-3 max-w-md mx-auto">
                       {[
-                        { value: 5, icon: Sparkles, label: '最高！', color: 'emerald' },
-                        { value: 4, icon: Sun, label: '良い', color: 'emerald' },
-                        { value: 3, icon: Minus, label: 'ふつう', color: 'gray' },
-                        { value: 2, icon: Cloud, label: 'イマイチ', color: 'gray' },
-                        { value: 1, icon: CloudRain, label: 'つらい', color: 'gray' },
-                      ].map(({ value, icon: Icon, label, color }) => (
+                        { value: 5, icon: Sparkles, labelKey: 'active_session.mood_great', color: 'emerald' },
+                        { value: 4, icon: Sun, labelKey: 'active_session.mood_good', color: 'emerald' },
+                        { value: 3, icon: Minus, labelKey: 'active_session.mood_neutral', color: 'gray' },
+                        { value: 2, icon: Cloud, labelKey: 'active_session.mood_poor', color: 'gray' },
+                        { value: 1, icon: CloudRain, labelKey: 'active_session.mood_bad', color: 'gray' },
+                      ].map(({ value, icon: Icon, labelKey, color }) => (
                         <Button
                           key={value}
                           onClick={() => setMood(value)}
@@ -819,7 +657,7 @@ export function ActiveSession({
                           )}>
                             <Icon className="w-6 h-6" />
                           </div>
-                          <span className="font-semibold">{label}</span>
+                          <span className="font-semibold">{t(labelKey)}</span>
                           {mood === value && (
                             <Check className="w-5 h-5 ml-auto" />
                           )}
@@ -832,7 +670,7 @@ export function ActiveSession({
                       disabled={!mood}
                       className="w-full h-12 text-base font-semibold bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
                     >
-                      次へ
+                      {t('active_session.next')}
                       <ChevronRight className="w-5 h-5 ml-2" />
                     </Button>
                   </div>
@@ -887,7 +725,7 @@ export function ActiveSession({
                           <Plus className={`w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-200 ${showPhotoAccordion ? 'rotate-45' : ''}`} />
                         </div>
                         <Label className="text-sm text-gray-400 cursor-pointer group-hover:text-gray-300 transition-colors">
-                          {t('active_session.photos_label')} (オプション)
+                          {t('active_session.photos_label')}
                         </Label>
                         {photos.length > 0 && (
                           <span className="ml-2 bg-emerald-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
@@ -906,7 +744,7 @@ export function ActiveSession({
                                 <div key={`pending-${index}`} className="relative group rounded-lg overflow-hidden shadow-md">
                                   <img
                                     src={URL.createObjectURL(photo)}
-                                    alt={`写真 ${index + 1}`}
+                                    alt={t('active_session.photo_alt', { number: index + 1 })}
                                     className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105"
                                   />
                                   <Button
@@ -928,7 +766,7 @@ export function ActiveSession({
                             className="w-full h-12 border-dashed border-2 hover:bg-secondary"
                           >
                             <Camera className="w-5 h-5 mr-2" />
-                            {photos.length > 0 ? '写真を追加' : '写真を選択'}
+                            {photos.length > 0 ? t('active_session.add_photos') : t('active_session.select_photos')}
                           </Button>
                         </div>
                       )}
@@ -1067,7 +905,7 @@ export function ActiveSession({
                       <Plus className={`w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-200 ${showPhotoAccordion ? 'rotate-45' : ''}`} />
                     </div>
                     <Label className="text-sm text-gray-400 cursor-pointer group-hover:text-gray-300 transition-colors">
-                      {t('active_session.photos_label')} (オプション)
+                      {t('active_session.photos_label')}
                     </Label>
                     {photos.length > 0 && (
                       <span className="ml-2 bg-emerald-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
@@ -1086,7 +924,7 @@ export function ActiveSession({
                             <div key={`pending-${index}`} className="relative group rounded-lg overflow-hidden shadow-md">
                               <img
                                 src={URL.createObjectURL(photo)}
-                                alt={`写真 ${index + 1}`}
+                                alt={t('active_session.photo_alt', { number: index + 1 })}
                                 className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105"
                               />
                               <Button
@@ -1108,7 +946,7 @@ export function ActiveSession({
                         className="w-full h-12 border-dashed border-2 hover:bg-secondary"
                       >
                         <Camera className="w-5 h-5 mr-2" />
-                        {photos.length > 0 ? '写真を追加' : '写真を選択'}
+                        {photos.length > 0 ? t('active_session.add_photos') : t('active_session.select_photos')}
                       </Button>
                     </div>
                   )}

@@ -99,8 +99,8 @@
     "monthly_default_message": "継続して記録し、月次メッセージを解放しましょう。",
     "weekly_no_data_message": "まだ十分なデータが蓄積されていません。行動を記録すると、週次メッセージが受け取れるようになります。",
     "monthly_no_data_message": "継続的な記録により、月次メッセージが受け取れます。日々の積み重ねを続けましょう。",
-    "next_weekly_feedback": "次回の週次メッセージ",
-    "next_monthly_feedback": "次回の月次メッセージ",
+    "next_weekly_feedback": "次回は",
+    "next_monthly_feedback": "次回は",
     "scheduled": "予定",
     "generating": "メッセージを生成中...",
     "generate_error": "メッセージ生成中にエラーが発生しました",
@@ -198,6 +198,13 @@
       "year_placeholder": "年",
       "month_placeholder": "月",
       "day_placeholder": "日"
+    },
+    "preset_tags": {
+      "smartphone": "スマホ",
+      "multitask": "マルチタスク",
+      "excuses": "言い訳",
+      "perfectionism": "完璧主義",
+      "comparison": "他人との比較"
     }
   },
   "settings": {
@@ -388,8 +395,14 @@
     "paused_message": "⏸一時停止中です。",
     "completed_message": "お疲れさまでした。",
     "goal_match_question": "この目標のための時間でしたか？",
+    "goal_match_question_with_title": "「{goalTitle}」のための時間でしたか？",
     "no_goal_session": "目標を設定しますか？",
     "mood_question": "今の気分はどうですか？",
+    "mood_great": "最高",
+    "mood_good": "良い",
+    "mood_neutral": "ふつう",
+    "mood_poor": "イマイチ",
+    "mood_bad": "つらい",
     "notes_placeholder": "どんなことでも構いません。自由に記入してください。",
     "photos_label": "写真",
     "memo_label": "メモ",
@@ -401,8 +414,17 @@
     "saved_photos": "保存済みの写真",
     "waiting_save": "保存待ち",
     "save_button": "保存",
+    "next": "次へ",
+    "remove_goal": "目標なしにする",
+    "which_goal_question": "どの目標のための時間でしたか？",
+    "link_to_goal_description": "この活動を目標に紐づけますか？",
+    "no_goals_title": "お疲れさまでした！",
+    "no_goals_description": "目標を設定すると、より効果的に進捗を管理できます",
+    "yes": "はい",
+    "no": "いいえ",
     "reflection_save_error": "振り返りの保存に失敗しました。",
-    "save_error": "保存処理でエラーが発生しました。"
+    "save_error": "保存処理でエラーが発生しました。",
+    "photo_alt": "写真 {number}"
   },
   "session_page": {
     "not_found_title": "セッションが見つかりません",

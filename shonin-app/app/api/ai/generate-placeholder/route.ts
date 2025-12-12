@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     // プレースホルダーを生成
     const placeholder = await generatePlaceholder({
       sessions: sessions || [],
-      activityName: activity?.name || 'アクティビティ',
+      activityName: activity?.name || (locale === 'ja' ? 'アクティビティ' : 'Activity'),
       goalTitle,
       userName: userData?.name || null,
       currentMood: current_mood,
@@ -210,22 +210,32 @@ async function generatePlaceholder({
   
   // 前回の気分を詳細に記録
   if (lastMood) {
+    const getMoodLabel = (score: number, locale: string) => {
+      if (locale === 'ja') {
+        return score === 5 ? '最高' : score === 4 ? '良い' : score === 3 ? 'ふつう' : score === 2 ? 'イマイチ' : 'つらい';
+      } else {
+        return score === 5 ? 'Excellent' : score === 4 ? 'Good' : score === 3 ? 'Okay' : score === 2 ? 'Not Great' : 'Tough';
+      }
+    };
     analysisData.previousMood = {
       score: lastMood,
-      label: lastMood === 5 ? '最高' : lastMood === 4 ? '良い' : lastMood === 3 ? 'ふつう' : lastMood === 2 ? 'イマイチ' : 'つらい'
+      label: getMoodLabel(lastMood, locale)
     };
   }
   
   // 前回の時間を詳細に記録
   if (lastDuration) {
     const lastMinutes = Math.round(lastDuration / 60);
+    const hours = Math.floor(lastMinutes / 60);
+    const remainingMinutes = lastMinutes % 60;
+    const displayText = lastMinutes >= 60 
+      ? (locale === 'ja' ? `${hours}時間${remainingMinutes}分` : `${hours}h ${remainingMinutes}m`)
+      : (locale === 'ja' ? `${lastMinutes}分` : `${lastMinutes}m`);
     analysisData.previousDuration = {
       seconds: lastDuration,
       minutes: lastMinutes,
-      hours: Math.floor(lastMinutes / 60),
-      displayText: lastMinutes >= 60 
-        ? `${Math.floor(lastMinutes / 60)}時間${lastMinutes % 60}分`
-        : `${lastMinutes}分`
+      hours: hours,
+      displayText: displayText
     };
   }
 
@@ -252,12 +262,17 @@ async function generatePlaceholder({
     // 気分の比較
     if (currentMood && lastMood) {
       const moodDiff = currentMood - lastMood;
+      const trendText = moodDiff > 0 
+        ? (locale === 'ja' ? '向上' : 'improved')
+        : moodDiff < 0 
+        ? (locale === 'ja' ? '低下' : 'declined')
+        : (locale === 'ja' ? '同じ' : 'same');
       analysisData.moodComparison = {
         previous: lastMood,
         current: currentMood,
         difference: moodDiff,
         trend: moodDiff > 0 ? 'improved' : moodDiff < 0 ? 'declined' : 'same',
-        trendText: moodDiff > 0 ? '向上' : moodDiff < 0 ? '低下' : '同じ'
+        trendText: trendText
       };
     }
 
@@ -265,24 +280,33 @@ async function generatePlaceholder({
     if (currentDuration && lastDuration) {
       const durationDiff = currentDuration - lastDuration;
       const minutesDiff = Math.round(durationDiff / 60);
+      const trendText = durationDiff > 300 
+        ? (locale === 'ja' ? '長い' : 'longer')
+        : durationDiff < -300 
+        ? (locale === 'ja' ? '短い' : 'shorter')
+        : (locale === 'ja' ? '同じくらい' : 'similar');
       analysisData.durationComparison = {
         previous: Math.round(lastDuration / 60),
         current: Math.round(currentDuration / 60),
         differenceMinutes: minutesDiff,
         trend: durationDiff > 300 ? 'longer' : durationDiff < -300 ? 'shorter' : 'similar',
-        trendText: durationDiff > 300 ? '長い' : durationDiff < -300 ? '短い' : '同じくらい'
+        trendText: trendText
       };
     }
   }
 
   // Anthropic APIでプレースホルダーを生成
   try {
+    console.log('[Placeholder Generation] locale:', locale, 'isPreGeneration:', isPreGeneration);
+    
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
     const systemPrompt = locale === 'ja' 
       ? `あなたは努力を見守るShoninです。ユーザーがセッション終了後に振り返りを書く際のプレースホルダーテキストを生成します。
+
+**重要：必ず日本語で応答してください。**
 
 【重要な生成タイプの違い】
 generationType が "draft" の場合：
@@ -297,6 +321,7 @@ generationType が "final" の場合：
   - moodComparisonやdurationComparisonを活用して、違いを追加
 
 要件：
+- **日本語で応答する**
 - 1文のみ、40文字以内の簡潔な文章
 - userNameが提供されている場合は必ず「〇〇さん、」から始める（例：「太郎さん、前回は...」「花子さん、今日は...」）
 - userNameがnullの場合は名前なしで始める
@@ -311,6 +336,8 @@ generationType が "final" の場合：
 `
 
       : `You are Shonin, witnessing users' efforts. Generate a placeholder text for the reflection input field.
+
+**CRITICAL: You MUST respond ONLY in English. Even if the user's name or past notes are in Japanese, generate your response entirely in English.**
 
 【Important Generation Type Differences】
 When generationType is "draft":
@@ -327,8 +354,9 @@ When generationType is "final":
   - Example: "Your mood improved from last time. What changed?" "10 minutes longer than last time. How was it?"
 
 Requirements:
+- **RESPOND IN ENGLISH ONLY**
 - One sentence only, within 50 characters
-- If userName is provided, always start with "userName, " (e.g., "Taro, last time..." "Hanako, today...")
+- If userName is provided, always start with "userName, " (e.g., "Daisuke, last time..." "Taro, today...")
 - If userName is null, start without name
 - Encouraging or questioning based on user's situation
 - Friendly and gentle tone
@@ -337,6 +365,7 @@ Requirements:
 - Must be a single sentence with one period
 
 Prohibitions:
+- **DO NOT use Japanese. Use English only.**
 - Never mention session counts like "third session" or "nth time"
 - Focus on what was accomplished, not what wasn't
 - Banned words: experience, learning, discovery, insight, feeling, unchanged`;

@@ -29,7 +29,8 @@ export default function SessionPage() {
     pauseSession,
     resumeSession,
     saveSession,
-    loading
+    loading,
+    isInitialLoad
   } = useSessions()
 
   // 注意: 自動リダイレクトは行わない
@@ -70,8 +71,8 @@ export default function SessionPage() {
     resumeSession()
   }
 
-  // 復元中または保存中はローディング表示
-  if (loading || isSaving) {
+  // 復元中、初期ロード中、または保存中はローディング表示
+  if (loading || isSaving || isInitialLoad) {
     return (
       <>
         <AppSidebar currentPage="dashboard" />
@@ -90,7 +91,7 @@ export default function SessionPage() {
     )
   }
 
-  // セッションが存在しない場合は、セッションが見つからない旨を表示
+  // 初期ロード完了後、セッションが存在しない場合のみエラーメッセージを表示
   if (!isSessionActive || !currentSession) {
     return (
       <>

@@ -43,6 +43,7 @@ interface SessionsContextType {
   currentSession: SessionData | null
   isSessionActive: boolean
   sessionState: SessionState
+  isInitialLoad: boolean // 初期ロード中かどうか
   // タイマー管理（一元化）
   elapsedTime: number
   formattedTime: string
@@ -98,6 +99,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
   const [elapsedTime, setElapsedTime] = useState(0)
   const [isRestoring, setIsRestoring] = useState(true)
   const [isRestoredSession, setIsRestoredSession] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
 
 
@@ -242,6 +244,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       }
       
       setIsRestoring(false)
+      setIsInitialLoad(false) // 初期ロード完了
     }
 
     if (!loading) {
@@ -628,6 +631,7 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
         currentSession,
         isSessionActive,
         sessionState,
+        isInitialLoad,
         elapsedTime,
         formattedTime: formatTime(elapsedTime),
         startSession,
