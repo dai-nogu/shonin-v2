@@ -43,10 +43,10 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       url: `/${locale}/goals`,
     },
     {
-      id: "feedback",
+      id: "letters",
       label: t('navigation.feedback'),
       icon: MessageSquare,
-      url: `/${locale}/feedback`,
+      url: `/${locale}/letters`,
       badge: true, // 通知バッジ表示フラグ
     },
     {
@@ -69,8 +69,8 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
       setActivePage("calendar")
     } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
-    } else if (pathWithoutLocale === "/feedback") {
-      setActivePage("feedback")
+    } else if (pathWithoutLocale === "/letters") {
+      setActivePage("letters")
     } else if (pathWithoutLocale === "/plan") {
       setActivePage("plan")
     } else if (pathWithoutLocale === "/settings") {

@@ -36,7 +36,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen w-full bg-gray-950 text-gray-100">
       {/* 追従ヘッダー */}
       <Header activeSection={activeSection} scrollToSection={scrollToSection} />
 
@@ -111,27 +111,16 @@ function Header({
 // Heroセクション
 function HeroSection() {
   return (
-    <section id="hero" className="pt-32 pb-24 px-6">
+    <section id="hero" className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight text-white text-yakumono-tight">
-        静かに、そして突然変わる。
+        静かに突然変わる
         </h1>
-        <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
+        <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em] pt-5">
         ただ自分の成長に没頭する時間だけが<br />
         あなたを劇的に進化させる。<br />
         Shoninはその時間に寄り添い続ける。
         </p>
-        <>
-          <button
-            onClick={() => {
-              const element = document.getElementById('origin')
-              if (element) element.scrollIntoView({ behavior: 'smooth' })
-            }}
-            className="px-8 py-4 border-2 border-gray-700 text-gray-300 rounded-lg hover:border-gray-500 hover:bg-gray-800 transition-colors duration-200 text-lg font-medium"
-          >
-            詳しく見る
-          </button>
-        </>
       </div>
     </section>
   )
@@ -172,31 +161,29 @@ function ScreenshotSection() {
 
   const screenshots = [
     {
-      title: 'ダッシュボード',
-      description: '日々の活動を記録し、週間の進捗を一目で確認。目標に向かって着実に歩みを進めましょう。',
+      title: 'あなたが捨てるもの',
+      description: '目標達成には何か捨てる必要があります。',
       image: '/img/img01.png',
-      alt: 'ダッシュボード画面 - History、Start Focus、Weekly Progressを表示'
+      alt: 'add Goal'
     },
     {
       title: 'Shoninからの手紙',
-      description: '毎週,毎月届くShoninからのメッセージ。努力の伴走者として手紙を送ります。',
+      description: '毎週1回、毎月1回の合計5回届くShoninからの手紙。',
       image: '/img/img02.png',
-      alt: 'Letters画面 - Weekly Letterの表示'
+      alt: 'Letters'
     },
     {
-      title: '詳細な記録',
-      description: 'リアルタイムでの時間記録と振り返りメモ。あなたの努力の証を残します。',
+      title: 'もう1人じゃない',
+      description: '毎回の行動を見て送られる短文のメッセージ。',
       image: '/img/img03.png',
-      alt: 'アクティビティ詳細画面 - タイマーとメモ機能'
+      alt: 'mood,memo'
     }
   ]
 
   return (
     <section id="screenshot" className="py-24 px-6 bg-gray-900">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-16 text-white">
-          シンプルで使いやすいインターフェース
-        </h2>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight pb-24 leading-tight text-white text-yakumono-tight text-center">自分に集中するための設計</h2>
         <div className="space-y-24">
           {screenshots.map((screenshot, i) => (
             <div
@@ -225,8 +212,6 @@ function ScreenshotSection() {
                             <div class="text-8xl mb-6 text-emerald-500/20">
                               ${i === 0 ? '📊' : i === 1 ? '💌' : '⏱️'}
                             </div>
-                            <h3 class="text-2xl font-bold text-white mb-3">${screenshot.title}</h3>
-                            <p class="text-gray-400">${screenshot.description}</p>
                           </div>
                         `
                       }

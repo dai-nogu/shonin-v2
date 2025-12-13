@@ -109,8 +109,12 @@
   * {
     @apply border-border;
   }
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
     /* Midnight Sanctuary Background - 明るさを微調整 */
     background-image: 
       radial-gradient(circle at 50% 0%, hsl(240, 25%, 13%) 0%, transparent 60%),
@@ -246,26 +250,27 @@
 .bg-susutake { background-color: #5b5248; } /* 煤竹色 */
 .bg-rikyu-nezu { background-color: #6b7b6e; } /* 利休鼠 */
 
-/* ===== デフォルトスクロールバー（カスタムスタイル削除） ===== */
+/* ===== カスタムスクロールバー（ダークモード対応） ===== */
 * {
-  scrollbar-width: auto;
-  scrollbar-color: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(55, 65, 81) rgb(17, 24, 39); /* gray-700 / gray-900 */
 }
 
 *::-webkit-scrollbar {
-  width: auto;
-  height: auto;
+  width: 12px;
+  height: 12px;
 }
 
 *::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgb(17, 24, 39); /* gray-900 */
 }
 
 *::-webkit-scrollbar-thumb {
-  background: auto;
-  border-radius: auto;
+  background: rgb(55, 65, 81); /* gray-700 */
+  border-radius: 6px;
+  border: 2px solid rgb(17, 24, 39); /* gray-900 */
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: auto;
+  background: rgb(75, 85, 99); /* gray-600 */
 }

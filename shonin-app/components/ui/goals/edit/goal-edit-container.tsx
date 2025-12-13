@@ -189,7 +189,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
             onSubmit={handleUpdateGoal}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
-            isValid={formData.title.trim() !== "" && hasChanges}
+            isValid={formData.title.trim() !== "" && dontDoTags.length > 0 && hasChanges}
           />
         </CardContent>
       </Card>

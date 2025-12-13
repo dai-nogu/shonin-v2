@@ -28,7 +28,7 @@ test.describe('AIフィードバック機能', () => {
 
   test('フィードバックページが正しく表示される', async ({ page }) => {
     // フィードバックページにアクセス
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     // ログインページにリダイレクトされた場合
@@ -49,7 +49,7 @@ test.describe('AIフィードバック機能', () => {
   });
 
   test('フィードバック一覧が表示される', async ({ page }) => {
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {
@@ -84,7 +84,7 @@ test.describe('AIフィードバック機能', () => {
   });
 
   test('週間フィードバックと月間フィードバックが区別される', async ({ page }) => {
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {
@@ -112,7 +112,7 @@ test.describe('AIフィードバック機能', () => {
   });
 
   test('未読フィードバックの表示', async ({ page }) => {
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {
@@ -137,7 +137,7 @@ test.describe('AIフィードバック機能', () => {
   });
 
   test('フィードバック詳細の表示', async ({ page }) => {
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {
@@ -289,7 +289,7 @@ test.describe('AIフィードバック自動生成', () => {
  */
 test.describe('フィードバックコンテンツの品質', () => {
   test('フィードバックに必要な要素が含まれている', async ({ page }) => {
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {
@@ -325,7 +325,7 @@ test.describe('フィードバックコンテンツの品質', () => {
   });
 
   test('フィードバックの期間情報が表示されている', async ({ page }) => {
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {
@@ -380,7 +380,7 @@ test.describe('Anthropic API統合', () => {
 test.describe('フィードバック入力データ', () => {
   test('セッションデータが存在しない場合の処理', async ({ page }) => {
     // 新規ユーザーまたはセッションデータがない場合の動作を確認
-    await page.goto('/ja/feedback');
+    await page.goto('/ja/letters');
     await waitForPageLoad(page);
 
     if (page.url().includes('/login')) {

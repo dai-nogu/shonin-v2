@@ -92,7 +92,7 @@ export function GoalDontDoSelector({
 
   return (
     <div className="space-y-4">
-      <Label className="text-gray-300">{t('goals.dont_do_label')}</Label>
+      <Label className="text-gray-300">{t('goals.dont_do_label')} *</Label>
       
       {/* プリセットタグ */}
       <div className="flex flex-wrap gap-2">

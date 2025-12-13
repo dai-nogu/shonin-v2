@@ -180,7 +180,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
         <CardContent className="pt-6">
           <div className="text-center py-8 space-y-4">
             <>
-              <p className="font-bold text-lg text-white">{t('plan.limit_modal.ai_feedback_line1')}</p>
+              <h3 className="text-xl font-medium text-white mb-6">{t('plan.limit_modal.ai_feedback_line1')}</h3>
             </>
             <Button
               onClick={() => router.push('/plan')}

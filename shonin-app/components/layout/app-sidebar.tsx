@@ -78,9 +78,9 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     },
     {
       title: t('navigation.feedback'),
-      url: `/${locale}/feedback`,
+      url: `/${locale}/letters`,
       icon: Mail,
-      id: "feedback",
+      id: "letters",
       glow: true, // glow効果表示フラグ
     },
   ]
@@ -111,8 +111,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       setActivePage("calendar")
     } else if (pathWithoutLocale === "/goals") {
       setActivePage("goals")
-    } else if (pathWithoutLocale === "/feedback") {
-      setActivePage("feedback")
+    } else if (pathWithoutLocale === "/letters") {
+      setActivePage("letters")
     } else if (pathWithoutLocale === "/plan" || pathWithoutLocale.startsWith("/settings")) {
       // プランや設定ページではサイドバーのメニューをアクティブにしない
       setActivePage("")

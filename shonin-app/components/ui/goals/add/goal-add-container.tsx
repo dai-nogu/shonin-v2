@@ -118,7 +118,7 @@ export function GoalAddContainer() {
             onSubmit={handleAddGoal}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
-            isValid={formData.title.trim() !== ""}
+            isValid={formData.title.trim() !== "" && dontDoTags.length > 0}
           />
         </CardContent>
       </Card>
