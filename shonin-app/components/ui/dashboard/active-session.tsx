@@ -1,13 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Pause, Play, Square, MessageSquare, Camera, Save, RotateCcw, X, CloudRain, Cloud, Minus, Sun, Sparkles, Plus, ChevronRight, Check, PenLine } from "lucide-react"
-import { Card, CardContent, CardHeader } from "@/components/ui/common/card"
-import { Button } from "@/components/ui/common/button"
-import { Badge } from "@/components/ui/common/badge"
-import { Textarea } from "@/components/ui/common/textarea"
-import { Label } from "@/components/ui/common/label"
-import { CharacterCounter } from "@/components/ui/common/character-counter"
 import { useTranslations, useLocale } from 'next-intl'
 import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
@@ -15,10 +8,14 @@ import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useSessions } from "@/contexts/sessions-context"
 import { useAuth } from "@/contexts/auth-context"
-import { uploadPhotos, type UploadedPhoto } from "@/lib/upload-photo"
-import { getTimeString } from "@/lib/date-utils"
+import { uploadPhotos } from "@/lib/upload-photo"
 import { getInputLimits } from "@/lib/input-limits"
-import { cn } from "@/lib/utils"
+
+// 分割されたコンポーネント
+import { SessionTimer } from "./session/session-timer"
+import { SessionControls } from "./session/session-controls"
+import { SessionCompletionMessage } from "./session/session-completion-message"
+import { SessionReflectionForm } from "./session/session-reflection-form"
 
 interface ActiveSessionProps {
   session: SessionData
@@ -40,42 +37,47 @@ export function ActiveSession({
   const t = useTranslations()
   const locale = useLocale()
   const limits = getInputLimits(locale)
-  const encouragementMessages = useTranslations('encouragement')
+  
   // 認証フック
   const { user } = useAuth()
   
   // 振り返りデータベースフック
-  const { saveReflection, isLoading: isReflectionLoading, error: reflectionError } = useReflectionsDb()
+  const { saveReflection } = useReflectionsDb()
   
   // 目標データを取得
   const { goals } = useGoalsDb()
   const activeGoals = goals.filter(goal => goal.status === 'active')
 
   // セッションコンテキストから一元化された時間データを取得
-  const { formattedTime, elapsedTime, sessions } = useSessions()
+  const { formattedTime, elapsedTime } = useSessions()
   
   // 振り返り関連の状態
   const [mood, setMood] = useState(3)
   const [notes, setNotes] = useState("")
   const [showNotes, setShowNotes] = useState(false)
-  const [showPhotos, setShowPhotos] = useState(false)
   const [photos, setPhotos] = useState<File[]>([])
   const [isSaving, setIsSaving] = useState(false)
   
   // 2ステップフロー管理（SPのみ）
-  // SPでは目標確認画面は表示せず、気分評価とメモ入力のみ
-  const [currentStep, setCurrentStep] = useState(2) // 2: 気分評価, 3: メモ入力
-  const [showPhotoAccordion, setShowPhotoAccordion] = useState(false) // 写真アコーディオンの開閉
-  const [suggestedGoalId, setSuggestedGoalId] = useState<string | null>(null) // 提案された目標ID
-  const [selectedGoalForSession, setSelectedGoalForSession] = useState<string | null>(null) // セッションに紐づける目標ID
+  const [currentStep, setCurrentStep] = useState(2)
+  const [showPhotoAccordion, setShowPhotoAccordion] = useState(false)
+  const [suggestedGoalId, setSuggestedGoalId] = useState<string | null>(null)
+  const [selectedGoalForSession, setSelectedGoalForSession] = useState<string | null>(null)
   
-  // 画面サイズ判定（SPかPCか）
+  // 画面サイズ判定
   const [isMobile, setIsMobile] = useState(false)
   
-  // プレースホルダー（開始時1回のみ生成）
+  // プレースホルダー
   const [notesPlaceholder, setNotesPlaceholder] = useState(t('active_session.notes_placeholder'))
   const [isPreparingReflection, setIsPreparingReflection] = useState(false)
   const [hasGeneratedPlaceholder, setHasGeneratedPlaceholder] = useState(false)
+  
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
+  const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
+  const notesRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   // 画面サイズ判定
   useEffect(() => {
@@ -99,15 +101,6 @@ export function ActiveSession({
     }
   }, [session.goalId, activeGoals.length])
   
-  
-  // 初回マウント完了フラグ（ローカルストレージ復元完了を待つ）
-  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [localReflectionError, setLocalReflectionError] = useState<string | null>(null)
-  const [completedDurationMinutes, setCompletedDurationMinutes] = useState<number>(0)
-  const notesRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  
   // ローカルストレージのキー生成
   const getStorageKey = (field: string) => {
     return `session_${session.activityId}_${session.startTime.getTime()}_${field}`
@@ -126,17 +119,14 @@ export function ActiveSession({
       if (savedPlaceholder) setNotesPlaceholder(savedPlaceholder)
       if (savedHasGenerated === 'true') setHasGeneratedPlaceholder(true)
       
-      // 復元完了をマーク
       setIsInitialLoadComplete(true)
     }
   }, [session.activityId, session.startTime])
 
-  // セッション開始時にプレースホルダーを事前生成（ローカルストレージ復元後のみ）
+  // セッション開始時にプレースホルダーを事前生成
   const startTimeMs = session.startTime.getTime()
   useEffect(() => {
-    // ローカルストレージ復元完了まで待つ
     if (!isInitialLoadComplete) return
-    // 既に生成済み、または終了状態の場合はスキップ
     if (hasGeneratedPlaceholder || sessionState === 'ended') return
     
     const timer = setTimeout(async () => {
@@ -181,7 +171,6 @@ export function ActiveSession({
   // プレースホルダーと生成フラグをローカルストレージに自動保存
   const isInitialMountForPlaceholder = useRef(true)
   useEffect(() => {
-    // 初回マウント時はスキップ（復元用のuseEffectが先に実行されるため）
     if (isInitialMountForPlaceholder.current) {
       isInitialMountForPlaceholder.current = false
       return
@@ -194,7 +183,6 @@ export function ActiveSession({
 
   const isInitialMountForFlag = useRef(true)
   useEffect(() => {
-    // 初回マウント時はスキップ（復元用のuseEffectが先に実行されるため）
     if (isInitialMountForFlag.current) {
       isInitialMountForFlag.current = false
       return
@@ -218,12 +206,9 @@ export function ActiveSession({
   // 終了画面に遷移した時にメモ入力欄にフォーカス
   useEffect(() => {
     if (sessionState === "ended" && !isPreparingReflection) {
-      // PC版: showNotesがtrueの時
-      // SP版: currentStep === 3の時
       const shouldFocus = (!isMobile && showNotes) || (isMobile && currentStep === 3)
       
       if (shouldFocus && notesRef.current) {
-        // 少し遅延させてフォーカス
         setTimeout(() => {
           notesRef.current?.focus()
         }, 100)
@@ -231,22 +216,13 @@ export function ActiveSession({
     }
   }, [sessionState, showNotes, currentStep, isMobile, isPreparingReflection])
 
-  const handleTogglePause = () => {
-    onTogglePause()
-  }
-
   const handleEnd = async () => {
-    // 終了時点の経過時間を分単位で保存
     setCompletedDurationMinutes(elapsedTime / 60)
-    
-    // 外部の終了処理を呼び出し
     onEnd()
     
-    // ローディング演出のみ（プレースホルダーは開始時に既に生成済み）
     setIsPreparingReflection(true)
     const minimumLoadingTime = 2500
     
-    // 最低ローディング時間を確保（ユーザー体験のため）
     await new Promise(resolve => setTimeout(resolve, minimumLoadingTime))
     
     setIsPreparingReflection(false)
@@ -255,13 +231,9 @@ export function ActiveSession({
 
   const handleResume = () => {
     setShowNotes(false)
-    setShowPhotos(false)
     setIsPreparingReflection(false)
-    // 完了時間をリセット（再開後に新しい時間で計算し直すため）
     setCompletedDurationMinutes(0)
-    // プレースホルダー生成フラグはリセットしない（同じセッションで再利用）
-    // セッション状態をactiveに戻す
-    onResume() // 終了状態からアクティブ状態に戻る
+    onResume()
   }
 
   // 写真アップロード処理
@@ -273,12 +245,10 @@ export function ActiveSession({
     }
   }
 
-  // 写真削除処理
   const handlePhotoRemove = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 
-  // 写真選択ボタンクリック
   const handlePhotoButtonClick = () => {
     fileInputRef.current?.click()
   }
@@ -288,26 +258,22 @@ export function ActiveSession({
 
   const handleSave = useCallback(async () => {
     if (isSaving || saveInProgressRef.current) {
-      return // 重複保存を防ぐ
+      return
     }
     
-    // 保存処理開始フラグを設定
     saveInProgressRef.current = true
     setIsSaving(true)
     
     try {
-      // まずセッションデータを保存
       const sessionData = {
         ...session,
         duration: elapsedTime,
         endTime: new Date(),
         notes,
         mood,
-        // 目標IDを更新（ユーザーが選択した目標 or 元の目標）
         goalId: selectedGoalForSession || session.goalId,
       }
 
-      // セッションデータを外部保存処理に渡し、セッションIDを取得
       const result = onSave(sessionData)
       const savedSessionId = result instanceof Promise ? await result : result
       
@@ -315,8 +281,8 @@ export function ActiveSession({
       if (photos.length > 0 && savedSessionId && user?.id) {
         try {
           setIsUploading(true)
-          const uploadedPhotoResults = await uploadPhotos(photos, savedSessionId, user.id)
-          setPhotos([]) // アップロード完了後にクリア
+          await uploadPhotos(photos, savedSessionId, user.id)
+          setPhotos([])
         } catch (photoError) {
           // 写真アップロードに失敗してもセッション保存は継続
         } finally {
@@ -324,608 +290,99 @@ export function ActiveSession({
         }
       }
        
-      // セッションが正常に保存された場合のみ振り返りデータを保存
       if (savedSessionId) {
         const reflectionData: SessionReflection = {
           moodScore: mood,
           additionalNotes: notes.trim() || undefined,
         }
         
-  
-        
         const reflectionId = await saveReflection(savedSessionId, reflectionData)
         
         if (!reflectionId) {
-          // 振り返り保存に失敗した場合でもセッション保存は継続
           setLocalReflectionError(t('active_session.reflection_save_error'))
         }
       }
       
-      // 保存が成功したらローカルストレージをクリア
       clearLocalStorage()
-      
-      // プレースホルダー生成フラグもリセット（次のセッション用）
       setHasGeneratedPlaceholder(false)
       setNotesPlaceholder(t('active_session.notes_placeholder'))
       
     } catch (error) {
-              setLocalReflectionError(t('active_session.save_error'))
+      setLocalReflectionError(t('active_session.save_error'))
     } finally {
       setIsSaving(false)
-      saveInProgressRef.current = false // 保存処理完了フラグをリセット
+      saveInProgressRef.current = false
     }
   }, [session, elapsedTime, notes, mood, photos, selectedGoalForSession, user, onSave, saveReflection, clearLocalStorage, t])
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* メインタイマーカード */}
-      <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl rounded-lg">
-        <CardHeader className="text-center pb-4">
-          <h2 className="text-4xl font-bold tracking-tight">{session.activityName}</h2>
-        </CardHeader>
+      <div>
+        <SessionTimer
+          activityName={session.activityName}
+          formattedTime={formattedTime}
+          startTime={session.startTime}
+          elapsedTime={elapsedTime}
+          targetTime={session.targetTime}
+          sessionState={sessionState}
+        />
+        
+        <div className="mt-4">
+          <SessionControls
+            sessionState={sessionState}
+            onTogglePause={onTogglePause}
+            onEnd={handleEnd}
+            onResume={handleResume}
+          />
+        </div>
 
-        <CardContent className="text-center">
-          {/* 経過時間表示 */}
-          <>
-            <div
-              className="text-7xl md:text-8xl font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
-            >
-              {formattedTime}
-            </div>
-            <div className="text-muted-foreground text-sm font-medium">
-              {t('active_session.start_time')}:{" "}
-              {getTimeString(session.startTime, '24h').substring(0, 5)}
-            </div>
-            
-            {/* 目標時間と進捗表示 */}
-            {!!(session.targetTime && session.targetTime > 0) && (
-              <div className="space-y-3 mt-8 max-w-md mx-auto">
-                <div className="flex items-center justify-between text-sm text-muted-foreground font-medium">
-                  <span>
-                    {t('active_session.target')}: {Math.floor(session.targetTime / 60)}{t('time.hours_unit')}
-                    {session.targetTime % 60 > 0 && `${session.targetTime % 60}${t('time.minutes_unit')}`}
-                  </span>
-                  <span>
-                    {Math.round((elapsedTime / (session.targetTime * 60)) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-secondary/50 rounded-full h-3 overflow-hidden backdrop-blur-sm">
-                  <div
-                    className={cn("h-full rounded-full transition-all duration-500",
-                      elapsedTime >= session.targetTime * 60
-                        ? "bg-emerald-700 shadow-[0_0_15px_rgba(4,120,87,0.6)]"
-                        : elapsedTime >= session.targetTime * 60 * 0.8
-                        ? "bg-yellow-500"
-                        : "bg-blue-500"
-                    )}
-                    style={{
-                      width: `${Math.min((elapsedTime / (session.targetTime * 60)) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
-                {elapsedTime >= session.targetTime * 60 && (
-                  <div className="text-sm text-emerald-500 font-medium animate-pulse flex items-center justify-center gap-1">
-                     {t('active_session.goal_achieved')}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-
-          {/* 制御ボタン */}
-          <div className="flex justify-center items-center gap-4 pt-4">
-            {sessionState === "ended" ? (
-              // 終了後のボタン
-              <Button
-                onClick={handleResume}
-                variant="outline"
-                size="lg"
-                className="h-20 px-12 text-xl font-semibold hover:bg-secondary/80 border-white/10 rounded-full w-full max-w-md shadow-lg"
-              >
-                <RotateCcw className="w-7 h-7 mr-3" />
-                {t('active_session.resume')}
-              </Button>
-            ) : (
-              // 通常の制御ボタン
-              <>
-                <Button
-                  onClick={handleTogglePause}
-                  variant="outline"
-                  size="lg"
-                  className="h-16 px-8 rounded-full border-2 hover:bg-secondary/80 border-white/10 backdrop-blur-sm"
-                >
-                  {sessionState === "paused" ? (
-                    <>
-                      <Play className="w-6 h-6 mr-2 fill-current" />
-                      {t('active_session.resume')}
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="w-6 h-6 mr-2 fill-current" />
-                      {t('active_session.pause')}
-                    </>
-                  )}
-                </Button>
-
-                <Button 
-                  onClick={handleEnd} 
-                  variant="destructive" 
-                  size="lg" 
-                  className="h-16 px-8 rounded-full shadow-lg hover:shadow-red-900/20 transition-all hover:-translate-y-0.5"
-                >
-                  <Square className="w-6 h-6 mr-2 fill-current" />
-                  {t('active_session.end')}
-                </Button>
-              </>
-            )}
+        {/* 完了メッセージ */}
+        {sessionState === "ended" && (
+          <div className="mt-4">
+            <SessionCompletionMessage
+              completedDurationMinutes={completedDurationMinutes}
+              isPreparingReflection={isPreparingReflection}
+            />
           </div>
+        )}
 
-          {/* 状態別メッセージ */}
-          {sessionState === "paused" && (
-            <div className="text-center p-4">
-              <p className="text-yellow-500 text-sm font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.paused_message') }} />
-            </div>
-          )}
-
-          {sessionState === "ended" && completedDurationMinutes > 0 && (
-            <div className="space-y-2 mt-2">
-              <p className="text-foreground font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
-              
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {(() => {
-                  const minutes = Math.floor(completedDurationMinutes)
-                  const hours = Math.floor(completedDurationMinutes / 60)
-                  
-                  // 時間範囲に応じたメッセージを直接取得
-                  if (completedDurationMinutes <= 5) {
-                    return encouragementMessages('session_completion.range_0_5', { minutes })
-                  } else if (completedDurationMinutes <= 15) {
-                    return encouragementMessages('session_completion.range_6_15', { minutes })
-                  } else if (completedDurationMinutes <= 30) {
-                    return encouragementMessages('session_completion.range_16_30', { minutes })
-                  } else if (completedDurationMinutes <= 45) {
-                    return encouragementMessages('session_completion.range_31_45', { minutes })
-                  } else if (completedDurationMinutes <= 60) {
-                    return encouragementMessages('session_completion.range_46_60', { minutes, hours })
-                  } else if (completedDurationMinutes <= 90) {
-                    return encouragementMessages('session_completion.range_61_90', { minutes, hours })
-                  } else if (completedDurationMinutes <= 120) {
-                    return encouragementMessages('session_completion.range_91_120', { minutes, hours })
-                  } else if (completedDurationMinutes <= 180) {
-                    return encouragementMessages('session_completion.range_121_180', { minutes, hours })
-                  } else if (completedDurationMinutes <= 360) {
-                    return encouragementMessages('session_completion.range_180_360', { hours })
-                  } else if (completedDurationMinutes <= 720) {
-                    return encouragementMessages('session_completion.range_360_720', { hours })
-                  } else {
-                    return encouragementMessages('session_completion.range_720_1440', { hours })
-                  }
-                })()}
-              </p>
-              
-              {/* プレースホルダー生成してる感じのアニメーション */}
-              {isPreparingReflection && (
-                <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                  <div className="relative w-24 h-24 mx-auto">
-                    {/* メモ帳のライン */}
-                    <div className="absolute inset-0 flex flex-col justify-center items-center gap-3 pt-2">
-                      <div className="h-1 bg-emerald-600/30 rounded-full w-12 animate-[line-draw_1.5s_ease-in-out_infinite]" />
-                      <div className="h-1 bg-emerald-600/30 rounded-full w-16 animate-[line-draw_1.5s_ease-in-out_0.3s_infinite]" />
-                      <div className="h-1 bg-emerald-600/30 rounded-full w-10 animate-[line-draw_1.5s_ease-in-out_0.6s_infinite]" />
-                    </div>
-                    {/* ペンアイコン */}
-                    <div className="absolute top-2 right-2 animate-writing">
-                      <PenLine className="w-10 h-10 text-emerald-600 fill-emerald-100/10" />
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm font-medium animate-pulse">
-                    {t('active_session.preparing_reflection')}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* エラー表示 */}
-          {localReflectionError && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
-              <p className="text-destructive text-sm font-medium">⚠️ {localReflectionError}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* エラー表示 */}
+        {localReflectionError && (
+          <div className="mt-4 bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+            <p className="text-destructive text-sm font-medium">⚠️ {localReflectionError}</p>
+          </div>
+        )}
+      </div>
 
       {/* アクション・メモカード（終了時かつローディング完了後に表示） */}
       {sessionState === "ended" && !isPreparingReflection && (
-        <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-xl rounded-lg">
-          <CardContent className="p-6">
-            {/* 隠しファイル入力 */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,image/heic,image/heif"
-              capture="environment"
-              multiple
-              onChange={handlePhotoUpload}
-              className="hidden"
-            />
-
-            {/* SP: 2ステップフロー */}
-            {isMobile ? (
-              <>
-                {/* ステップ2: 気分評価 */}
-                {currentStep === 2 && (
-                  <div className="space-y-6 animate-in fade-in duration-300">
-                    {/* 目標表示（目標が設定されている場合） */}
-                    {(session.goalId || (activeGoals.length === 1 && selectedGoalForSession)) && (
-                      <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-xl p-4 mb-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-700/20 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-5 h-5 text-emerald-500" />
-                          </div>
-                          <div>
-                            <p className="text-white font-semibold">
-                              {(() => {
-                                const goalId = session.goalId || selectedGoalForSession
-                                const goal = activeGoals.find(g => g.id === goalId)
-                                return goal ? goal.title : t('active_session.no_goal')
-                              })()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="text-center space-y-2">
-                      <h3 className="text-xl font-bold text-white">
-                        {t('active_session.mood_question')}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-3 max-w-md mx-auto">
-                      {[
-                        { value: 5, icon: Sparkles, labelKey: 'active_session.mood_great', color: 'emerald' },
-                        { value: 4, icon: Sun, labelKey: 'active_session.mood_good', color: 'emerald' },
-                        { value: 3, icon: Minus, labelKey: 'active_session.mood_neutral', color: 'gray' },
-                        { value: 2, icon: Cloud, labelKey: 'active_session.mood_poor', color: 'gray' },
-                        { value: 1, icon: CloudRain, labelKey: 'active_session.mood_bad', color: 'gray' },
-                      ].map(({ value, icon: Icon, labelKey, color }) => (
-                        <Button
-                          key={value}
-                          onClick={() => setMood(value)}
-                          variant={mood === value ? "default" : "outline"}
-                          className={cn(
-                            "w-full h-16 justify-start gap-4 text-base transition-all",
-                            mood === value
-                              ? "bg-emerald-700 text-white scale-105 shadow-lg border-2 border-emerald-500"
-                              : "hover:bg-secondary hover:scale-[1.02]"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center",
-                            mood === value ? "bg-white/20" : "bg-secondary"
-                          )}>
-                            <Icon className="w-6 h-6" />
-                          </div>
-                          <span className="font-semibold">{t(labelKey)}</span>
-                          {mood === value && (
-                            <Check className="w-5 h-5 ml-auto" />
-                          )}
-                        </Button>
-                      ))}
-                    </div>
-
-                    <Button
-                      onClick={() => setCurrentStep(3)}
-                      disabled={!mood}
-                      className="w-full h-12 text-base font-semibold bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
-                    >
-                      {t('active_session.next')}
-                      <ChevronRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </div>
-                )}
-
-                {/* ステップ3: メモ入力 */}
-                {currentStep === 3 && (
-                  <div className="space-y-6 animate-in fade-in duration-300">
-                    {/* 目標表示（目標が設定されている場合） */}
-                    {(session.goalId || (activeGoals.length === 1 && selectedGoalForSession)) && (
-                      <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-xl p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-700/20 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-5 h-5 text-emerald-500" />
-                          </div>
-                          <div>
-                            <p className="text-white font-semibold">
-                              {(() => {
-                                const goalId = session.goalId || selectedGoalForSession
-                                const goal = activeGoals.find(g => g.id === goalId)
-                                return goal ? goal.title : t('active_session.no_goal')
-                              })()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* メモ入力 */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-end mb-2">
-                        <CharacterCounter current={notes.length} max={limits.sessionNotes} />
-                      </div>
-                      <Textarea
-                        ref={notesRef}
-                        placeholder={notesPlaceholder}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
-                        maxLength={limits.sessionNotes}
-                        className="bg-secondary/20 border-white/10 min-h-[120px] focus-visible:ring-primary resize-none text-base"
-                      />
-                    </div>
-
-                    {/* 写真アコーディオン */}
-                    <div className="border-t border-white/5 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => setShowPhotoAccordion(!showPhotoAccordion)}
-                        className="flex items-center space-x-2 text-left group w-full"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
-                          <Plus className={`w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-200 ${showPhotoAccordion ? 'rotate-45' : ''}`} />
-                        </div>
-                        <Label className="text-sm text-gray-400 cursor-pointer group-hover:text-gray-300 transition-colors">
-                          {t('active_session.photos_label')}
-                        </Label>
-                        {photos.length > 0 && (
-                          <span className="ml-2 bg-emerald-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                            {photos.length}
-                          </span>
-                        )}
-                      </button>
-
-                      {/* 写真アップロードエリア */}
-                      {showPhotoAccordion && (
-                        <div className="mt-4 space-y-4 animate-in fade-in duration-300">
-                          {/* アップロードされた写真のプレビュー */}
-                          {photos.length > 0 && (
-                            <div className="grid grid-cols-2 gap-3">
-                              {photos.map((photo, index) => (
-                                <div key={`pending-${index}`} className="relative group rounded-lg overflow-hidden shadow-md">
-                                  <img
-                                    src={URL.createObjectURL(photo)}
-                                    alt={t('active_session.photo_alt', { number: index + 1 })}
-                                    className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105"
-                                  />
-                                  <Button
-                                    onClick={() => handlePhotoRemove(index)}
-                                    size="icon"
-                                    variant="destructive"
-                                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-all"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <Button
-                            onClick={handlePhotoButtonClick}
-                            variant="outline"
-                            className="w-full h-12 border-dashed border-2 hover:bg-secondary"
-                          >
-                            <Camera className="w-5 h-5 mr-2" />
-                            {photos.length > 0 ? t('active_session.add_photos') : t('active_session.select_photos')}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 保存ボタン */}
-                    <Button
-                      onClick={handleSave}
-                      disabled={isSaving || isUploading}
-                      className="w-full h-14 text-base font-bold bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 shadow-lg"
-                    >
-                      {isSaving || isUploading ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                          {isUploading ? t('active_session.uploading') : t('active_session.saving')}
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-5 h-5 mr-2" />
-                          {t('active_session.save_button')}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </>
-            ) : (
-              /* PC: 1画面完結型UI */
-              <div className="animate-in fade-in duration-300">
-                {/* 1. 目標確認セクション */}
-                {session.goalId ? (
-                  <div className="space-y-3 pb-6">
-                    <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-xl p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-700/20 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                          <p className="text-white font-semibold">
-                            {(() => {
-                              const goal = activeGoals.find(g => g.id === session.goalId)
-                              return goal ? goal.title : t('active_session.no_goal')
-                            })()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : activeGoals.length > 0 ? (
-                  <div className="space-y-3 pb-6">
-                    <Label className="text-base font-medium">{t('active_session.select_goal_optional')}</Label>
-                    <div className="space-y-2">
-                      {activeGoals.map((goal) => (
-                        <Button
-                          key={goal.id}
-                          onClick={() => setSelectedGoalForSession(goal.id)}
-                          variant={selectedGoalForSession === goal.id ? "default" : "outline"}
-                          className={cn(
-                            "w-full h-14 justify-start gap-3 text-base transition-all",
-                            selectedGoalForSession === goal.id
-                              ? "bg-emerald-700 text-white border-2 border-emerald-500"
-                              : "hover:bg-secondary"
-                          )}
-                        >
-                          <span className="font-semibold truncate flex-1 text-left">{goal.title}</span>
-                          {selectedGoalForSession === goal.id && (
-                            <Check className="w-5 h-5 ml-auto flex-shrink-0" />
-                          )}
-                        </Button>
-                      ))}
-                      <Button
-                        onClick={() => setSelectedGoalForSession(null)}
-                        variant={selectedGoalForSession === null ? "default" : "outline"}
-                        className={cn(
-                          "w-full h-12 text-sm",
-                          selectedGoalForSession === null
-                            ? "bg-gray-700 text-white"
-                            : "hover:bg-secondary"
-                        )}
-                      >
-                        {t('active_session.no_goal')}
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* 2. 気分評価セクション */}
-                <div className="space-y-3 pb-6">
-                  <Label className="text-base font-medium">{t('active_session.mood_question')}</Label>
-                  <div className="flex justify-between sm:justify-start sm:gap-4">
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <Button
-                        key={rating}
-                        onClick={() => setMood(rating)}
-                        variant={mood === rating ? "default" : "outline"}
-                        className={cn(
-                          "h-14 w-14 p-0 flex items-center justify-center rounded-xl transition-all",
-                          mood === rating
-                            ? "bg-emerald-700 text-white scale-110 shadow-lg shadow-emerald-900/20 ring-2 ring-emerald-700 ring-offset-2 ring-offset-background"
-                            : "text-gray-400 hover:bg-secondary hover:scale-105"
-                        )}
-                      >
-                        {rating === 1 && <CloudRain className="w-6 h-6" />}
-                        {rating === 2 && <Cloud className="w-6 h-6" />}
-                        {rating === 3 && <Minus className="w-6 h-6" />}
-                        {rating === 4 && <Sun className="w-6 h-6" />}
-                        {rating === 5 && <Sparkles className="w-6 h-6" />}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 3. メモ入力セクション */}
-                <div className="space-y-3 pb-6">
-                  <div className="flex items-center justify-between">
-                    <CharacterCounter current={notes.length} max={limits.sessionNotes} />
-                  </div>
-                  <Textarea
-                    ref={notesRef}
-                    placeholder={notesPlaceholder}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value.slice(0, limits.sessionNotes))}
-                    maxLength={limits.sessionNotes}
-                    className="bg-secondary/20 border-white/10 min-h-[120px] focus-visible:ring-primary resize-none text-base"
-                  />
-                </div>
-
-                {/* 4. 写真アップロードセクション（アコーディオン） */}
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowPhotoAccordion(!showPhotoAccordion)}
-                    className="flex items-center space-x-2 text-left group w-full"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
-                      <Plus className={`w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-200 ${showPhotoAccordion ? 'rotate-45' : ''}`} />
-                    </div>
-                    <Label className="text-sm text-gray-400 cursor-pointer group-hover:text-gray-300 transition-colors">
-                      {t('active_session.photos_label')}
-                    </Label>
-                    {photos.length > 0 && (
-                      <span className="ml-2 bg-emerald-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                        {photos.length}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* 写真アップロードエリア */}
-                  {showPhotoAccordion && (
-                    <div className="space-y-4 animate-in fade-in duration-300">
-                      {/* アップロードされた写真のプレビュー */}
-                      {photos.length > 0 && (
-                        <div className="grid grid-cols-3 gap-3">
-                          {photos.map((photo, index) => (
-                            <div key={`pending-${index}`} className="relative group rounded-lg overflow-hidden shadow-md">
-                              <img
-                                src={URL.createObjectURL(photo)}
-                                alt={t('active_session.photo_alt', { number: index + 1 })}
-                                className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105"
-                              />
-                              <Button
-                                onClick={() => handlePhotoRemove(index)}
-                                size="icon"
-                                variant="destructive"
-                                className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-all"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <Button
-                        onClick={handlePhotoButtonClick}
-                        variant="outline"
-                        className="w-full h-12 border-dashed border-2 hover:bg-secondary"
-                      >
-                        <Camera className="w-5 h-5 mr-2" />
-                        {photos.length > 0 ? t('active_session.add_photos') : t('active_session.select_photos')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* 5. 保存ボタン */}
-                <div className="pt-2">
-                  <Button
-                    onClick={handleSave}
-                    disabled={isSaving || isUploading}
-                    className="w-full h-14 text-base font-bold bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 shadow-lg"
-                  >
-                    {isSaving || isUploading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                        {isUploading ? t('active_session.uploading') : t('active_session.saving')}
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-5 h-5 mr-2" />
-                        {t('active_session.save_button')}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <SessionReflectionForm
+          activeGoals={activeGoals}
+          currentGoalId={session.goalId}
+          selectedGoalId={selectedGoalForSession}
+          setSelectedGoalId={setSelectedGoalForSession}
+          mood={mood}
+          setMood={setMood}
+          notes={notes}
+          setNotes={setNotes}
+          notesPlaceholder={notesPlaceholder}
+          notesMaxLength={limits.sessionNotes}
+          notesRef={notesRef}
+          photos={photos}
+          showPhotoAccordion={showPhotoAccordion}
+          setShowPhotoAccordion={setShowPhotoAccordion}
+          onPhotoUpload={handlePhotoUpload}
+          onPhotoRemove={handlePhotoRemove}
+          onPhotoButtonClick={handlePhotoButtonClick}
+          fileInputRef={fileInputRef}
+          isMobile={isMobile}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onSave={handleSave}
+          isSaving={isSaving}
+          isUploading={isUploading}
+        />
       )}
     </div>
   )
