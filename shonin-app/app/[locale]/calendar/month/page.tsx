@@ -7,10 +7,9 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { BottomNavigation } from "@/components/layout/bottom-navigation"
 import { MonthCalendarCSR } from "@/components/ui/calendar/month/month-calendar-csr"
 import { useSessionList } from "@/hooks/useSessionList"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
-import { Button } from "@/components/ui/common/button"
-import { ChevronLeft, ChevronRight, BarChart3 } from "lucide-react"
-import { formatDuration } from "@/lib/format-duration"
+import { Card, CardContent } from "@/components/ui/common/card"
+import { CalendarHeader } from "@/components/ui/calendar/calendar-header"
+import { CalendarStatsCard } from "@/components/ui/calendar/calendar-stats-card"
 import { useTranslations, useLocale } from 'next-intl'
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
 import { 
@@ -77,39 +76,12 @@ function MonthCalendarSSR({
     <div className="bg-gray-950 text-white">
       <div className="px-0">
         <Card className="!bg-gray-950 border-0 rounded-none shadow-none">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-white">{monthName}</CardTitle>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onTodayClick}
-                  className="text-gray-300 hover:bg-white/10"
-                >
-                  {t('calendar.today')}
-                </Button>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onNavigate("prev")}
-                    className="text-gray-300 hover:bg-white/10"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onNavigate("next")}
-                    className="text-gray-300 hover:bg-white/10"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
+          <CalendarHeader
+            title={monthName}
+            onNavigate={onNavigate}
+            onTodayClick={onTodayClick}
+            todayLabel="today"
+          />
 
           <CardContent className="p-0">
             {/* 曜日ヘッダー */}
@@ -191,53 +163,18 @@ function MonthCalendarSSR({
 
         {/* 統計サマリー */}
         <div className="grid grid-cols-2 gap-2 md:gap-4 mt-2 md:mt-6 mb-2 md:mb-0">
-          <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl shadow-lg">
-            <CardContent className="p-3 md:p-6 text-center">
-              {totalMonthTime === 0 ? (
-                <>
-                  <div className="flex justify-center mb-2">
-                    <div className="p-2 rounded-full bg-gray-800/50">
-                      <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
-                    </div>
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-500 font-medium">{getNoRecordsMessage()}</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-2xl md:text-3xl font-bold text-emerald-500 mb-1">
-                    {formatDuration(totalMonthTime)}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
-                    {t('calendar.month_stats.total_time')}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-gray-900 to-gray-900/50 border border-gray-800 rounded-xl shadow-lg">
-            <CardContent className="p-3 md:p-6 text-center">
-              {averageMonthTime === 0 ? (
-                <>
-                  <div className="flex justify-center mb-2">
-                    <div className="p-2 rounded-full bg-gray-800/50">
-                      <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-gray-500" />
-                    </div>
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-500 font-medium">{getNoRecordsMessage()}</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-2xl md:text-3xl font-bold text-[#96514d] mb-1">
-                    {formatDuration(averageMonthTime)}
-                  </div>
-                  <div className="text-xs md:text-sm text-gray-400 font-medium tracking-wide">
-                    {t('calendar.month_stats.average_time')}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <CalendarStatsCard
+            value={totalMonthTime}
+            label={t('calendar.month_stats.total_time')}
+            color="emerald"
+            noRecordsMessage={getNoRecordsMessage()}
+          />
+          <CalendarStatsCard
+            value={averageMonthTime}
+            label={t('calendar.month_stats.average_time')}
+            color="brown"
+            noRecordsMessage={getNoRecordsMessage()}
+          />
         </div>
       </div>
     </div>
