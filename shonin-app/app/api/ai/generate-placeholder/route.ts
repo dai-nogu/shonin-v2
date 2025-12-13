@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         .from('activities')
         .select('name')
         .eq('id', activity_id)
-        .single();
+        .single<{ name: string }>();
       const placeholder = getDefaultPlaceholder(0, null, locale, activity?.name);
       return NextResponse.json({ placeholder });
     }
@@ -96,17 +96,17 @@ export async function POST(request: NextRequest) {
       .from('activities')
       .select('name')
       .eq('id', activity_id)
-      .single();
+      .single<{ name: string }>();
 
     // 目標名を取得（目標IDがある場合）
-    let goalTitle = null;
+    let goalTitle: string | null = null;
     if (goal_id) {
       const { data: goal } = await supabase
         .from('goals')
         .select('title')
         .eq('id', goal_id)
-        .single();
-      goalTitle = goal?.title;
+        .single<{ title: string }>();
+      goalTitle = goal?.title ?? null;
     }
 
     // ユーザー名を取得
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('name')
       .eq('id', user.id)
-      .single();
+      .single<{ name: string }>();
 
     // プレースホルダーを生成
     const placeholder = await generatePlaceholder({

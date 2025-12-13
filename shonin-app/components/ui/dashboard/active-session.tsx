@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, type RefObject } from "react"
 import { useTranslations, useLocale } from 'next-intl'
 import type { SessionData } from "./time-tracker"
 import { SessionReflection } from "@/types/database"
@@ -358,7 +358,11 @@ export function ActiveSession({
       {/* アクション・メモカード（終了時かつローディング完了後に表示） */}
       {sessionState === "ended" && !isPreparingReflection && (
         <SessionReflectionForm
-          activeGoals={activeGoals}
+          activeGoals={activeGoals.map(goal => ({
+            id: goal.id,
+            title: goal.title,
+            status: goal.status ?? undefined
+          }))}
           currentGoalId={session.goalId}
           selectedGoalId={selectedGoalForSession}
           setSelectedGoalId={setSelectedGoalForSession}
@@ -368,14 +372,14 @@ export function ActiveSession({
           setNotes={setNotes}
           notesPlaceholder={notesPlaceholder}
           notesMaxLength={limits.sessionNotes}
-          notesRef={notesRef}
+          notesRef={notesRef as RefObject<HTMLTextAreaElement>}
           photos={photos}
           showPhotoAccordion={showPhotoAccordion}
           setShowPhotoAccordion={setShowPhotoAccordion}
           onPhotoUpload={handlePhotoUpload}
           onPhotoRemove={handlePhotoRemove}
           onPhotoButtonClick={handlePhotoButtonClick}
-          fileInputRef={fileInputRef}
+          fileInputRef={fileInputRef as RefObject<HTMLInputElement>}
           isMobile={isMobile}
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
