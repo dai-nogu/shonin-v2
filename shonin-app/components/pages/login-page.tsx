@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/contexts/toast-context'
 import { Button } from '@/components/ui/common/button'
@@ -28,21 +29,29 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <Card className="w-full max-w-md bg-gray-900 border-gray-800">
+    <div className="min-h-screen bg-gray-950 relative">
+      {/* 左上のロゴ */}
+      <div className="absolute top-6 left-6 z-10">
+        <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">?</span>
+          </div>
+          <h1 className="text-xl font-bold text-white">Shonin</h1>
+        </Link>
+      </div>
+
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-gray-900 border-gray-800">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
             {/* TODO: ロゴを追加 */}
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-emerald-700 rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold text-white">?</span>
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-white">
             Shonin
           </CardTitle>
-          <CardDescription className="text-gray-200">
-            {t('login.tagline')}
-          </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
@@ -87,6 +96,7 @@ export function LoginPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 } 
