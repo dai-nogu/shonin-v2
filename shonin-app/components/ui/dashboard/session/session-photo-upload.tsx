@@ -28,7 +28,7 @@ export const SessionPhotoUpload = memo(function SessionPhotoUpload({
   const t = useTranslations()
 
   return (
-    <div className="border-t border-white/5 pt-4">
+    <div className="border-t border-white/5">
       {/* 隠しファイル入力 */}
       <input
         ref={fileInputRef}

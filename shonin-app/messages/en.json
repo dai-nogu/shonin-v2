@@ -92,8 +92,8 @@
   },
   "ai_feedback": {
     "feedback": "Letter",
-    "weekly": "Weekly ",
-    "monthly": "Monthly ",
+    "weekly": "Weekly letter",
+    "monthly": "Monthly letter",
     "weekly_default_message": "Keep logging your activities to receive weekly letter.",
     "monthly_default_message": "Stay consistent to unlock your monthly letter.",
     "weekly_no_data_message": "Not enough data accumulated yet. Record activities to start receiving weekly letter.",

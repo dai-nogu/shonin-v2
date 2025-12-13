@@ -2,7 +2,6 @@
 
 import { memo } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useTranslations } from 'next-intl'
 
@@ -28,6 +27,7 @@ interface AIFeedbackCardProps {
   onPrevious: () => void
   onNext: () => void
   getNextWeekMonday: () => string
+  getNextMonthFirstDay: () => string
 }
 
 export const AIFeedbackCard = memo(function AIFeedbackCard({
@@ -37,7 +37,8 @@ export const AIFeedbackCard = memo(function AIFeedbackCard({
   isTransitioning,
   onPrevious,
   onNext,
-  getNextWeekMonday
+  getNextWeekMonday,
+  getNextMonthFirstDay
 }: AIFeedbackCardProps) {
   const t = useTranslations()
 
@@ -46,120 +47,98 @@ export const AIFeedbackCard = memo(function AIFeedbackCard({
 
     if (typeof message === 'string') {
       return (
-        <div className="bg-gray-800/50 rounded-lg p-3 md:p-4 mb-3 whitespace-pre-wrap leading-relaxed text-gray-100 text-sm md:text-base">
+        <p className="whitespace-pre-wrap leading-[2.0] text-gray-100 text-base md:text-lg tracking-wide">
           {message}
-        </div>
+        </p>
       )
     }
 
+    // 全てのテキストを一つの文章として結合
+    const fullText = [
+      message.overview,
+      message.principle_application,
+      // message.principle_definition, // UIには表示しない
+      message.insight,
+      message.closing
+    ]
+      .filter(Boolean) // null/undefinedを除外
+      .join('\n') // 段落間の空行をなくす
+
     return (
-      <div className="space-y-4 text-gray-100">
-        {/* Overview Section */}
-        <div className="bg-gray-800/50 rounded-lg p-3 md:p-4">
-          <p className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">
-            {message.overview}
-          </p>
-        </div>
-
-        {/* Principle Application (if present) */}
-        {message.principle_application && (
-          <div className="bg-emerald-700/10 border border-emerald-700/30 rounded-lg p-3 md:p-4">
-            <div className="flex items-start gap-2 mb-2">
-              <span className="text-emerald-400 font-semibold text-xs md:text-sm flex-shrink-0">
-                📚 {t('ai_feedback.principle_application')}
-              </span>
-            </div>
-            <p className="text-gray-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-              {message.principle_application}
-            </p>
-            {message.principle_definition && (
-              <p className="text-gray-400 text-xs md:text-sm mt-2 italic">
-                {message.principle_definition}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Insight Section */}
-        {message.insight && (
-          <div className="bg-gray-800/50 rounded-lg p-3 md:p-4">
-            <div className="flex items-start gap-2 mb-2">
-              <span className="text-blue-400 font-semibold text-xs md:text-sm flex-shrink-0">
-                💡 {t('ai_feedback.insight')}
-              </span>
-            </div>
-            <p className="text-gray-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-              {message.insight}
-            </p>
-          </div>
-        )}
-
-        {/* Closing Message */}
-        {message.closing && (
-          <div className="bg-gradient-to-r from-emerald-700/10 to-blue-700/10 rounded-lg p-3 md:p-4 border-l-4 border-emerald-500">
-            <p className="text-gray-100 text-sm md:text-base leading-relaxed font-medium whitespace-pre-wrap">
-              {message.closing}
-            </p>
-          </div>
-        )}
-      </div>
+      <p className="whitespace-pre-wrap leading-[2] text-gray-100 text-base md:text-lg tracking-wide">
+        {fullText}
+      </p>
     )
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
-      <CardHeader className="pb-3 lg:pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white text-[1.25rem] md:text-2xl">
-            {currentFeedback.type}
-            {currentFeedback.date && (
-              <span className="text-gray-400 text-sm md:text-base font-normal ml-2 md:ml-3">
-                ({currentFeedback.date})
-              </span>
-            )}
-          </CardTitle>
-          {totalCount > 1 && (
-            <div className="flex items-center gap-1 md:gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onPrevious}
-                disabled={currentIndex === 0}
-                className="text-gray-400 hover:text-white disabled:opacity-30"
-              >
-                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-              </Button>
-              <span className="text-gray-400 text-xs md:text-sm min-w-[3rem] text-center">
-                {currentIndex + 1} / {totalCount}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onNext}
-                disabled={currentIndex === totalCount - 1}
-                className="text-gray-400 hover:text-white disabled:opacity-30"
-              >
-                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-              </Button>
+    <div className="relative flex flex-col">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between mb-4 md:mb-6 px-1">
+        <h1 className="text-xl md:text-2xl font-bold text-white">
+          {currentFeedback.type}
+        </h1>
+        
+        {/* ナビゲーション */}
+        {totalCount > 1 && (
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onPrevious}
+              disabled={currentIndex === 0}
+              className="text-gray-400 hover:text-white hover:bg-transparent disabled:opacity-30 h-8 w-8 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            
+            {/* ドットインジケーター */}
+            <div className="flex gap-2 items-center">
+              {Array.from({ length: totalCount }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex ? 'w-6 bg-emerald-500' : 'w-2 bg-gray-600'
+                  }`}
+                />
+              ))}
             </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onNext}
+              disabled={currentIndex === totalCount - 1}
+              className="text-gray-400 hover:text-white hover:bg-transparent disabled:opacity-30 h-8 w-8 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* メインコンテンツカード */}
+      <div className="border border-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-lg backdrop-blur-sm">
         <div 
-          className={`transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+          className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
         >
           {renderFeedbackContent()}
-          
-          {/* 次回のフィードバック予定 */}
-          {currentIndex === 0 && (
-            <div className="mt-4 text-xs md:text-sm text-gray-400 text-center">
-              {t('ai_feedback.next_feedback', { date: getNextWeekMonday() })}
-            </div>
-          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* 次回のフィードバック予定 - カードの外に配置 */}
+      <div className="mt-3 text-xs text-gray-500 text-right font-medium">
+        {currentFeedback.type.includes(t('ai_feedback.weekly')) ? (
+          <>
+            {t('ai_feedback.next_weekly_feedback')}{getNextWeekMonday()}{t('ai_feedback.scheduled')}
+          </>
+        ) : (
+          <>
+            {t('ai_feedback.next_monthly_feedback')}{getNextMonthFirstDay()}{t('ai_feedback.scheduled')}
+          </>
+        )}
+      </div>
+    </div>
   )
 })
 

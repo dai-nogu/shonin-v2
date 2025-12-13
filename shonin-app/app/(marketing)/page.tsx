@@ -114,11 +114,11 @@ function HeroSection() {
     <section id="hero" className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
         <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight text-white text-yakumono-tight">
-        静かに突然変わる
+        見せない努力に証人を
         </h1>
         <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em] pt-5">
         ただ自分の成長に没頭する時間だけが<br />
-        あなたを劇的に進化させる。<br />
+        あなたを進化させる。<br />
         Shoninはその時間に寄り添い続ける。
         </p>
       </div>
@@ -293,33 +293,18 @@ function ScreenshotSection() {
 // Originセクション
 function OriginSection() {
   return (
-    <section id="origin" className="py-24 px-6 bg-gray-950">
+    <section id="origin" className="py-20 px-6 bg-gray-950">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-16 text-white text-yakumono-tight">
-        「証人」と「承認」
+        Shonin（証人）とは
         </h2>
-        <div className="grid md:grid-cols-2 gap-12 items-start">
+        <div className="text-center">
           {/* 左: Shoninの意味 */}
-          <div className="bg-gray-800 p-10 rounded-2xl border border-gray-700 shadow-sm">
-            <h3 className="text-2xl font-bold mb-6 text-white">Shonin（証人）</h3>
-            <p className="text-gray-300 leading-relaxed mb-4 tracking-[0.15em]">
+          <div className="p-5 rounded-2xl border-gray-700 shadow-sm">
+            <p className="text-2xl text-gray-300 max-w-5xl mx-auto leading-relaxed tracking-[0.15em]">
             孤独な戦いの唯一の「証人」<br />
-            </p>
-            <p className="text-gray-300 leading-relaxed tracking-[0.15em]">
-            誰も見ていない場所でこそ人は成長する。<br />
-            Shoninはあなたの努力に伴走し、証人となる。
-            </p>
-          </div>
-
-          {/* 右: コンセプト */}
-          <div className="bg-gray-800 p-10 rounded-2xl border border-gray-700 shadow-sm">
-            <h3 className="text-2xl font-bold mb-6 text-white">Shonin（承認）</h3>
-            <p className="text-gray-300 leading-relaxed mb-4 tracking-[0.15em]">
-              誰にも言わない努力の「承認」
-            </p>
-            <p className="text-gray-300 leading-relaxed tracking-[0.15em]">
-            承認欲求は過程では必要はない。<br/>
-            結果で周りを驚かせよう。
+           誰も見ていないところで人は成長する。<br />
+            Shoninはあなたに伴走し、努力の証人となる。
             </p>
           </div>
         </div>

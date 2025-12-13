@@ -18,42 +18,9 @@ export const SessionCompletionMessage = memo(function SessionCompletionMessage({
 
   if (completedDurationMinutes <= 0) return null
 
-  const getMessage = () => {
-    const minutes = Math.floor(completedDurationMinutes)
-    const hours = Math.floor(completedDurationMinutes / 60)
-    
-    if (completedDurationMinutes <= 5) {
-      return encouragementMessages('session_completion.range_0_5', { minutes })
-    } else if (completedDurationMinutes <= 15) {
-      return encouragementMessages('session_completion.range_6_15', { minutes })
-    } else if (completedDurationMinutes <= 30) {
-      return encouragementMessages('session_completion.range_16_30', { minutes })
-    } else if (completedDurationMinutes <= 45) {
-      return encouragementMessages('session_completion.range_31_45', { minutes })
-    } else if (completedDurationMinutes <= 60) {
-      return encouragementMessages('session_completion.range_46_60', { minutes, hours })
-    } else if (completedDurationMinutes <= 90) {
-      return encouragementMessages('session_completion.range_61_90', { minutes, hours })
-    } else if (completedDurationMinutes <= 120) {
-      return encouragementMessages('session_completion.range_91_120', { minutes, hours })
-    } else if (completedDurationMinutes <= 180) {
-      return encouragementMessages('session_completion.range_121_180', { minutes, hours })
-    } else if (completedDurationMinutes <= 360) {
-      return encouragementMessages('session_completion.range_180_360', { hours })
-    } else if (completedDurationMinutes <= 720) {
-      return encouragementMessages('session_completion.range_360_720', { hours })
-    } else {
-      return encouragementMessages('session_completion.range_720_1440', { hours })
-    }
-  }
-
   return (
     <div className="space-y-2 mt-2 text-center">
       <p className="text-foreground font-medium" dangerouslySetInnerHTML={{ __html: t('active_session.completed_message') }} />
-      
-      <p className="text-muted-foreground text-sm leading-relaxed">
-        {getMessage()}
-      </p>
       
       {/* プレースホルダー生成してる感じのアニメーション */}
       {isPreparingReflection && (

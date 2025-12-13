@@ -69,7 +69,7 @@ export const SessionMoodSelector = memo(function SessionMoodSelector({
 
   // PC version
   return (
-    <div className="space-y-3 pb-6">
+    <div className="space-y-3 mt-3">
       <Label className="text-base font-medium">{t('active_session.mood_question')}</Label>
       <div className="flex justify-between sm:justify-start sm:gap-4">
         {[1, 2, 3, 4, 5].map((rating) => {

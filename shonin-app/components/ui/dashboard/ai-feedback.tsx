@@ -157,7 +157,13 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
     thisWeekMonday.setDate(today.getDate() - daysSinceMonday)
     const nextWeekMonday = new Date(thisWeekMonday)
     nextWeekMonday.setDate(thisWeekMonday.getDate() + 7)
-    return `${nextWeekMonday.getMonth() + 1}/${nextWeekMonday.getDate()}`
+    return ` ${nextWeekMonday.getMonth() + 1}/${nextWeekMonday.getDate()} `
+  }
+
+  const getNextMonthFirstDay = () => {
+    const today = new Date()
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+    return ` ${nextMonth.getMonth() + 1}/${nextMonth.getDate()} `
   }
 
   const handleTransition = (newIndex: number) => {
@@ -189,6 +195,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       onPrevious={handlePrev}
       onNext={handleNext}
       getNextWeekMonday={getNextWeekMonday}
+      getNextMonthFirstDay={getNextMonthFirstDay}
     />
   )
 }
