@@ -188,11 +188,13 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
       // 既にセッションがアクティブな場合は復元をスキップ（新規開始直後など）
       if (isSessionActive) {
         setIsRestoring(false)
+        setIsInitialLoad(false) // 初期ロード完了フラグを設定
         return
       }
       
       if (!sessions || sessions.length === 0) {
         setIsRestoring(false)
+        setIsInitialLoad(false) // 初期ロード完了フラグを設定
         return
       }
 
