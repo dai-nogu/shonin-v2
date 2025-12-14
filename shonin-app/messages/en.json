@@ -441,7 +441,6 @@
     "free": "Free",
     "standard": "Standard",
     "premium": "Premium",
-    "popular": "Recommended",
     "current_plan": "Current Plan",
     "upgrade": "Upgrade",
     "downgrade": "Downgrade",
@@ -480,7 +479,7 @@
       "ai_feedback_line1": "Would you like to receive letters from Shonin?",
       "view_plans": "View Plan"
     },
-    "premium_coming_soon": "※ Premium plan is coming soon."
+    "premium_coming_soon": "※ Basic timer, reflections, and deep worker count are included in all plans."
   },
   "encouragement": {
     "session_start": {

@@ -437,7 +437,6 @@
     "free": "Free",
     "standard": "Standard",
     "premium": "Premium",
-    "popular": "おすすめ",
     "current_plan": "現在のプラン",
     "upgrade": "アップグレード",
     "downgrade": "ダウングレード",
@@ -476,7 +475,7 @@
       "ai_feedback_line1": "Shoninからの手紙を受け取ってみませんか？",
       "view_plans": "詳しくみる"
     },
-    "premium_coming_soon": "※ プレミアムプランは近日公開予定です。"
+    "premium_coming_soon": "※ 基本的なタイマー、振り返り、ユーザーの没頭数などは全てのプランに含まれます。"
   },
   "encouragement": {
     "session_start": {

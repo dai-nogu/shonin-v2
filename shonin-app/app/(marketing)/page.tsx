@@ -5,11 +5,11 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 
 export default function HomePage() {
-  const [activeSection, setActiveSection] = useState('hero')
+  const [activeSection, setActiveSection] = useState('top')
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['hero', 'screenshot', 'origin', 'pricing']
+      const sections = ['top', 'features', 'about', 'price']
       const scrollPosition = window.scrollY + 100
 
       for (const section of sections) {
@@ -70,22 +70,22 @@ function Header({
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* ロゴ */}
-        <div className="text-2xl font-bold tracking-tight text-white">
+        <div className="text-2xl font-bold text-white tracking-[0.15em]">
           Shonin
         </div>
 
         {/* ナビゲーション */}
         <nav className="hidden md:flex items-center gap-8">
           {[
-            { id: 'hero', label: 'Home' },
-            { id: 'screenshot', label: 'Features' },
-            { id: 'origin', label: 'Origin' },
-            { id: 'pricing', label: 'Pricing' },
+            { id: 'top', label: 'Top' },
+            { id: 'features', label: 'Features' },
+            { id: 'about', label: 'About' },
+            { id: 'price', label: 'Price' },
           ].map((item) => (
             <button
               key={item.id}
               onClick={() => scrollToSection(item.id)}
-              className={`text-sm transition-colors duration-200 ${
+              className={`text-sm tracking-[0.15em] transition-colors duration-200 ${
                 activeSection === item.id
                   ? 'text-emerald-500 font-semibold'
                   : 'text-gray-300 hover:text-white'
@@ -99,7 +99,7 @@ function Header({
         {/* ログインボタン */}
         <Link
           href="/ja/login"
-          className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 text-sm font-medium"
+          className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 text-sm font-medium tracking-[0.15em]"
         >
           ログイン
         </Link>
@@ -111,15 +111,15 @@ function Header({
 // Heroセクション
 function HeroSection() {
   return (
-    <section id="hero" className="pt-32 pb-20 px-6">
+    <section id="top" className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-5xl md:font-size: 3.75rem; font-bold mb-6 leading-relaxed text-white text-yakumono-tight">
-        自分に没頭する<br/>デジタルコワーキングスペース
-        </h1>
-        <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em] pt-5">
-        ただ自分の成長に没頭する時間だけが<br />
-        あなたを進化させる。<br />
-        Shoninはその時間に寄り添い続ける。
+      <h1 className="text-5xl md:font-size: 3.5rem; font-bold leading-relaxed text-white">No Chat, No Camera, No Avatar.</h1>
+      <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
+      自分に没頭するデジタルコワーキングスペース
+      </p>
+        <p className="text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em] pt-10">
+        同志の気配を感じひとりで没頭する。<br />
+        その静かな闘いをShoninが見ている。
         </p>
       </div>
     </section>
@@ -161,29 +161,29 @@ function ScreenshotSection() {
 
   const screenshots = [
     {
-      title: 'あなたが捨てるもの',
-      description: '目標達成には何かを捨てる必要があります。',
+      title: 'ひとりだけど独りじゃない',
+      description: '今も世界中で誰かが没頭しています。',
       image: '/img/img01.png',
-      alt: 'add Goal'
+      alt: 'Deep work'
     },
     {
       title: 'Shoninからの手紙',
-      description: 'あなただけの苦労やプロセスも見ています。',
+      description: 'あなたの苦労やプロセスもちゃんと見ています。',
       image: '/img/img02.png',
       alt: 'Letters'
     },
     {
-      title: 'もう1人じゃない',
-      description: '毎回の行動を見て送られる短文のメッセージ。',
+      title: 'あなたが捨てるもの',
+      description: '目標達成には何かを捨てる必要があります。',
       image: '/img/img03.png',
-      alt: 'mood,memo'
+      alt: 'add Goal'
     }
   ]
 
   return (
-    <section id="screenshot" className="py-24 px-6 bg-gray-900">
+    <section id="features" className="py-24 px-6 bg-gray-900">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight pb-24 leading-tight text-white text-yakumono-tight text-center">自分に集中するための設計</h2>
+        <h2 className="text-4xl md:text-4xl font-bold pb-24 leading-relaxed text-white text-center">自分に集中するための設計</h2>
         <div className="space-y-24">
           {screenshots.map((screenshot, i) => (
             <div
@@ -219,7 +219,7 @@ function ScreenshotSection() {
                   />
                   {/* ホバー時のオーバーレイ */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium">
+                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium tracking-[0.15em]">
                       クリックで拡大
                     </span>
                   </div>
@@ -229,10 +229,10 @@ function ScreenshotSection() {
               {/* 説明 */}
               <div className="w-full md:w-2/5 space-y-6">
                 <div>
-                  <h3 className="text-3xl font-bold text-white mb-4 tracking-tight">
+                  <h3 className="text-3xl font-bold text-white mb-4">
                     {screenshot.title}
                   </h3>
-                  <p className="text-lg text-gray-300 leading-relaxed tracking-wide">
+                  <p className="text-lg text-gray-300 leading-relaxed tracking-[0.15em]">
                     {screenshot.description}
                   </p>
                 </div>
@@ -293,17 +293,16 @@ function ScreenshotSection() {
 // Originセクション
 function OriginSection() {
   return (
-    <section id="origin" className="py-20 px-6 bg-gray-950">
+    <section id="about" className="py-20 px-6 bg-gray-950">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-16 text-white text-yakumono-tight">
+        <h2 className="text-4xl font-bold text-center mb-12 text-white">
         Shonin（証人）とは
         </h2>
         <div className="text-center">
           {/* 左: Shoninの意味 */}
           <div className="p-5 rounded-2xl border-gray-700 shadow-sm">
             <p className="text-2xl text-gray-300 max-w-5xl mx-auto leading-relaxed tracking-[0.15em]">
-            孤独な戦いの唯一の「証人」<br />
-           誰も見ていないところで人は成長する。<br />
+            誰も見ていないところで人は成長する。<br />
             Shoninはあなたに伴走し、努力の証人となる。
             </p>
           </div>
@@ -316,82 +315,87 @@ function OriginSection() {
 // Pricingセクション
 function PricingSection() {
   return (
-    <section id="pricing" className="py-24 px-6 bg-gray-900">
+    <section id="price" className="py-24 px-6 bg-gray-900">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-16 text-white">
           料金プラン
         </h2>
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* フリープラン */}
-          <div className="bg-gray-800 p-10 rounded-2xl border-2 border-gray-700">
-            <h3 className="text-2xl font-bold mb-4 text-white">フリープラン</h3>
-            <div className="text-4xl font-bold mb-6 text-white">
-            FREE
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* Freeプラン */}
+          <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 overflow-hidden">
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="text-lg text-white mb-2">Free</div>
+                <div className="text-5xl font-bold text-white mb-2">
+                  $0<span className="text-xl text-white font-normal">/月</span>
+                  </div>
+              </div>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">目標追加</span>
+                  <span className="text-white font-medium">1つ</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">カレンダー閲覧</span>
+                  <span className="text-white font-medium">当月のみ</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">Shoninによるメッセージ</span>
+                  <span className="text-white font-medium">—</span>
+                </div>
+              </div>
+
+              <Link
+                href="/ja/dashboard"
+                className="block w-full py-4 text-center bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
+              >
+                無料で始める
+              </Link>
             </div>
-            <ul className="space-y-3 mb-8 text-gray-300">
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>基本的な時間記録機能</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>カレンダー表示</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>目標設定（1つ）</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>基本的な統計機能</span>
-              </li>
-            </ul>
-            <Link
-              href="/ja/dashboard"
-              className="block w-full py-3 text-center border-2 border-gray-600 text-gray-300 rounded-lg hover:border-gray-500 hover:bg-gray-700 transition-colors duration-200 font-medium"
-            >
-              無料で始める
-            </Link>
           </div>
 
-          {/* プレミアムプラン */}
-          <div className="bg-gray-800 p-10 rounded-2xl border-2 border-emerald-700 relative">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-emerald-700 text-white text-sm font-medium rounded-full">
-              おすすめ
+          {/* Standardプラン */}
+          <div className="bg-gray-800 rounded-2xl border-2 border-emerald-700 overflow-hidden">
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="text-lg text-white mb-2">Standard</div>
+                <div className="text-5xl font-bold text-emerald-500 mb-2">
+                  $9.99<span className="text-xl text-white font-normal">/月</span>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">目標追加</span>
+                  <span className="text-emerald-500 font-medium">3つ</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">カレンダー閲覧</span>
+                  <span className="text-emerald-500 font-medium">全期間</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">Shoninによるメッセージ</span>
+                  <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center">
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href="/ja/dashboard"
+                className="block w-full py-4 text-center bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 font-medium"
+              >
+                始める
+              </Link>
             </div>
-            <h3 className="text-2xl font-bold mb-4 text-white">スタンダードプラン</h3>
-            <div className="text-4xl font-bold mb-6 text-white">
-              $9.99<span className="text-lg text-gray-400 font-normal">/月</span>
-            </div>
-            <ul className="space-y-3 mb-8 text-gray-300">
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>フリープランの全機能</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>無制限の目標設定</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>AIによる週次・月次メッセージ</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>画像・動画・音声アップロード</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>高度な分析機能</span>
-              </li>
-            </ul>
-            <Link
-              href="/ja/dashboard"
-              className="block w-full py-3 text-center bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 font-medium"
-            >
-              プレミアムを始める
-            </Link>
           </div>
+        </div>
+        
+        {/* 注釈 */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-400">
+            ※ 基本的なタイマー、ログ機能、ユーザーの没頭数などは全てのプランに含まれます。
+          </p>
         </div>
       </div>
     </section>
@@ -426,7 +430,7 @@ function Footer() {
               </li>
               <li>
                 <button onClick={() => {
-                  const element = document.getElementById('pricing')
+                  const element = document.getElementById('price')
                   if (element) element.scrollIntoView({ behavior: 'smooth' })
                 }} className="hover:text-white transition-colors">
                   料金プラン
@@ -441,7 +445,7 @@ function Footer() {
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
                 <button onClick={() => {
-                  const element = document.getElementById('origin')
+                  const element = document.getElementById('about')
                   if (element) element.scrollIntoView({ behavior: 'smooth' })
                 }} className="hover:text-white transition-colors">
                   私たちについて

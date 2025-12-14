@@ -125,20 +125,10 @@ export const PlanCard = memo(function PlanCard({
             : "border-white/30"
       }`}
     >
-      {plan.isPopular && (
-        <div className={`absolute ${
-          isMobile 
-            ? "top-0 right-0 bg-emerald-700 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg shadow-lg"
-            : "-top-3 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-5 py-1.5 text-sm font-bold rounded-full shadow-lg z-10"
-        }`}>
-          {t("popular")}
-        </div>
-      )}
-
       <div className={`${isMobile ? 'p-5 lg:p-6' : 'p-6'} flex flex-col flex-1`}>
         {/* Plan Header */}
         <div className="text-center mb-5 lg:mb-6">
-          <h2 className={`${isMobile ? 'text-lg lg:text-xl' : 'text-xl'} font-bold text-white mb-2 lg:mb-3 ${plan.isPopular && !isMobile ? "mt-1" : ""}`}>
+          <h2 className={`${isMobile ? 'text-lg lg:text-xl' : 'text-xl'} font-bold text-white mb-2 lg:mb-3`}>
             {plan.isCurrent ? t("current_plan") : plan.name}
           </h2>
           <div className="flex items-baseline justify-center gap-2 mb-1">
