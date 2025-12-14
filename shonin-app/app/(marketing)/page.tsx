@@ -113,8 +113,8 @@ function HeroSection() {
   return (
     <section id="hero" className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight text-white text-yakumono-tight">
-        見せない努力に証人を
+        <h1 className="text-5xl md:font-size: 3.75rem; font-bold mb-6 leading-relaxed text-white text-yakumono-tight">
+        自分に没頭する<br/>デジタルコワーキングスペース
         </h1>
         <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em] pt-5">
         ただ自分の成長に没頭する時間だけが<br />
@@ -162,13 +162,13 @@ function ScreenshotSection() {
   const screenshots = [
     {
       title: 'あなたが捨てるもの',
-      description: '目標達成には何か捨てる必要があります。',
+      description: '目標達成には何かを捨てる必要があります。',
       image: '/img/img01.png',
       alt: 'add Goal'
     },
     {
       title: 'Shoninからの手紙',
-      description: '毎週1回、毎月1回の合計5回届くShoninからの手紙。',
+      description: 'あなただけの苦労やプロセスも見ています。',
       image: '/img/img02.png',
       alt: 'Letters'
     },

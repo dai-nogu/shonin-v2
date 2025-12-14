@@ -35,6 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/settings/alert-dialog"
+import { ActiveUsersBadge } from "@/components/ui/marketing/active-users-badge"
 
 interface AppSidebarProps {
   currentPage?: string
@@ -138,6 +139,11 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
           <div>
             <h1 className="text-lg font-bold text-white">Shonin</h1>
           </div>
+        </div>
+        
+        {/* アクティブユーザー数バッジ */}
+        <div className="mt-4">
+          <ActiveUsersBadge />
         </div>
       </SidebarHeader>
 

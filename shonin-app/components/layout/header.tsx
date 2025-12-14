@@ -1,4 +1,5 @@
 import { MobileMenu } from "@/components/layout/mobile-menu"
+import { ActiveUsersBadge } from "@/components/ui/marketing/active-users-badge"
 
 interface HeaderProps {
   currentPage?: string
@@ -18,6 +19,9 @@ export function Header({
           </div>
           <h1 className="text-xl font-bold text-white">Shonin</h1>
         </div>
+        
+        {/* アクティブユーザー数バッジ */}
+        <ActiveUsersBadge />
         
         {/* SP専用：ハンバーガーメニュー（ボトムナビゲーション実装により非表示） */}
         {/* {onPageChange && (
