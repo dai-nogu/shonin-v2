@@ -113,14 +113,11 @@ function HeroSection() {
   return (
     <section id="top" className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
-      <h1 className="text-5xl md:font-size: 3.5rem; font-bold leading-relaxed text-white">No Chat, No Camera, No Avatar.</h1>
+      <h1 className="text-5xl md:font-size: 3.5rem; font-bold leading-relaxed text-white">沈黙を愛する努力家たちへ</h1>
       <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
-      自分に没頭するデジタルコワーキングスペース
+      No Chat, No Camera, No Avatar.
       </p>
-        <p className="text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em] pt-10">
-        同志の気配を感じひとりで没頭する。<br />
-        その静かな闘いをShoninが見ている。
-        </p>
+
       </div>
     </section>
   )
@@ -162,19 +159,19 @@ function ScreenshotSection() {
   const screenshots = [
     {
       title: 'ひとりだけど独りじゃない',
-      description: '今も世界中で誰かが没頭しています。',
+      description: '同志の気配を感じ、ひとりで没頭するデジタルコワーキングスペース',
       image: '/img/img01.png',
       alt: 'Deep work'
     },
     {
       title: 'Shoninからの手紙',
-      description: 'あなたの苦労やプロセスもちゃんと見ています。',
+      description: '成功の影にある苦労、プロセスもちゃんと見ています。週に1回、月に1回の合計5回、Shoninから手紙が届きます。',
       image: '/img/img02.png',
       alt: 'Letters'
     },
     {
       title: 'あなたが捨てるもの',
-      description: '目標達成には何かを捨てる必要があります。',
+      description: 'スマホ、娯楽、誘惑などを一時的に断つことでより深い集中が可能になり、目標達成の可能性が高まります。',
       image: '/img/img03.png',
       alt: 'add Goal'
     }

@@ -9,6 +9,7 @@ import { useToast } from "@/contexts/toast-context"
 import { splitSessionByDate, getCurrentTime, getDateString } from "@/lib/date-utils"
 import { getSessionStartMessage } from "@/lib/encouragement-messages"
 import type { ActivityStat } from "@/app/actions/sessions"
+import * as sessionsActions from '@/app/actions/sessions'
 import { safeWarn } from "@/lib/safe-logger"
 
 export interface SessionData {
@@ -492,8 +493,13 @@ export function SessionsProvider({ children }: SessionsProviderProps) {
     try {
       let mainSessionId: string | null = null
       
-      // 進行中セッションがあるかチェック
-      const activeSession = sessions.find(session => !session.end_time)
+      // 画面遷移などで状態が古くなっている可能性があるため、
+      // 最新のセッションリストをDBから直接取得
+      const sessionsResult = await sessionsActions.getSessions()
+      const latestSessions = sessionsResult.success ? sessionsResult.data : []
+      
+      // 進行中セッションがあるかチェック（最新のデータを使用）
+      const activeSession = latestSessions.find(session => !session.end_time)
       
       // クリーンアップ用にactiveSessionのIDを保存
       const activeSessionIdForCleanup = activeSession?.id
