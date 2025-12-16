@@ -24,6 +24,7 @@ export interface SendEmailParams {
   emailCategory: EmailCategory;
   emailType: AuthEmailType | SubscriptionEmailType;
   planName?: string;
+  previousPlanName?: string; // アップグレード元/ダウングレード元のプラン名
   currentPlanName?: string;
   changeDate?: string;
 }
@@ -46,6 +47,7 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
       emailCategory, 
       emailType,
       planName,
+      previousPlanName,
       currentPlanName,
       changeDate,
     } = params;
@@ -106,6 +108,7 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
         firstName, 
         emailType: subType,
         planName,
+        previousPlanName,
         currentPlanName,
         changeDate
       });

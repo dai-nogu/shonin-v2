@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
-import { getPlanTypeFromPriceId, type PlanType } from '@/types/subscription';
+import { getPlanTypeFromPriceId, comparePlans, type PlanType } from '@/types/subscription';
 import { safeError, stripeLog } from '@/lib/safe-logger';
 import { sendEmailInternal } from '@/lib/mail';
+
+// プランタイプから表示名を取得するヘルパー関数
+function getPlanDisplayName(planType: PlanType): string {
+  const displayNames: Record<PlanType, string> = {
+    free: 'Free',
+    starter: 'Starter',
+    standard: 'Standard',
+    premium: 'Premium',
+  };
+  return displayNames[planType] || 'Free';
+}
 
 // ==========================================
 // Stripeイベント処理
@@ -139,6 +150,21 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case 'subscription_schedule.created':
+      case 'subscription_schedule.updated': {
+        const schedule = event.data.object as Stripe.SubscriptionSchedule;
+        await handleSubscriptionSchedule(schedule);
+        break;
+      }
+
+      case 'subscription_schedule.canceled':
+      case 'subscription_schedule.released':
+      case 'subscription_schedule.aborted': {
+        const schedule = event.data.object as Stripe.SubscriptionSchedule;
+        await handleSubscriptionScheduleCanceled(schedule);
+        break;
+      }
+
       default:
         break;
     }
@@ -242,7 +268,7 @@ async function handleCheckoutCompleted(
       throw userError;
     }
 
-    // アップグレードメールを送信（FreeからPremiumへ）
+    // アップグレードメールを送信（新規購入時）
     try {
       // ユーザー情報を取得
       const { data: userData } = await supabaseAdmin
@@ -253,19 +279,6 @@ async function handleCheckoutCompleted(
 
       if (userData?.email) {
         const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
-        
-        // プラン名のマッピング（将来的に拡張しやすい設計）
-        const getPlanDisplayName = (status: string): string => {
-          switch (status) {
-            case 'standard':
-              return 'Standard';
-            case 'premium':
-              return 'Premium'; // 将来の拡張用
-            default:
-              return 'Standard'; // デフォルトはStandard
-          }
-        };
-        
         const planName = getPlanDisplayName(subscriptionStatus);
 
         stripeLog('アップグレードメールを送信します', { email: userData.email, plan: planName });
@@ -276,6 +289,7 @@ async function handleCheckoutCompleted(
           emailCategory: 'subscription',
           emailType: 'upgrade',
           planName: planName,
+          previousPlanName: 'Free',
         });
 
         if (emailResult.success) {
@@ -387,17 +401,23 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     
     // アクティブな場合はDBを更新
     if (fullSubscription.status === 'active') {
-      // ⚠️ 重要: DB更新前にメールチェック用の値を取得
-      let wasCancelScheduledBefore = false;
-      if (cancelAtPeriodEnd) {
-        const { data: currentSubData } = await supabaseAdmin
-          .from('subscription')
-          .select('cancel_at_period_end')
-          .eq('user_id', userId)
-          .single();
-        wasCancelScheduledBefore = currentSubData?.cancel_at_period_end || false;
-        console.log('DB更新前のcancel_at_period_end:', wasCancelScheduledBefore);
-      }
+      // ⚠️ 重要: DB更新前に現在のプラン情報を取得（メールチェック用）
+      const { data: currentSubData } = await supabaseAdmin
+        .from('subscription')
+        .select('cancel_at_period_end, stripe_price_id')
+        .eq('user_id', userId)
+        .single();
+      
+      const wasCancelScheduledBefore = currentSubData?.cancel_at_period_end || false;
+      const previousPriceId = currentSubData?.stripe_price_id;
+      const previousPlanType: PlanType = previousPriceId ? (getPlanTypeFromPriceId(previousPriceId) || 'free') : 'free';
+      
+      console.log('DB更新前の状態:', {
+        cancel_at_period_end: wasCancelScheduledBefore,
+        previous_price_id: previousPriceId,
+        previous_plan: previousPlanType,
+        new_plan: subscriptionStatus,
+      });
       
       // subscriptionテーブルを更新
       const updateData: any = {
@@ -405,6 +425,14 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         cancel_at_period_end: cancelAtPeriodEnd,
         canceled_at: canceledAt,
       };
+      
+      // プランが実際に変更された場合、ダウングレード予約情報をクリア
+      if (previousPriceId && previousPriceId !== priceId) {
+        updateData.scheduled_price_id = null;
+        updateData.scheduled_change_date = null;
+        updateData.stripe_schedule_id = null;
+        console.log('Clearing scheduled downgrade info as plan has changed');
+      }
       
       // periodEndが有効な場合のみ追加
       if (periodEnd && !isNaN(periodEnd)) {
@@ -423,10 +451,80 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
           .update({ subscription_status: subscriptionStatus })
           .eq('id', userId);
         
-        // キャンセルを取り消した場合（cancel_at_period_end が true → false）
-        // この情報はupdate前に取得する必要があるため、ここで再度取得
-        // （既に最新のStripeデータでDBが更新されているため、updateDataのcancel_at_period_endはfalse）
-        console.log('キャンセル取り消しをチェック中（updateDataのcancel_at_period_end:', updateData.cancel_at_period_end, '）');
+        // プラン変更の検知（アップグレード/ダウングレード）
+        // 注意: checkout.session.completedとの重複を避けるため、以前のプランがある場合のみ
+        if (previousPriceId && previousPlanType !== subscriptionStatus) {
+          const planChange = comparePlans(previousPlanType, subscriptionStatus);
+          const previousPlanName = getPlanDisplayName(previousPlanType);
+          const newPlanName = getPlanDisplayName(subscriptionStatus);
+          
+          console.log('プラン変更を検知:', {
+            previous: previousPlanName,
+            new: newPlanName,
+            change: planChange,
+          });
+          
+          // プラン変更メールを送信
+          try {
+            const { data: userData } = await supabaseAdmin
+              .from('users')
+              .select('email, name')
+              .eq('id', userId)
+              .single();
+
+            if (userData?.email) {
+              const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+              
+              if (planChange === 'upgrade') {
+                // アップグレードメール
+                stripeLog('プラン変更（アップグレード）メールを送信します', {
+                  email: userData.email,
+                  from: previousPlanName,
+                  to: newPlanName,
+                });
+
+                const emailResult = await sendEmailInternal({
+                  email: userData.email,
+                  firstName: firstName,
+                  emailCategory: 'subscription',
+                  emailType: 'upgrade',
+                  planName: newPlanName,
+                  previousPlanName: previousPlanName,
+                });
+
+                if (emailResult.success) {
+                  stripeLog('✓ プラン変更（アップグレード）メールを送信しました');
+                } else {
+                  safeError('プラン変更（アップグレード）メール送信に失敗しました', emailResult.error);
+                }
+              } else if (planChange === 'downgrade') {
+                // ダウングレードメール（即時変更）
+                stripeLog('プラン変更（ダウングレード）メールを送信します', {
+                  email: userData.email,
+                  from: previousPlanName,
+                  to: newPlanName,
+                });
+
+                const emailResult = await sendEmailInternal({
+                  email: userData.email,
+                  firstName: firstName,
+                  emailCategory: 'subscription',
+                  emailType: 'downgrade',
+                  planName: newPlanName,
+                  previousPlanName: previousPlanName,
+                });
+
+                if (emailResult.success) {
+                  stripeLog('✓ プラン変更（ダウングレード）メールを送信しました');
+                } else {
+                  safeError('プラン変更（ダウングレード）メール送信に失敗しました', emailResult.error);
+                }
+              }
+            }
+          } catch (emailError) {
+            safeError('プラン変更メール送信中にエラーが発生', emailError);
+          }
+        }
       }
 
       if (cancelAtPeriodEnd) {
@@ -449,19 +547,6 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
             if (userData?.email && periodEnd) {
               const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
-              
-              // プラン名のマッピング
-              const getPlanDisplayName = (status: string): string => {
-                switch (status) {
-                  case 'standard':
-                    return 'Standard';
-                  case 'premium':
-                    return 'Premium';
-                  default:
-                    return 'Standard';
-                }
-              };
-              
               const currentPlanName = getPlanDisplayName(subscriptionStatus);
               const changeDate = new Date(periodEnd * 1000).toLocaleDateString('ja-JP', {
                 year: 'numeric',
@@ -568,6 +653,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.log('User ID:', userId);
     console.log('Subscription ID:', subscription.id);
     
+    // DB更新前に以前のプラン情報を取得
+    const { data: subData } = await supabaseAdmin
+      .from('subscription')
+      .select('stripe_price_id')
+      .eq('user_id', userId)
+      .single();
+    
+    const previousPriceId = subData?.stripe_price_id;
+    const previousPlanType: PlanType = previousPriceId ? (getPlanTypeFromPriceId(previousPriceId) || 'free') : 'free';
+    const previousPlanName = getPlanDisplayName(previousPlanType);
+    
     // subscriptionテーブルのcancel_at_period_endをfalseに、canceled_atをStripeから届いた時刻に設定
     const canceledAt = subscription.canceled_at
       ? new Date(subscription.canceled_at * 1000).toISOString()
@@ -589,7 +685,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       
     console.log(`Subscription deleted for user ${userId}. Status set to 'free'. cancel_at_period_end set to false.`);
 
-    // ダウングレードメールを送信（PremiumからFreeへ）
+    // ダウングレードメールを送信（有料プランからFreeへ）
     try {
       // ユーザー情報を取得
       const { data: userData } = await supabaseAdmin
@@ -601,7 +697,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       if (userData?.email) {
         const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
 
-        console.log('ダウングレードメールを送信します:', userData.email);
+        console.log('ダウングレードメールを送信します:', userData.email, `(${previousPlanName} → Free)`);
 
         const emailResult = await sendEmailInternal({
           email: userData.email,
@@ -609,6 +705,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
           emailCategory: 'subscription',
           emailType: 'downgrade',
           planName: 'Free',
+          previousPlanName: previousPlanName,
         });
 
         if (emailResult.success) {
@@ -704,4 +801,271 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   
   // TODO: ユーザーにメール通知を送る処理を追加
   // TODO: 支払いリトライのロジックを追加
+}
+
+// ==========================================
+// Subscription Schedule処理（ダウングレード予約）
+// ==========================================
+// トリガー: subscription_schedule.created, subscription_schedule.updated
+// タイミング: Stripeのビリングポータルでダウングレードが予約された時
+// 
+// 処理内容:
+// 1. スケジュールから次のフェーズのプラン情報を取得
+// 2. subscriptionテーブルにダウングレード予約情報を保存
+//    - scheduled_price_id: 予約されている次のプランのprice_id
+//    - scheduled_change_date: プラン変更予定日
+//    - stripe_schedule_id: Subscription ScheduleのID
+// ==========================================
+async function handleSubscriptionSchedule(schedule: Stripe.SubscriptionSchedule) {
+  try {
+    stripeLog('=== Subscription Schedule Event ===', {
+      schedule_id: schedule.id,
+      status: schedule.status,
+      phases: schedule.phases?.length,
+    });
+
+    // スケジュールがアクティブでない場合はスキップ
+    if (schedule.status !== 'active') {
+      console.log('Schedule is not active, skipping');
+      return;
+    }
+
+    // サブスクリプションIDを取得
+    const subscriptionId = typeof schedule.subscription === 'string' 
+      ? schedule.subscription 
+      : schedule.subscription?.id;
+
+    if (!subscriptionId) {
+      console.error('No subscription found in schedule');
+      return;
+    }
+
+    // サブスクリプションからuser_idを取得
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    let userId = (subscription.metadata as any)?.supabase_user_id as string;
+
+    // metadataにない場合、customerからuser_idを取得
+    if (!userId) {
+      const customerId = typeof subscription.customer === 'string' 
+        ? subscription.customer 
+        : subscription.customer.id;
+      
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('stripe_customer_id', customerId)
+        .single();
+
+      if (userError || !userData) {
+        console.error('Failed to find user by customer_id:', userError);
+        return;
+      }
+
+      userId = userData.id;
+    }
+
+    // フェーズ情報を確認（複数フェーズがある場合、次のフェーズを確認）
+    const phases = schedule.phases || [];
+    
+    // フェーズが2未満の場合、ダウングレード予約がキャンセルされた可能性がある
+    if (phases.length < 2) {
+      console.log('No scheduled change found (less than 2 phases) - clearing schedule info');
+      
+      // 既存の予約情報をクリア
+      const { error: clearError } = await supabaseAdmin
+        .from('subscription')
+        .update({
+          scheduled_price_id: null,
+          scheduled_change_date: null,
+          stripe_schedule_id: null,
+        })
+        .eq('user_id', userId);
+
+      if (clearError) {
+        console.error('Failed to clear subscription schedule info:', clearError);
+      } else {
+        console.log(`Subscription schedule cleared for user ${userId} (no phases)`);
+      }
+      return;
+    }
+
+    // 次のフェーズ（ダウングレード先）の情報を取得
+    const nextPhase = phases[1];
+    const nextPriceId = nextPhase.items?.[0]?.price as string;
+    const changeDate = nextPhase.start_date;
+
+    if (!nextPriceId || !changeDate) {
+      console.log('Missing price_id or change_date in next phase');
+      return;
+    }
+
+    // 現在のプランと次のプランを比較
+    const currentPriceId = phases[0]?.items?.[0]?.price as string;
+    const currentPlanType = currentPriceId ? getPlanTypeFromPriceId(currentPriceId) : null;
+    const nextPlanType = getPlanTypeFromPriceId(nextPriceId);
+
+    stripeLog('Schedule details:', {
+      user_id: userId,
+      current_price_id: currentPriceId,
+      current_plan: currentPlanType,
+      next_price_id: nextPriceId,
+      next_plan: nextPlanType,
+      change_date: new Date(changeDate * 1000).toISOString(),
+    });
+
+    // ダウングレード予約情報をDBに保存
+    const { error: updateError } = await supabaseAdmin
+      .from('subscription')
+      .update({
+        scheduled_price_id: nextPriceId,
+        scheduled_change_date: new Date(changeDate * 1000).toISOString(),
+        stripe_schedule_id: schedule.id,
+      })
+      .eq('user_id', userId);
+
+    if (updateError) {
+      console.error('Failed to update subscription schedule info:', updateError);
+      throw updateError;
+    }
+
+    console.log(`Subscription schedule saved for user ${userId}: ${currentPlanType} -> ${nextPlanType} on ${new Date(changeDate * 1000).toISOString()}`);
+
+    // ダウングレード予定メールを送信
+    try {
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('email, name')
+        .eq('id', userId)
+        .single();
+
+      if (userData?.email && nextPlanType) {
+        const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+        const currentPlanName = currentPlanType ? getPlanDisplayName(currentPlanType) : 'Current';
+        const nextPlanName = getPlanDisplayName(nextPlanType);
+        const changeDateStr = new Date(changeDate * 1000).toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        stripeLog('ダウングレード予約メールを送信します', {
+          email: userData.email,
+          from: currentPlanName,
+          to: nextPlanName,
+          date: changeDateStr,
+        });
+
+        const emailResult = await sendEmailInternal({
+          email: userData.email,
+          firstName: firstName,
+          emailCategory: 'subscription',
+          emailType: 'downgrade_scheduled',
+          planName: nextPlanName,
+          currentPlanName: currentPlanName,
+          changeDate: changeDateStr,
+        });
+
+        if (emailResult.success) {
+          stripeLog('✓ ダウングレード予約メールを送信しました');
+        } else {
+          safeError('ダウングレード予約メール送信に失敗しました', emailResult.error);
+        }
+      }
+    } catch (emailError) {
+      safeError('ダウングレード予約メール送信中にエラーが発生', emailError);
+    }
+  } catch (error) {
+    console.error('Error in handleSubscriptionSchedule:', error);
+    throw error;
+  }
+}
+
+// ==========================================
+// Subscription Scheduleキャンセル処理
+// ==========================================
+// トリガー: subscription_schedule.canceled, subscription_schedule.released, subscription_schedule.aborted
+// タイミング: ダウングレード予約がキャンセルまたは完了した時
+// 
+// 処理内容:
+// 1. subscriptionテーブルのダウングレード予約情報をクリア
+// ==========================================
+async function handleSubscriptionScheduleCanceled(schedule: Stripe.SubscriptionSchedule) {
+  try {
+    stripeLog('=== Subscription Schedule Canceled/Released/Aborted ===', {
+      schedule_id: schedule.id,
+      status: schedule.status,
+    });
+
+    let userId: string | null = null;
+
+    // 方法1: stripe_schedule_idからユーザーを直接特定
+    const { data: subData } = await supabaseAdmin
+      .from('subscription')
+      .select('user_id')
+      .eq('stripe_schedule_id', schedule.id)
+      .single();
+
+    if (subData?.user_id) {
+      userId = subData.user_id;
+      console.log('Found user by stripe_schedule_id:', userId);
+    }
+
+    // 方法2: サブスクリプションIDからユーザーを特定
+    if (!userId) {
+      const subscriptionId = typeof schedule.subscription === 'string' 
+        ? schedule.subscription 
+        : schedule.subscription?.id;
+
+      if (subscriptionId) {
+        try {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          userId = (subscription.metadata as any)?.supabase_user_id as string;
+
+          // metadataにない場合、customerからuser_idを取得
+          if (!userId) {
+            const customerId = typeof subscription.customer === 'string' 
+              ? subscription.customer 
+              : subscription.customer.id;
+            
+            const { data: userData } = await supabaseAdmin
+              .from('users')
+              .select('id')
+              .eq('stripe_customer_id', customerId)
+              .single();
+
+            if (userData?.id) {
+              userId = userData.id;
+            }
+          }
+        } catch (subError) {
+          console.error('Failed to retrieve subscription:', subError);
+        }
+      }
+    }
+
+    if (!userId) {
+      console.error('Could not find user for schedule:', schedule.id);
+      return;
+    }
+
+    // ダウングレード予約情報をクリア
+    const { error: updateError } = await supabaseAdmin
+      .from('subscription')
+      .update({
+        scheduled_price_id: null,
+        scheduled_change_date: null,
+        stripe_schedule_id: null,
+      })
+      .eq('user_id', userId);
+
+    if (updateError) {
+      console.error('Failed to clear subscription schedule info:', updateError);
+      throw updateError;
+    }
+
+    console.log(`Subscription schedule cleared for user ${userId}`);
+  } catch (error) {
+    console.error('Error in handleSubscriptionScheduleCanceled:', error);
+    throw error;
+  }
 }

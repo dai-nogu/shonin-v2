@@ -14,7 +14,7 @@ DROP VIEW IF EXISTS public.user_subscription;
 
 ALTER TABLE public.users 
 ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT UNIQUE,
-ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'standard', 'premium'));
+ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'starter', 'standard', 'premium'));
 
 -- インデックス作成
 CREATE INDEX IF NOT EXISTS idx_users_stripe_customer_id ON public.users(stripe_customer_id);
@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS public.subscription (
     stripe_current_period_end TIMESTAMP WITH TIME ZONE,
     cancel_at_period_end BOOLEAN DEFAULT FALSE,
     canceled_at TIMESTAMP WITH TIME ZONE,
+    -- ダウングレード予約情報
+    scheduled_price_id TEXT,                          -- 予約されている次のプランのprice_id
+    scheduled_change_date TIMESTAMP WITH TIME ZONE,   -- プラン変更予定日
+    stripe_schedule_id TEXT,                          -- Subscription ScheduleのID
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

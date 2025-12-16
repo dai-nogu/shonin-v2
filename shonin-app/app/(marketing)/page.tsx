@@ -168,7 +168,7 @@ function ScreenshotSection() {
   const screenshots = [
     {
       title: 'ひとりだけど独りじゃない',
-      description: 'チャット、カメラ、アバターはない。世界中の一人で頑張る同志の気配を感じ、ひとりで没頭する。',
+      description: 'チャット、カメラ、アバターはない。一人で頑張る世界中の同志の気配を感じ、ひとりで没頭する。',
       image: '/img/img01.png',
       alt: 'Deep work'
     },
@@ -320,21 +320,42 @@ function OriginSection() {
 
 // Pricingセクション
 function PricingSection() {
+  const [isYearly, setIsYearly] = useState(true) // デフォルトで年額表示
+
   return (
     <section id="price" className="py-24 px-6 bg-gray-900">
       <div className="max-w-8xl mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-16 text-white">
+        <h2 className="text-4xl font-bold text-center mb-4 text-white">
           料金プラン
         </h2>
+        <p className="text-center text-gray-400 mb-8">見せないことが自分を強くします</p>
+        
+        {/* 年額/月額切り替えボタン */}
+        <div className="flex items-center justify-center gap-4 mb-12">
+          <span className={`text-lg ${!isYearly ? 'text-white' : 'text-gray-400'}`}>月額</span>
+          <button
+            onClick={() => setIsYearly(!isYearly)}
+            className="relative w-16 h-8 bg-emerald-700 rounded-full transition-colors duration-200"
+          >
+            <div
+              className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform duration-200 ${
+                isYearly ? 'translate-x-9' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className={`text-lg ${isYearly ? 'text-white' : 'text-gray-400'}`}>年額</span>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-4 max-w-7xl mx-auto">
-          {/* Freeプラン */}
+          {/* Starterプラン */}
           <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 overflow-hidden">
             <div className="p-8">
               <div className="text-center mb-8">
                 <div className="text-xl font-semibold text-white mb-2">Starter</div>
-                <div className="text-5xl font-bold text-white mb-2">
-                  $4.99<span className="text-sm text-white font-normal">/month</span>
-                  </div>
+                <div className="flex items-baseline justify-center gap-1 mb-2">
+                  <span className="text-5xl font-bold text-white">$4.99</span>
+                  <span className="text-sm text-white font-normal">/month</span>
+                </div>
               </div>
               
               <div className="space-y-4 mb-8">
@@ -346,7 +367,7 @@ function PricingSection() {
                   <span className="text-white">カレンダー表示</span>
                   <span className="text-white font-medium">当月のみ</span>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                <div className="flex items-center justify-between py-3">
                   <span className="text-white">Shoninからの手紙</span>
                   <span className="text-white font-medium">—</span>
                 </div>
@@ -366,9 +387,22 @@ function PricingSection() {
             <div className="p-8">
               <div className="text-center mb-8">
                 <div className="text-xl font-semibold text-white mb-2">Standard</div>
-                <div className="text-5xl font-bold text-emerald-500 mb-2">
-                  $9.99<span className="text-sm text-white font-normal">/month</span>
-                </div>
+                {isYearly ? (
+                  <>
+                    <div className="flex items-baseline justify-center gap-2 mb-2">
+                      <span className="text-5xl font-bold text-emerald-500">$99.99</span>
+                      <span className="text-sm text-white font-normal">/year</span>
+                      <span className="text-lg text-gray-400 line-through">$119.88</span>
+                    </div>
+                    <div className="inline-block text-xs bg-emerald-700/20 text-emerald-400 px-2.5 py-1 rounded-full font-medium">
+                      2ヶ月分お得。
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-5xl font-bold text-emerald-500 mb-2">
+                    $9.99<span className="text-sm text-white font-normal">/month</span>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-4 mb-8">
@@ -380,7 +414,7 @@ function PricingSection() {
                   <span className="text-white">カレンダー表示</span>
                   <span className="text-emerald-500 font-medium">全期間</span>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                <div className="flex items-center justify-between py-3">
                   <span className="text-white">月1回、Shoninからの手紙</span>
                   <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center">
                   </div>
@@ -391,7 +425,7 @@ function PricingSection() {
                 href="/ja/dashboard"
                 className="block w-full py-4 text-center bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 font-medium"
               >
-                始める
+                無料で始める
               </Link>
             </div>
           </div>
@@ -402,9 +436,22 @@ function PricingSection() {
             <div className="p-8">
               <div className="text-center mb-8">
                 <div className="text-xl font-semibold text-white mb-2">Premium</div>
-                <div className="text-5xl font-bold text-white mb-2">
-                  $14.99<span className="text-sm text-white font-normal">/month</span>
+                {isYearly ? (
+                  <>
+                    <div className="flex items-baseline justify-center gap-2 mb-2">
+                      <span className="text-5xl font-bold text-white">$149.99</span>
+                      <span className="text-sm text-white font-normal">/year</span>
+                      <span className="text-lg text-gray-400 line-through">$179.88</span>
+                    </div>
+                    <div className="inline-block text-xs bg-gray-700/50 text-white px-2.5 py-1 rounded-full font-medium">
+                      2ヶ月分お得。
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-5xl font-bold text-white mb-2">
+                    $14.99<span className="text-sm text-white font-normal">/month</span>
                   </div>
+                )}
               </div>
               
               <div className="space-y-4 mb-8">
@@ -416,7 +463,7 @@ function PricingSection() {
                   <span className="text-white">カレンダー表示</span>
                   <span className="text-white font-medium">全期間</span>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                <div className="flex items-center justify-between py-3">
                   <span className="text-white">週1回、月1回のShoninからの手紙</span>
                   <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
                   </div>

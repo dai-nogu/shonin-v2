@@ -21,7 +21,7 @@ interface PlanCardProps {
   }
   featureComparison?: Array<{
     label: string
-    free: boolean | string
+    starter: boolean | string
     standard: boolean | string
     premium: boolean | string
   }>
@@ -42,38 +42,7 @@ export const PlanCard = memo(function PlanCard({
   const t = useTranslations("plan")
 
   const renderButton = () => {
-    if (plan.id === "free") {
-      if (plan.isCurrent) {
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  disabled
-                  className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto bg-gray-600 text-gray-400 cursor-not-allowed border border-gray-500`}
-                >
-                  {plan.buttonText}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t("current_plan_tooltip")}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )
-      }
-      return (
-        <button
-          type="button"
-          onClick={onManageSubscription}
-          className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600`}
-        >
-          {plan.buttonText}
-        </button>
-      )
-    }
-
+    // 現在のプランの場合は無効化されたボタン
     if (plan.isCurrent) {
       return (
         <TooltipProvider>
@@ -83,7 +52,7 @@ export const PlanCard = memo(function PlanCard({
                 <button
                   type="button"
                   disabled
-                  className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto bg-emerald-700 text-white cursor-not-allowed`}
+                  className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto ${plan.isPopular ? 'bg-emerald-700' : 'bg-gray-600'} text-white cursor-not-allowed`}
                 >
                   {plan.buttonText}
                 </button>
@@ -97,17 +66,16 @@ export const PlanCard = memo(function PlanCard({
       )
     }
 
+    // 他のプランの場合はStripeビリングポータルに飛ばす
     return (
-      <form action={formAction}>
-        <input type="hidden" name="priceId" value={plan.priceId} />
-        <button
-          type="submit"
-          disabled={isPending}
-          className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto bg-emerald-700 text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none`}
-        >
-          {isPending ? t("processing") : plan.buttonText}
-        </button>
-      </form>
+      <button
+        type="button"
+        onClick={onManageSubscription}
+        disabled={isPending}
+        className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto ${plan.isPopular ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-gray-700 hover:bg-gray-600'} text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none`}
+      >
+        {isPending ? t("processing") : plan.buttonText}
+      </button>
     )
   }
 
@@ -147,7 +115,11 @@ export const PlanCard = memo(function PlanCard({
             )}
           </div>
           {plan.showYearlySavings && (
-            <span className={`inline-block text-xs bg-emerald-700/20 text-emerald-400 ${isMobile ? 'px-2 py-0.5' : 'px-2.5 py-1 mt-1'} rounded-full font-medium`}>
+            <span className={`inline-block text-xs ${isMobile ? 'px-2 py-0.5' : 'px-2.5 py-1 mt-1'} rounded-full font-medium ${
+              plan.id === 'premium' 
+                ? 'bg-gray-700/50 text-white' 
+                : 'bg-emerald-700/20 text-emerald-400'
+            }`}>
               {t("yearly_savings")}
             </span>
           )}
@@ -170,26 +142,41 @@ export const PlanCard = memo(function PlanCard({
         {/* Features List - Desktop (comparison) */}
         {!isMobile && featureComparison && (
           <div className="space-y-3 mb-6 flex-1">
-            {featureComparison.map((feature, index) => (
-              <div key={index} className="flex items-center justify-between py-2.5 border-b border-white/30">
-                <span className="text-sm text-white font-medium">
-                  {feature.label}
-                </span>
-                <div className="flex items-center gap-2">
-                  {typeof (plan.id === "free" ? feature.free : feature.standard) === "boolean" ? (
-                    (plan.id === "free" ? feature.free : feature.standard) ? (
-                      <Circle className={`${index === 3 ? "w-5 h-5" : "w-4 h-4"} ${plan.isPopular ? "text-emerald-400" : "text-emerald-500"}`} />
+            {featureComparison.map((feature, index) => {
+              const featureValue = plan.id === "starter" ? feature.starter : plan.id === "standard" ? feature.standard : feature.premium;
+              return (
+                <div key={index} className="flex items-center justify-between py-2.5 border-b border-white/30">
+                  <span className="text-sm text-white font-medium">
+                    {feature.label}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {typeof featureValue === "boolean" ? (
+                      featureValue ? (
+                        <Circle className={`w-4 h-4 ${
+                          plan.id === 'premium' 
+                            ? "text-white" 
+                            : plan.isPopular 
+                              ? "text-emerald-400" 
+                              : "text-emerald-500"
+                        }`} />
+                      ) : (
+                        <Minus className="w-4 h-4 text-gray-300" />
+                      )
                     ) : (
-                      <Minus className={`${index === 3 ? "w-5 h-5" : "w-4 h-4"} text-gray-300`} />
-                    )
-                  ) : (
-                    <span className={`text-sm font-semibold ${plan.isPopular ? "text-emerald-300" : "text-white"}`}>
-                      {plan.id === "free" ? feature.free : feature.standard}
-                    </span>
-                  )}
+                      <span className={`text-sm font-semibold ${
+                        plan.id === 'premium' 
+                          ? "text-white" 
+                          : plan.isPopular 
+                            ? "text-emerald-300" 
+                            : "text-white"
+                      }`}>
+                        {featureValue}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

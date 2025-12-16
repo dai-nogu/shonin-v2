@@ -4,13 +4,14 @@
  */
 
 // プランタイプの定義（将来的な拡張に対応）
-export type PlanType = 'free' | 'standard' | 'premium';
+export type PlanType = 'free' | 'starter' | 'standard' | 'premium';
 
 // プランの階層レベル（アップグレード/ダウングレード判定用）
 export const PLAN_HIERARCHY: Record<PlanType, number> = {
   free: 0,
-  standard: 1,
-  premium: 2,
+  starter: 1,
+  standard: 2,
+  premium: 3,
 } as const;
 
 // 課金サイクルの型
@@ -18,30 +19,35 @@ export type BillingCycle = 'monthly' | 'yearly';
 
 // Stripe Price IDとプランタイプのマッピング
 export const PRICE_ID_TO_PLAN: Record<string, PlanType> = {
+  'price_1SeyN5IaAOyL3ERQgumk1eWo': 'starter', // 月額
   'price_1SELBSIaAOyL3ERQzh3nDxnr': 'standard', // 月額
   'price_1SabtaIaAOyL3ERQmoX2SwRo': 'standard', // 年額
-  // プレミアムプラン追加時はここに追加
-  // 'price_xxxxxxxxxxxxxxxxxxxxx': 'premium',
+  'price_1SeyR7IaAOyL3ERQ5CryLlzk': 'premium', // 月額
+  'price_1SeySPIaAOyL3ERQA086JfQz': 'premium', // 年額
 } as const;
 
 // プランタイプ・課金サイクル別のStripe Price ID
 export const PLAN_PRICE_IDS: Record<Exclude<PlanType, 'free'>, Record<BillingCycle, string>> = {
+  starter: {
+    monthly: 'price_1SeyN5IaAOyL3ERQgumk1eWo',
+    yearly: '', // Starterプランは月額のみ
+  },
   standard: {
     monthly: 'price_1SELBSIaAOyL3ERQzh3nDxnr',
     yearly: 'price_1SabtaIaAOyL3ERQmoX2SwRo',
   },
   premium: {
-    monthly: '', // 未実装
-    yearly: '',  // 未実装
+    monthly: 'price_1SeyR7IaAOyL3ERQ5CryLlzk',
+    yearly: 'price_1SeySPIaAOyL3ERQA086JfQz',
   },
 } as const;
 
 // プランタイプからStripe Price IDへの逆マッピング（月額のデフォルト値）
 // Partialを使って未実装のプランをオプショナルに
 export const PLAN_TO_PRICE_ID: Partial<Record<Exclude<PlanType, 'free'>, string>> = {
+  starter: 'price_1SeyN5IaAOyL3ERQgumk1eWo',
   standard: 'price_1SELBSIaAOyL3ERQzh3nDxnr',
-  // プレミアムプラン追加時はここに追加
-  // premium: 'price_xxxxxxxxxxxxxxxxxxxxx',
+  premium: 'price_1SeyR7IaAOyL3ERQ5CryLlzk',
 } as const;
 
 /**
@@ -80,6 +86,13 @@ export function comparePlans(currentPlan: PlanType, targetPlan: PlanType): 'upgr
 // プランごとの機能制限
 export const PLAN_LIMITS = {
   free: {
+    maxGoals: 0,
+    maxActivities: 0,
+    hasAIFeedback: false,
+    hasPastCalendar: false,
+    hasAdvancedAnalytics: false,
+  },
+  starter: {
     maxGoals: 1,
     maxActivities: 3,
     hasAIFeedback: false,
@@ -140,5 +153,8 @@ export interface SubscriptionInfo {
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd?: boolean;
   canceledAt?: string | null;
+  // ダウングレード予約情報
+  scheduledPlanType?: PlanType | null;  // 予約されている次のプラン
+  scheduledChangeDate?: string | null;   // プラン変更予定日
 }
 

@@ -43,7 +43,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
     return result;
   }, initialState);
 
-  // Freeプランのボタンクリック（ポータルに飛ぶ）
+  // サブスクリプション管理ポータルへ飛ぶ
   const handleManageSubscription = async () => {
     try {
       const response = await fetch('/api/create-portal-session', {
@@ -68,7 +68,16 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
     const displayPrice = isYearly && plan.yearlyPrice ? plan.yearlyPrice : plan.price;
     const displayPriceLabel = isYearly && plan.yearlyPriceLabel ? plan.yearlyPriceLabel : plan.priceLabel;
     const displayPriceId = isYearly && plan.yearlyPriceId ? plan.yearlyPriceId : plan.priceId;
-    const originalYearlyPrice = plan.id === 'standard' && isYearly ? '$119.88' : null;
+    
+    // 年額時の通常価格（月額×12）を計算
+    let originalYearlyPrice = null;
+    if (isYearly) {
+      if (plan.id === 'standard') {
+        originalYearlyPrice = '$119.88'; // $9.99 × 12
+      } else if (plan.id === 'premium') {
+        originalYearlyPrice = '$179.88'; // $14.99 × 12
+      }
+    }
     
     return {
       ...plan,
@@ -77,7 +86,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
       priceLabel: displayPriceLabel ? t(displayPriceLabel as any) : "",
       priceId: displayPriceId,
       originalYearlyPrice,
-      showYearlySavings: plan.id === 'standard' && isYearly,
+      showYearlySavings: (plan.id === 'standard' || plan.id === 'premium') && isYearly,
       features: plan.features.map(feature => t(feature as any)),
       buttonText: t(plan.buttonText as any),
     };
@@ -87,19 +96,19 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
   const featureComparisonData = [
     {
       label: "features.goal_label", 
-      free: "features.up_to_1",
+      starter: "features.up_to_1",
       standard: "features.up_to_3",
       premium: "features.unlimited",
     },
     {
       label: "features.calendar_label",
-      free: "features.current_month_only",
+      starter: "features.current_month_only",
       standard: "features.all_days",
       premium: "features.all_days",
     },
     {
       label: "features.ai_label",
-      free: false,
+      starter: false,
       standard: true,
       premium: true,
     },
@@ -107,7 +116,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
   
   const featureComparison = featureComparisonData.map(feature => ({
     label: t(feature.label as any),
-    free: typeof feature.free === "boolean" ? feature.free : t(feature.free as any),
+    starter: typeof feature.starter === "boolean" ? feature.starter : t(feature.starter as any),
     standard: typeof feature.standard === "boolean" ? feature.standard : t(feature.standard as any),
     premium: typeof feature.premium === "boolean" ? feature.premium : t(feature.premium as any),
   }));

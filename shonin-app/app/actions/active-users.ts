@@ -40,8 +40,14 @@ export async function getActiveUsersCount(): Promise<Result<number>> {
       return failure('Failed to fetch active users count', 'ACTIVE_USERS_FETCH_FAILED')
     }
 
+    if (!data || data.length === 0) {
+      return success(0)
+    }
+
     // ユニークなユーザーIDの数を計算
-    const uniqueUserIds = new Set(data.map(session => session.user_id))
+    const uniqueUserIds = new Set(
+      data.map((session: { user_id: string }) => session.user_id)
+    )
     const activeUsersCount = uniqueUserIds.size
 
     return success(activeUsersCount)

@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
 import type { PlanType, SubscriptionInfo } from "@/types/subscription";
+import { getPlanTypeFromPriceId } from "@/types/subscription";
 
 export async function getSubscriptionInfo(): Promise<SubscriptionInfo> {
   const cookieStore = await cookies();
@@ -29,21 +30,28 @@ export async function getSubscriptionInfo(): Promise<SubscriptionInfo> {
     .eq('id', user.id)
     .single();
 
-  // subscriptionテーブルから更新日とキャンセル情報を取得
+  // subscriptionテーブルから更新日、キャンセル情報、ダウングレード予約情報を取得
   const { data: subscriptionData } = await supabase
     .from('subscription')
-    .select('stripe_current_period_end, cancel_at_period_end, canceled_at')
+    .select('stripe_current_period_end, cancel_at_period_end, canceled_at, scheduled_price_id, scheduled_change_date')
     .eq('user_id', user.id)
     .single();
 
   // cancel_at_period_endがtrueの場合、キャンセル予定とみなす
   const isCancelScheduled = subscriptionData?.cancel_at_period_end || false;
 
+  // ダウングレード予約情報を取得
+  const scheduledPriceId = subscriptionData?.scheduled_price_id;
+  const scheduledPlanType = scheduledPriceId ? getPlanTypeFromPriceId(scheduledPriceId) : null;
+  const scheduledChangeDate = subscriptionData?.scheduled_change_date || null;
+
   return {
     subscriptionStatus: (userData?.subscription_status || 'free') as PlanType,
     currentPeriodEnd: subscriptionData?.stripe_current_period_end || null,
     cancelAtPeriodEnd: isCancelScheduled,
     canceledAt: subscriptionData?.canceled_at || null,
+    scheduledPlanType,
+    scheduledChangeDate,
   };
 }
 

@@ -38,6 +38,13 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
   const [canceledAt, setCanceledAt] = useState<string | null>(
     initialSubscriptionInfo?.canceledAt || null
   )
+  // ダウングレード予約情報
+  const [scheduledPlanType, setScheduledPlanType] = useState<PlanType | null>(
+    initialSubscriptionInfo?.scheduledPlanType || null
+  )
+  const [scheduledChangeDate, setScheduledChangeDate] = useState<string | null>(
+    initialSubscriptionInfo?.scheduledChangeDate || null
+  )
 
   // ユーザー情報が更新された際に状態を同期
   useEffect(() => {
@@ -64,6 +71,8 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
         setCurrentPeriodEnd(info.currentPeriodEnd)
         setCancelAtPeriodEnd(info.cancelAtPeriodEnd ?? false)
         setCanceledAt(info.canceledAt ?? null)
+        setScheduledPlanType(info.scheduledPlanType ?? null)
+        setScheduledChangeDate(info.scheduledChangeDate ?? null)
       }
       fetchSubscriptionInfo()
     }
@@ -104,16 +113,34 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-0">
               <div className="space-y-2">
                 <Label className="text-white text-base">{t('settings.current_plan')}</Label>
-                <div className="flex items-center gap-2">
-                  {subscriptionStatus === 'standard' ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {subscriptionStatus && subscriptionStatus !== 'free' ? (
                     <>
                       <span className="text-gray-300 text-sm font-semibold">
-                        Standard
+                        {subscriptionStatus === 'starter' && 'Starter'}
+                        {subscriptionStatus === 'standard' && 'Standard'}
+                        {subscriptionStatus === 'premium' && 'Premium'}
                       </span>
-                      {cancelAtPeriodEnd && currentPeriodEnd && (
+                      {/* キャンセル予約バッジ */}
+                      {cancelAtPeriodEnd && currentPeriodEnd && !scheduledPlanType && (
                         <span className="px-2 py-1 bg-orange-900 text-orange-300 text-xs font-medium rounded">
                           {t('settings.cancel_scheduled_badge', {
                             date: new Date(currentPeriodEnd).toLocaleDateString(t('common.locale') || 'ja-JP', {
+                              month: 'numeric',
+                              day: 'numeric',
+                            })
+                          })}
+                        </span>
+                      )}
+                      {/* ダウングレード予約バッジ */}
+                      {scheduledPlanType && scheduledChangeDate && (
+                        <span className="px-2 py-1 bg-blue-900 text-blue-300 text-xs font-medium rounded">
+                          {t('settings.downgrade_scheduled_badge', {
+                            plan: scheduledPlanType === 'starter' ? 'Starter' 
+                              : scheduledPlanType === 'standard' ? 'Standard'
+                              : scheduledPlanType === 'premium' ? 'Premium'
+                              : 'Free',
+                            date: new Date(scheduledChangeDate).toLocaleDateString(t('common.locale') || 'ja-JP', {
                               month: 'numeric',
                               day: 'numeric',
                             })
@@ -129,7 +156,7 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                 </div>
               </div>
               
-              {subscriptionStatus === 'standard' && currentPeriodEnd && !cancelAtPeriodEnd && (
+              {subscriptionStatus && subscriptionStatus !== 'free' && currentPeriodEnd && !cancelAtPeriodEnd && !scheduledPlanType && (
                 <div className="space-y-2">
                   <Label className="text-white text-base">{t('settings.next_billing_date')}</Label>
                   <div className="text-gray-300">
@@ -141,10 +168,24 @@ export function ProfileSettings({ initialSubscriptionInfo, initialUserProfile }:
                   </div>
                 </div>
               )}
+
+              {/* ダウングレード予約時の変更予定日 */}
+              {scheduledPlanType && scheduledChangeDate && (
+                <div className="space-y-2">
+                  <Label className="text-white text-base">{t('settings.scheduled_change_date')}</Label>
+                  <div className="text-gray-300">
+                    {new Date(scheduledChangeDate).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* ボタン */}
-            {subscriptionStatus === 'standard' && (
+            {/* ボタン - 有料プラン（starter, standard, premium）の場合に表示 */}
+            {subscriptionStatus && subscriptionStatus !== 'free' && (
               <div className="pt-2">
                 <Button
                   onClick={handleManageSubscription}

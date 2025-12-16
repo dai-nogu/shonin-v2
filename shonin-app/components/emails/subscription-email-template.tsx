@@ -3,18 +3,58 @@ import * as React from 'react';
 interface SubscriptionEmailTemplateProps {
   firstName: string;
   emailType: 'upgrade' | 'downgrade' | 'downgrade_scheduled';
-  planName?: string; // 現在: 'Standard' or 'Free' | 将来: 'Premium'も追加可能
+  planName?: string; // アップグレード先/ダウングレード先のプラン名
+  previousPlanName?: string; // アップグレード元/ダウングレード元のプラン名
   currentPlanName?: string; // downgrade_scheduled用: 現在のプラン名
   changeDate?: string; // downgrade_scheduled用: 変更予定日
 }
 
+// プラン別の機能リスト
+const PLAN_FEATURES: Record<string, { features: string[]; description: string }> = {
+  Starter: {
+    description: '基本的な機能で努力を記録できます',
+    features: [
+      '📝 セッションの記録',
+      '📅 当月のカレンダー表示',
+      '🎯 1つの目標設定',
+    ],
+  },
+  Standard: {
+    description: 'AIフィードバックで成長をサポートします',
+    features: [
+      '📝 セッションの記録',
+      '📅 全期間のカレンダー表示',
+      '🎯 3つの目標設定',
+      '💌 月1回のShoninからの手紙',
+    ],
+  },
+  Premium: {
+    description: '全ての機能を無制限に利用できます',
+    features: [
+      '📝 セッションの記録',
+      '📅 全期間のカレンダー表示',
+      '🎯 無制限の目標設定',
+      '💌 週1回、月1回のShoninからの手紙',
+    ],
+  },
+  Free: {
+    description: '基本機能のみご利用いただけます',
+    features: [
+      '📝 セッションの記録（制限あり）',
+    ],
+  },
+};
+
 export function SubscriptionEmailTemplate({ 
   firstName, 
   emailType, 
-  planName, 
+  planName = 'Standard', 
+  previousPlanName,
   currentPlanName,
   changeDate 
 }: SubscriptionEmailTemplateProps) {
+  const planFeatures = PLAN_FEATURES[planName] || PLAN_FEATURES.Standard;
+
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       {emailType === 'upgrade' && (
@@ -24,13 +64,12 @@ export function SubscriptionEmailTemplate({
             {planName}プランへのアップグレード、ありがとうございます。
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            これからは、さらに充実した機能をご利用いただけます：
+            {planFeatures.description}：
           </p>
           <ul style={{ fontSize: '16px', lineHeight: '1.8', color: '#555' }}>
-            <li>セッション数無制限</li>
-            <li>詳細な分析レポート</li>
-            <li>AIによる週次・月次フィードバック</li>
-            <li>写真・動画・音声のアップロード</li>
+            {planFeatures.features.map((feature, index) => (
+              <li key={index}>{feature}</li>
+            ))}
           </ul>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
             {firstName}さんの更なる成長をサポートできることを楽しみにしています。
@@ -64,16 +103,23 @@ export function SubscriptionEmailTemplate({
             プランを{planName}プランに変更いたしました。
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            引き続き、基本的な機能をご利用いただけます：
+            {planFeatures.description}：
           </p>
           <ul style={{ fontSize: '16px', lineHeight: '1.8', color: '#555' }}>
-            <li>📝 セッションの記録</li>
-            <li>📅 カレンダー表示</li>
-            <li>🎯 目標設定と追跡</li>
+            {planFeatures.features.map((feature, index) => (
+              <li key={index}>{feature}</li>
+            ))}
           </ul>
-          <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            もし、またStandardプランの機能が必要になった場合は、いつでもアップグレードできます。
-          </p>
+          {planName !== 'Free' && (
+            <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
+              もし、より充実した機能が必要になった場合は、いつでもアップグレードできます。
+            </p>
+          )}
+          {planName === 'Free' && previousPlanName && (
+            <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
+              もし再度{previousPlanName}プランの機能が必要になった場合は、いつでもアップグレードできます。
+            </p>
+          )}
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555', marginTop: '30px' }}>
             引き続き、{firstName}さんの努力を応援しています。
           </p>
