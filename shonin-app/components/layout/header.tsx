@@ -14,10 +14,13 @@ export function Header({
     <header className="border-b border-gray-800 bg-gray-950">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">?</span>
+        <div className="w-[100px] bg-transparent">
+            <img 
+              src="/logo.png" 
+              alt="Shonin Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
-          <h1 className="text-xl font-bold text-white">Shonin</h1>
         </div>
         
         {/* アクティブユーザー数バッジ */}

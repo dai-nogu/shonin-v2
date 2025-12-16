@@ -54,8 +54,9 @@
   "login": {
     "loginWithGoogle": "Continue with Google",
     "authenticating": "Authenticating...",
-    "termsAgreement": "By logging in, you agree to our Terms of Service and Privacy Policy",
-    "loginError": "SignIn failed. Please try again"
+    "termsAgreement": "By sign in, you agree to our Terms of Service and Privacy Policy",
+    "loginError": "SignIn failed. Please try again",
+    "loginText": "The digital coworking space for solo focus."
   },
   "dashboard": {
     "title": "Dashboard",

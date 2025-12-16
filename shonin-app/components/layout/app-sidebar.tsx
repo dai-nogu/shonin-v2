@@ -131,18 +131,19 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
   return (
     <Sidebar className="border-r border-gray-800">
-      <SidebarHeader className="border-gray-800 p-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">?</span>
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-white">Shonin</h1>
+      <SidebarHeader className="border-gray-800 p-2">
+        <div className="flex items-center space-x-2 pl-2">
+          <div className="w-[100px] bg-transparent">
+            <img 
+              src="/logo.png" 
+              alt="Shonin Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
         
         {/* アクティブユーザー数バッジ */}
-        <div className="mt-4">
+        <div className="mt-6">
           <ActiveUsersBadge />
         </div>
       </SidebarHeader>

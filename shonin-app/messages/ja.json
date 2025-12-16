@@ -49,13 +49,14 @@
     "signIn": "サインイン",
     "signUp": "サインアップ",
     "forgotPassword": "パスワードを忘れた方",
-    "loginWithGoogle": "Googleでログイン"
+    "loginWithGoogle": "Googleでサインイン"
     },
   "login": {
     "loginWithGoogle": "Googleで続ける",
     "authenticating": "認証中...",
-    "termsAgreement": "ログインすることで、利用規約とプライバシーポリシーに同意したものとみなされます",
-    "loginError": "ログインに失敗しました。再度お試しください"
+    "termsAgreement": "サインインすることで、利用規約とプライバシーポリシーに同意したものとみなされます。",
+    "loginError": "ログインに失敗しました。再度お試しください",
+    "loginText": "ひとりで没頭するデジタルコワーキングスペース"
   },
   "dashboard": {
     "title": "ダッシュボード",

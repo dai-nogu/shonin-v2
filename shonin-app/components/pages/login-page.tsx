@@ -33,24 +33,31 @@ export function LoginPage() {
       {/* 左上のロゴ */}
       <div className="absolute top-6 left-6 z-10">
         <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">?</span>
-          </div>
-          <h1 className="text-xl font-bold text-white">Shonin</h1>
+        <div className="w-[170px] overflow-hidden bg-transparent">
+            <img 
+              src="/logo.png" 
+              alt="Shonin Logo" 
+              className="w-full h-full object-contain"
+            />
+        </div>
         </Link>
       </div>
 
       <div className="min-h-screen flex items-center justify-center px-4">
         <Card className="w-full max-w-md bg-gray-900 border-gray-800">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
+          <div className="mx-auto">
             {/* TODO: ロゴを追加 */}
-            <div className="w-16 h-16 bg-emerald-700 rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">?</span>
-            </div>
+            <div className="w-[170px] overflow-hidden bg-transparent">
+            <img 
+              src="/logo.png" 
+              alt="Shonin Logo" 
+              className="w-full h-full object-contain"
+            />
+        </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-white">
-            Shonin
+          <CardTitle className="text-base font-light text-white tracking-[0.1em]">
+          No Chat, No Camera, No Avatar.
           </CardTitle>
         </CardHeader>
         

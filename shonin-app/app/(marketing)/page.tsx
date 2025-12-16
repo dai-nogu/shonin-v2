@@ -70,8 +70,17 @@ function Header({
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* ロゴ */}
-        <div className="text-2xl font-bold text-white tracking-[0.15em]">
-          Shonin
+        <div className="space-x-3">
+          <div className="w-[170px] overflow-hidden bg-transparent">
+            <img 
+              src="/logo.png" 
+              alt="Shonin Logo" 
+              className="w-full h-full object-contain"
+            />
+          </div>
+          {/* <div className="text-2xl font-bold text-white tracking-[0.15em]">
+            Shonin
+          </div> */}
         </div>
 
         {/* ナビゲーション */}
@@ -85,7 +94,7 @@ function Header({
             <button
               key={item.id}
               onClick={() => scrollToSection(item.id)}
-              className={`text-sm tracking-[0.15em] transition-colors duration-200 ${
+              className={`text-lg tracking-[0.15em] transition-colors duration-200 ${
                 activeSection === item.id
                   ? 'text-emerald-500 font-semibold'
                   : 'text-gray-300 hover:text-white'
@@ -159,21 +168,21 @@ function ScreenshotSection() {
   const screenshots = [
     {
       title: 'ひとりだけど独りじゃない',
-      description: '同志の気配を感じ、ひとりで没頭するデジタルコワーキングスペース',
+      description: 'チャット、カメラ、アバターはない。世界中の一人で頑張る同志の気配を感じ、ひとりで没頭する。',
       image: '/img/img01.png',
       alt: 'Deep work'
     },
     {
-      title: 'Shoninからの手紙',
-      description: '成功の影にある苦労、プロセスもちゃんと見ています。週に1回、月に1回の合計5回、Shoninから手紙が届きます。',
-      image: '/img/img02.png',
-      alt: 'Letters'
-    },
-    {
       title: 'あなたが捨てるもの',
       description: 'スマホ、娯楽、誘惑などを一時的に断つことでより深い集中が可能になり、目標達成の可能性が高まります。',
-      image: '/img/img03.png',
+      image: '/img/img02.png',
       alt: 'add Goal'
+    },
+    {
+      title: 'Shoninからの手紙',
+      description: '一人で頑張るのがどうしても辛い時はShoninからの手紙を受け取ってみてください。あなたの影の頑張りを全て見ています。',
+      image: '/img/img03.png',
+      alt: 'Letters'
     }
   ]
 
@@ -300,7 +309,7 @@ function OriginSection() {
           <div className="p-5 rounded-2xl border-gray-700 shadow-sm">
             <p className="text-2xl text-gray-300 max-w-5xl mx-auto leading-relaxed tracking-[0.15em]">
             誰も見ていないところで人は成長する。<br />
-            Shoninはあなたに伴走し、努力の証人となる。
+            Shoninはあなたの努力の証人となる。
             </p>
           </div>
         </div>
@@ -313,18 +322,18 @@ function OriginSection() {
 function PricingSection() {
   return (
     <section id="price" className="py-24 px-6 bg-gray-900">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-16 text-white">
           料金プラン
         </h2>
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-4 max-w-7xl mx-auto">
           {/* Freeプラン */}
           <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 overflow-hidden">
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="text-lg text-white mb-2">Free</div>
+                <div className="text-xl font-semibold text-white mb-2">Starter</div>
                 <div className="text-5xl font-bold text-white mb-2">
-                  $0<span className="text-xl text-white font-normal">/月</span>
+                  $4.99<span className="text-sm text-white font-normal">/month</span>
                   </div>
               </div>
               
@@ -334,11 +343,11 @@ function PricingSection() {
                   <span className="text-white font-medium">1つ</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">カレンダー閲覧</span>
+                  <span className="text-white">カレンダー表示</span>
                   <span className="text-white font-medium">当月のみ</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">Shoninによるメッセージ</span>
+                  <span className="text-white">Shoninからの手紙</span>
                   <span className="text-white font-medium">—</span>
                 </div>
               </div>
@@ -356,9 +365,9 @@ function PricingSection() {
           <div className="bg-gray-800 rounded-2xl border-2 border-emerald-700 overflow-hidden">
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="text-lg text-white mb-2">Standard</div>
+                <div className="text-xl font-semibold text-white mb-2">Standard</div>
                 <div className="text-5xl font-bold text-emerald-500 mb-2">
-                  $9.99<span className="text-xl text-white font-normal">/月</span>
+                  $9.99<span className="text-sm text-white font-normal">/month</span>
                 </div>
               </div>
               
@@ -368,11 +377,11 @@ function PricingSection() {
                   <span className="text-emerald-500 font-medium">3つ</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">カレンダー閲覧</span>
+                  <span className="text-white">カレンダー表示</span>
                   <span className="text-emerald-500 font-medium">全期間</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">Shoninによるメッセージ</span>
+                  <span className="text-white">月1回、Shoninからの手紙</span>
                   <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center">
                   </div>
                 </div>
@@ -386,12 +395,48 @@ function PricingSection() {
               </Link>
             </div>
           </div>
+
+
+          {/* Premiumプラン */}
+          <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 overflow-hidden">
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="text-xl font-semibold text-white mb-2">Premium</div>
+                <div className="text-5xl font-bold text-white mb-2">
+                  $14.99<span className="text-sm text-white font-normal">/month</span>
+                  </div>
+              </div>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">目標追加</span>
+                  <span className="text-white font-medium">無制限</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">カレンダー表示</span>
+                  <span className="text-white font-medium">全期間</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-700">
+                  <span className="text-white">週1回、月1回のShoninからの手紙</span>
+                  <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href="/ja/dashboard"
+                className="block w-full py-4 text-center bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
+              >
+                無料で始める
+              </Link>
+            </div>
+          </div>
         </div>
         
         {/* 注釈 */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-400">
-            ※ 基本的なタイマー、ログ機能、ユーザーの没頭数などは全てのプランに含まれます。
+            ※ 基本的なタイマー、ログ機能、世界中の同士の表示などは全てのプランに含まれます。
           </p>
         </div>
       </div>
@@ -407,7 +452,15 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           {/* ロゴとコピーライト */}
           <div className="md:col-span-2">
-            <div className="text-2xl font-bold mb-4 text-white">Shonin</div>
+            <div className="space-x-3 mb-4">
+              <div className="w-30 h-10 overflow-hidden bg-transparent">
+                <img 
+                  src="/logo.png" 
+                  alt="Shonin Logo" 
+                  className="h-full object-contain"
+                />
+              </div>
+            </div>
             <p className="text-gray-400 text-sm mb-4">
               Be a witness to your growth.
             </p>
