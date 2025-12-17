@@ -30,7 +30,8 @@
     "reload_and_retry": "Please reload the page and try again.",
     "recording_in_progress": "Cannot start focus while another focus is active",
     "total": "Total",
-    "read_more": "Read more"
+    "read_more": "Read more",
+    "please_wait": "Please wait..."
   },
   "navigation": {
     "dashboard": "Dashboard",

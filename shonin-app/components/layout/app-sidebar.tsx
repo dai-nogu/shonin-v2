@@ -49,6 +49,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const locale = (params?.locale as string) || 'ja'
   const [activePage, setActivePage] = useState(currentPage)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
   const t = useTranslations()
   const { user, signOut, loading } = useAuth()
@@ -88,12 +89,14 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
   // ログアウト確認ダイアログの処理
   const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true)
     setOperationError(null)
     try {
       await signOut()
       router.push(`/${locale}/login`)
     } catch (error) {
       setOperationError(t('settings.logout_error'))
+      setIsLoggingOut(false)
     }
   }
 
@@ -130,8 +133,20 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   }
 
   return (
-    <Sidebar className="border-r border-gray-800">
-      <SidebarHeader className="border-gray-800 p-2">
+    <>
+      {/* 処理中のフルスクリーンオーバーレイ */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">{t('settings.logging_out')}</p>
+            <p className="text-gray-300 text-sm">{t('common.please_wait')}</p>
+          </div>
+        </div>
+      )}
+
+      <Sidebar className="border-r border-gray-800">
+        <SidebarHeader className="border-gray-800 p-2">
         <div className="flex items-center space-x-2 pl-2">
           <div className="w-[100px] bg-transparent">
             <img 
@@ -246,12 +261,25 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       </SidebarFooter>
 
       {/* ログアウト確認ダイアログ */}
-      <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
+      <AlertDialog open={logoutDialogOpen} onOpenChange={(open) => !isLoggingOut && setLogoutDialogOpen(open)}>
+        <AlertDialogContent 
+          className="bg-gray-800 border-gray-700 text-white"
+          onInteractOutside={(e) => {
+            if (isLoggingOut) {
+              e.preventDefault()
+            }
+          }}
+          onEscapeKeyDown={(e) => {
+            if (isLoggingOut) {
+              e.preventDefault()
+            }
+          }}
+        >
           <AlertDialogHeader>
             <button
-              onClick={() => setLogoutDialogOpen(false)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors"
+              onClick={() => !isLoggingOut && setLogoutDialogOpen(false)}
+              disabled={isLoggingOut}
+              className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <X className="w-4 h-4" />
             </button>
@@ -279,15 +307,24 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
           <AlertDialogFooter className="flex justify-end">
             <AlertDialogAction
               onClick={handleLogoutConfirm}
-              className="bg-red-500 hover:bg-destructive text-white transition-colors"
+              disabled={isLoggingOut}
+              className="bg-red-500 hover:bg-destructive text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t('settings.logout')}
+              {isLoggingOut ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>{t('settings.logging_out')}</span>
+                </div>
+              ) : (
+                t('settings.logout')
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <SidebarRail />
-    </Sidebar>
+      </Sidebar>
+    </>
   )
 }

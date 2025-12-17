@@ -124,31 +124,52 @@ export function DeleteAccountButton() {
   }
 
   return (
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-      <AlertDialogTrigger asChild>
-        <Button 
-          variant="outline"
-          className="bg-transparent border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-300"
+    <>
+      {/* 処理中のフルスクリーンオーバーレイ */}
+      {isDeleting && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">{t('settings.deleting')}</p>
+            <p className="text-gray-300 text-sm">{t('common.please_wait')}</p>
+          </div>
+        </div>
+      )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="outline"
+            className="bg-transparent border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-300"
+          >
+            {t('settings.account_deletion')}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent 
+          className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl"
+          onOverlayClick={() => !isDeleting && setDeleteDialogOpen(false)}
+          onInteractOutside={(e) => {
+            if (isDeleting) {
+              e.preventDefault()
+              return
+            }
+            e.preventDefault()
+            setDeleteDialogOpen(false)
+          }}
+          onEscapeKeyDown={(e) => {
+            if (isDeleting) {
+              e.preventDefault()
+              return
+            }
+            e.preventDefault()
+            setDeleteDialogOpen(false)
+          }}
         >
-          {t('settings.account_deletion')}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent 
-        className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl"
-        onOverlayClick={() => setDeleteDialogOpen(false)}
-        onInteractOutside={(e) => {
-          e.preventDefault()
-          setDeleteDialogOpen(false)
-        }}
-        onEscapeKeyDown={(e) => {
-          e.preventDefault()
-          setDeleteDialogOpen(false)
-        }}
-      >
         <AlertDialogHeader>
           <button
-            onClick={() => setDeleteDialogOpen(false)}
-            className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors"
+            onClick={() => !isDeleting && setDeleteDialogOpen(false)}
+            disabled={isDeleting}
+            className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <X className="w-4 h-4" />
           </button>
@@ -216,7 +237,8 @@ export function DeleteAccountButton() {
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
-    </AlertDialog>
+      </AlertDialog>
+    </>
   )
 }
 

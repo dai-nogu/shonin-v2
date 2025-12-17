@@ -30,7 +30,8 @@
     "reload_and_retry": "画面をリロードしてもう一度やり直してください。",
     "recording_in_progress": "記録中は他の記録を開始できません",
     "total": "合計",
-    "read_more": "続きを読む"
+    "read_more": "続きを読む",
+    "please_wait": "しばらくお待ちください..."
   },
   "navigation": {
     "dashboard": "ダッシュボード",
