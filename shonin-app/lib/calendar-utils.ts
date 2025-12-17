@@ -1,6 +1,8 @@
 // カレンダーのデータ処理変更
 import { getWeekStart, getCurrentTime, getDateString } from "@/lib/date-utils"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
+import type { PlanType } from "@/types/subscription"
+import { getPlanLimits } from "@/types/subscription"
 
 export interface CalendarSession {
   id: string
@@ -271,4 +273,55 @@ export const calculateWeekAverageTime = (
   }
   
   return Math.floor(totalTime / daysPassed)
+}
+
+/**
+ * プランに応じて日付が表示可能かどうかをチェック
+ * @param date - チェックする日付（月ビュー用は日付番号、週ビュー用はDateオブジェクト）
+ * @param currentDate - 現在のカレンダー表示月
+ * @param userPlan - ユーザーのプラン
+ * @returns 日付が表示可能かどうか
+ */
+export const canViewDate = (
+  date: number | Date,
+  currentDate: Date,
+  userPlan: PlanType
+): boolean => {
+  const planLimits = getPlanLimits(userPlan)
+  
+  // プラン制限がない場合は全て表示可能
+  if (!planLimits.calendarDaysLimit) {
+    // starterプランの場合は当月のみ表示可能
+    if (!planLimits.hasPastCalendar) {
+      const today = new Date()
+      const targetYear = currentDate.getFullYear()
+      const targetMonth = currentDate.getMonth()
+      const currentYear = today.getFullYear()
+      const currentMonth = today.getMonth()
+      
+      return targetYear === currentYear && targetMonth === currentMonth
+    }
+    return true
+  }
+  
+  // freeプランの場合: 直近3日のみ表示（一昨日、昨日、今日）
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  let targetDate: Date
+  if (typeof date === 'number') {
+    // 月ビュー用
+    targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), date)
+  } else {
+    // 週ビュー用
+    targetDate = new Date(date)
+  }
+  targetDate.setHours(0, 0, 0, 0)
+  
+  // 今日から何日前かを計算
+  const diffTime = today.getTime() - targetDate.getTime()
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  // -2から0の範囲（一昨日、昨日、今日）のみ表示可能
+  return diffDays >= 0 && diffDays <= 2
 } 

@@ -30,7 +30,9 @@ export function GoalLimitModal({ isOpen, onClose, currentPlan, currentGoalCount 
   }
 
   const getLimitText = () => {
-    if (currentPlan === 'starter') {
+    if (currentPlan === 'free') {
+      return t('goal_free')
+    } else if (currentPlan === 'starter') {
       return t('goal_starter')
     } else if (currentPlan === 'standard') {
       return t('goal_standard')

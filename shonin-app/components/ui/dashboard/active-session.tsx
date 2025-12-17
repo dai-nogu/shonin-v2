@@ -8,6 +8,8 @@ import { useReflectionsDb } from "@/hooks/use-reflections-db"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useSessions } from "@/contexts/sessions-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useSubscriptionContext } from "@/contexts/subscription-context"
+import { getPlanLimits } from "@/types/subscription"
 import { uploadPhotos } from "@/lib/upload-photo"
 import { getInputLimits } from "@/lib/input-limits"
 
@@ -40,6 +42,10 @@ export function ActiveSession({
   
   // 認証フック
   const { user } = useAuth()
+  
+  // サブスクリプション情報
+  const { userPlan } = useSubscriptionContext()
+  const planLimits = getPlanLimits(userPlan)
   
   // 振り返りデータベースフック
   const { saveReflection } = useReflectionsDb()
@@ -129,6 +135,11 @@ export function ActiveSession({
     if (!isInitialLoadComplete) return
     if (hasGeneratedPlaceholder || sessionState === 'ended') return
     
+    // freeプランの場合はAI生成をスキップ
+    if (!planLimits.hasAIPlaceholder) {
+      return
+    }
+    
     const timer = setTimeout(async () => {
       try {
         const res = await fetch('/api/ai/generate-placeholder', {
@@ -153,7 +164,7 @@ export function ActiveSession({
     }, 500)
     
     return () => clearTimeout(timer)
-  }, [isInitialLoadComplete, hasGeneratedPlaceholder, sessionState, session.activityId, session.goalId, startTimeMs, locale])
+  }, [isInitialLoadComplete, hasGeneratedPlaceholder, sessionState, session.activityId, session.goalId, startTimeMs, locale, planLimits.hasAIPlaceholder])
 
   // メモ内容をローカルストレージに自動保存
   useEffect(() => {

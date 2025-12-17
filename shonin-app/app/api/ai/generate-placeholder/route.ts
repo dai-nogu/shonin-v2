@@ -5,6 +5,7 @@ import type { Database } from '@/types/database';
 import { validateOrigin } from '@/lib/csrf-protection';
 import { safeWarn, safeError } from '@/lib/safe-logger';
 import Anthropic from '@anthropic-ai/sdk';
+import { getPlanLimits, type PlanType } from '@/types/subscription';
 
 interface GeneratePlaceholderRequest {
   activity_id: string;
@@ -46,11 +47,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // ユーザーのプラン情報を取得
+    const { data: userData } = await supabase
+      .from('users')
+      .select('subscription_status')
+      .eq('id', user.id)
+      .single();
+
+    const userPlan = (userData?.subscription_status || 'free') as PlanType;
+    const planLimits = getPlanLimits(userPlan);
+
     const { 
       activity_id, 
       goal_id, 
       locale = 'ja' 
     }: GeneratePlaceholderRequest = await request.json();
+
+    // アクティビティ名を取得
+    const { data: activity } = await supabase
+      .from('activities')
+      .select('name')
+      .eq('id', activity_id)
+      .single<{ name: string }>();
+
+    // freeプランの場合はAI生成をスキップしてデフォルトのプレースホルダーを返す
+    if (!planLimits.hasAIPlaceholder) {
+      const placeholder = getDefaultPlaceholder(0, null, locale, activity?.name);
+      return NextResponse.json({ placeholder });
+    }
 
     // 過去のセッション情報を取得（暗号化されたデータを復号化するビューを使用）
     let query = supabase
@@ -81,24 +105,11 @@ export async function POST(request: NextRequest) {
     if (sessionsError) {
       safeError('セッション取得エラー', sessionsError);
       // エラー時はセッションなしとしてプレースホルダーを生成
-      // アクティビティ名を取得
-      const { data: activity } = await supabase
-        .from('activities')
-        .select('name')
-        .eq('id', activity_id)
-        .single<{ name: string }>();
       const placeholder = getDefaultPlaceholder(0, null, locale, activity?.name);
       return NextResponse.json({ placeholder });
     }
 
-    // アクティビティ名を取得
-    const { data: activity } = await supabase
-      .from('activities')
-      .select('name')
-      .eq('id', activity_id)
-      .single<{ name: string }>();
-
-    // 目標名を取得（目標IDがある場合）
+    // 目標名とユーザー名を取得
     let goalTitle: string | null = null;
     if (goal_id) {
       const { data: goal } = await supabase
@@ -109,8 +120,7 @@ export async function POST(request: NextRequest) {
       goalTitle = goal?.title ?? null;
     }
 
-    // ユーザー名を取得
-    const { data: userData } = await supabase
+    const { data: userDataWithName } = await supabase
       .from('users')
       .select('name')
       .eq('id', user.id)
@@ -121,7 +131,7 @@ export async function POST(request: NextRequest) {
       sessions: sessions || [],
       activityName: activity?.name || (locale === 'ja' ? 'アクティビティ' : 'Activity'),
       goalTitle,
-      userName: userData?.name || null,
+      userName: userDataWithName?.name || null,
       locale
     });
 

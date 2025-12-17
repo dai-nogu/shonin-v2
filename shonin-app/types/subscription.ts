@@ -89,28 +89,36 @@ export const PLAN_LIMITS = {
     maxGoals: 0,
     maxActivities: 0,
     hasAIFeedback: false,
+    hasAIPlaceholder: false, // セッション振り返りのAIプレースホルダー
     hasPastCalendar: false,
+    calendarDaysLimit: 3, // 直近3日のみ（一昨日、昨日、今日）
     hasAdvancedAnalytics: false,
   },
   starter: {
     maxGoals: 1,
     maxActivities: 3,
     hasAIFeedback: false,
-    hasPastCalendar: false,
+    hasAIPlaceholder: true, // セッション振り返りのAIプレースホルダー
+    hasPastCalendar: false, // 当月のみ
+    calendarDaysLimit: null, // 当月制限はhasPastCalendarで判定
     hasAdvancedAnalytics: false,
   },
   standard: {
     maxGoals: 3,
     maxActivities: 3,
     hasAIFeedback: true,
-    hasPastCalendar: true,
+    hasAIPlaceholder: true, // セッション振り返りのAIプレースホルダー
+    hasPastCalendar: true, // 全期間
+    calendarDaysLimit: null,
     hasAdvancedAnalytics: false,
   },
   premium: {
     maxGoals: Infinity,
     maxActivities: Infinity,
     hasAIFeedback: true,
-    hasPastCalendar: true,
+    hasAIPlaceholder: true, // セッション振り返りのAIプレースホルダー
+    hasPastCalendar: true, // 全期間
+    calendarDaysLimit: null,
     hasAdvancedAnalytics: true,
   },
 } as const;

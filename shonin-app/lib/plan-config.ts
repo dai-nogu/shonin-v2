@@ -2,6 +2,7 @@ import { PlanType, PLAN_PRICE_IDS } from '@/types/subscription';
 
 export interface PlanFeature {
   label: string;
+  free?: string | boolean;
   starter: string | boolean;
   standard: string | boolean;
   premium: string | boolean;
@@ -99,21 +100,24 @@ export const planConfig = {
   featureComparison: [
     {
       label: "features.goal_label",
+      free: false,
       starter: "features.up_to_1",
       standard: "features.up_to_3",
       premium: "features.unlimited",
     },
     {
       label: "features.calendar_label",
+      free: "features.recent_3_days",
       starter: "features.current_month_only",
       standard: "features.all_days",
       premium: "features.all_days",
     },
     {
       label: "features.ai_label",
+      free: false,
       starter: false,
-      standard: true,
-      premium: true,
+      standard: "features.monthly_once",
+      premium: "features.weekly_and_monthly",
     },
   ]
 };

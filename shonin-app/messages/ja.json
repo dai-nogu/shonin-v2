@@ -467,14 +467,18 @@
       "goal_label": "目標追加",
       "calendar_label": "カレンダー表示",
       "ai_label": "Shoninからの手紙",
+      "recent_3_days": "直近3日のみ",
       "current_month_only": "当月のみ",
       "all_days": "全期間",
       "up_to_1": "1つ",
       "up_to_3": "3つ",
-      "unlimited": "無制限"
+      "unlimited": "無制限",
+      "monthly_once": "毎月1回",
+      "weekly_and_monthly": "毎週1回、毎月1回"
     },
     "description": "見せないことが自分を強くします",
     "limit_modal": {
+      "goal_free": "目標を追加するには\n有料プランへの登録が必要です",
       "goal_starter": "目標を追加するには\nStandardプランへの登録が必要です",
       "goal_standard": "目標を追加するには\nPremiumプランへの登録が必要です",
       "goal_default": "制限に達しました",

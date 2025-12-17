@@ -153,7 +153,7 @@ export function Goals({ initialGoals }: GoalsProps) {
 
   const handleAddGoal = () => {
     // プラン制限をチェック
-    const goalLimit = userPlan === 'free' ? 1 : userPlan === 'standard' ? 3 : Infinity
+    const goalLimit = userPlan === 'free' ? 0 : userPlan === 'starter' ? 1 : userPlan === 'standard' ? 3 : Infinity
     
     if (goals.length >= goalLimit) {
       // 制限に達している場合はモーダルを表示

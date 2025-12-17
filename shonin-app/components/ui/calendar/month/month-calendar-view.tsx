@@ -9,12 +9,14 @@ import { DateSessionsModal } from "@/components/ui/calendar/date-sessions-modal"
 import { PlanLimitModal } from "@/components/ui/calendar/plan-limit-modal"
 import { useTranslations, useLocale } from 'next-intl'
 import { formatDateForLocale } from '@/lib/i18n-utils'
+import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { 
   convertToCalendarSessions, 
   getDaysInMonth, 
   getSessionsForDate, 
   isToday, 
   getCurrentMonthSessions,
+  canViewDate,
   type CalendarSession 
 } from "@/lib/calendar-utils"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
@@ -38,6 +40,7 @@ export function MonthCalendarView({
 }: MonthCalendarViewProps) {
   const t = useTranslations()
   const locale = useLocale()
+  const { userPlan } = useSubscriptionContext()
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")
@@ -130,17 +133,22 @@ export function MonthCalendarView({
               {/* カレンダーグリッド */}
               <div className="grid grid-cols-7 gap-1">
                 {days.map((day, index) => {
-                  const daySessions = getSessionsForDate(day, currentDate, sessions)
                   const todayCheck = isToday(day, currentDate)
+                  
+                  // プラン制限チェック
+                  const canView = day ? canViewDate(day, currentDate, userPlan) : false
+                  const daySessions = canView ? getSessionsForDate(day, currentDate, sessions) : []
                   const hasMoreSessions = daySessions.length > 2
 
                   return (
                     <div
                       key={index}
-                      onClick={day && hasMoreSessions ? () => handleDateClick(day, daySessions) : undefined}
+                      onClick={day && hasMoreSessions && canView ? () => handleDateClick(day, daySessions) : undefined}
                       className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-xl transition-colors ${
                         day ? `bg-gray-900 border border-gray-800/50` : "bg-gray-950/50"
-                      } ${hasMoreSessions ? "hover:bg-gray-800/80 cursor-pointer" : ""} ${todayCheck ? "relative overflow-hidden" : ""}`}
+                      } ${hasMoreSessions && canView ? "hover:bg-gray-800/80 cursor-pointer" : ""} ${todayCheck ? "relative overflow-hidden" : ""} ${
+                        day && !canView ? "opacity-40" : ""
+                      }`}
                     >
                       {todayCheck && (
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-700/0 via-emerald-700/50 to-emerald-700/0 opacity-50" />
@@ -157,25 +165,27 @@ export function MonthCalendarView({
                             </span>
                           </div>
 
-                          <div className="space-y-1 px-1">
-                            {daySessions.slice(0, 2).map((session) => (
-                              <div
-                                key={session.id}
-                                className={`text-xs p-1 rounded-md shadow-sm backdrop-blur-sm ${session.color} bg-opacity-20 border-l-2 border-white/20`}
-                              >
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-white truncate text-[10px] md:text-xs font-medium pl-1">
-                                    {session.activity}
-                                  </span>
+                          {canView && (
+                            <div className="space-y-1 px-1">
+                              {daySessions.slice(0, 2).map((session) => (
+                                <div
+                                  key={session.id}
+                                  className={`text-xs p-1 rounded-md shadow-sm backdrop-blur-sm ${session.color} bg-opacity-20 border-l-2 border-white/20`}
+                                >
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-white truncate text-[10px] md:text-xs font-medium pl-1">
+                                      {session.activity}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                            {daySessions.length > 2 && (
-                              <div className={`text-[10px] md:text-xs text-gray-400 text-center py-0.5 rounded bg-gray-800/50`}>
-                                +{daySessions.length - 2}
-                              </div>
-                            )}
-                          </div>
+                              ))}
+                              {daySessions.length > 2 && (
+                                <div className={`text-[10px] md:text-xs text-gray-400 text-center py-0.5 rounded bg-gray-800/50`}>
+                                  +{daySessions.length - 2}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </>
                       )}
                     </div>

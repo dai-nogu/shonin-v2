@@ -55,16 +55,28 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   
-  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([
-    { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_default_message') },
-    { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }
-  ])
+  // Standardプランは月次のみ、Premiumプランは週次・月次
+  const initialFeedbacks = userPlan === 'standard'
+    ? [{ type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }]
+    : [
+        { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_default_message') },
+        { type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }
+      ]
+  
+  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>(initialFeedbacks)
   
   const { 
     error, 
     getWeeklyFeedback, 
     getMonthlyFeedback
   } = useAIFeedback()
+
+  // feedbacksの長さが変わった時にcurrentIndexを調整
+  useEffect(() => {
+    if (currentIndex >= feedbacks.length) {
+      setCurrentIndex(0)
+    }
+  }, [feedbacks.length, currentIndex])
 
   // フィードバックを取得
   useEffect(() => {
@@ -79,56 +91,88 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           if (response.ok) {
             const devData = await response.json()
             
-            setFeedbacks([
-              { 
-                type: t('ai_feedback.weekly'), 
-                date: devData.weekly_date || "2024-11-04", 
-                message: devData.weekly || DEV_MOCK_DATA.weekly
-              },
-              { 
-                type: t('ai_feedback.monthly'), 
-                date: devData.monthly_date || "2024-11-01", 
-                message: devData.monthly || DEV_MOCK_DATA.monthly
-              }
-            ])
+            // Standardプランは月次のみ、Premiumプランは週次・月次
+            const feedbackList = userPlan === 'standard' 
+              ? [
+                  { 
+                    type: t('ai_feedback.monthly'), 
+                    date: devData.monthly_date || "2024-11-01", 
+                    message: devData.monthly || DEV_MOCK_DATA.monthly
+                  }
+                ]
+              : [
+                  { 
+                    type: t('ai_feedback.weekly'), 
+                    date: devData.weekly_date || "2024-11-04", 
+                    message: devData.weekly || DEV_MOCK_DATA.weekly
+                  },
+                  { 
+                    type: t('ai_feedback.monthly'), 
+                    date: devData.monthly_date || "2024-11-01", 
+                    message: devData.monthly || DEV_MOCK_DATA.monthly
+                  }
+                ]
+            
+            setFeedbacks(feedbackList)
             return
           }
         } catch (error) {
           clientLogger.warn('dev-feedback.jsonの読み込みに失敗、モックデータを使用します')
         }
         
-        setFeedbacks([
-          { 
-            type: t('ai_feedback.weekly'), 
-            date: "2024-11-04", 
-            message: DEV_MOCK_DATA.weekly
-          },
-          { 
-            type: t('ai_feedback.monthly'), 
-            date: "2024-11-01", 
-            message: DEV_MOCK_DATA.monthly
-          }
-        ])
+        // Standardプランは月次のみ、Premiumプランは週次・月次
+        const feedbackList = userPlan === 'standard'
+          ? [
+              { 
+                type: t('ai_feedback.monthly'), 
+                date: "2024-11-01", 
+                message: DEV_MOCK_DATA.monthly
+              }
+            ]
+          : [
+              { 
+                type: t('ai_feedback.weekly'), 
+                date: "2024-11-04", 
+                message: DEV_MOCK_DATA.weekly
+              },
+              { 
+                type: t('ai_feedback.monthly'), 
+                date: "2024-11-01", 
+                message: DEV_MOCK_DATA.monthly
+              }
+            ]
+        
+        setFeedbacks(feedbackList)
         return
       }
       
-      const [weeklyData, monthlyData] = await Promise.all([
-        getWeeklyFeedback(),
-        getMonthlyFeedback()
-      ])
+      // 本番環境
+      const monthlyData = await getMonthlyFeedback()
       
-      setFeedbacks([
-        { 
-          type: t('ai_feedback.weekly'), 
-          date: weeklyData?.period_start || "", 
-          message: weeklyData?.feedback || t('ai_feedback.weekly_default_message')
-        },
-        { 
-          type: t('ai_feedback.monthly'), 
-          date: monthlyData?.period_start || "", 
-          message: monthlyData?.feedback || t('ai_feedback.monthly_default_message')
-        }
-      ])
+      // Standardプランは月次のみ、Premiumプランは週次・月次
+      if (userPlan === 'standard') {
+        setFeedbacks([
+          { 
+            type: t('ai_feedback.monthly'), 
+            date: monthlyData?.period_start || "", 
+            message: monthlyData?.feedback || t('ai_feedback.monthly_default_message')
+          }
+        ])
+      } else {
+        const weeklyData = await getWeeklyFeedback()
+        setFeedbacks([
+          { 
+            type: t('ai_feedback.weekly'), 
+            date: weeklyData?.period_start || "", 
+            message: weeklyData?.feedback || t('ai_feedback.weekly_default_message')
+          },
+          { 
+            type: t('ai_feedback.monthly'), 
+            date: monthlyData?.period_start || "", 
+            message: monthlyData?.feedback || t('ai_feedback.monthly_default_message')
+          }
+        ])
+      }
     }
     
     loadFeedbacks()
@@ -140,7 +184,7 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       
       return () => clearInterval(interval)
     }
-  }, [planLimits.hasAIFeedback, getWeeklyFeedback, getMonthlyFeedback, t])
+  }, [planLimits.hasAIFeedback, getWeeklyFeedback, getMonthlyFeedback, t, userPlan])
   
   if (subscriptionLoading) {
     return <AIFeedbackSkeleton />

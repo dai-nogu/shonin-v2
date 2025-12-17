@@ -21,6 +21,7 @@ interface PlanCardProps {
   }
   featureComparison?: Array<{
     label: string
+    free?: boolean | string
     starter: boolean | string
     standard: boolean | string
     premium: boolean | string
@@ -161,7 +162,7 @@ export const PlanCard = memo(function PlanCard({
         {!isMobile && featureComparison && (
           <div className="space-y-3 mb-6 flex-1">
             {featureComparison.map((feature, index) => {
-              const featureValue = plan.id === "starter" ? feature.starter : plan.id === "standard" ? feature.standard : feature.premium;
+              const featureValue = plan.id === "free" ? (feature.free ?? false) : plan.id === "starter" ? feature.starter : plan.id === "standard" ? feature.standard : feature.premium;
               return (
                 <div key={index} className="flex items-center justify-between py-2.5 border-b border-white/30">
                   <span className="text-sm text-white font-medium">

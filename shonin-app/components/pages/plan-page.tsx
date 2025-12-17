@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { getPlanConfigs } from "@/lib/plan-config";
+import { getPlanConfigs, planConfig } from "@/lib/plan-config";
 import { useActionState, useState } from "react";
 import { createStripeSession } from "@/app/actions/stripe";
 import type { PlanType, BillingCycle } from "@/types/subscription";
@@ -92,30 +92,10 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
     };
   });
 
-  // 機能比較データも翻訳を適用
-  const featureComparisonData = [
-    {
-      label: "features.goal_label", 
-      starter: "features.up_to_1",
-      standard: "features.up_to_3",
-      premium: "features.unlimited",
-    },
-    {
-      label: "features.calendar_label",
-      starter: "features.current_month_only",
-      standard: "features.all_days",
-      premium: "features.all_days",
-    },
-    {
-      label: "features.ai_label",
-      starter: false,
-      standard: true,
-      premium: true,
-    },
-  ];
-  
-  const featureComparison = featureComparisonData.map(feature => ({
+  // 機能比較データを plan-config.ts から取得して翻訳を適用
+  const featureComparison = planConfig.featureComparison.map(feature => ({
     label: t(feature.label as any),
+    free: feature.free !== undefined ? (typeof feature.free === "boolean" ? feature.free : t(feature.free as any)) : undefined,
     starter: typeof feature.starter === "boolean" ? feature.starter : t(feature.starter as any),
     standard: typeof feature.standard === "boolean" ? feature.standard : t(feature.standard as any),
     premium: typeof feature.premium === "boolean" ? feature.premium : t(feature.premium as any),

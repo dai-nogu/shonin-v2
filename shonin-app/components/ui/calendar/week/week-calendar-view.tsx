@@ -10,12 +10,14 @@ import { PlanLimitModal } from "@/components/ui/calendar/plan-limit-modal"
 import { useTranslations, useLocale } from 'next-intl'
 import { formatDateForLocale } from '@/lib/i18n-utils'
 import { getWeekStart } from "@/lib/date-utils"
+import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { 
   convertToCalendarSessions, 
   getSessionsForWeekDate, 
   isTodayWeek, 
   getCurrentWeekSessions,
   calculateWeekAverageTime,
+  canViewDate,
   type CalendarSession 
 } from "@/lib/calendar-utils"
 import type { CompletedSession } from "@/components/ui/dashboard/time-tracker"
@@ -27,7 +29,6 @@ interface WeekCalendarViewProps {
   onTodayClick: () => void
   showPlanLimitModal: boolean
   setShowPlanLimitModal: (show: boolean) => void
-  userPlan?: 'free' | 'standard' | 'premium'
 }
 
 export function WeekCalendarView({
@@ -36,11 +37,11 @@ export function WeekCalendarView({
   onNavigate,
   onTodayClick,
   showPlanLimitModal,
-  setShowPlanLimitModal,
-  userPlan = 'free'
+  setShowPlanLimitModal
 }: WeekCalendarViewProps) {
   const t = useTranslations()
   const locale = useLocale()
+  const { userPlan } = useSubscriptionContext()
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState<string>("")
@@ -125,7 +126,6 @@ export function WeekCalendarView({
             <CardContent className="p-0">
               <div className="grid grid-cols-7 gap-2">
                 {weekDays.map((day, index) => {
-                  const daySessions = getSessionsForWeekDate(day, sessions)
                   const todayCheck = isTodayWeek(day)
                   const dayNames = [
                     t('weekly_progress.days.monday'),
@@ -137,13 +137,12 @@ export function WeekCalendarView({
                     t('weekly_progress.days.sunday')
                   ]
                   
-                  // 前月の日付かどうかをチェック
-                  const isPastMonth = userPlan === 'free' && 
-                    (day.getFullYear() < currentYear || 
-                     (day.getFullYear() === currentYear && day.getMonth() < currentMonth))
+                  // プラン制限チェック
+                  const canView = canViewDate(day, currentDate, userPlan)
+                  const daySessions = canView ? getSessionsForWeekDate(day, sessions) : []
                   
                   // スケルトン表示の場合
-                  if (isPastMonth) {
+                  if (!canView) {
                     return (
                       <div
                         key={index}

@@ -471,14 +471,18 @@
       "goal_label": "Add Goals",
       "calendar_label": "Calendar Display",
       "ai_label": "Letters from Shonin",
+      "recent_3_days": "Last 3 days only",
       "current_month_only": "This month only",
       "all_days": "Unlimited History",
       "up_to_1": "1",
       "up_to_3": "3",
-      "unlimited": "Unlimited"
+      "unlimited": "Unlimited",
+      "monthly_once": "Monthly",
+      "weekly_and_monthly": "Weekly & Monthly"
     },
     "description": "Strength lies in what you don't show",
     "limit_modal": {
+      "goal_free": "To add goals, you need to\nupgrade to a paid plan",
       "goal_starter": "Upgrade to the Standard plan to add more goals.",
       "goal_standard": "To add more goals, you need to\nupgrade to the Premium plan",
       "goal_default": "Limit reached",
