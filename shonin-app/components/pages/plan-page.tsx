@@ -152,7 +152,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                 }`}
               />
             </button>
-            <span className={`text-sm font-medium transition-colors ${billingCycle === 'yearly' ? 'text-white' : 'text-gray-500'}`}>
+            <span className={`text-sm font-medium transition-colors ${billingCycle === 'yearly' ? 'text-emerald-400' : 'text-gray-500'}`}>
               {t("yearly")}
             </span>
           </div>
@@ -176,6 +176,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                 formAction={formAction}
                 onManageSubscription={handleManageSubscription}
                 isMobile={true}
+                isUserFree={userPlan === 'free'}
               />
             ))}
           </div>
@@ -200,6 +201,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
                 formAction={formAction}
                 onManageSubscription={handleManageSubscription}
                 isMobile={false}
+                isUserFree={userPlan === 'free'}
               />
             ))}
           </div>

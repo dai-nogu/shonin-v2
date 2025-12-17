@@ -320,7 +320,7 @@ function OriginSection() {
 
 // Pricingセクション
 function PricingSection() {
-  const [isYearly, setIsYearly] = useState(true) // デフォルトで年額表示
+  const [isYearly, setIsYearly] = useState(false) // デフォルトで月額表示
 
   return (
     <section id="price" className="py-24 px-6 bg-gray-900">
@@ -332,10 +332,12 @@ function PricingSection() {
         
         {/* 年額/月額切り替えボタン */}
         <div className="flex items-center justify-center gap-4 mb-12">
-          <span className={`text-lg ${!isYearly ? 'text-white' : 'text-gray-400'}`}>月額</span>
+          <span className={`text-lg ${!isYearly ? 'text-white' : 'text-gray-500'}`}>月額</span>
           <button
             onClick={() => setIsYearly(!isYearly)}
-            className="relative w-16 h-8 bg-emerald-700 rounded-full transition-colors duration-200"
+            className={`relative w-16 h-8 rounded-full transition-colors duration-200 ${
+              isYearly ? 'bg-emerald-700' : 'bg-gray-600'
+            }`}
           >
             <div
               className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform duration-200 ${
@@ -343,7 +345,7 @@ function PricingSection() {
               }`}
             />
           </button>
-          <span className={`text-lg ${isYearly ? 'text-white' : 'text-gray-400'}`}>年額</span>
+          <span className={`text-lg ${isYearly ? 'text-emerald-400' : 'text-gray-500'}`}>年額</span>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 max-w-7xl mx-auto">

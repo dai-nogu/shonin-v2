@@ -36,7 +36,12 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
       return 'current_plan';
     }
     
-    // 他のプランはすべて「プラン変更」（Stripeビリングポータルに飛ばす）
+    // Freeユーザーの場合は「無料で始める」（チェックアウトフロー）
+    if (userPlan === 'free') {
+      return 'start_free';
+    }
+    
+    // 有料プランユーザーの場合は「プラン変更」（ビリングポータル）
     return 'change_plan';
   };
 

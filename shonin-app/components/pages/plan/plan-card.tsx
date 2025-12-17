@@ -29,6 +29,7 @@ interface PlanCardProps {
   formAction: any
   onManageSubscription: () => void
   isMobile?: boolean
+  isUserFree?: boolean  // Freeユーザーの場合はチェックアウトフローを使う
 }
 
 export const PlanCard = memo(function PlanCard({
@@ -37,7 +38,8 @@ export const PlanCard = memo(function PlanCard({
   isPending,
   formAction,
   onManageSubscription,
-  isMobile = false
+  isMobile = false,
+  isUserFree = false
 }: PlanCardProps) {
   const t = useTranslations("plan")
 
@@ -66,7 +68,23 @@ export const PlanCard = memo(function PlanCard({
       )
     }
 
-    // 他のプランの場合はStripeビリングポータルに飛ばす
+    // Freeユーザーの場合はチェックアウトフロー（初回購入）
+    if (isUserFree) {
+      return (
+        <form action={formAction}>
+          <input type="hidden" name="priceId" value={plan.priceId} />
+          <button
+            type="submit"
+            disabled={isPending}
+            className={`w-full ${isMobile ? 'py-2.5 lg:py-3 text-xs lg:text-sm' : 'py-3 text-base'} px-5 rounded-lg font-semibold transition-all duration-200 transform mt-auto ${plan.isPopular ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-gray-700 hover:bg-gray-600'} text-white active:scale-95 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none`}
+          >
+            {isPending ? t("processing") : plan.buttonText}
+          </button>
+        </form>
+      )
+    }
+
+    // 有料プランユーザーの場合はStripeビリングポータルに飛ばす
     return (
       <button
         type="button"

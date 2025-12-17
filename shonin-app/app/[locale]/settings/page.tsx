@@ -32,10 +32,13 @@ export default async function SettingsPage({
       <header className="sticky top-0 z-10 backdrop-blur-md bg-background/50 border-b border-white/5">
         <div className="container mx-auto px-4 py-4 flex items-center">
           <Link href={`/${locale}/dashboard`} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/20">
-              <span className="text-white font-bold text-lg">?</span>
-            </div>
-            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Shonin</span>
+          <div className="w-[170px] overflow-hidden bg-transparent">
+            <img 
+              src="/logo.png" 
+              alt="Shonin Logo" 
+              className="w-full h-full object-contain"
+            />
+          </div>
           </Link>
         </div>
       </header>
