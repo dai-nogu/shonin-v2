@@ -50,7 +50,15 @@ export function MonthCalendarView({
   
   // セッションデータの変換（メモ化）
   const sessions = useMemo(() => convertToCalendarSessions(completedSessions), [completedSessions])
-  const days = useMemo(() => getDaysInMonth(currentDate), [currentDate])
+  const allDays = useMemo(() => getDaysInMonth(currentDate), [currentDate])
+  
+  // Freeプランの場合、前月の空白（null）を除外
+  const days = useMemo(() => {
+    if (userPlan === 'free') {
+      return allDays.filter(day => day !== null)
+    }
+    return allDays
+  }, [allDays, userPlan])
   
   // ロケールに応じた年月表示（メモ化）
   const monthName = useMemo(() => 
@@ -140,15 +148,33 @@ export function MonthCalendarView({
                   const daySessions = canView ? getSessionsForDate(day, currentDate, sessions) : []
                   const hasMoreSessions = daySessions.length > 2
 
+                  // スケルトン表示（Freeプランで表示できない過去の日付）
+                  if (day && !canView) {
+                    return (
+                      <div
+                        key={index}
+                        className="h-[70px] md:h-[120px] p-0 md:p-2 rounded-xl transition-colors border border-gray-800/30 bg-gray-900/30 opacity-40 cursor-not-allowed relative overflow-hidden"
+                      >
+                        <div className="mb-1 md:mb-2 flex justify-center md:justify-start">
+                          <span className="text-xs md:text-sm font-medium w-6 h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full text-gray-600">
+                            {day}
+                          </span>
+                        </div>
+                        <div className="space-y-1 px-1">
+                          <div className="h-6 md:h-8 bg-gray-700/50 rounded-md animate-pulse"></div>
+                          <div className="h-6 md:h-8 bg-gray-700/50 rounded-md animate-pulse"></div>
+                        </div>
+                      </div>
+                    )
+                  }
+
                   return (
                     <div
                       key={index}
                       onClick={day && hasMoreSessions && canView ? () => handleDateClick(day, daySessions) : undefined}
                       className={`h-[70px] md:h-[120px] p-0 md:p-2 rounded-xl transition-colors ${
                         day ? `bg-gray-900 border border-gray-800/50` : "bg-gray-950/50"
-                      } ${hasMoreSessions && canView ? "hover:bg-gray-800/80 cursor-pointer" : ""} ${todayCheck ? "relative overflow-hidden" : ""} ${
-                        day && !canView ? "opacity-40" : ""
-                      }`}
+                      } ${hasMoreSessions && canView ? "hover:bg-gray-800/80 cursor-pointer" : ""} ${todayCheck ? "relative overflow-hidden" : ""}`}
                     >
                       {todayCheck && (
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-700/0 via-emerald-700/50 to-emerald-700/0 opacity-50" />

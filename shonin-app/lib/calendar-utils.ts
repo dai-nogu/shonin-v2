@@ -304,7 +304,7 @@ export const canViewDate = (
     return true
   }
   
-  // freeプランの場合: 直近3日のみ表示（一昨日、昨日、今日）
+  // freeプランの場合: 直近1週間（7日間）のみ表示
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
@@ -322,6 +322,6 @@ export const canViewDate = (
   const diffTime = today.getTime() - targetDate.getTime()
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
   
-  // -2から0の範囲（一昨日、昨日、今日）のみ表示可能
-  return diffDays >= 0 && diffDays <= 2
+  // 今日から過去6日間まで（合計7日間：今日を含む1週間）を表示可能
+  return diffDays >= 0 && diffDays <= (planLimits.calendarDaysLimit - 1)
 } 

@@ -84,31 +84,33 @@ export function useCalendarViewMode(props?: UseCalendarViewModeProps) {
         if (direction === "prev") {
           newDate.setDate(newDate.getDate() - 7)
           
-          // Freeプランの場合、週の中に今月の日付が1つでも含まれているかチェック
-          if (!planLimits.hasPastCalendar) {
+          // Freeプランの場合、過去の制限をチェック
+          if (planLimits.calendarDaysLimit) {
             // 週の開始日（日曜日）を計算
             const weekStart = new Date(newDate)
             const dayOfWeek = weekStart.getDay()
             weekStart.setDate(weekStart.getDate() - dayOfWeek)
             
-            // 週の7日間をチェック
-            let hasCurrentMonthDate = false
-            for (let i = 0; i < 7; i++) {
-              const checkDate = new Date(weekStart)
-              checkDate.setDate(weekStart.getDate() + i)
-              checkDate.setHours(0, 0, 0, 0)
-              
-              // 今月の1日以降の日付が含まれているかチェック
-              if (checkDate >= currentMonthStart) {
-                hasCurrentMonthDate = true
-                break
-              }
-            }
+            // 週の終了日（土曜日）を計算
+            const weekEnd = new Date(weekStart)
+            weekEnd.setDate(weekStart.getDate() + 6)
+            weekEnd.setHours(23, 59, 59, 999)
             
-            // 週の中に今月の日付が1つもない場合のみブロック
-            if (!hasCurrentMonthDate) {
-              setShowPlanLimitModal(true)
-              return prevDate // 移動しない
+            // 週の終了日が今日より未来の場合は制限なし（未来から戻ってくる場合）
+            if (weekEnd > today) {
+              // 制限なし、移動可能
+            } else {
+              // 過去の週の場合のみ、制限をチェック
+              // 今日から過去7日間の開始日を計算（今日を含む）
+              const limitDate = new Date(today)
+              limitDate.setDate(limitDate.getDate() - (planLimits.calendarDaysLimit - 1))
+              limitDate.setHours(0, 0, 0, 0)
+              
+              // 週の終了日が制限日より前の場合はブロック
+              if (weekEnd < limitDate) {
+                setShowPlanLimitModal(true)
+                return prevDate // 移動しない
+              }
             }
           }
         } else {

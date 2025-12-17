@@ -141,22 +141,22 @@ export function WeekCalendarView({
                   const canView = canViewDate(day, currentDate, userPlan)
                   const daySessions = canView ? getSessionsForWeekDate(day, sessions) : []
                   
-                  // スケルトン表示の場合
+                  // スケルトン表示の場合（Freeプランで表示できない過去の日付）
                   if (!canView) {
                     return (
                       <div
                         key={index}
-                        className="min-h-[150px] p-0 md:p-3 rounded-lg bg-gray-800 opacity-30 cursor-not-allowed"
+                        className="min-h-[150px] p-0 md:p-3 rounded-xl transition-colors border border-gray-800/30 bg-gray-900/30 opacity-40 cursor-not-allowed relative overflow-hidden"
                       >
-                        <div className="text-center mb-3">
-                          <div className="text-gray-500 text-sm">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
-                          <div className="text-lg font-medium text-gray-600">
+                        <div className="text-center mb-3 flex flex-col items-center">
+                          <div className="text-gray-600 text-sm mb-1">{dayNames[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
+                          <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-medium text-gray-600">
                             {day.getDate()}
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <div className="h-8 bg-gray-700 rounded animate-pulse"></div>
-                          <div className="h-8 bg-gray-700 rounded animate-pulse"></div>
+                          <div className="h-8 bg-gray-700/50 rounded-md animate-pulse"></div>
+                          <div className="h-8 bg-gray-700/50 rounded-md animate-pulse"></div>
                         </div>
                       </div>
                     )
