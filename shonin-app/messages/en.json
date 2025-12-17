@@ -471,14 +471,15 @@
       "goal_label": "Add Goals",
       "calendar_label": "Calendar Display",
       "ai_label": "Letters from Shonin",
-      "recent_3_days": "Last 3 days only",
+      "recent_1_week": "Last 7 days only",
       "current_month_only": "This month only",
       "all_days": "Unlimited History",
       "up_to_1": "1",
       "up_to_3": "3",
       "unlimited": "Unlimited",
-      "monthly_once": "Monthly",
-      "weekly_and_monthly": "Weekly & Monthly"
+      "first_month_only": "1st of month after registration\n(one time only)",
+      "monthly_once": "1st of every month",
+      "weekly_and_monthly": "Every Monday and\n1st of every month"
     },
     "description": "Strength lies in what you don't show",
     "limit_modal": {

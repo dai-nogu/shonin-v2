@@ -18,14 +18,14 @@
 ```typescript
 // Stripe Price IDとプランタイプのマッピング
 export const PRICE_ID_TO_PLAN: Record<string, PlanType> = {
-  'price_1SELBSIaAOyL3ERQzh3nDxnr': 'standard',
+  'price_1SfHdQIaAOyL3ERQKF2Gl2Um': 'standard',
   'price_xxxxxxxxxxxxxxxxxxxxx': 'premium', // ← ここを追加
 } as const;
 
 // プランタイプからStripe Price IDへの逆マッピング
 // Partialを使って未実装のプランをオプショナルに
 export const PLAN_TO_PRICE_ID: Partial<Record<Exclude<PlanType, 'free'>, string>> = {
-  standard: 'price_1SELBSIaAOyL3ERQzh3nDxnr',
+  standard: 'price_1SfHdQIaAOyL3ERQKF2Gl2Um',
   premium: 'price_xxxxxxxxxxxxxxxxxxxxx', // ← コメントを外す
 } as const;
 ```

@@ -355,7 +355,7 @@ function PricingSection() {
               <div className="text-center mb-8">
                 <div className="text-xl font-semibold text-white mb-2">Starter</div>
                 <div className="flex items-baseline justify-center gap-1 mb-2">
-                  <span className="text-5xl font-bold text-white">$4.99</span>
+                  <span className="text-5xl font-bold text-white">$3.99</span>
                   <span className="text-sm text-white font-normal">/month</span>
                 </div>
               </div>
@@ -392,9 +392,9 @@ function PricingSection() {
                 {isYearly ? (
                   <>
                     <div className="flex items-baseline justify-center gap-2 mb-2">
-                      <span className="text-5xl font-bold text-emerald-500">$99.99</span>
+                      <span className="text-5xl font-bold text-emerald-500">$69</span>
                       <span className="text-sm text-white font-normal">/year</span>
-                      <span className="text-lg text-gray-400 line-through">$119.88</span>
+                      <span className="text-lg text-gray-400 line-through">$83.88</span>
                     </div>
                     <div className="inline-block text-xs bg-emerald-700/20 text-emerald-400 px-2.5 py-1 rounded-full font-medium">
                       2ヶ月分お得。
@@ -402,7 +402,7 @@ function PricingSection() {
                   </>
                 ) : (
                   <div className="text-5xl font-bold text-emerald-500 mb-2">
-                    $9.99<span className="text-sm text-white font-normal">/month</span>
+                    $6.99<span className="text-sm text-white font-normal">/month</span>
                   </div>
                 )}
               </div>
@@ -441,9 +441,9 @@ function PricingSection() {
                 {isYearly ? (
                   <>
                     <div className="flex items-baseline justify-center gap-2 mb-2">
-                      <span className="text-5xl font-bold text-white">$149.99</span>
+                      <span className="text-5xl font-bold text-white">$99</span>
                       <span className="text-sm text-white font-normal">/year</span>
-                      <span className="text-lg text-gray-400 line-through">$179.88</span>
+                      <span className="text-lg text-gray-400 line-through">$119.88</span>
                     </div>
                     <div className="inline-block text-xs bg-gray-700/50 text-white px-2.5 py-1 rounded-full font-medium">
                       2ヶ月分お得。
@@ -451,7 +451,7 @@ function PricingSection() {
                   </>
                 ) : (
                   <div className="text-5xl font-bold text-white mb-2">
-                    $14.99<span className="text-sm text-white font-normal">/month</span>
+                    $9.99<span className="text-sm text-white font-normal">/month</span>
                   </div>
                 )}
               </div>

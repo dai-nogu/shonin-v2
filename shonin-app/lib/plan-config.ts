@@ -50,7 +50,7 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
     {
       id: "starter",
       name: "starter",
-      price: "$4.99",
+      price: "$3.99",
       priceLabel: "per_month",
       priceId: PLAN_PRICE_IDS.starter.monthly,
       features: [],
@@ -62,10 +62,10 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
     {
       id: "standard",
       name: "standard", 
-      price: "$9.99",
+      price: "$6.99",
       priceLabel: "per_month",
       priceId: PLAN_PRICE_IDS.standard.monthly,
-      yearlyPrice: "$99.99",
+      yearlyPrice: "$69",
       yearlyPriceLabel: "per_year",
       yearlyPriceId: PLAN_PRICE_IDS.standard.yearly,
       features: [],
@@ -77,10 +77,10 @@ export function getPlanConfigs(userPlan: PlanType = 'free'): Plan[] {
     {
       id: "premium",
       name: "premium",
-      price: "$14.99",
+      price: "$9.99",
       priceLabel: "per_month",
       priceId: PLAN_PRICE_IDS.premium.monthly,
-      yearlyPrice: "$149.99",
+      yearlyPrice: "$99",
       yearlyPriceLabel: "per_year",
       yearlyPriceId: PLAN_PRICE_IDS.premium.yearly,
       features: [],
@@ -107,7 +107,7 @@ export const planConfig = {
     },
     {
       label: "features.calendar_label",
-      free: "features.recent_3_days",
+      free: "features.recent_1_week",
       starter: "features.current_month_only",
       standard: "features.all_days",
       premium: "features.all_days",
@@ -115,7 +115,7 @@ export const planConfig = {
     {
       label: "features.ai_label",
       free: false,
-      starter: false,
+      starter: "features.first_month_only",
       standard: "features.monthly_once",
       premium: "features.weekly_and_monthly",
     },

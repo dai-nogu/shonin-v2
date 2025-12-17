@@ -467,14 +467,15 @@
       "goal_label": "目標追加",
       "calendar_label": "カレンダー表示",
       "ai_label": "Shoninからの手紙",
-      "recent_3_days": "直近3日のみ",
+      "recent_1_week": "直近1週間のみ",
       "current_month_only": "当月のみ",
       "all_days": "全期間",
       "up_to_1": "1つ",
       "up_to_3": "3つ",
       "unlimited": "無制限",
-      "monthly_once": "毎月1回",
-      "weekly_and_monthly": "毎週1回、毎月1回"
+      "first_month_only": "登録翌月の1日のみ",
+      "monthly_once": "毎月1日",
+      "weekly_and_monthly": "毎週月曜日と\n毎月1日"
     },
     "description": "見せないことが自分を強くします",
     "limit_modal": {

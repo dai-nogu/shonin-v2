@@ -75,6 +75,43 @@ export async function GET(request: NextRequest) {
     // 各ユーザーに対してフィードバックを生成
     for (const user of users.users) {
       try {
+        // ユーザーのプラン情報を取得
+        const { data: userData } = await supabase
+          .from('users')
+          .select('subscription_status, created_at')
+          .eq('id', user.id)
+          .single()
+        
+        const userPlan = userData?.subscription_status || 'free'
+        const userCreatedAt = userData?.created_at ? new Date(userData.created_at) : null
+        
+        // Starterプランの場合、登録月の翌月のみフィードバックを生成
+        if (userPlan === 'starter' && userCreatedAt) {
+          const now = new Date()
+          const userCreatedYear = userCreatedAt.getFullYear()
+          const userCreatedMonth = userCreatedAt.getMonth()
+          const currentYear = now.getFullYear()
+          const currentMonth = now.getMonth()
+          
+          // 登録月の翌月かどうかを判定
+          const registrationNextMonth = new Date(userCreatedYear, userCreatedMonth + 1)
+          const isRegistrationNextMonth = 
+            currentYear === registrationNextMonth.getFullYear() && 
+            currentMonth === registrationNextMonth.getMonth()
+          
+          // 登録月の翌月でない場合はスキップ
+          if (!isRegistrationNextMonth) {
+            results.skipped++
+            continue
+          }
+        }
+        
+        // Freeプランの場合はスキップ
+        if (userPlan === 'free') {
+          results.skipped++
+          continue
+        }
+        
         // このユーザーの対象期間のセッションを取得（暗号化されたデータを復号化するビューを使用）
         const { data: sessions, error: sessionsError } = await supabase
           .from('decrypted_session')

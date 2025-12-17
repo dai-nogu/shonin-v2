@@ -19,35 +19,35 @@ export type BillingCycle = 'monthly' | 'yearly';
 
 // Stripe Price IDとプランタイプのマッピング
 export const PRICE_ID_TO_PLAN: Record<string, PlanType> = {
-  'price_1SeyN5IaAOyL3ERQgumk1eWo': 'starter', // 月額
-  'price_1SELBSIaAOyL3ERQzh3nDxnr': 'standard', // 月額
-  'price_1SabtaIaAOyL3ERQmoX2SwRo': 'standard', // 年額
-  'price_1SeyR7IaAOyL3ERQ5CryLlzk': 'premium', // 月額
-  'price_1SeySPIaAOyL3ERQA086JfQz': 'premium', // 年額
+  'price_1SfHT5IaAOyL3ERQLQO5ZoQ9': 'starter', // 月額
+  'price_1SfHdQIaAOyL3ERQKF2Gl2Um': 'standard', // 月額
+  'price_1SfHgIIaAOyL3ERQfGKHmBqr': 'standard', // 年額
+  'price_1SfHebIaAOyL3ERQwNIXrwXc': 'premium', // 月額
+  'price_1SfHhYIaAOyL3ERQsitxjg5L': 'premium', // 年額
 } as const;
 
 // プランタイプ・課金サイクル別のStripe Price ID
 export const PLAN_PRICE_IDS: Record<Exclude<PlanType, 'free'>, Record<BillingCycle, string>> = {
   starter: {
-    monthly: 'price_1SeyN5IaAOyL3ERQgumk1eWo',
+    monthly: 'price_1SfHT5IaAOyL3ERQLQO5ZoQ9',
     yearly: '', // Starterプランは月額のみ
   },
   standard: {
-    monthly: 'price_1SELBSIaAOyL3ERQzh3nDxnr',
-    yearly: 'price_1SabtaIaAOyL3ERQmoX2SwRo',
+    monthly: 'price_1SfHdQIaAOyL3ERQKF2Gl2Um',
+    yearly: 'price_1SfHgIIaAOyL3ERQfGKHmBqr',
   },
   premium: {
-    monthly: 'price_1SeyR7IaAOyL3ERQ5CryLlzk',
-    yearly: 'price_1SeySPIaAOyL3ERQA086JfQz',
+    monthly: 'price_1SfHebIaAOyL3ERQwNIXrwXc',
+    yearly: 'price_1SfHhYIaAOyL3ERQsitxjg5L',
   },
 } as const;
 
 // プランタイプからStripe Price IDへの逆マッピング（月額のデフォルト値）
 // Partialを使って未実装のプランをオプショナルに
 export const PLAN_TO_PRICE_ID: Partial<Record<Exclude<PlanType, 'free'>, string>> = {
-  starter: 'price_1SeyN5IaAOyL3ERQgumk1eWo',
-  standard: 'price_1SELBSIaAOyL3ERQzh3nDxnr',
-  premium: 'price_1SeyR7IaAOyL3ERQ5CryLlzk',
+  starter: 'price_1SfHT5IaAOyL3ERQLQO5ZoQ9',
+  standard: 'price_1SfHdQIaAOyL3ERQKF2Gl2Um',
+  premium: 'price_1SfHebIaAOyL3ERQwNIXrwXc',
 } as const;
 
 /**
@@ -91,13 +91,13 @@ export const PLAN_LIMITS = {
     hasAIFeedback: false,
     hasAIPlaceholder: false, // セッション振り返りのAIプレースホルダー
     hasPastCalendar: false,
-    calendarDaysLimit: 3, // 直近3日のみ（一昨日、昨日、今日）
+    calendarDaysLimit: 7, // 直近1週間のみ
     hasAdvancedAnalytics: false,
   },
   starter: {
     maxGoals: 1,
     maxActivities: 3,
-    hasAIFeedback: false,
+    hasAIFeedback: false, // 初月のみ（表示側で判定）
     hasAIPlaceholder: true, // セッション振り返りのAIプレースホルダー
     hasPastCalendar: false, // 当月のみ
     calendarDaysLimit: null, // 当月制限はhasPastCalendarで判定

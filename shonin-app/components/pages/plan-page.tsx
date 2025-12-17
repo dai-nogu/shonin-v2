@@ -73,9 +73,9 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
     let originalYearlyPrice = null;
     if (isYearly) {
       if (plan.id === 'standard') {
-        originalYearlyPrice = '$119.88'; // $9.99 × 12
+        originalYearlyPrice = '$83.88'; // $6.99 × 12
       } else if (plan.id === 'premium') {
-        originalYearlyPrice = '$179.88'; // $14.99 × 12
+        originalYearlyPrice = '$119.88'; // $9.99 × 12
       }
     }
     

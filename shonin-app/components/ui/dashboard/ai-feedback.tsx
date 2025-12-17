@@ -49,14 +49,57 @@ const DEV_MOCK_DATA = {
 
 export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   const t = useTranslations()
-  const { userPlan, loading: subscriptionLoading } = useSubscriptionContext()
+  const { userPlan, loading: subscriptionLoading, subscriptionInfo } = useSubscriptionContext()
   const planLimits = getPlanLimits(userPlan)
+  
+  // Starterプランの初月判定（登録月の翌月のみ）
+  const [isStarterFirstMonth, setIsStarterFirstMonth] = useState(false)
+  const [isCheckingStarterStatus, setIsCheckingStarterStatus] = useState(true)
+  
+  useEffect(() => {
+    const checkStarterFirstMonth = async () => {
+      if (userPlan !== 'starter') {
+        setIsStarterFirstMonth(false)
+        setIsCheckingStarterStatus(false)
+        return
+      }
+      
+      try {
+        const response = await fetch('/api/user/created-at')
+        if (response.ok) {
+          const data = await response.json()
+          const createdAt = new Date(data.createdAt)
+          const now = new Date()
+          
+          const userCreatedYear = createdAt.getFullYear()
+          const userCreatedMonth = createdAt.getMonth()
+          const currentYear = now.getFullYear()
+          const currentMonth = now.getMonth()
+          
+          // 登録月の翌月かどうかを判定
+          const registrationNextMonth = new Date(userCreatedYear, userCreatedMonth + 1)
+          const isRegistrationNextMonth = 
+            currentYear === registrationNextMonth.getFullYear() && 
+            currentMonth === registrationNextMonth.getMonth()
+          
+          setIsStarterFirstMonth(isRegistrationNextMonth)
+        }
+      } catch (error) {
+        console.error('Failed to check starter first month:', error)
+        setIsStarterFirstMonth(false)
+      } finally {
+        setIsCheckingStarterStatus(false)
+      }
+    }
+    
+    checkStarterFirstMonth()
+  }, [userPlan])
   
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   
-  // Standardプランは月次のみ、Premiumプランは週次・月次
-  const initialFeedbacks = userPlan === 'standard'
+  // Starter・Standardプランは月次のみ、Premiumプランは週次・月次
+  const initialFeedbacks = (userPlan === 'standard' || userPlan === 'starter')
     ? [{ type: t('ai_feedback.monthly'), date: "", message: t('ai_feedback.monthly_default_message') }]
     : [
         { type: t('ai_feedback.weekly'), date: "", message: t('ai_feedback.weekly_default_message') },
@@ -81,7 +124,13 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
   // フィードバックを取得
   useEffect(() => {
     const loadFeedbacks = async () => {
-      if (!planLimits.hasAIFeedback) return
+      // Starterプランの初月判定が完了するまで待つ
+      if (userPlan === 'starter' && isCheckingStarterStatus) return
+      
+      // Starterプランで初月を過ぎている場合は取得しない
+      if (userPlan === 'starter' && !isStarterFirstMonth) return
+      
+      if (!planLimits.hasAIFeedback && !(userPlan === 'starter' && isStarterFirstMonth)) return
       
       const USE_DEV_FILE = process.env.NODE_ENV === 'development'
       
@@ -91,8 +140,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           if (response.ok) {
             const devData = await response.json()
             
-            // Standardプランは月次のみ、Premiumプランは週次・月次
-            const feedbackList = userPlan === 'standard' 
+            // Starter・Standardプランは月次のみ、Premiumプランは週次・月次
+            const feedbackList = (userPlan === 'standard' || userPlan === 'starter') 
               ? [
                   { 
                     type: t('ai_feedback.monthly'), 
@@ -120,8 +169,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
           clientLogger.warn('dev-feedback.jsonの読み込みに失敗、モックデータを使用します')
         }
         
-        // Standardプランは月次のみ、Premiumプランは週次・月次
-        const feedbackList = userPlan === 'standard'
+        // Starter・Standardプランは月次のみ、Premiumプランは週次・月次
+        const feedbackList = (userPlan === 'standard' || userPlan === 'starter')
           ? [
               { 
                 type: t('ai_feedback.monthly'), 
@@ -149,8 +198,8 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       // 本番環境
       const monthlyData = await getMonthlyFeedback()
       
-      // Standardプランは月次のみ、Premiumプランは週次・月次
-      if (userPlan === 'standard') {
+      // Starter・Standardプランは月次のみ、Premiumプランは週次・月次
+      if (userPlan === 'standard' || userPlan === 'starter') {
         setFeedbacks([
           { 
             type: t('ai_feedback.monthly'), 
@@ -184,13 +233,16 @@ export function AIFeedback({ completedSessions }: AIFeedbackProps) {
       
       return () => clearInterval(interval)
     }
-  }, [planLimits.hasAIFeedback, getWeeklyFeedback, getMonthlyFeedback, t, userPlan])
+  }, [planLimits.hasAIFeedback, getWeeklyFeedback, getMonthlyFeedback, t, userPlan, isStarterFirstMonth, isCheckingStarterStatus])
   
-  if (subscriptionLoading) {
+  if (subscriptionLoading || isCheckingStarterStatus) {
     return <AIFeedbackSkeleton />
   }
   
-  if (!planLimits.hasAIFeedback) {
+  // Starterプランの場合、初月のみ表示
+  const shouldShowFeedback = planLimits.hasAIFeedback || (userPlan === 'starter' && isStarterFirstMonth)
+  
+  if (!shouldShowFeedback) {
     return <AIFeedbackUpgradePrompt />
   }
 
