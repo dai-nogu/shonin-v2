@@ -182,7 +182,7 @@ export const PlanCard = memo(function PlanCard({
                         <Minus className="w-4 h-4 text-gray-300" />
                       )
                     ) : (
-                      <span className={`text-sm font-semibold whitespace-pre-line ${
+                      <span className={`text-sm font-semibold whitespace-pre-line text-right ${
                         plan.id === 'premium' 
                           ? "text-white" 
                           : plan.isPopular 
