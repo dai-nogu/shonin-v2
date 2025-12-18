@@ -593,5 +593,86 @@
     "description": {
       "too_big": "説明は1000文字以内で入力してください"
     }
+  },
+  "email": {
+    "subject": {
+      "welcome": "ようこそ！",
+      "welcome_back": "おかえりなさい！",
+      "goodbye": "ご利用ありがとうございました",
+      "upgrade": "{planName}プランへようこそ！",
+      "downgrade_scheduled": "プラン変更のお知らせ",
+      "downgrade": "{planName}プランに変更されました"
+    },
+    "auth": {
+      "welcome": {
+        "title": "{firstName}さん、ようこそ",
+        "line1": "ご登録ありがとうございます。",
+        "line2": "世界中の同志と共に孤独な努力を続けましょう。",
+        "line3": "私たちは、あなたの努力の証人です。"
+      },
+      "welcome_back": {
+        "title": "{firstName}さん、おかえりなさい！",
+        "line1": "おかえりなさい！",
+        "line2": "引き続き、あなたの努力と成長を記録していきましょう。",
+        "line3": "私たちは、あなたの努力の証人です。"
+      },
+      "goodbye": {
+        "title": "{firstName}さん、ご利用ありがとうございました",
+        "line1": "もし、また頑張りたいことができたときは、いつでも戻ってきてください。",
+        "line2": "私たちは、いつでもあなたの努力の証人になります。",
+        "line3": "今までの頑張り、お疲れ様でした。"
+      }
+    },
+    "subscription": {
+      "upgrade": {
+        "title": "{firstName}さん、{planName}プランへようこそ",
+        "line1": "{planName}プランへのアップグレードが完了しました。",
+        "line2": "{description}",
+        "line3": "ここは、世界中の同志と気配でつながる場所です。"
+      },
+      "downgrade_scheduled": {
+        "title": "{firstName}さん、プラン変更のお知らせです",
+        "line1": "ダウングレードの変更を承りました。",
+        "line2": "{changeDate}に{planName}プランに変更されます。",
+        "line3": "それまでは引き続き、現在の{currentPlanName}プランの全機能をご利用いただけます。"
+      },
+      "downgrade": {
+        "title": "{firstName}さん、{planName}プランに変更されました",
+        "line1": "プランを{planName}プランに変更いたしました。",
+        "line2": "{description}：",
+        "line3_non_free": "どうしても一人に耐えられなくなったら、いつでも戻ってきてくださいね。",
+        "line3_free": "再度{previousPlanName}プランが必要になった場合は、いつでもアップグレードできます。"
+      },
+      "plan_features": {
+        "starter": {
+          "description": "主な機能はこちら",
+          "feature1": "孤独な努力の記録",
+          "feature2": "当月のみのカレンダー表示",
+          "feature3": "1つの目標設定"
+        },
+        "standard": {
+          "description": "主な機能はこちら",
+          "feature1": "孤独な努力の記録",
+          "feature2": "全期間のカレンダー表示",
+          "feature3": "3つの目標設定",
+          "feature4": "月1回のShoninからの手紙"
+        },
+        "premium": {
+          "description": "主な機能はこちら",
+          "feature1": "孤独な努力の記録",
+          "feature2": "全期間のカレンダー表示",
+          "feature3": "無制限の目標設定",
+          "feature4": "週1回、月1回のShoninからの手紙"
+        },
+        "free": {
+          "description": "静寂の中で孤独な努力を続けましょう。",
+          "feature1": "孤独な努力の記録",
+          "feature2": "直近1週間のカレンダー表示"
+        }
+      }
+    },
+    "footer": {
+      "tagline": "See the unseen."
+    }
   }
 } 

@@ -5,6 +5,7 @@
 
 import { AuthEmailTemplate } from '@/components/emails/auth-email-template';
 import { SubscriptionEmailTemplate } from '@/components/emails/subscription-email-template';
+import { getEmailMessage } from './email-i18n';
 import { Resend } from 'resend';
 import React from 'react';
 
@@ -17,6 +18,7 @@ const EMAIL_FROM = 'Shonin <no-reply@account-shonin.com>';
 export type EmailCategory = 'auth' | 'subscription';
 export type AuthEmailType = 'welcome' | 'welcome_back' | 'goodbye';
 export type SubscriptionEmailType = 'upgrade' | 'downgrade' | 'downgrade_scheduled';
+export type EmailLocale = 'ja' | 'en';
 
 export interface SendEmailParams {
   email: string;
@@ -27,6 +29,7 @@ export interface SendEmailParams {
   previousPlanName?: string; // アップグレード元/ダウングレード元のプラン名
   currentPlanName?: string;
   changeDate?: string;
+  locale?: EmailLocale; // ロケール (デフォルト: 'en')
 }
 
 export interface SendEmailResult {
@@ -43,19 +46,21 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
   try {
     const { 
       email, 
-      firstName = 'ユーザー', 
+      firstName = 'User', 
       emailCategory, 
       emailType,
       planName,
       previousPlanName,
       currentPlanName,
       changeDate,
+      locale = 'en',
     } = params;
 
     console.log('=== メール送信処理開始 ===');
     console.log('送信先:', email);
     console.log('カテゴリ:', emailCategory);
     console.log('メールタイプ:', emailType);
+    console.log('ロケール:', locale);
 
     if (!email) {
       console.error('エラー: メールアドレスが提供されていません');
@@ -68,41 +73,18 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
     if (emailCategory === 'auth') {
       const authType = emailType as AuthEmailType;
       
-      switch (authType) {
-        case 'welcome':
-          subject = 'ようこそ！';
-          break;
-        case 'welcome_back':
-          subject = 'おかえりなさい！';
-          break;
-        case 'goodbye':
-          subject = 'ご利用ありがとうございました';
-          break;
-        default:
-          subject = 'お知らせ';
-      }
+      subject = getEmailMessage(locale, `email.subject.${authType}`, { planName: planName || '' });
 
       emailTemplate = AuthEmailTemplate({ 
         firstName, 
-        emailType: authType 
+        emailType: authType,
+        locale
       });
 
     } else if (emailCategory === 'subscription') {
       const subType = emailType as SubscriptionEmailType;
       
-      switch (subType) {
-        case 'upgrade':
-          subject = `${planName || 'Standard'}プランへようこそ！`;
-          break;
-        case 'downgrade_scheduled':
-          subject = 'プラン変更のお知らせ';
-          break;
-        case 'downgrade':
-          subject = `${planName || 'Free'}プランに変更されました`;
-          break;
-        default:
-          subject = 'プラン変更のお知らせ';
-      }
+      subject = getEmailMessage(locale, `email.subject.${subType}`, { planName: planName || '' });
 
       emailTemplate = SubscriptionEmailTemplate({ 
         firstName, 
@@ -110,7 +92,8 @@ export async function sendEmailInternal(params: SendEmailParams): Promise<SendEm
         planName,
         previousPlanName,
         currentPlanName,
-        changeDate
+        changeDate,
+        locale
       });
 
     } else {

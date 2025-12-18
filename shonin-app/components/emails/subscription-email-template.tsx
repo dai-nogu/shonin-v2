@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getEmailMessage } from '@/lib/email-i18n';
 
 interface SubscriptionEmailTemplateProps {
   firstName: string;
@@ -7,44 +8,8 @@ interface SubscriptionEmailTemplateProps {
   previousPlanName?: string; // アップグレード元/ダウングレード元のプラン名
   currentPlanName?: string; // downgrade_scheduled用: 現在のプラン名
   changeDate?: string; // downgrade_scheduled用: 変更予定日
+  locale?: 'ja' | 'en';
 }
-
-// プラン別の機能リスト
-const PLAN_FEATURES: Record<string, { features: string[]; description: string }> = {
-  Starter: {
-    description: '基本的な機能であなたを見守ります。',
-    features: [
-      '① 孤独な努力の記録',
-      '② 当月のみのカレンダー表示',
-      '③ 1つの目標設定',
-    ],
-  },
-  Standard: {
-    description: '基本的な機能 + Shoninからの手紙であなたを見守ります。',
-    features: [
-      '① 孤独な努力の記録',
-      '② 全期間のカレンダー表示',
-      '③ 3つの目標設定',
-      '④ 月1回のShoninからの手紙',
-    ],
-  },
-  Premium: {
-    description: 'Shoninの持てる全てであなたを見守ります。',
-    features: [
-      '① 孤独な努力の記録',
-      '② 全期間のカレンダー表示',
-      '③ 無制限の目標設定',
-      '④ 週1回、月1回のShoninからの手紙',
-    ],
-  },
-  Free: {
-    description: '静寂の中で孤独な努力を続けましょう。',
-    features: [
-      '① 孤独な努力の記録',
-      '② 直近1週間のカレンダー表示',
-    ],
-  },
-};
 
 export function SubscriptionEmailTemplate({ 
   firstName, 
@@ -52,89 +17,111 @@ export function SubscriptionEmailTemplate({
   planName = 'Standard', 
   previousPlanName,
   currentPlanName,
-  changeDate 
+  changeDate,
+  locale = 'ja'
 }: SubscriptionEmailTemplateProps) {
-  const planFeatures = PLAN_FEATURES[planName] || PLAN_FEATURES.Standard;
+  const t = (key: string, replacements?: Record<string, string>) => 
+    getEmailMessage(locale, key, replacements);
+
+  // プラン名を小文字に変換してキーとして使用
+  const planKey = planName.toLowerCase();
+  
+  // プランの説明を取得
+  const getPlanDescription = () => {
+    return t(`email.subscription.plan_features.${planKey}.description`);
+  };
+  
+  // プランの機能リストを取得
+  const getPlanFeatures = () => {
+    const features = [];
+    let index = 1;
+    while (true) {
+      const featureKey = `email.subscription.plan_features.${planKey}.feature${index}`;
+      const feature = t(featureKey);
+      if (feature === featureKey) break; // 翻訳が見つからない場合は終了
+      features.push(feature);
+      index++;
+    }
+    return features;
+  };
+  
+  const planDescription = getPlanDescription();
+  const planFeatures = getPlanFeatures();
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       {emailType === 'upgrade' && (
         <>
-          <h1 style={{ color: '#333' }}>{firstName}さん、{planName}プランへようこそ</h1>
+          <h1 style={{ color: '#333' }}>
+            {t('email.subscription.upgrade.title', { firstName, planName })}
+          </h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            {planName}プランへのアップグレードが完了しました。
+            {t('email.subscription.upgrade.line1', { planName })}
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            {planFeatures.description}：
+            {t('email.subscription.upgrade.line2', { description: planDescription })}
           </p>
           <ul style={{ fontSize: '16px', lineHeight: '1.8', color: '#555' }}>
-            {planFeatures.features.map((feature, index) => (
+            {planFeatures.map((feature, index) => (
               <li key={index}>{feature}</li>
             ))}
           </ul>
-          <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            世界中の同志と共に孤独な努力を続けましょう。
-          </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555', marginTop: '30px' }}>
-            引き続き、{firstName}さんの努力を見守っています。
+            {t('email.subscription.upgrade.line3', { firstName })}
           </p>
         </>
       )}
       
       {emailType === 'downgrade_scheduled' && (
         <>
-          <h1 style={{ color: '#333' }}>{firstName}さん、プラン変更のお知らせです</h1>
+          <h1 style={{ color: '#333' }}>
+            {t('email.subscription.downgrade_scheduled.title', { firstName })}
+          </h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            サブスクリプションのキャンセルを承りました。
+            {t('email.subscription.downgrade_scheduled.line1')}
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555', fontWeight: 'bold' }}>
-            {changeDate}に{planName}プランに変更されます。
+            {t('email.subscription.downgrade_scheduled.line2', { changeDate: changeDate || '', planName })}
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            それまでは引き続き、現在の{currentPlanName}プランの全機能をご利用いただけます。
-          </p>
-          <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #eee' }} />
-          <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#888' }}>
-            変更後も基本機能は引き続きご利用いただけます。もし再度{currentPlanName}プランが必要になった場合は、いつでもアップグレードできます。
+            {t('email.subscription.downgrade_scheduled.line3', { currentPlanName: currentPlanName || '' })}
           </p>
         </>
       )}
       
       {emailType === 'downgrade' && (
         <>
-          <h1 style={{ color: '#333' }}>{firstName}さん、{planName}プランに変更されました</h1>
+          <h1 style={{ color: '#333' }}>
+            {t('email.subscription.downgrade.title', { firstName, planName })}
+          </h1>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            プランを{planName}プランに変更いたしました。
+            {t('email.subscription.downgrade.line1', { planName })}
           </p>
           <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-            {planFeatures.description}：
+            {t('email.subscription.downgrade.line2', { description: planDescription })}
           </p>
           <ul style={{ fontSize: '16px', lineHeight: '1.8', color: '#555' }}>
-            {planFeatures.features.map((feature, index) => (
+            {planFeatures.map((feature, index) => (
               <li key={index}>{feature}</li>
             ))}
           </ul>
           {planName !== 'Free' && (
             <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-              どうしても一人に耐えられなくなったら、いつでも戻ってきてくださいね。
+              {t('email.subscription.downgrade.line3_non_free')}
             </p>
           )}
           {planName === 'Free' && previousPlanName && (
             <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
-              再度{previousPlanName}プランが必要になった場合は、いつでもアップグレードできます。
+              {t('email.subscription.downgrade.line3_free', { previousPlanName })}
             </p>
           )}
-          <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555', marginTop: '30px' }}>
-            引き続き、{firstName}さんの努力を見守っています。
-          </p>
         </>
       )}
       
       <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #eee' }} />
       <p style={{ fontSize: '14px', color: '#888', textAlign: 'center' }}>
-        Be a witness to your growth.
+        {t('email.footer.tagline')}
       </p>
     </div>
   );
 }
-

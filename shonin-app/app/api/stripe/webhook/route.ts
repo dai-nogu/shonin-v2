@@ -270,16 +270,17 @@ async function handleCheckoutCompleted(
 
     // アップグレードメールを送信（新規購入時）
     try {
-      // ユーザー情報を取得
+      // ユーザー情報を取得（localeも含む）
       const { data: userData } = await supabaseAdmin
         .from('users')
-        .select('email, name')
+        .select('email, name, locale')
         .eq('id', userId)
         .single();
 
       if (userData?.email) {
-        const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+        const firstName = userData.name || userData.email.split('@')[0] || 'User';
         const planName = getPlanDisplayName(subscriptionStatus);
+        const userLocale = (userData.locale || 'en') as 'ja' | 'en';
 
         stripeLog('アップグレードメールを送信します', { email: userData.email, plan: planName });
 
@@ -290,6 +291,7 @@ async function handleCheckoutCompleted(
           emailType: 'upgrade',
           planName: planName,
           previousPlanName: 'Free',
+          locale: userLocale,
         });
 
         if (emailResult.success) {
@@ -468,12 +470,13 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
           try {
             const { data: userData } = await supabaseAdmin
               .from('users')
-              .select('email, name')
+              .select('email, name, locale')
               .eq('id', userId)
               .single();
 
             if (userData?.email) {
-              const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+              const firstName = userData.name || userData.email.split('@')[0] || 'User';
+              const userLocale = (userData.locale || 'en') as 'ja' | 'en';
               
               if (planChange === 'upgrade') {
                 // アップグレードメール
@@ -490,6 +493,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
                   emailType: 'upgrade',
                   planName: newPlanName,
                   previousPlanName: previousPlanName,
+                  locale: userLocale,
                 });
 
                 if (emailResult.success) {
@@ -512,6 +516,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
                   emailType: 'downgrade',
                   planName: newPlanName,
                   previousPlanName: previousPlanName,
+                  locale: userLocale,
                 });
 
                 if (emailResult.success) {
@@ -541,14 +546,15 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
           if (!wasCancelScheduledBefore && cancelAtPeriodEnd) {
             const { data: userData } = await supabaseAdmin
               .from('users')
-              .select('email, name')
+              .select('email, name, locale')
               .eq('id', userId)
               .single();
 
             if (userData?.email && periodEnd) {
-              const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+              const firstName = userData.name || userData.email.split('@')[0] || 'User';
+              const userLocale = (userData.locale || 'en') as 'ja' | 'en';
               const currentPlanName = getPlanDisplayName(subscriptionStatus);
-              const changeDate = new Date(periodEnd * 1000).toLocaleDateString('ja-JP', {
+              const changeDate = new Date(periodEnd * 1000).toLocaleDateString(userLocale === 'en' ? 'en-US' : 'ja-JP', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -564,6 +570,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
                 planName: 'Free',
                 currentPlanName: currentPlanName,
                 changeDate: changeDate,
+                locale: userLocale,
               });
 
               if (emailResult.success) {
@@ -687,15 +694,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
     // ダウングレードメールを送信（有料プランからFreeへ）
     try {
-      // ユーザー情報を取得
+      // ユーザー情報を取得（localeも含む）
       const { data: userData } = await supabaseAdmin
         .from('users')
-        .select('email, name')
+        .select('email, name, locale')
         .eq('id', userId)
         .single();
 
       if (userData?.email) {
-        const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+        const firstName = userData.name || userData.email.split('@')[0] || 'User';
+        const userLocale = (userData.locale || 'en') as 'ja' | 'en';
 
         console.log('ダウングレードメールを送信します:', userData.email, `(${previousPlanName} → Free)`);
 
@@ -706,6 +714,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
           emailType: 'downgrade',
           planName: 'Free',
           previousPlanName: previousPlanName,
+          locale: userLocale,
         });
 
         if (emailResult.success) {
@@ -934,15 +943,16 @@ async function handleSubscriptionSchedule(schedule: Stripe.SubscriptionSchedule)
     try {
       const { data: userData } = await supabaseAdmin
         .from('users')
-        .select('email, name')
+        .select('email, name, locale')
         .eq('id', userId)
         .single();
 
       if (userData?.email && nextPlanType) {
-        const firstName = userData.name || userData.email.split('@')[0] || 'ユーザー';
+        const firstName = userData.name || userData.email.split('@')[0] || 'User';
+        const userLocale = (userData.locale || 'en') as 'ja' | 'en';
         const currentPlanName = currentPlanType ? getPlanDisplayName(currentPlanType) : 'Current';
         const nextPlanName = getPlanDisplayName(nextPlanType);
-        const changeDateStr = new Date(changeDate * 1000).toLocaleDateString('ja-JP', {
+        const changeDateStr = new Date(changeDate * 1000).toLocaleDateString(userLocale === 'en' ? 'en-US' : 'ja-JP', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
@@ -963,6 +973,7 @@ async function handleSubscriptionSchedule(schedule: Stripe.SubscriptionSchedule)
           planName: nextPlanName,
           currentPlanName: currentPlanName,
           changeDate: changeDateStr,
+          locale: userLocale,
         });
 
         if (emailResult.success) {

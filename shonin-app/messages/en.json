@@ -597,5 +597,86 @@
     "description": {
       "too_big": "Description must be 1000 characters or less"
     }
+  },
+  "email": {
+    "subject": {
+      "welcome": "Welcome!",
+      "welcome_back": "Welcome back!",
+      "goodbye": "Thank you for using our service",
+      "upgrade": "Welcome to the {planName} plan!",
+      "downgrade_scheduled": "Plan change notification",
+      "downgrade": "Your plan has been changed to {planName}"
+    },
+    "auth": {
+      "welcome": {
+        "title": "Welcome, {firstName}",
+        "line1": "Thank you for signing up.",
+        "line2": "Let's continue the solitary work together with comrades from around the world.",
+        "line3": "We are witnesses to your efforts."
+      },
+      "welcome_back": {
+        "title": "Welcome back, {firstName}!",
+        "line1": "Welcome back!",
+        "line2": "Let's continue to record your efforts and growth.",
+        "line3": "We are witnesses to your efforts."
+      },
+      "goodbye": {
+        "title": "Thank you for using our service, {firstName}",
+        "line1": "If you find something you want to work on again, please come back anytime.",
+        "line2": "We will always be witnesses to your efforts.",
+        "line3": "Thank you for all your hard work."
+      }
+    },
+    "subscription": {
+      "upgrade": {
+        "title": "Welcome to the {planName} plan, {firstName}",
+        "line1": "Your upgrade to the {planName} plan is complete.",
+        "line2": "{description}",
+        "line3": "This is a place where you can feel the presence of like-minded people from all over the world."
+      },
+      "downgrade_scheduled": {
+        "title": "{firstName}, notification of plan change",
+        "line1": "We have received your downgrade request.",
+        "line2": "Your plan will change to {planName} on {changeDate}.",
+        "line3": "Until then, you can continue to use all features of your current {currentPlanName} plan."
+      },
+      "downgrade": {
+        "title": "Your plan has been changed to {planName}, {firstName}",
+        "line1": "Your plan has been changed to {planName}.",
+        "line2": "{description}:",
+        "line3_non_free": "If you can't endure being alone, you can always come back.",
+        "line3_free": "If you need the {previousPlanName} plan again, you can upgrade at any time."
+      },
+      "plan_features": {
+        "starter": {
+          "description": "Main features",
+          "feature1": "Record your solitary efforts",
+          "feature2": "Calendar display for current month only",
+          "feature3": "1 goal setting"
+        },
+        "standard": {
+          "description": "Main features",
+          "feature1": "Record your solitary efforts",
+          "feature2": "Calendar display for all periods",
+          "feature3": "3 goal settings",
+          "feature4": "Monthly letter from Shonin"
+        },
+        "premium": {
+          "description": "Main features",
+          "feature1": "Record your solitary efforts",
+          "feature2": "Calendar display for all periods",
+          "feature3": "Unlimited goal settings",
+          "feature4": "Weekly and monthly letters from Shonin"
+        },
+        "free": {
+          "description": "Continue your solitary efforts in silence.",
+          "feature1": "Record your solitary efforts",
+          "feature2": "Calendar display for the last 7 days only"
+        }
+      }
+    },
+    "footer": {
+      "tagline": "See the unseen."
+    }
   }
 } 

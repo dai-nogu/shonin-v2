@@ -11,6 +11,7 @@ import {
   type EmailCategory,
   type AuthEmailType,
   type SubscriptionEmailType,
+  type EmailLocale,
 } from '@/lib/mail';
 
 interface EmailRequestBody {
@@ -21,6 +22,7 @@ interface EmailRequestBody {
   planName?: string;
   currentPlanName?: string;
   changeDate?: string;
+  locale?: EmailLocale;
   isNewUser?: boolean; // 後方互換性用
 }
 
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
       planName,
       currentPlanName,
       changeDate,
+      locale = 'en',
       isNewUser = true 
     } = body;
 
@@ -75,6 +78,7 @@ export async function POST(request: NextRequest) {
       planName,
       currentPlanName,
       changeDate,
+      locale,
     });
 
     if (!result.success) {

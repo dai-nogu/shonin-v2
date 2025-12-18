@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const firstName = user.user_metadata?.full_name || 
                      user.user_metadata?.name || 
                      user.email?.split('@')[0] || 
-                     'ユーザー';
+                     'User';
 
     // ユーザーのサブスクリプション情報を取得
     const { data: subscriptionData, error: subscriptionError } = await supabaseServer
@@ -106,6 +106,14 @@ export async function POST(request: NextRequest) {
     
     // 退会メールを送信（直接関数呼び出し）
     try {
+      // ユーザーのlocale設定を取得（存在しない場合はデフォルトで'en'）
+      const { data: userSettings } = await supabaseServer
+        .from('users')
+        .select('locale')
+        .eq('id', user.id)
+        .single();
+      
+      const userLocale = (userSettings?.locale || 'en') as 'ja' | 'en';
       safeLog('退会メールを送信します', user.email);
       
       const emailResult = await sendEmailInternal({
@@ -113,6 +121,7 @@ export async function POST(request: NextRequest) {
         firstName: firstName,
         emailCategory: 'auth',
         emailType: 'goodbye',
+        locale: userLocale,
       });
 
       if (emailResult.success) {
