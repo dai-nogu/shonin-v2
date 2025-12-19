@@ -632,7 +632,7 @@
       },
       "downgrade_scheduled": {
         "title": "{firstName}さん、プラン変更のお知らせです",
-        "line1": "ダウングレードの変更を承りました。",
+        "line1": "ダウングレードを承りました。",
         "line2": "{changeDate}に{planName}プランに変更されます。",
         "line3": "それまでは引き続き、現在の{currentPlanName}プランの全機能をご利用いただけます。"
       },

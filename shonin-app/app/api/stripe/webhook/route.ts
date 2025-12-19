@@ -922,6 +922,24 @@ async function handleSubscriptionSchedule(schedule: Stripe.SubscriptionSchedule)
       change_date: new Date(changeDate * 1000).toISOString(),
     });
 
+    // ⚠️ 重要: メール送信判定のため、DB更新前に既存のスケジュール情報を取得
+    const { data: existingSchedule } = await supabaseAdmin
+      .from('subscription')
+      .select('scheduled_price_id, scheduled_change_date, stripe_schedule_id')
+      .eq('user_id', userId)
+      .single();
+
+    const isScheduleChanged = 
+      !existingSchedule?.scheduled_price_id || // 新規スケジュール
+      existingSchedule.scheduled_price_id !== nextPriceId || // プラン変更
+      existingSchedule.scheduled_change_date !== new Date(changeDate * 1000).toISOString(); // 日付変更
+
+    console.log('スケジュール変更チェック:', {
+      existing_price_id: existingSchedule?.scheduled_price_id,
+      new_price_id: nextPriceId,
+      is_changed: isScheduleChanged,
+    });
+
     // ダウングレード予約情報をDBに保存
     const { error: updateError } = await supabaseAdmin
       .from('subscription')
@@ -939,51 +957,55 @@ async function handleSubscriptionSchedule(schedule: Stripe.SubscriptionSchedule)
 
     console.log(`Subscription schedule saved for user ${userId}: ${currentPlanType} -> ${nextPlanType} on ${new Date(changeDate * 1000).toISOString()}`);
 
-    // ダウングレード予定メールを送信
-    try {
-      const { data: userData } = await supabaseAdmin
-        .from('users')
-        .select('email, name, locale')
-        .eq('id', userId)
-        .single();
+    // ダウングレード予定メールを送信（スケジュールが変更された場合のみ）
+    if (isScheduleChanged) {
+      try {
+        const { data: userData } = await supabaseAdmin
+          .from('users')
+          .select('email, name, locale')
+          .eq('id', userId)
+          .single();
 
-      if (userData?.email && nextPlanType) {
-        const firstName = userData.name || userData.email.split('@')[0] || 'User';
-        const userLocale = (userData.locale || 'en') as 'ja' | 'en';
-        const currentPlanName = currentPlanType ? getPlanDisplayName(currentPlanType) : 'Current';
-        const nextPlanName = getPlanDisplayName(nextPlanType);
-        const changeDateStr = new Date(changeDate * 1000).toLocaleDateString(userLocale === 'en' ? 'en-US' : 'ja-JP', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+        if (userData?.email && nextPlanType) {
+          const firstName = userData.name || userData.email.split('@')[0] || 'User';
+          const userLocale = (userData.locale || 'en') as 'ja' | 'en';
+          const currentPlanName = currentPlanType ? getPlanDisplayName(currentPlanType) : 'Current';
+          const nextPlanName = getPlanDisplayName(nextPlanType);
+          const changeDateStr = new Date(changeDate * 1000).toLocaleDateString(userLocale === 'en' ? 'en-US' : 'ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
 
-        stripeLog('ダウングレード予約メールを送信します', {
-          email: userData.email,
-          from: currentPlanName,
-          to: nextPlanName,
-          date: changeDateStr,
-        });
+          stripeLog('ダウングレード予約メールを送信します', {
+            email: userData.email,
+            from: currentPlanName,
+            to: nextPlanName,
+            date: changeDateStr,
+          });
 
-        const emailResult = await sendEmailInternal({
-          email: userData.email,
-          firstName: firstName,
-          emailCategory: 'subscription',
-          emailType: 'downgrade_scheduled',
-          planName: nextPlanName,
-          currentPlanName: currentPlanName,
-          changeDate: changeDateStr,
-          locale: userLocale,
-        });
+          const emailResult = await sendEmailInternal({
+            email: userData.email,
+            firstName: firstName,
+            emailCategory: 'subscription',
+            emailType: 'downgrade_scheduled',
+            planName: nextPlanName,
+            currentPlanName: currentPlanName,
+            changeDate: changeDateStr,
+            locale: userLocale,
+          });
 
-        if (emailResult.success) {
-          stripeLog('✓ ダウングレード予約メールを送信しました');
-        } else {
-          safeError('ダウングレード予約メール送信に失敗しました', emailResult.error);
+          if (emailResult.success) {
+            stripeLog('✓ ダウングレード予約メールを送信しました');
+          } else {
+            safeError('ダウングレード予約メール送信に失敗しました', emailResult.error);
+          }
         }
+      } catch (emailError) {
+        safeError('ダウングレード予約メール送信中にエラーが発生', emailError);
       }
-    } catch (emailError) {
-      safeError('ダウングレード予約メール送信中にエラーが発生', emailError);
+    } else {
+      console.log('スケジュール内容が変更されていないため、メール送信をスキップします');
     }
   } catch (error) {
     console.error('Error in handleSubscriptionSchedule:', error);
