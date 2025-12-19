@@ -433,7 +433,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="text-white font-bold truncate text-base lg:text-lg tracking-tight drop-shadow-md">{activity.name}</h3>
+                  <h3 className="text-white font-bold truncate text-base lg:text-lg drop-shadow-md">{activity.name}</h3>
                 </div>
 
                 <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
@@ -595,7 +595,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return (
       <Card className="bg-transparent border-0 shadow-none">
         <CardHeader className="px-0 pt-0 pb-4">
-          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
             <span className="text-[#fffffC]">
               {t('quick_start.start_activity')}
             </span>
@@ -617,7 +617,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       <Card className="bg-transparent border-0 shadow-none">
         <CardHeader className="px-0 pt-0 pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+            <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
               <span className="text-[#fffffC]">
                 {t('quick_start.start_activity')}
               </span>

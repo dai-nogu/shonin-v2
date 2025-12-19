@@ -246,7 +246,7 @@ export function Goals({ initialGoals }: GoalsProps) {
                 <div className="p-6 relative z-10">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-1 tracking-tight">{goal.title}</h3>
+                      <h3 className="text-xl font-bold text-white mb-1">{goal.title}</h3>
                       {goal.motivation && (() => {
                         const dontDoTags = parseDontList(goal.motivation)
                         return dontDoTags.length > 0 && (

@@ -134,7 +134,7 @@ export function DateSessionsModal({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-bold truncate text-base lg:text-lg tracking-tight drop-shadow-md">
+                      <h3 className="text-white font-bold truncate text-base lg:text-lg drop-shadow-md">
                         {session.activity}
                       </h3>
                       <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300 mt-1">

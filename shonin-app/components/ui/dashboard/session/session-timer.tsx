@@ -28,13 +28,13 @@ export const SessionTimer = memo(function SessionTimer({
   return (
     <Card className="backdrop-blur-xl bg-card/50 border-white/10 shadow-2xl rounded-lg">
       <CardHeader className="text-center pb-4">
-        <h2 className="text-4xl font-bold tracking-tight">{activityName}</h2>
+        <h2 className="text-4xl font-bold">{activityName}</h2>
       </CardHeader>
 
       <CardContent className="text-center">
         {/* 経過時間表示 */}
         <div
-          className="text-7xl md:text-8xl font-bold tracking-tighter tabular-nums transition-colors py-4 text-emerald-600"
+          className="text-7xl md:text-8xl font-bold tabular-nums transition-colors py-4 text-emerald-600"
         >
           {formattedTime}
         </div>

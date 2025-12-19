@@ -2,10 +2,15 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Globe } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useParams, useRouter, usePathname } from 'next/navigation'
 
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState('top')
+  const t = useTranslations('marketing')
+  const params = useParams()
+  const locale = params.locale as string
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,7 +43,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen w-full bg-gray-950 text-gray-100">
       {/* 追従ヘッダー */}
-      <Header activeSection={activeSection} scrollToSection={scrollToSection} />
+      <Header activeSection={activeSection} scrollToSection={scrollToSection} locale={locale} />
 
       {/* Hero Section */}
       <HeroSection />
@@ -50,10 +55,10 @@ export default function HomePage() {
       <OriginSection />
 
       {/* Pricing Section */}
-      <PricingSection />
+      <PricingSection locale={locale} />
 
       {/* Footer */}
-      <Footer />
+      <Footer locale={locale} />
     </div>
   )
 }
@@ -61,11 +66,44 @@ export default function HomePage() {
 // ヘッダーコンポーネント
 function Header({ 
   activeSection, 
-  scrollToSection 
+  scrollToSection,
+  locale 
 }: { 
   activeSection: string
-  scrollToSection: (id: string) => void 
+  scrollToSection: (id: string) => void
+  locale: string
 }) {
+  const t = useTranslations('marketing.header')
+  const router = useRouter()
+  const pathname = usePathname()
+  const [showLangMenu, setShowLangMenu] = useState(false)
+  
+  const switchLanguage = (newLocale: string) => {
+    if (!pathname) return
+    const segments = pathname.split('/')
+    segments[1] = newLocale
+    const newPath = segments.join('/')
+    router.push(newPath)
+    setShowLangMenu(false)
+  }
+  
+  // 外部クリックでメニューを閉じる
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showLangMenu) {
+        setShowLangMenu(false)
+      }
+    }
+    
+    if (showLangMenu) {
+      document.addEventListener('click', handleClickOutside)
+    }
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showLangMenu])
+  
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/90 backdrop-blur-sm border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -78,9 +116,6 @@ function Header({
               className="w-full h-full object-contain"
             />
           </div>
-          {/* <div className="text-2xl font-bold text-white tracking-[0.15em]">
-            Shonin
-          </div> */}
         </div>
 
         {/* ナビゲーション */}
@@ -105,13 +140,53 @@ function Header({
           ))}
         </nav>
 
-        {/* ログインボタン */}
-        <Link
-          href="/ja/login"
-          className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 text-sm font-medium tracking-[0.15em]"
-        >
-          ログイン
-        </Link>
+        {/* 右側のボタングループ */}
+        <div className="flex items-center gap-3">
+          {/* 言語切り替えボタン */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowLangMenu(!showLangMenu)
+              }}
+              className="p-2 text-gray-300 hover:text-white transition-colors duration-200"
+              aria-label="言語切り替え"
+            >
+              <Globe className="w-5 h-5" />
+            </button>
+            {showLangMenu && (
+              <div 
+                className="absolute right-0 mt-2 w-32 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => switchLanguage('ja')}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-700 transition-colors ${
+                    locale === 'ja' ? 'bg-gray-700 text-emerald-400' : 'text-gray-300'
+                  }`}
+                >
+                  日本語
+                </button>
+                <button
+                  onClick={() => switchLanguage('en')}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-700 transition-colors ${
+                    locale === 'en' ? 'bg-gray-700 text-emerald-400' : 'text-gray-300'
+                  }`}
+                >
+                  English
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* ログインボタン */}
+          <Link
+            href={`/${locale}/login`}
+            className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 text-sm font-medium tracking-[0.15em]"
+          >
+            {t('login')}
+          </Link>
+        </div>
       </div>
     </header>
   )
@@ -119,14 +194,15 @@ function Header({
 
 // Heroセクション
 function HeroSection() {
+  const t = useTranslations('marketing.hero')
+  
   return (
     <section id="top" className="pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
-      <h1 className="text-5xl md:font-size: 3.5rem; font-bold leading-relaxed text-white">沈黙を愛する努力家たちへ</h1>
-      <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
-      No Chat, No Camera, No Avatar.
-      </p>
-
+        <h1 className="text-5xl md:font-size: 3.5rem; font-bold leading-relaxed text-white">{t('title')}</h1>
+        <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed tracking-[0.15em]">
+          {t('subtitle')}
+        </p>
       </div>
     </section>
   )
@@ -136,13 +212,14 @@ function HeroSection() {
 function ScreenshotSection() {
   const [selectedImage, setSelectedImage] = useState<number | null>(null)
   const [isClosing, setIsClosing] = useState(false)
+  const t = useTranslations('marketing.features')
 
   const handleClose = () => {
     setIsClosing(true)
     setTimeout(() => {
       setSelectedImage(null)
       setIsClosing(false)
-    }, 300) // アニメーション時間と同じ
+    }, 300)
   }
 
   // ESCキーでモーダルを閉じる & スクロールロック
@@ -155,7 +232,6 @@ function ScreenshotSection() {
     
     if (selectedImage !== null) {
       window.addEventListener('keydown', handleEscape)
-      // モーダル開いている間はbodyのスクロールを無効化
       document.body.style.overflow = 'hidden'
     }
     
@@ -167,20 +243,20 @@ function ScreenshotSection() {
 
   const screenshots = [
     {
-      title: 'ひとりだけど独りじゃない',
-      description: 'チャット、カメラ、アバターはない。一人で頑張る世界中の同志の気配を感じ、ひとりで没頭する。',
+      title: t('feature1.title'),
+      description: t('feature1.description'),
       image: '/img/img01.png',
       alt: 'Deep work'
     },
     {
-      title: 'あなたが捨てるもの',
-      description: 'スマホ、娯楽、誘惑などを一時的に断つことでより深い集中が可能になり、目標達成の可能性が高まります。',
+      title: t('feature2.title'),
+      description: t('feature2.description'),
       image: '/img/img02.png',
       alt: 'add Goal'
     },
     {
-      title: 'Shoninからの手紙',
-      description: '一人で頑張るのがどうしても辛い時はShoninからの手紙を受け取ってみてください。あなたの影の頑張りを全て見ています。',
+      title: t('feature3.title'),
+      description: t('feature3.description'),
       image: '/img/img03.png',
       alt: 'Letters'
     }
@@ -189,7 +265,7 @@ function ScreenshotSection() {
   return (
     <section id="features" className="py-24 px-6 bg-gray-900">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-4xl md:text-4xl font-bold pb-24 leading-relaxed text-white text-center">自分に集中するための設計</h2>
+        <h2 className="text-4xl md:text-4xl font-bold pb-24 leading-relaxed text-white text-center">{t('title')}</h2>
         <div className="space-y-24">
           {screenshots.map((screenshot, i) => (
             <div
@@ -209,7 +285,6 @@ function ScreenshotSection() {
                     alt={screenshot.alt}
                     className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
-                      // 画像が読み込めない場合はプレースホルダーを表示
                       e.currentTarget.style.display = 'none'
                       const parent = e.currentTarget.parentElement
                       if (parent) {
@@ -226,7 +301,7 @@ function ScreenshotSection() {
                   {/* ホバー時のオーバーレイ */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                     <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium tracking-[0.15em]">
-                      クリックで拡大
+                      {t('clickToEnlarge')}
                     </span>
                   </div>
                 </div>
@@ -298,19 +373,20 @@ function ScreenshotSection() {
 
 // Originセクション
 function OriginSection() {
+  const t = useTranslations('marketing.about')
+  
   return (
     <section id="about" className="py-20 px-6 bg-gray-950">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-12 text-white">
-        Shonin（証人）とは
+          {t('title')}
         </h2>
         <div className="text-center">
-          {/* 左: Shoninの意味 */}
           <div className="p-5 rounded-2xl border-gray-700 shadow-sm">
-            <p className="text-2xl text-gray-300 max-w-5xl mx-auto leading-relaxed tracking-[0.15em]">
-            誰も見ていないところで人は成長する。<br />
-            Shoninはあなたの努力の証人となる。
-            </p>
+            <p 
+              className="text-2xl text-gray-300 max-w-5xl mx-auto leading-relaxed tracking-[0.15em]"
+              dangerouslySetInnerHTML={{ __html: t('description') }}
+            />
           </div>
         </div>
       </div>
@@ -319,20 +395,21 @@ function OriginSection() {
 }
 
 // Pricingセクション
-function PricingSection() {
-  const [isYearly, setIsYearly] = useState(false) // デフォルトで月額表示
-
+function PricingSection({ locale }: { locale: string }) {
+  const [isYearly, setIsYearly] = useState(false)
+  const t = useTranslations('marketing.pricing')
+  
   return (
     <section id="price" className="py-24 px-6 bg-gray-900">
       <div className="max-w-8xl mx-auto">
         <h2 className="text-4xl font-bold text-center mb-4 text-white">
-          料金プラン
+          {t('title')}
         </h2>
-        <p className="text-center text-gray-400 mb-8">見せないことが自分を強くします</p>
+        <p className="text-center text-gray-400 mb-8">{t('subtitle')}</p>
         
         {/* 年額/月額切り替えボタン */}
         <div className="flex items-center justify-center gap-4 mb-12">
-          <span className={`text-lg ${!isYearly ? 'text-white' : 'text-gray-500'}`}>月額</span>
+          <span className={`text-lg ${!isYearly ? 'text-white' : 'text-gray-500'}`}>{t('monthly')}</span>
           <button
             onClick={() => setIsYearly(!isYearly)}
             className={`relative w-16 h-8 rounded-full transition-colors duration-200 ${
@@ -345,7 +422,7 @@ function PricingSection() {
               }`}
             />
           </button>
-          <span className={`text-lg ${isYearly ? 'text-emerald-400' : 'text-gray-500'}`}>年額</span>
+          <span className={`text-lg ${isYearly ? 'text-emerald-400' : 'text-gray-500'}`}>{t('yearly')}</span>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 max-w-7xl mx-auto">
@@ -353,33 +430,33 @@ function PricingSection() {
           <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 overflow-hidden">
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="text-xl font-semibold text-white mb-2">Starter</div>
+                <div className="text-xl font-semibold text-white mb-2">{t('starter.name')}</div>
                 <div className="flex items-baseline justify-center gap-1 mb-2">
-                  <span className="text-5xl font-bold text-white">$3.99</span>
-                  <span className="text-sm text-white font-normal">/month</span>
+                  <span className="text-5xl font-bold text-white">{t('starter.price_monthly')}</span>
+                  <span className="text-sm text-white font-normal">{t('starter.per_month')}</span>
                 </div>
               </div>
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">目標追加</span>
-                  <span className="text-white font-medium">1つ</span>
+                  <span className="text-white">{t('features.goals')}</span>
+                  <span className="text-white font-medium">{t('starter.goal_limit')}</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">カレンダー表示</span>
-                  <span className="text-white font-medium">当月のみ</span>
+                  <span className="text-white">{t('features.calendar')}</span>
+                  <span className="text-white font-medium">{t('starter.calendar')}</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
-                  <span className="text-white">Shoninからの手紙</span>
-                  <span className="text-white font-medium">—</span>
+                  <span className="text-white">{t('features.letters')}</span>
+                  <span className="text-white font-medium">{t('starter.letters')}</span>
                 </div>
               </div>
 
               <Link
-                href="/ja/dashboard"
+                href={`/${locale}/dashboard`}
                 className="block w-full py-4 text-center bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
               >
-                無料で始める
+                {t('starter.cta')}
               </Link>
             </div>
           </div>
@@ -388,95 +465,94 @@ function PricingSection() {
           <div className="bg-gray-800 rounded-2xl border-2 border-emerald-700 overflow-hidden">
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="text-xl font-semibold text-white mb-2">Standard</div>
+                <div className="text-xl font-semibold text-white mb-2">{t('standard.name')}</div>
                 {isYearly ? (
                   <>
                     <div className="flex items-baseline justify-center gap-2 mb-2">
-                      <span className="text-5xl font-bold text-emerald-500">$69</span>
-                      <span className="text-sm text-white font-normal">/year</span>
-                      <span className="text-lg text-gray-400 line-through">$83.88</span>
+                      <span className="text-5xl font-bold text-emerald-500">{t('standard.price_yearly')}</span>
+                      <span className="text-sm text-white font-normal">{t('standard.per_year')}</span>
+                      <span className="text-lg text-gray-400 line-through">{t('standard.original_yearly')}</span>
                     </div>
                     <div className="inline-block text-xs bg-emerald-700/20 text-emerald-400 px-2.5 py-1 rounded-full font-medium">
-                      2ヶ月分お得。
+                      {t('yearly_savings')}
                     </div>
                   </>
                 ) : (
                   <div className="text-5xl font-bold text-emerald-500 mb-2">
-                    $6.99<span className="text-sm text-white font-normal">/month</span>
+                    {t('standard.price_monthly')}<span className="text-sm text-white font-normal">{t('standard.per_month')}</span>
                   </div>
                 )}
               </div>
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">目標追加</span>
-                  <span className="text-emerald-500 font-medium">3つ</span>
+                  <span className="text-white">{t('features.goals')}</span>
+                  <span className="text-emerald-500 font-medium">{t('standard.goal_limit')}</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">カレンダー表示</span>
-                  <span className="text-emerald-500 font-medium">全期間</span>
+                  <span className="text-white">{t('features.calendar')}</span>
+                  <span className="text-emerald-500 font-medium">{t('standard.calendar')}</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
-                  <span className="text-white">月1回、Shoninからの手紙</span>
+                  <span className="text-white">{t('standard.letters')}</span>
                   <div className="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center">
                   </div>
                 </div>
               </div>
 
               <Link
-                href="/ja/dashboard"
+                href={`/${locale}/dashboard`}
                 className="block w-full py-4 text-center bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 font-medium"
               >
-                無料で始める
+                {t('standard.cta')}
               </Link>
             </div>
           </div>
-
 
           {/* Premiumプラン */}
           <div className="bg-gray-800 rounded-2xl border-2 border-gray-700 overflow-hidden">
             <div className="p-8">
               <div className="text-center mb-8">
-                <div className="text-xl font-semibold text-white mb-2">Premium</div>
+                <div className="text-xl font-semibold text-white mb-2">{t('premium.name')}</div>
                 {isYearly ? (
                   <>
                     <div className="flex items-baseline justify-center gap-2 mb-2">
-                      <span className="text-5xl font-bold text-white">$99</span>
-                      <span className="text-sm text-white font-normal">/year</span>
-                      <span className="text-lg text-gray-400 line-through">$119.88</span>
+                      <span className="text-5xl font-bold text-white">{t('premium.price_yearly')}</span>
+                      <span className="text-sm text-white font-normal">{t('premium.per_year')}</span>
+                      <span className="text-lg text-gray-400 line-through">{t('premium.original_yearly')}</span>
                     </div>
                     <div className="inline-block text-xs bg-gray-700/50 text-white px-2.5 py-1 rounded-full font-medium">
-                      2ヶ月分お得。
+                      {t('yearly_savings')}
                     </div>
                   </>
                 ) : (
                   <div className="text-5xl font-bold text-white mb-2">
-                    $9.99<span className="text-sm text-white font-normal">/month</span>
+                    {t('premium.price_monthly')}<span className="text-sm text-white font-normal">{t('premium.per_month')}</span>
                   </div>
                 )}
               </div>
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">目標追加</span>
-                  <span className="text-white font-medium">無制限</span>
+                  <span className="text-white">{t('features.goals')}</span>
+                  <span className="text-white font-medium">{t('premium.goal_limit')}</span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-700">
-                  <span className="text-white">カレンダー表示</span>
-                  <span className="text-white font-medium">全期間</span>
+                  <span className="text-white">{t('features.calendar')}</span>
+                  <span className="text-white font-medium">{t('premium.calendar')}</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
-                  <span className="text-white">週1回、月1回のShoninからの手紙</span>
+                  <span className="text-white">{t('premium.letters')}</span>
                   <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
                   </div>
                 </div>
               </div>
 
               <Link
-                href="/ja/dashboard"
+                href={`/${locale}/dashboard`}
                 className="block w-full py-4 text-center bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
               >
-                無料で始める
+                {t('premium.cta')}
               </Link>
             </div>
           </div>
@@ -485,7 +561,7 @@ function PricingSection() {
         {/* 注釈 */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-400">
-            ※ 基本的なタイマー、ログ機能、世界中の同士の表示などは全てのプランに含まれます。
+            {t('note')}
           </p>
         </div>
       </div>
@@ -494,7 +570,9 @@ function PricingSection() {
 }
 
 // Footerコンポーネント
-function Footer() {
+function Footer({ locale }: { locale: string }) {
+  const t = useTranslations('marketing.footer')
+  
   return (
     <footer className="py-12 px-6 border-t border-gray-800 bg-gray-950">
       <div className="max-w-6xl mx-auto">
@@ -511,20 +589,20 @@ function Footer() {
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-4">
-              Be a witness to your growth.
+              {t('tagline')}
             </p>
             <p className="text-gray-500 text-sm">
-              © 2025 Shonin. All rights reserved.
+              {t('copyright')}
             </p>
           </div>
 
           {/* プロダクト */}
           <div>
-            <h4 className="font-bold mb-3 text-white">プロダクト</h4>
+            <h4 className="font-bold mb-3 text-white">{t('product')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <Link href="/ja/dashboard" className="hover:text-white transition-colors">
-                  ダッシュボード
+                <Link href={`/${locale}/dashboard`} className="hover:text-white transition-colors">
+                  {t('dashboard')}
                 </Link>
               </li>
               <li>
@@ -532,7 +610,7 @@ function Footer() {
                   const element = document.getElementById('price')
                   if (element) element.scrollIntoView({ behavior: 'smooth' })
                 }} className="hover:text-white transition-colors">
-                  料金プラン
+                  {t('pricing')}
                 </button>
               </li>
             </ul>
@@ -540,24 +618,24 @@ function Footer() {
 
           {/* 会社情報 */}
           <div>
-            <h4 className="font-bold mb-3 text-white">会社情報</h4>
+            <h4 className="font-bold mb-3 text-white">{t('company')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
                 <button onClick={() => {
                   const element = document.getElementById('about')
                   if (element) element.scrollIntoView({ behavior: 'smooth' })
                 }} className="hover:text-white transition-colors">
-                  私たちについて
+                  {t('about')}
                 </button>
               </li>
               <li>
                 <a href="#" className="hover:text-white transition-colors">
-                  プライバシーポリシー
+                  {t('privacy')}
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-white transition-colors">
-                  利用規約
+                  {t('terms')}
                 </a>
               </li>
             </ul>

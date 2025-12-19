@@ -594,6 +594,92 @@
       "too_big": "説明は1000文字以内で入力してください"
     }
   },
+  "marketing": {
+    "header": {
+      "login": "ログイン"
+    },
+    "hero": {
+      "title": "沈黙を愛する努力家たちへ",
+      "subtitle": "No Chat, No Camera, No Avatar."
+    },
+    "features": {
+      "title": "自分に集中するための設計",
+      "feature1": {
+        "title": "ひとりだけど独りじゃない",
+        "description": "チャット、カメラ、アバターはない。一人で頑張る世界中の同志の気配を感じ、ひとりで没頭する。"
+      },
+      "feature2": {
+        "title": "あなたが捨てるもの",
+        "description": "スマホ、娯楽、誘惑などを一時的に断つことでより深い集中が可能になり、目標達成の可能性が高まります。"
+      },
+      "feature3": {
+        "title": "Shoninからの手紙",
+        "description": "一人で頑張るのがどうしても辛い時はShoninからの手紙を受け取ってみてください。あなたの影の頑張りを全て見ています。"
+      },
+      "clickToEnlarge": "クリックで拡大"
+    },
+    "about": {
+      "title": "Shonin(証人)とは",
+      "description": "誰も見ていないところで人は成長する。<br />Shoninはあなたの努力の証人となる。"
+    },
+    "pricing": {
+      "title": "料金プラン",
+      "subtitle": "見せないことが自分を強くします",
+      "monthly": "月額",
+      "yearly": "年額",
+      "yearly_savings": "2ヶ月分お得。",
+      "starter": {
+        "name": "Starter",
+        "price_monthly": "$3.99",
+        "per_month": "/month",
+        "goal_limit": "1つ",
+        "calendar": "当月のみ",
+        "letters": "—",
+        "cta": "Starterで始める"
+      },
+      "standard": {
+        "name": "Standard",
+        "price_monthly": "$6.99",
+        "price_yearly": "$69",
+        "per_month": "/month",
+        "per_year": "/year",
+        "original_yearly": "$83.88",
+        "goal_limit": "3つ",
+        "calendar": "全期間",
+        "letters": "月1回、Shoninからの手紙",
+        "cta": "Standardで始める"
+      },
+      "premium": {
+        "name": "Premium",
+        "price_monthly": "$9.99",
+        "price_yearly": "$99",
+        "per_month": "/month",
+        "per_year": "/year",
+        "original_yearly": "$119.88",
+        "goal_limit": "無制限",
+        "calendar": "全期間",
+        "letters": "週1回、月1回のShoninからの手紙",
+        "cta": "Premiumで始める"
+      },
+      "features": {
+        "goals": "目標追加",
+        "calendar": "カレンダー表示",
+        "letters": "Shoninからの手紙"
+      },
+      "note": "※ 基本的なタイマー、ログ機能、世界中の同士の表示などは全てのプランに含まれます。"
+    },
+    "footer": {
+      "tagline": "See the unseen.",
+      "copyright": "© 2025 Shonin. All rights reserved.",
+      "product": "プロダクト",
+      "dashboard": "ダッシュボード",
+      "pricing": "料金プラン",
+      "company": "会社情報",
+      "about": "私たちについて",
+      "privacy": "プライバシーポリシー",
+      "terms": "利用規約"
+    }
+  },
   "email": {
     "subject": {
       "welcome": "ようこそ！",

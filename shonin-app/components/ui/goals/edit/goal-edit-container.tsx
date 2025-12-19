@@ -155,7 +155,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
     <div className="container mx-auto max-w-3xl">
       <Card className="bg-card/30 border-white/10 backdrop-blur-md shadow-2xl">
         <CardHeader className="pb-2 border-b border-white/5 mb-6">
-          <CardTitle className="text-2xl font-bold text-white tracking-tight">{t('goals.editGoal')}</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">{t('goals.editGoal')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-8 pt-2">
           <GoalTitleInput

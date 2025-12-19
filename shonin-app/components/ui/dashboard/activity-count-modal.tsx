@@ -275,7 +275,7 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-white font-bold truncate text-base lg:text-lg tracking-tight drop-shadow-md">
+                        <h3 className="text-white font-bold truncate text-base lg:text-lg drop-shadow-md">
                           {activity.name}
                         </h3>
                       </div>

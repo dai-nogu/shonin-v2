@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // 認証が不要なパス
-const publicPaths = ['/login', '/callback']
+const publicPaths = ['/login', '/callback', '/']
 
 // next-intlのミドルウェアを作成
 const intlMiddleware = createMiddleware({
@@ -16,11 +16,6 @@ const intlMiddleware = createMiddleware({
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
-  // ルートパス（HP）はそのまま通す
-  if (pathname === '/') {
-    return NextResponse.next()
-  }
-  
   // 静的ファイルやAPIルート、callbackはスキップ（認証チェックなし）
   if (
     pathname.startsWith('/_next') ||
@@ -31,7 +26,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
-  // next-intlのミドルウェアを実行
+  // next-intlのミドルウェアを実行（ルートパスも含む）
   const response = intlMiddleware(request)
   
   // URLからロケールを取得

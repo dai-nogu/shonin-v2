@@ -11,13 +11,14 @@ const config: Config = {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['var(--font-noto-serif)', 'serif'],
-  			serif: ['var(--font-noto-serif)', 'serif'],
+  			sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+  			serif: ['var(--font-cormorant)', 'var(--font-noto-serif-jp)', 'serif'],
   			'serif-jp': ['var(--font-noto-serif-jp)', 'serif'],
+  			'serif-en': ['var(--font-cormorant)', 'serif'],
   			mono: ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', 'monospace'],
   		},
   		colors: {
-  			white: '#fffffC',
+  			white: '#d0d0d0',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

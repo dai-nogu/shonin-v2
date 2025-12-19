@@ -292,7 +292,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
       <CardHeader className="px-0 pt-0 pb-4">
         <div className="flex items-start justify-between gap-3">
-          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold tracking-tight">
+          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
             <span className="text-[#fffffC]">
                {t('session_start.title')}
             </span>

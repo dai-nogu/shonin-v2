@@ -598,6 +598,92 @@
       "too_big": "Description must be 1000 characters or less"
     }
   },
+  "marketing": {
+    "header": {
+      "login": "Sign In"
+    },
+    "hero": {
+      "title": "For those who love to work in silence",
+      "subtitle": "No Chat, No Camera, No Avatar."
+    },
+    "features": {
+      "title": "Designed for deep focus",
+      "feature1": {
+        "title": "Alone, but not lonely",
+        "description": "No chat, no camera, no avatar. Feel the presence of fellow deep workers worldwide while you focus alone."
+      },
+      "feature2": {
+        "title": "What you leave behind",
+        "description": "By temporarily setting aside your phone, entertainment, and distractions, you enable deeper focus and increase your chances of achieving your goals."
+      },
+      "feature3": {
+        "title": "Letters from Shonin",
+        "description": "When working alone gets too difficult, receive a letter from Shonin. We witness all your unseen efforts."
+      },
+      "clickToEnlarge": "Click to enlarge"
+    },
+    "about": {
+      "title": "What is Shonin (Witness)?",
+      "description": "People grow where no one is watching.<br />Shonin becomes a witness to your efforts."
+    },
+    "pricing": {
+      "title": "Pricing Plans",
+      "subtitle": "Strength lies in what you don't show",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "yearly_savings": "Save 2 months.",
+      "starter": {
+        "name": "Starter",
+        "price_monthly": "$3.99",
+        "per_month": "/month",
+        "goal_limit": "1",
+        "calendar": "This month only",
+        "letters": "—",
+        "cta": "Go Starter"
+      },
+      "standard": {
+        "name": "Standard",
+        "price_monthly": "$6.99",
+        "price_yearly": "$69",
+        "per_month": "/month",
+        "per_year": "/year",
+        "original_yearly": "$83.88",
+        "goal_limit": "3",
+        "calendar": "Unlimited History",
+        "letters": "Monthly letter from Shonin",
+        "cta": "Go Standard"
+      },
+      "premium": {
+        "name": "Premium",
+        "price_monthly": "$9.99",
+        "price_yearly": "$99",
+        "per_month": "/month",
+        "per_year": "/year",
+        "original_yearly": "$119.88",
+        "goal_limit": "Unlimited",
+        "calendar": "Unlimited History",
+        "letters": "Weekly and monthly letters from Shonin",
+        "cta": "Go Premium"
+      },
+      "features": {
+        "goals": "Add Goals",
+        "calendar": "Calendar Display",
+        "letters": "Letters from Shonin"
+      },
+      "note": "※ Basic timer, log function, and deep worker count are included in all plans."
+    },
+    "footer": {
+      "tagline": "See the unseen.",
+      "copyright": "© 2025 Shonin. All rights reserved.",
+      "product": "Product",
+      "dashboard": "Dashboard",
+      "pricing": "Pricing",
+      "company": "Company",
+      "about": "About Us",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    }
+  },
   "email": {
     "subject": {
       "welcome": "Welcome!",

@@ -79,7 +79,7 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
       <Card className="bg-transparent border-0 shadow-none">
       <CardHeader className="px-0 pt-0 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center text-xl font-bold tracking-tight">
+          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
             <span className="text-[#fffffC]">
                {t('weekly_progress.title')}
             </span>
