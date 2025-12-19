@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, Mail, Settings, CreditCard, LogOut, User, X } from "lucide-react"
+import { Home, Settings, CreditCard, LogOut, User, X } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -24,7 +24,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/common/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
-import { useFeedback } from "@/contexts/feedback-context"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,37 +52,17 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const [operationError, setOperationError] = useState<string | null>(null)
   const t = useTranslations()
   const { user, signOut, loading } = useAuth()
-  const { unreadCount } = useFeedback()
 
   // ユーザー名を取得（Googleアカウントの名前を使用）
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || ''
 
-  // next-intlを使用したメニューアイテム（設定とプランを削除）
+  // next-intlを使用したメニューアイテム（ダッシュボードのみ）
   const menuItems = [
     {
       title: t('navigation.dashboard'),
       url: `/${locale}/dashboard`,
       icon: Home,
       id: "dashboard",
-    },
-    {
-      title: t('navigation.calendar'),
-      url: `/${locale}/calendar/month`,
-      icon: Calendar,
-      id: "calendar",
-    },
-    {
-      title: t('navigation.goals'),
-      url: `/${locale}/goals`,
-      icon: Target,
-      id: "goals",
-    },
-    {
-      title: t('navigation.feedback'),
-      url: `/${locale}/letters`,
-      icon: Mail,
-      id: "letters",
-      glow: true, // glow効果表示フラグ
     },
   ]
 
@@ -109,14 +88,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     if (pathWithoutLocale === "/session") {
       // セッション中はどのメニューもアクティブにしない
       setActivePage("")
-    } else if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/") {
+    } else if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
       setActivePage("dashboard")
-    } else if (pathWithoutLocale === "/calendar" || pathWithoutLocale.startsWith("/calendar/")) {
-      setActivePage("calendar")
-    } else if (pathWithoutLocale === "/goals") {
-      setActivePage("goals")
-    } else if (pathWithoutLocale === "/letters") {
-      setActivePage("letters")
     } else if (pathWithoutLocale === "/plan" || pathWithoutLocale.startsWith("/settings")) {
       // プランや設定ページではサイドバーのメニューをアクティブにしない
       setActivePage("")
@@ -167,38 +140,26 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item, index) => {
-                const hasGlow = item.glow && unreadCount > 0
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => handlePageChange(item.id, item.url)}
-                      isActive={activePage === item.id}
-                      className="text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 ease-out active:scale-[0.98]"
-                    >
-                      <item.icon 
-                        className={`w-4 h-4 ${
-                          !hasGlow ? 'transition-all duration-200' : ''
-                        } ${
-                          activePage === item.id ? 'text-emerald-500 scale-110' : ''
-                        } ${
-                          hasGlow ? 'text-amber-300 animate-glow' : ''
-                        }`}
-                        style={hasGlow ? {
-                          filter: 'drop-shadow(0 0 10px rgb(252 211 77 / 0.7))',
-                        } : undefined}
-                      />
-                      <span className={hasGlow ? 'animate-glow' : ''}>
-                        {item.title}
-                      </span>
-                      {/* アクティブインジケーター */}
-                      {activePage === item.id && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-700 rounded-r-full transition-all duration-300" />
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => handlePageChange(item.id, item.url)}
+                    isActive={activePage === item.id}
+                    className="text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 ease-out active:scale-[0.98]"
+                  >
+                    <item.icon 
+                      className={`w-4 h-4 transition-all duration-200 ${
+                        activePage === item.id ? 'text-emerald-500 scale-110' : ''
+                      }`}
+                    />
+                    <span>{item.title}</span>
+                    {/* アクティブインジケーター */}
+                    {activePage === item.id && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-700 rounded-r-full transition-all duration-300" />
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

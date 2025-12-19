@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Calendar, Target, MessageSquare, CreditCard, Settings } from "lucide-react"
+import { Home, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useFeedback } from "@/contexts/feedback-context"
 
 interface BottomNavigationProps {
   currentPage?: string
@@ -20,34 +19,14 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
   const [isMobile, setIsMobile] = useState(false)
   const [activePage, setActivePage] = useState(currentPage)
   const t = useTranslations()
-  const { unreadCount } = useFeedback()
 
-  // next-intlを使用したメニューアイテム
+  // next-intlを使用したメニューアイテム（ダッシュボードと設定のみ）
   const menuItems = [
     {
       id: "dashboard",
       label: t('navigation.dashboard'),
       icon: Home,
       url: `/${locale}/dashboard`,
-    },
-    {
-      id: "calendar", 
-      label: t('navigation.calendar'),
-      icon: Calendar,
-      url: `/${locale}/calendar/month`,
-    },
-    {
-      id: "goals",
-      label: t('navigation.goals'),
-      icon: Target,
-      url: `/${locale}/goals`,
-    },
-    {
-      id: "letters",
-      label: t('navigation.feedback'),
-      icon: MessageSquare,
-      url: `/${locale}/letters`,
-      badge: true, // 通知バッジ表示フラグ
     },
     {
       id: "settings",
@@ -63,17 +42,9 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
     
     const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
     
-    if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session") {
+    if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
       setActivePage("dashboard")
-    } else if (pathWithoutLocale === "/calendar" || pathWithoutLocale.startsWith("/calendar/")) {
-      setActivePage("calendar")
-    } else if (pathWithoutLocale === "/goals") {
-      setActivePage("goals")
-    } else if (pathWithoutLocale === "/letters") {
-      setActivePage("letters")
-    } else if (pathWithoutLocale === "/plan") {
-      setActivePage("plan")
-    } else if (pathWithoutLocale === "/settings") {
+    } else if (pathWithoutLocale === "/settings" || pathWithoutLocale.startsWith("/settings/") || pathWithoutLocale === "/plan") {
       setActivePage("settings")
     } else {
       // パスが一致しない場合のみcurrentPageを使用
@@ -138,12 +109,6 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
                 "w-7 h-7 transition-all duration-300 ease-out",
                 isActive ? "text-emerald-500 scale-110" : "text-gray-400 scale-100"
               )} />
-              {/* 通知バッジ */}
-              {item.badge && unreadCount > 0 && (
-                <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
-                  {unreadCount}
-                </span>
-              )}
               {/* アクティブインジケーターのドット */}
               <div className={cn(
                 "absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500 transition-all duration-300",

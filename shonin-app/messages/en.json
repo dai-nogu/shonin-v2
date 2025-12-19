@@ -31,7 +31,33 @@
     "recording_in_progress": "Cannot start focus while another focus is active",
     "total": "Total",
     "read_more": "Read more",
-    "please_wait": "Please wait..."
+    "please_wait": "Please wait...",
+    "see_all": "See All"
+  },
+  "timer": {
+    "title": "Timer",
+    "no_active_session": "No active session",
+    "paused": "Paused",
+    "recording": "Recording",
+    "view_details": "View Details"
+  },
+  "focus": {
+    "no_goal": "Set your goal",
+    "no_goal_description": "Set a goal to visualize your effort",
+    "what_are_you_working": "What are you working on?",
+    "end_session": "END SESSION",
+    "change_goal": "Switch",
+    "add_goal": "Add"
+  },
+  "today_time": {
+    "title": "Today's Time",
+    "of_target": "of target"
+  },
+  "weekly_chart": {
+    "title": "Progress",
+    "this_week": "Week",
+    "two_weeks": "2 Weeks",
+    "month": "Month"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -152,7 +178,7 @@
     "goal_placeholder": "Improve my focus and reduce distractions.",
     "motivation_label": "Purpose",
     "motivation_placeholder": "To feel more in control of my time and attention.",
-    "dont_do_label": "Make a promise to Shonin. What will you stop doing during this goal?",
+    "dont_do_label": "What will you stop doing during this goal?",
     "dont_do_custom_placeholder": "Other things to stop...",
     "dont_do_count": "{current}/{max} selected",
     "deadline_label_required": "Target Date",
@@ -346,7 +372,7 @@
     "fetch_error": "Failed to fetch subscription information"
   },
   "session_start": {
-    "title": "Start Focus",
+    "title": "Start",
     "select_activity": "Select a Focus",
     "activity_placeholder": "No activity yet",
     "activity_input_placeholder": "What are you working on...",

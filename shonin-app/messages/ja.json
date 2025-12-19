@@ -31,7 +31,33 @@
     "recording_in_progress": "記録中は他の記録を開始できません",
     "total": "合計",
     "read_more": "続きを読む",
-    "please_wait": "しばらくお待ちください..."
+    "please_wait": "しばらくお待ちください...",
+    "see_all": "すべて見る"
+  },
+  "timer": {
+    "title": "タイマー",
+    "no_active_session": "進行中の記録はありません",
+    "paused": "一時停止中",
+    "recording": "記録中",
+    "view_details": "詳細を見る"
+  },
+  "focus": {
+    "no_goal": "目標を設定する",
+    "no_goal_description": "目標を設定して、努力を可視化しましょう",
+    "what_are_you_working": "何に取り組んでいますか？",
+    "end_session": "END SESSION",
+    "change_goal": "切り替え",
+    "add_goal": "追加"
+  },
+  "today_time": {
+    "title": "今日の時間",
+    "of_target": "達成"
+  },
+  "weekly_chart": {
+    "title": "進捗",
+    "this_week": "今週",
+    "two_weeks": "2週間",
+    "month": "1ヶ月"
   },
   "navigation": {
     "dashboard": "ダッシュボード",
@@ -148,7 +174,7 @@
     "goal_placeholder": "転職を成功させる",
     "motivation_label": "目的",
     "motivation_placeholder": "家族との時間を大事にしたいから",
-    "dont_do_label": "Shoninと約束してください。この目標中あなたは何をやめますか？",
+    "dont_do_label": "この目標中あなたは何をやめますか？",
     "dont_do_custom_placeholder": "その他やめること...",
     "dont_do_count": "{current}/{max}個選択中",
     "deadline_label_required": "終了日",
@@ -342,7 +368,7 @@
     "fetch_error": "サブスクリプション情報の取得に失敗しました"
   },
   "session_start": {
-    "title": "記録する",
+    "title": "Start",
     "select_activity": "取り組む内容を選ぶ",
     "activity_placeholder": "何に取り組みますか？",
     "activity_input_placeholder": "取り組む内容を入力...",

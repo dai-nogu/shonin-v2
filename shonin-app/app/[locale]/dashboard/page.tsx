@@ -2,13 +2,13 @@ import { SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
 import { BottomNavigation } from "@/components/layout/bottom-navigation"
-import { DashboardMainContent } from "@/components/ui/dashboard/dashboard-main-content"
-import { DashboardSidebarContent } from "@/components/ui/dashboard/dashboard-sidebar-content"
+import { DashboardContent } from "@/components/ui/dashboard/dashboard-content"
+import { getGoals } from "@/app/actions/goals"
 
 export default async function DashboardPage() {
-  // SSRとして初期データを設定（認証は後でクライアントサイドで処理）
-  const completedSessions: any[] = []
-  const user: any = { id: 'temp-user' }
+  // サーバーサイドで目標データを取得
+  const goalsResult = await getGoals()
+  const initialGoals = goalsResult.success ? goalsResult.data : []
 
   return (
     <>
@@ -20,23 +20,7 @@ export default async function DashboardPage() {
             <Header currentPage="dashboard" />
           </div>
           <main className="container mx-auto px-4 py-4 lg:py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-              {/* メインエリア - 2列分 */}
-              <div className="lg:col-span-2">
-                <DashboardMainContent 
-                  initialCompletedSessions={completedSessions}
-                  user={user}
-                />
-              </div>
-
-              {/* サイドバー - 1列分 */}
-              <div className="space-y-4 lg:space-y-6">
-                <DashboardSidebarContent 
-                  initialCompletedSessions={completedSessions}
-                  user={user}
-                />
-              </div>
-            </div>
+            <DashboardContent initialGoals={initialGoals} />
           </main>
         </div>
       </SidebarInset>

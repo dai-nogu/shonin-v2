@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Input } from "@/components/ui/common/input"
@@ -9,13 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ErrorModal } from "@/components/ui/common/error-modal"
 import { CharacterCounter } from "@/components/ui/common/character-counter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Plus, Play, X, Check } from "lucide-react"
+import { Plus, Play, X, Check, Target, ChevronRight, Pencil, Trash2 } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
-import { useGoalsDb } from "@/hooks/use-goals-db"
+import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
 import { useSessions } from "@/contexts/sessions-context"
 import { useTranslations, useLocale } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import { getInputLimits } from "@/lib/input-limits"
+import { GoalTitleInput } from "@/components/ui/goals/goal-title-input"
+import { GoalDontDoSelector } from "@/components/ui/goals/goal-dont-do-selector"
+import { GoalHoursInputs } from "@/components/ui/goals/goal-hours-inputs"
+import { useGoalForm } from "@/hooks/use-goal-form"
 import type { Activity, SessionData } from "./time-tracker"
 
 interface ActivitySelectorProps {
@@ -25,7 +29,6 @@ interface ActivitySelectorProps {
 export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const t = useTranslations()
   const locale = useLocale()
-  const router = useRouter()
   const limits = getInputLimits(locale)
   const [selectedActivity, setSelectedActivity] = useState<string>("")
   const [location, setLocation] = useState("")
@@ -33,9 +36,21 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [isStarting, setIsStarting] = useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
   const [showLocationInput, setShowLocationInput] = useState(false) // 場所入力の表示状態
+  const [showGoalForm, setShowGoalForm] = useState(false) // 目標追加フォームの表示状態
+  const [dontDoTags, setDontDoTags] = useState<string[]>([]) // やめることタグ
+  const [isSubmittingGoal, setIsSubmittingGoal] = useState(false) // 目標追加中
+
+  // 目標フォームフック
+  const {
+    formData: goalFormData,
+    validationErrors: goalValidationErrors,
+    updateField: updateGoalField,
+    validateForm: validateGoalForm,
+    setInitialData: resetGoalForm,
+  } = useGoalForm()
 
   // 目標データを取得
-  const { goals } = useGoalsDb()
+  const { goals, addGoal } = useGoalsDb()
   
   // セッション状態を取得
   const { isSessionActive } = useSessions()
@@ -91,12 +106,15 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   
   const { activities: allActivities, loading: activitiesLoading, addActivity, deleteActivity } = useActivities()
   
-  // 現在選択されている目標に紐づくアクティビティのみをフィルタリング
+  // 現在選択されている目標に紐づくアクティビティをフィルタリング
+  // 目標が選択されていない場合はすべてのアクティビティを表示
   const customActivities = allActivities.filter(activity => {
-    // goal_idがundefinedの場合は、selectedGoalと比較できないため除外
-    if (activity.goal_id === undefined) return false
-    // goal_idがnullの場合は、目標に紐づいていないアクティビティ（互換性のため残す）
-    if (activity.goal_id === null && !selectedGoal) return true
+    // 目標が選択されていない場合はすべて表示
+    if (!selectedGoal) return true
+    // goal_idがundefinedの場合も表示（古いデータ対応）
+    if (activity.goal_id === undefined) return true
+    // goal_idがnullの場合は、目標に紐づいていないアクティビティ
+    if (activity.goal_id === null) return true
     // goal_idが一致する場合のみ表示
     return activity.goal_id === selectedGoal
   })
@@ -233,6 +251,46 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
     }
   }
 
+  // 目標追加ハンドラー
+  const handleAddGoal = async () => {
+    if (!validateGoalForm()) return
+
+    setIsSubmittingGoal(true)
+    try {
+      const goalData: DbGoalFormData = {
+        title: goalFormData.title,
+        motivation: JSON.stringify(dontDoTags),
+        deadline: goalFormData.deadline,
+        weekdayHours: parseInt(goalFormData.weekdayHours),
+        weekendHours: parseInt(goalFormData.weekendHours),
+        calculatedHours: goalFormData.calculatedHours
+      }
+
+      const result = await addGoal(goalData)
+      
+      if (result.success && result.data) {
+        // 追加した目標を選択状態に
+        setSelectedGoal(result.data)
+        sessionStorage.setItem('currentSelectedGoal', result.data)
+        // フォームを閉じてリセット
+        setShowGoalForm(false)
+        resetGoalForm({})
+        setDontDoTags([])
+      }
+    } catch (error) {
+      setOperationError(t('errors.goal_add_failed'))
+    } finally {
+      setIsSubmittingGoal(false)
+    }
+  }
+
+  // 目標フォームキャンセル
+  const handleCancelGoalForm = () => {
+    setShowGoalForm(false)
+    resetGoalForm({})
+    setDontDoTags([])
+  }
+
 
 
   const handleStart = async () => {
@@ -291,41 +349,122 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
       />
 
       <CardHeader className="px-0 pt-0 pb-4">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
             <span className="text-[#fffffC]">
                {t('session_start.title')}
             </span>
           </CardTitle>
           
-          {/* 目標タブ - アクティブな目標がある場合のみ表示 */}
-          {activeGoals.length > 0 && (
-            <div className="flex bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10 overflow-x-auto max-w-[60%] md:max-w-none scrollbar-hide">
-              {activeGoals.map((goal) => (
-                <button
-                  key={goal.id}
-                  onClick={() => setSelectedGoal(goal.id)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                    selectedGoal === goal.id ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
-                  }`}
-                  title={goal.title}
-                >
-                  {goal.title.length > 10 ? `${goal.title.substring(0, 10)}...` : goal.title}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* 右側のボタン群 */}
+          <div className="flex items-center gap-2">
+            {activeGoals.length > 0 && (
+              <Select value={selectedGoal} onValueChange={setSelectedGoal}>
+                <SelectTrigger className="w-auto bg-gray-800/60 border-gray-700 hover:bg-gray-700/80 text-gray-300 hover:text-white text-xs h-7 px-2.5 gap-1 rounded-lg transition-colors">
+                  <span>{t('focus.change_goal')}</span>
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  {activeGoals.map((goal) => (
+                    <SelectItem 
+                      key={goal.id} 
+                      value={goal.id}
+                      className="text-white hover:bg-white/10 text-xs"
+                    >
+                      {goal.title.length > 20 ? `${goal.title.substring(0, 20)}...` : goal.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowGoalForm(true)}
+              className="h-7 px-2.5 text-xs bg-gray-800/60 hover:bg-gray-700/80 text-gray-300 hover:text-white border border-gray-700 rounded-lg"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              {t('focus.add_goal')}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-0 space-y-4 lg:space-y-6">
-        {/* 新しい行動追加フォーム */}
-        {showAddForm && (
-          <div className="rounded-xl border border-white/10 p-5 shadow-lg animate-fade-in-down">
+      <CardContent className="px-0 space-y-4 lg:space-y-4">
+        {/* コンテンツ切り替えコンテナ */}
+        <div>
+          <AnimatePresence mode="wait">
+            {showGoalForm ? (
+              <motion.div
+                key="goal-form"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ 
+                  duration: 0.2, 
+                  ease: "easeInOut"
+                }}
+                className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950"
+              >
+              <div className="space-y-2">
+                <GoalTitleInput
+                  value={goalFormData.title}
+                  onChange={(value) => updateGoalField("title", value)}
+                />
+
+                <GoalDontDoSelector
+                  selectedTags={dontDoTags}
+                  onChange={setDontDoTags}
+                />
+
+                <GoalHoursInputs
+                  deadline={goalFormData.deadline}
+                  onDeadlineChange={(value) => updateGoalField("deadline", value)}
+                  weekdayHours={goalFormData.weekdayHours}
+                  weekendHours={goalFormData.weekendHours}
+                  onWeekdayHoursChange={(value) => updateGoalField("weekdayHours", value)}
+                  onWeekendHoursChange={(value) => updateGoalField("weekendHours", value)}
+                  validationErrors={goalValidationErrors}
+                />
+
+                <div className="flex space-x-3 pt-1">
+                  <Button
+                    onClick={handleCancelGoalForm}
+                    variant="outline"
+                    className="flex-1 bg-transparent border-gray-600 text-gray-300 hover:bg-white/5 hover:text-white text-sm h-10"
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    onClick={handleAddGoal}
+                    disabled={goalFormData.title.trim() === "" || dontDoTags.length === 0 || isSubmittingGoal}
+                    className="flex-1 bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 h-10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {isSubmittingGoal ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      t('goals.addGoal')
+                    )}
+                  </Button>
+                </div>
+              </div>
+              </motion.div>
+            ) : showAddForm ? (
+              <motion.div
+                key="activity-form"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ 
+                  duration: 0.2, 
+                  ease: "easeInOut"
+                }}
+                className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950"
+              >
             <div className="pb-3 mb-4 border-b border-white/5">
               <h3 className="text-white text-base font-semibold">{t('session_start.add_new_activity')}</h3>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-gray-300 text-xs tracking-wider">{t('session_start.activity_name')}</Label>
@@ -393,13 +532,91 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 </Button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* フォーム表示時以外の通常の内容 */}
-        {!showAddForm && (
-          <div ref={activityAreaRef} className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20">
-            <div className="space-y-6">
+              </motion.div>
+            ) : (
+              <motion.div
+                key="main-content"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ 
+                  duration: 0.2, 
+                  ease: "easeInOut"
+                }}
+                ref={activityAreaRef}
+                className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950 hover:border-white/20"
+              >
+            <div className="space-y-4">
+              {/* CURRENT FOCUS セクション */}
+              <div className="space-y-3">
+                {/* 目標情報 */}
+                <div 
+                  className={`flex items-center gap-4 py-2 ${activeGoals.length === 0 ? 'cursor-pointer group' : ''}`}
+                  onClick={(e) => {
+                    // ボタンをクリックした場合は何もしない
+                    if ((e.target as HTMLElement).closest('button')) {
+                      return
+                    }
+                    if (activeGoals.length === 0) {
+                      setShowGoalForm(true)
+                    }
+                  }}
+                >
+                  {/* 目標アイコン（常に同じ） */}
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-gray-800/80 flex items-center justify-center flex-shrink-0 border border-white/5">
+                    <Target className="w-7 h-7 md:w-8 md:h-8 text-gray-300" />
+                  </div>
+                  
+                  {/* 目標テキスト */}
+                  <div className="flex-1 text-left min-w-0">
+                    {activeGoals.length > 0 ? (
+                      <p className="text-white font-bold text-lg md:text-xl truncate">
+                        {activeGoals.find(g => g.id === selectedGoal)?.title || activeGoals[0]?.title}
+                      </p>
+                    ) : (
+                      <p className="text-gray-400 text-sm md:text-base">
+                        {t('focus.no_goal_description')}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* 編集・削除ボタン（目標がある場合のみ） */}
+                  {activeGoals.length > 0 ? (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // TODO: 編集機能を実装
+                          console.log('Edit goal:', selectedGoal)
+                        }}
+                        className="h-8 w-8 bg-gray-800/60 hover:bg-gray-700/80 text-gray-400 hover:text-white border border-gray-700 rounded-lg"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // TODO: 削除確認モーダルを表示
+                          console.log('Delete goal:', selectedGoal)
+                        }}
+                        className="h-8 w-8 bg-gray-800/60 hover:bg-red-700/80 text-gray-400 hover:text-white border border-gray-700 hover:border-red-700 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    /* 矢印（目標がない場合のみ） */
+                    <ChevronRight className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors flex-shrink-0" />
+                  )}
+                </div>
+              </div>
+              
               {/* 行動選択 - タグ + 直接入力 + サジェスト */}
               <div className="space-y-3">
                 <Label className="text-gray-300 text-xs tracking-wider pl-1">{t('session_start.select_activity')}</Label>
@@ -627,8 +844,10 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 )}
               </div>
             </div>
-          </div>
-        )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </CardContent>
     </Card>
   )

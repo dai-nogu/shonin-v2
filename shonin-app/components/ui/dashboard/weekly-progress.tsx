@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BarChart3, Calendar } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
-import { Button } from "@/components/ui/common/button"
 import { formatDuration } from "@/lib/format-duration"
 import { useTranslations } from 'next-intl'
 import { getWeekStart, getCurrentTime, getDateString } from "@/lib/date-utils"
@@ -11,10 +10,9 @@ import type { CompletedSession } from "./time-tracker"
 
 interface WeeklyProgressProps {
   completedSessions: CompletedSession[]
-  onWeekViewClick?: () => void
 }
 
-export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyProgressProps) {
+export function WeeklyProgress({ completedSessions }: WeeklyProgressProps) {
   const t = useTranslations()
   const [isAnimated, setIsAnimated] = useState(false)
   
@@ -78,22 +76,11 @@ export function WeeklyProgress({ completedSessions, onWeekViewClick }: WeeklyPro
     <div id="weekly-progress">
       <Card className="bg-transparent border-0 shadow-none">
       <CardHeader className="px-0 pt-0 pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
-            <span className="text-[#fffffC]">
-               {t('weekly_progress.title')}
-            </span>
-          </CardTitle>
-          <Button
-            onClick={onWeekViewClick}
-            variant="ghost"
-            size="sm"
-            className="text-emerald-500 hover:bg-white/5 text-xs lg:text-sm rounded-full px-3 transition-all duration-300 hover:scale-[1.02]"
-          >
-            <Calendar className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5" />
-            {t('weekly_progress.week_view')}
-          </Button>
-        </div>
+        <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
+          <span className="text-[#fffffC]">
+            {t('weekly_progress.title')}
+          </span>
+        </CardTitle>
       </CardHeader>
       
       <CardContent className="px-0">

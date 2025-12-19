@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, Target } from "lucide-react"
+import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, MoreVertical, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -425,6 +425,18 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-0.5 ${isMobile ? 'cursor-pointer' : ''}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
+            {/* 3点ドットボタン（カード右上に配置） */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-gray-700/50 text-gray-400 hover:text-white border border-white p-0 z-20"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleViewDetail(activity)
+              }}
+            >
+              <MoreVertical className="w-3.5 h-3.5" />
+            </Button>
             
             <div className="flex items-center space-x-4 flex-1 min-w-0 relative z-10">
               <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} text-xl`}>
@@ -453,32 +465,15 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                       </div>
                     </>
                   )}
-                  {activity.goalTitle && (
-                    <div className="hidden sm:flex items-center text-xs text-purple-200 bg-purple-500/20 border border-purple-500/20 px-2.5 py-0.5 rounded-full truncate max-w-[150px]">
-                      <Target className="w-3 h-3 mr-1 flex-shrink-0" />
-                      <span className="truncate font-medium">{activity.goalTitle}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* アクションボタン */}
             <div className="flex items-center space-x-2 relative z-10 pl-4">
-              {/* SP版: 詳細ボタン + 開始ボタン */}
+              {/* SP版: 開始ボタン */}
               {isMobile ? (
                 <>
-                   <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-9 w-9 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleViewDetail(activity)
-                    }}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
                   {isSessionActive ? (
                     <TooltipProvider>
                       <Tooltip delayDuration={0}>
@@ -521,20 +516,8 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   )}
                 </>
               ) : (
-                // PC版: 詳細ボタン + 開始ボタン (テキスト付き)
+                // PC版: 開始ボタン
                 <>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-gray-400 hover:text-white hover:bg-white/10 border border-white/30 hover:border-white/50"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleViewDetail(activity)
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-1.5" />
-                    {t('common.details')}
-                  </Button>
                   {isSessionActive ? (
                     <TooltipProvider>
                       <Tooltip delayDuration={0}>
