@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState, use, useMemo } from "react"
+import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { GoalTitleInput } from "../goal-title-input"
 import { GoalDontDoSelector } from "../goal-dont-do-selector"
@@ -46,6 +47,7 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   const { updateGoal } = useGoalsDb()
   const { handleAuthError } = useAuthRedirect()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
   const [initialGoalData, setInitialGoalData] = useState<InitialGoalData | null>(null)
   const [dontDoTags, setDontDoTags] = useState<string[]>([])
   const t = useTranslations()
@@ -125,7 +127,13 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
       if (handleAuthError(result)) return
       
       if (result.success) {
-        router.push(`/${locale}/goals`)
+        // フェードアウトアニメーションを開始
+        setIsExiting(true)
+        
+        // アニメーション完了後に遷移
+        setTimeout(() => {
+          router.push(`/${locale}/goals`)
+        }, 300)
       }
       // エラーは useGoalsDb hook で既に処理されているので、ここでは何もしない
     } catch (error) {
@@ -136,7 +144,13 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   }
 
   const handleCancel = () => {
-    router.push(`/${locale}/goals`)
+    // フェードアウトアニメーションを開始
+    setIsExiting(true)
+    
+    // アニメーション完了後に遷移
+    setTimeout(() => {
+      router.push(`/${locale}/goals`)
+    }, 300)
   }
 
   // ローディング中またはエラーの場合
@@ -152,37 +166,75 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
   }
 
   return (
-    <div className="container mx-auto max-w-3xl">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ 
+        opacity: isExiting ? 0 : 1, 
+        y: isExiting ? 20 : 0 
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="container mx-auto max-w-3xl"
+    >
       <Card className="bg-card/30 border-white/10 backdrop-blur-md shadow-2xl">
         <CardHeader className="pb-2 border-b border-white/5 mb-6">
-          <CardTitle className="text-2xl font-bold text-white">{t('goals.editGoal')}</CardTitle>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <CardTitle className="text-2xl font-bold text-white">{t('goals.editGoal')}</CardTitle>
+          </motion.div>
         </CardHeader>
         <CardContent className="space-y-8 pt-2">
-          <GoalTitleInput
-            value={formData.title}
-            onChange={(value) => updateField("title", value)}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
+            <GoalTitleInput
+              value={formData.title}
+              onChange={(value) => updateField("title", value)}
+            />
+          </motion.div>
 
-          <GoalDontDoSelector
-            selectedTags={dontDoTags}
-            onChange={setDontDoTags}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.3 }}
+          >
+            <GoalDontDoSelector
+              selectedTags={dontDoTags}
+              onChange={setDontDoTags}
+            />
+          </motion.div>
 
-          <GoalHoursInputs
-            deadline={formData.deadline}
-            onDeadlineChange={(value) => updateField("deadline", value)}
-            weekdayHours={formData.weekdayHours}
-            weekendHours={formData.weekendHours}
-            onWeekdayHoursChange={(value) => updateField("weekdayHours", value)}
-            onWeekendHoursChange={(value) => updateField("weekendHours", value)}
-            validationErrors={validationErrors}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          >
+            <GoalHoursInputs
+              deadline={formData.deadline}
+              onDeadlineChange={(value) => updateField("deadline", value)}
+              weekdayHours={formData.weekdayHours}
+              weekendHours={formData.weekendHours}
+              onWeekdayHoursChange={(value) => updateField("weekdayHours", value)}
+              onWeekendHoursChange={(value) => updateField("weekendHours", value)}
+              validationErrors={validationErrors}
+            />
+          </motion.div>
 
-          <GoalCalculationDisplay
-            weeklyHours={weeklyHours}
-            monthlyHours={monthlyHours}
-            totalHours={formData.calculatedHours}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.3 }}
+          >
+            <GoalCalculationDisplay
+              weeklyHours={weeklyHours}
+              monthlyHours={monthlyHours}
+              totalHours={formData.calculatedHours}
+            />
+          </motion.div>
 
           <GoalFormActions
             mode="edit"
@@ -193,6 +245,6 @@ export function GoalEditContainer({ params }: GoalEditContainerProps) {
           />
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 } 
