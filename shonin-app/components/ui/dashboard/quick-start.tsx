@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, MoreVertical, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
@@ -19,7 +19,7 @@ interface QuickStartActivity {
   id: string
   name: string
   duration: string
-  date: string
+  date: { number: string; text: string }
   rating: number
   category: string
   icon: string
@@ -48,9 +48,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
   const [showActivityCountModal, setShowActivityCountModal] = useState(false)
   const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
-  const [recentSessionsFilterMode, setRecentSessionsFilterMode] = useState<'all' | 'yesterday'>('all')
+  const [recentSessionsFilterMode, setRecentSessionsFilterMode] = useState<'all'>('all')
   const [isMobile, setIsMobile] = useState(false)
   const [previousModal, setPreviousModal] = useState<'activity-count' | 'recent-sessions' | null>(null)
+  const [isTabMenuOpen, setIsTabMenuOpen] = useState(false)
   
   // 行動管理フック
   const { activities, addActivity } = useActivities()
@@ -139,22 +140,21 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
   }
 
-  const formatRelativeTime = (date: Date) => {
+  const formatRelativeTime = (date: Date): { number: string; text: string } => {
     const now = new Date()
     const diffTime = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
     const diffMinutes = Math.floor(diffTime / (1000 * 60))
 
-    if (diffMinutes < 60) return `${diffMinutes}${t('time.minutes_ago')}`
-    if (diffHours < 24) return `${diffHours}${t('time.hours_ago')}`
-    if (diffDays === 1) return t('time.yesterday')
-    if (diffDays < 7) return `${diffDays}${t('time.days_ago')}`
-    return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" })
+    if (diffMinutes < 60) return { number: String(diffMinutes), text: t('time.minutes_ago') }
+    if (diffHours < 24) return { number: String(diffHours), text: t('time.hours_ago') }
+    
+    // それ以降は日付を表示
+    return { number: '', text: date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" }) }
   }
 
-  // 行動別（実行回数が多い順）
-  const getMostRecordedActivities = (): QuickStartActivity[] => {
+  // 行動別（実行回数が多い順）- useMemoで最適化
+  const mostRecordedActivities = useMemo((): QuickStartActivity[] => {
     const activityStats = new Map<string, { totalTime: number; sessionCount: number; latestSession: CompletedSession }>()
     
     completedSessions.forEach(session => {
@@ -185,7 +185,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           id: stats.latestSession.id,
           name: activityName,
           duration: formatDuration(stats.totalTime),
-          date: formatDate(new Date(stats.latestSession.endTime)),
+          date: formatRelativeTime(new Date(stats.latestSession.endTime)),
           rating: stats.latestSession.mood || 0,
           category: activityInfo.category,
           icon: activityInfo.icon,
@@ -197,10 +197,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           goalTitle: goalInfo?.title
         }
       })
-  }
+  }, [completedSessions, getGoal])
 
-  // 最新のセッション（最新登録順）
-  const getRecentActivities = (): QuickStartActivity[] => {
+  // 最新のセッション（最新登録順）- useMemoで最適化
+  const recentActivities = useMemo((): QuickStartActivity[] => {
     return completedSessions
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
       .slice(0, 3)
@@ -222,43 +222,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
           goalTitle: goalInfo?.title
         }
       })
-  }
-
-  // 昨日の行動
-  const getYesterdayActivities = (): QuickStartActivity[] => {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    
-    const yesterdaySessions = completedSessions.filter(session => {
-      const sessionDate = new Date(session.endTime)
-      return sessionDate.toDateString() === yesterday.toDateString()
-    })
-
-    return yesterdaySessions
-      .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
-      .slice(0, 3)
-      .map(session => {
-        const activityInfo = getActivityStyle(session)
-        const goalInfo = session.goalId ? getGoal(session.goalId) : null
-
-        return {
-          id: session.id,
-          name: session.activityName,
-          duration: formatDuration(session.duration),
-          date: session.endTime.toLocaleTimeString("ja-JP", {
-            hour: "2-digit",
-            minute: "2-digit"
-          }),
-          rating: session.mood || 0,
-          category: activityInfo.category,
-          icon: activityInfo.icon,
-          color: activityInfo.color,
-          location: session.location,
-          goalId: session.goalId,
-          goalTitle: goalInfo?.title
-        }
-      })
-  }
+  }, [completedSessions, getGoal])
 
   const handleActivityClick = async (activity: QuickStartActivity) => {
     // 既にローディング中なら何もしない
@@ -429,7 +393,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             <Button
               size="icon"
               variant="ghost"
-              className="absolute top-2 right-2 h-6 w-6 rounded-full hover:bg-gray-700/50 text-gray-400 hover:text-white border border-white p-0 z-20"
+              className="absolute top-2 right-2 h-5 w-5 rounded-full hover:bg-gray-700/50 text-white hover:text-white border border-white p-0 z-20"
               onClick={(e) => {
                 e.stopPropagation()
                 handleViewDetail(activity)
@@ -444,15 +408,15 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
+                <div className="flex items-center space-x-2">
                   <h3 className="text-white font-bold truncate text-base lg:text-lg drop-shadow-md">{activity.name}</h3>
                 </div>
 
                 <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
                   {activeTab === "most-recorded" ? (
                     <>
-                      <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
-                        <span className="font-bold text-emerald-400">{activity.sessionCount}</span>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm font-bold text-emerald-400">{activity.sessionCount}</span>
                         <span className="text-xs text-gray-300 opacity-90">
                           {activity.sessionCount === 1 ? t('common.time') : t('common.times')}
                         </span>
@@ -460,8 +424,15 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
-                        <span className="text-emerald-400 font-medium">{activity.date}</span>
+                      <div className="flex items-center space-x-1">
+                        {activity.date.number ? (
+                          <>
+                            <span className="text-sm font-bold text-emerald-400">{activity.date.number}</span>
+                            <span className="text-xs text-gray-300 opacity-90">{activity.date.text}</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-300 font-medium">{activity.date.text}</span>
+                        )}
                       </div>
                     </>
                   )}
@@ -470,7 +441,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             </div>
 
             {/* アクションボタン */}
-            <div className="flex items-center space-x-2 relative z-10 pl-4">
+            <div className="flex items-center space-x-2 relative z-10 pl-4 pr-6">
               {/* SP版: 開始ボタン */}
               {isMobile ? (
                 <>
@@ -606,32 +577,51 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               </span>
             </CardTitle>
             
-            {/* タブ切り替え - よりコンパクトでモダンに */}
-            <div className="flex bg-gray-900/50 backdrop-blur-sm p-1 rounded-lg border border-white/10">
+            {/* タブ切り替え - ホバーで展開 */}
+            <div className="relative z-50">
               <button
-                onClick={() => setActiveTab("recent")}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "recent" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
+                onMouseEnter={() => setIsTabMenuOpen(true)}
+                onMouseLeave={() => setIsTabMenuOpen(false)}
+                className={`px-3 py-1.5 text-xs font-medium bg-gray-900 backdrop-blur-sm border border-white/10 transition-all duration-200 min-w-[100px] text-white ${
+                  isTabMenuOpen ? 'rounded-t-lg' : 'rounded-lg hover:bg-gray-700'
                 }`}
               >
-                {t('quick_start.latest')}
+                {activeTab === "recent" ? t('quick_start.latest') : t('quick_start.most_recorded')}
               </button>
-              <button
-                onClick={() => setActiveTab("most-recorded")}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "most-recorded" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {t('quick_start.most_recorded')}
-              </button>
-              <button
-                onClick={() => setActiveTab("yesterday")}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "yesterday" ? "bg-white/10 text-white shadow-sm" : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {t('quick_start.yesterday')}
-              </button>
+              
+              {/* ドロップダウンコンテンツ - 残りの選択肢のみ */}
+              {isTabMenuOpen && (
+                <div
+                  onMouseEnter={() => setIsTabMenuOpen(true)}
+                  onMouseLeave={() => setIsTabMenuOpen(false)}
+                  className="absolute right-0 top-full w-full overflow-hidden"
+                  style={{
+                    animation: 'slideDown 0.2s ease-out'
+                  }}
+                >
+                  {activeTab === "recent" ? (
+                    <button
+                      onClick={() => {
+                        setActiveTab("most-recorded")
+                        setIsTabMenuOpen(false)
+                      }}
+                      className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 rounded-b-lg hover:bg-gray-700"
+                    >
+                      {t('quick_start.most_recorded')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setActiveTab("recent")
+                        setIsTabMenuOpen(false)
+                      }}
+                      className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 rounded-b-lg hover:bg-gray-700"
+                    >
+                      {t('quick_start.latest')}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -644,10 +634,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               {activeTab === "most-recorded" && (
                 <>
                   {renderActivityList(
-                    getMostRecordedActivities(),
+                    mostRecordedActivities,
                     t('quick_start.not_enough_data')
                   )}
-                  {getMostRecordedActivities().length > 0 && (
+                  {mostRecordedActivities.length > 0 && (
                     <div className="flex justify-end mt-3">
                       <Button
                         size="sm"
@@ -666,41 +656,16 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               {activeTab === "recent" && (
                 <>
                   {renderActivityList(
-                    getRecentActivities(),
+                    recentActivities,
                     t('quick_start.no_recent_activity')
                   )}
-                  {getRecentActivities().length > 0 && (
+                  {recentActivities.length > 0 && (
                     <div className="flex justify-end mt-3">
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => {
                           setRecentSessionsFilterMode('all')
-                          setShowRecentSessionsModal(true)
-                        }}
-                        className="text-gray-400 hover:text-white hover:bg-white/10"
-                      >
-                        <MoreHorizontal className="w-4 h-4 mr-1" />
-                        {t('quick_start.see_more')}
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {activeTab === "yesterday" && (
-                <>
-                  {renderActivityList(
-                    getYesterdayActivities(),
-                    t('quick_start.no_yesterday_activity')
-                  )}
-                  {getYesterdayActivities().length > 0 && (
-                    <div className="flex justify-end mt-3">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setRecentSessionsFilterMode('yesterday')
                           setShowRecentSessionsModal(true)
                         }}
                         className="text-gray-400 hover:text-white hover:bg-white/10"

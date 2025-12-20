@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { useTranslations } from 'next-intl'
@@ -16,6 +16,8 @@ type TimeRange = '6h' | '12h' | '24h'
 export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
   const t = useTranslations()
   const [timeRange, setTimeRange] = useState<TimeRange>('12h')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [animationKey, setAnimationKey] = useState(0)
   
   // 今日のセッション時間を計算
   const todayTotalSeconds = useMemo(() => {
@@ -29,6 +31,11 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
       })
       .reduce((sum, session) => sum + session.duration, 0)
   }, [completedSessions])
+
+  // データまたは時間範囲が変わったらアニメーションをトリガー
+  useEffect(() => {
+    setAnimationKey(prev => prev + 1)
+  }, [todayTotalSeconds, timeRange])
 
   // 時間と分に変換
   const hours = Math.floor(todayTotalSeconds / 3600)
@@ -58,21 +65,42 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
             {t('today_time.title')}
           </CardTitle>
           
-          {/* 切り替えボタン */}
-          <div className="flex bg-gray-900/50 p-1 rounded-lg border border-white/10">
-            {(['6h', '12h', '24h'] as TimeRange[]).map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
-                  timeRange === range 
-                    ? "bg-white/10 text-white" 
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
+          {/* 切り替えボタン - ホバーで展開 */}
+          <div className="relative z-50">
+            <button
+              onMouseEnter={() => setIsMenuOpen(true)}
+              onMouseLeave={() => setIsMenuOpen(false)}
+              className={`px-3 py-1.5 text-xs font-medium bg-gray-900 backdrop-blur-sm border border-white/10 transition-all duration-200 min-w-[60px] text-white ${
+                isMenuOpen ? 'rounded-t-lg' : 'rounded-lg hover:bg-gray-700'
+              }`}
+            >
+              {timeRange}
+            </button>
+            
+            {/* ドロップダウンコンテンツ - 残りの選択肢のみ */}
+            {isMenuOpen && (
+              <div
+                onMouseEnter={() => setIsMenuOpen(true)}
+                onMouseLeave={() => setIsMenuOpen(false)}
+                className="absolute right-0 top-full w-full overflow-hidden"
+                style={{
+                  animation: 'slideDown 0.2s ease-out'
+                }}
               >
-                {range}
-              </button>
-            ))}
+                {(['6h', '12h', '24h'] as TimeRange[]).filter(range => range !== timeRange).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => {
+                      setTimeRange(range)
+                      setIsMenuOpen(false)
+                    }}
+                    className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 first:border-t-0 last:rounded-b-lg hover:bg-gray-700"
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -94,6 +122,7 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
                 />
                 {/* 進捗の円 */}
                 <circle
+                  key={`progress-${animationKey}`}
                   cx="100"
                   cy="100"
                   r={radius}
@@ -104,7 +133,9 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   transform="rotate(-90 100 100)"
-                  className="transition-all duration-700 ease-out"
+                  style={{
+                    animation: `drawCircle 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+                  }}
                 />
               </svg>
               
@@ -132,12 +163,6 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
             </div>
           </div>
 
-          {/* 追加情報 */}
-          <div className="mt-4 text-center">
-            <div className="text-sm text-gray-400">
-              {progressPercentage.toFixed(0)}% {t('today_time.of_target')}
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

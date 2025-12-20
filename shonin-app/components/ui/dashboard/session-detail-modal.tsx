@@ -306,7 +306,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
       </div>
 
       {/* 目標時間と達成度 */}
-      {session.targetTime > 0 && (
+      {session.targetTime && session.targetTime > 0 && (
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5 text-purple-400">
@@ -362,9 +362,9 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-lg w-7 h-7 p-0"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-lg w-6 h-6 p-0"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </Button>
           
           {/* コンパクトなヘッダー */}
@@ -386,13 +386,13 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           </div>
         </CardHeader>
 
-        {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
-        <CardContent className={`flex flex-col ${needsFixedHeight ? (isMobile ? 'h-[360px]' : 'h-[320px]') : ''} relative`}>
+        {/* コンテンツとフッター */}
+        <CardContent className="flex flex-col relative">
           {/* コンテンツエリア - スクロール可能 */}
-          <div className={`${needsFixedHeight ? 'flex-1' : ''} overflow-hidden relative`}>
+          <div className="overflow-hidden relative">
             {/* スライダー本体 */}
             <div 
-              className={`${needsFixedHeight ? 'h-full' : ''} w-full relative`}
+              className="w-full relative"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
@@ -467,6 +467,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
             )}
               
               {/* スタートボタン */}
+              <div className="my-8">
               {onStartSimilar && (
                 isSessionActive ? (
                   <TooltipProvider>
@@ -507,6 +508,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
                   </Button>
                 )
               )}
+              </div>
           </div>
 
           {/* PCでのアクションボタン - PCレイアウト削除 */}
@@ -851,7 +853,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
       </div>
 
       {/* 目標時間と達成度 */}
-      {session.targetTime > 0 && (
+      {session.targetTime && session.targetTime > 0 && (
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-800/50">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5 text-purple-400">
@@ -962,9 +964,9 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-lg w-7 h-7 p-0"
+            className="absolute right-2 top-2 text-gray-400 hover:text-white hover:bg-white/10 z-10 rounded-lg w-6 h-6 p-0"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </Button>
           
           {/* コンパクトなヘッダー */}
@@ -986,13 +988,13 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           </div>
         </CardHeader>
 
-        {/* 新しい構造: フレックスレイアウトでコンテンツエリアとフッターを分離 */}
-        <CardContent className={`flex flex-col ${needsFixedHeight ? (isMobile ? 'h-[360px]' : 'h-[320px]') : ''} relative`}>
+        {/* コンテンツとフッター */}
+        <CardContent className="flex flex-col relative">
           {/* コンテンツエリア - スクロール可能 */}
-          <div className={`${needsFixedHeight ? 'flex-1' : ''} overflow-hidden relative`}>
+          <div className="overflow-hidden relative">
             {/* スライダー本体 */}
             <div 
-              className={`${needsFixedHeight ? 'h-full' : ''} w-full relative`}
+              className="w-full relative"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
@@ -1074,6 +1076,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
             )}
               
               {/* スタートボタン */}
+              <div className="my-8">
               {onStartSimilar && (
                 isSessionActive ? (
                   <TooltipProvider>
@@ -1114,6 +1117,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
                   </Button>
                 )
               )}
+              </div>
           </div>
 
           {/* PCでのアクションボタン - PCレイアウト削除 */}

@@ -280,9 +280,9 @@ export function ActivityCountModal({ isOpen, completedSessions, onClose, onStart
                         </h3>
                       </div>
 
-                      <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
-                        <div className="flex items-center space-x-1 bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
-                          <span className="font-bold text-emerald-400">{activity.sessionCount}</span>
+                      <div className="flex items-center space-x-3 text-xs lg:text-xs text-gray-300">
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm font-bold text-emerald-400">{activity.sessionCount}</span>
                           <span className="text-xs text-gray-300 opacity-90">
                             {activity.sessionCount === 1 ? t('common.time') : t('common.times')}
                           </span>

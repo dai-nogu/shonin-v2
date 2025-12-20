@@ -58,22 +58,37 @@ export function DashboardContent({ initialGoals }: DashboardContentProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左カラム: セッション開始 + 今日の時間チャート */}
         <div className="space-y-6">
-          <ActivitySelector onStart={handleStartSession} />
-          <TodayTimeChart completedSessions={completedSessions} />
+          {/* 1. Start（左上）: 即座に表示 */}
+          <div className="opacity-0 animate-[fadeIn_0.4s_ease-out_forwards]">
+            <ActivitySelector onStart={handleStartSession} />
+          </div>
+          {/* 4. Today's Time（左下）: 1.2秒後 */}
+          <div className="opacity-0 animate-[fadeIn_0.4s_ease-out_1.2s_forwards]">
+            <TodayTimeChart completedSessions={completedSessions} />
+          </div>
         </div>
 
         {/* 中央カラム: クイックスタート + 週間進捗チャート */}
         <div className="space-y-6">
-          <QuickStart 
-            completedSessions={completedSessions} 
-            onStartActivity={handleStartSession}
-          />
-          <WeeklyLineChart completedSessions={completedSessions} />
+          {/* 2. History（中央上）: 0.4秒後 */}
+          <div className="opacity-0 animate-[fadeIn_0.4s_ease-out_0.4s_forwards]">
+            <QuickStart 
+              completedSessions={completedSessions} 
+              onStartActivity={handleStartSession}
+            />
+          </div>
+          {/* 5. Progress（中央下）: 1.6秒後（最後） */}
+          <div className="opacity-0 animate-[fadeIn_0.4s_ease-out_1.6s_forwards]">
+            <WeeklyLineChart completedSessions={completedSessions} />
+          </div>
         </div>
 
         {/* 右カラム: 手紙(Letter) */}
         <div className="space-y-6">
-          <LetterSection completedSessions={completedSessions} />
+          {/* 3. Weekly letter（右上）: 0.8秒後 */}
+          <div className="opacity-0 animate-[fadeIn_0.4s_ease-out_0.8s_forwards]">
+            <LetterSection completedSessions={completedSessions} />
+          </div>
         </div>
       </div>
     </>

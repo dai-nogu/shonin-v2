@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { useTranslations } from 'next-intl'
 import { getWeekStart, getCurrentTime, getDateString } from "@/lib/date-utils"
@@ -13,9 +13,22 @@ interface WeeklyLineChartProps {
 
 type DateRange = 'week' | '2weeks' | 'month'
 
+interface DayData {
+  date: Date
+  label: string
+  totalSeconds: number
+  sessions: CompletedSession[]
+}
+
 export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
   const t = useTranslations()
   const [dateRange, setDateRange] = useState<DateRange>('week')
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [animationKey, setAnimationKey] = useState(0)
+  const pathRef = useRef<SVGPathElement>(null)
+  const [pathLength, setPathLength] = useState(0)
+  const [isReady, setIsReady] = useState(false)
 
   // 日数を取得
   const getDaysCount = () => {
@@ -38,7 +51,7 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
   const chartData = useMemo(() => {
     const daysCount = getDaysCount()
     const today = getCurrentTime()
-    const data: { date: Date; label: string; totalSeconds: number }[] = []
+    const data: DayData[] = []
 
     for (let i = daysCount - 1; i >= 0; i--) {
       const date = new Date(today)
@@ -56,11 +69,28 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
         date,
         label: getDateLabel(date),
         totalSeconds,
+        sessions: daySessions,
       })
     }
 
     return data
   }, [completedSessions, dateRange])
+
+  // パスの長さを計算（初回とchartDataが変わった時のみ）
+  useEffect(() => {
+    setIsReady(false)
+    // 次のフレームで計算を開始（DOMが更新されるのを待つ）
+    const timer = setTimeout(() => {
+      if (pathRef.current) {
+        const length = pathRef.current.getTotalLength()
+        setPathLength(length)
+        setAnimationKey(prev => prev + 1)
+        setIsReady(true)
+      }
+    }, 50) // 50msの遅延でDOMが確実に更新される
+    
+    return () => clearTimeout(timer)
+  }, [chartData])
 
   // 最大値を計算（グラフのスケーリング用）
   const maxSeconds = Math.max(...chartData.map(d => d.totalSeconds), 3600) // 最低1時間
@@ -109,25 +139,46 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
             {t('weekly_chart.title')}
           </CardTitle>
           
-          {/* 切り替えボタン */}
-          <div className="flex bg-gray-900/50 p-1 rounded-lg border border-white/10">
-            {([
-              { key: 'week', label: t('weekly_chart.this_week') },
-              { key: '2weeks', label: t('weekly_chart.two_weeks') },
-              { key: 'month', label: t('weekly_chart.month') },
-            ] as { key: DateRange; label: string }[]).map((item) => (
-              <button
-                key={item.key}
-                onClick={() => setDateRange(item.key)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 ${
-                  dateRange === item.key 
-                    ? "bg-white/10 text-white" 
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
+          {/* 切り替えボタン - ホバーで展開 */}
+          <div className="relative z-50">
+            <button
+              onMouseEnter={() => setIsMenuOpen(true)}
+              onMouseLeave={() => setIsMenuOpen(false)}
+              className={`px-3 py-1.5 text-xs font-medium bg-gray-900 backdrop-blur-sm border border-white/10 transition-all duration-200 min-w-[80px] text-white ${
+                isMenuOpen ? 'rounded-t-lg' : 'rounded-lg hover:bg-gray-700'
+              }`}
+            >
+              {dateRange === 'week' ? t('weekly_chart.this_week') : dateRange === '2weeks' ? t('weekly_chart.two_weeks') : t('weekly_chart.month')}
+            </button>
+            
+            {/* ドロップダウンコンテンツ - 残りの選択肢のみ */}
+            {isMenuOpen && (
+              <div
+                onMouseEnter={() => setIsMenuOpen(true)}
+                onMouseLeave={() => setIsMenuOpen(false)}
+                className="absolute right-0 top-full w-full overflow-hidden"
+                style={{
+                  animation: 'slideDown 0.2s ease-out'
+                }}
               >
-                {item.label}
-              </button>
-            ))}
+                {([
+                  { key: 'week', label: t('weekly_chart.this_week') },
+                  { key: '2weeks', label: t('weekly_chart.two_weeks') },
+                  { key: 'month', label: t('weekly_chart.month') },
+                ] as { key: DateRange; label: string }[]).filter(item => item.key !== dateRange).map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setDateRange(item.key)
+                      setIsMenuOpen(false)
+                    }}
+                    className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 first:border-t-0 last:rounded-b-lg hover:bg-gray-700"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -144,10 +195,15 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
 
           {/* 線グラフ */}
           <div className="relative h-32">
+            {/* スケルトンローディング（準備できるまで表示） */}
+            {!isReady && (
+              <div className="absolute inset-0 rounded-lg bg-gray-800/30 animate-pulse z-10" />
+            )}
             <svg
               viewBox="0 0 100 60"
               preserveAspectRatio="none"
               className="w-full h-full"
+              style={{ opacity: isReady ? 1 : 0 }}
             >
               {/* グラデーションの定義 */}
               <defs>
@@ -155,6 +211,26 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
                   <stop offset="0%" stopColor="#059669" stopOpacity="0.3" />
                   <stop offset="100%" stopColor="#059669" stopOpacity="0" />
                 </linearGradient>
+                
+                {/* クリップパス用のアニメーション定義 */}
+                <clipPath id={`revealClip-${animationKey}`}>
+                  <rect 
+                    x="0" 
+                    y="0" 
+                    width="0" 
+                    height="60"
+                  >
+                    <animate
+                      attributeName="width"
+                      from="0"
+                      to="100"
+                      dur="1.5s"
+                      fill="freeze"
+                      calcMode="spline"
+                      keySplines="0.4 0 0.2 1"
+                    />
+                  </rect>
+                </clipPath>
               </defs>
 
               {/* グリッド線 */}
@@ -174,50 +250,107 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
               <path
                 d={generateAreaPath()}
                 fill="url(#areaGradient)"
+                clipPath={`url(#revealClip-${animationKey})`}
               />
 
-              {/* 線 */}
+              {/* 線 - 最後に描画して目立たせる */}
               <path
+                key={`line-${animationKey}`}
+                ref={pathRef}
                 d={generatePath()}
                 fill="none"
                 stroke="#059669"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                strokeDasharray={pathLength || 1000}
+                strokeDashoffset={pathLength || 1000}
+                style={{
+                  animation: `drawLine 1.2s cubic-bezier(0.4, 0, 0.2, 1) 2.5s forwards`
+                }}
               />
 
               {/* データポイント */}
               {chartData.map((d, i) => {
                 const x = 5 + (i / (chartData.length - 1)) * 90
                 const y = 55 - (d.totalSeconds / maxSeconds) * 50
+                const hasData = d.totalSeconds > 0
+                const animationName = hasData ? 'fadeIn' : 'fadeInDim'
                 return (
                   <circle
-                    key={i}
+                    key={`${animationKey}-${i}`}
                     cx={x}
                     cy={y}
-                    r="1.5"
+                    r={hoveredDay === i ? "2.5" : "1.5"}
                     fill="#059669"
-                    className={d.totalSeconds > 0 ? 'opacity-100' : 'opacity-30'}
+                    className="transition-all duration-200 cursor-pointer"
+                    onMouseEnter={() => setHoveredDay(i)}
+                    onMouseLeave={() => setHoveredDay(null)}
+                    style={{ 
+                      pointerEvents: 'all',
+                      opacity: 0,
+                      animation: `${animationName} 0.3s ease-out ${0.1 * i + 1.2}s forwards`,
+                    }}
                   />
                 )
               })}
             </svg>
-          </div>
 
-          {/* X軸ラベル */}
-          <div className="flex justify-between mt-2 text-xs text-gray-500">
-            {dateRange === 'week' ? (
-              chartData.map((d, i) => (
-                <span key={i} className="w-8 text-center">{d.label}</span>
-              ))
-            ) : (
-              <>
-                <span>{chartData[0]?.label}</span>
-                <span>{chartData[Math.floor(chartData.length / 2)]?.label}</span>
-                <span>{chartData[chartData.length - 1]?.label}</span>
-              </>
+            {/* ツールチップ */}
+            {hoveredDay !== null && chartData[hoveredDay] && chartData[hoveredDay].sessions.length > 0 && (
+              <div
+                className="absolute z-50 bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-2xl p-3 min-w-[180px] max-w-[280px] pointer-events-none"
+                style={{
+                  left: `${((hoveredDay / (chartData.length - 1)) * 100)}%`,
+                  top: '-10px',
+                  transform: 'translate(-50%, -100%)',
+                }}
+              >
+                {/* 日付とトータル時間 */}
+                <div className="mb-2 pb-2 border-b border-white/10">
+                  <div className="text-xs text-gray-400">{chartData[hoveredDay].date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}</div>
+                  <div className="text-sm font-bold text-emerald-500">
+                    {formatDuration(chartData[hoveredDay].totalSeconds)}
+                  </div>
+                </div>
+
+                {/* セッション一覧（名前のみ） */}
+                <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
+                  {chartData[hoveredDay].sessions.map((session, idx) => (
+                    <div key={idx} className="flex items-center space-x-2">
+                      <div 
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${session.activityColor || 'bg-gray-500'}`}
+                      />
+                      <span className="text-white text-xs truncate">{session.activityName}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 三角形の矢印 */}
+                <div
+                  className="absolute left-1/2 bottom-0 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900/95"
+                  style={{ transform: 'translate(-50%, 100%)' }}
+                />
+              </div>
             )}
           </div>
+          
+          {/* X軸ラベル */}
+          {isReady && (
+            <div className="flex justify-between mt-2 text-xs text-gray-500">
+              {dateRange === 'week' ? (
+                chartData.map((d, i) => (
+                  <span key={i} className="w-8 text-center">{d.label}</span>
+                ))
+              ) : (
+                <>
+                  <span>{chartData[0]?.label}</span>
+                  <span>{chartData[Math.floor(chartData.length / 2)]?.label}</span>
+                  <span>{chartData[chartData.length - 1]?.label}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

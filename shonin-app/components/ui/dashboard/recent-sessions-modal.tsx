@@ -28,7 +28,7 @@ interface SessionItem {
   id: string
   name: string
   duration: string
-  date: string
+  date: { number: string; text: string }
   rating: number
   category: string
   icon: string
@@ -118,18 +118,17 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     })
   }
 
-  const formatRelativeTime = (date: Date) => {
+  const formatRelativeTime = (date: Date): { number: string; text: string } => {
     const now = new Date()
     const diffTime = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
     const diffMinutes = Math.floor(diffTime / (1000 * 60))
 
-    if (diffMinutes < 60) return `${diffMinutes}${t('time.minutes_ago')}`
-    if (diffHours < 24) return `${diffHours}${t('time.hours_ago')}`
-    if (diffDays === 1) return t('time.yesterday')
-    if (diffDays < 7) return `${diffDays}${t('time.days_ago')}`
-    return formatDate(date)
+    if (diffMinutes < 60) return { number: String(diffMinutes), text: t('time.minutes_ago') }
+    if (diffHours < 24) return { number: String(diffHours), text: t('time.hours_ago') }
+    
+    // それ以降は日付を表示
+    return { number: '', text: formatDate(date) }
   }
 
   // 最新順でセッションを取得（最大100件）
@@ -290,9 +289,16 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
                         </h3>
                       </div>
 
-                      <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
-                        <div className="flex items-center bg-white/10 border border-white/5 px-2.5 py-0.5 rounded-full">
-                          <span className="text-emerald-400 font-medium">{sessionItem.date}</span>
+                      <div className="flex items-center space-x-3 text-xs lg:text-xs text-gray-300">
+                        <div className="flex items-center space-x-1">
+                          {sessionItem.date.number ? (
+                            <>
+                              <span className="text-sm font-bold text-emerald-400">{sessionItem.date.number}</span>
+                              <span className="text-xs text-gray-300 opacity-90">{sessionItem.date.text}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-300 font-medium">{sessionItem.date.text}</span>
+                          )}
                         </div>
                         {sessionItem.goalTitle && (
                           <div className="hidden sm:flex items-center text-xs text-purple-200 bg-purple-500/20 border border-purple-500/20 px-2.5 py-0.5 rounded-full truncate max-w-[150px]">

@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ErrorModal } from "@/components/ui/common/error-modal"
 import { CharacterCounter } from "@/components/ui/common/character-counter"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Plus, Play, X, Check, Target, ChevronRight, Pencil, Trash2 } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/common/dialog"
+import { Plus, Play, X, Check, Target, ChevronRight, Pencil, Trash2, RefreshCw } from "lucide-react"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
 import { useSessions } from "@/contexts/sessions-context"
@@ -37,8 +38,13 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [operationError, setOperationError] = useState<string | null>(null)
   const [showLocationInput, setShowLocationInput] = useState(false) // 場所入力の表示状態
   const [showGoalForm, setShowGoalForm] = useState(false) // 目標追加フォームの表示状態
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null) // 編集中の目標ID
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false) // 削除確認ダイアログ
+  const [goalToDelete, setGoalToDelete] = useState<string | null>(null) // 削除対象の目標ID
+  const [isDeletingGoal, setIsDeletingGoal] = useState(false) // 削除処理中
   const [dontDoTags, setDontDoTags] = useState<string[]>([]) // やめることタグ
   const [isSubmittingGoal, setIsSubmittingGoal] = useState(false) // 目標追加中
+  const [rotationDegree, setRotationDegree] = useState(0) // 循環矢印の回転角度
 
   // 目標フォームフック
   const {
@@ -50,7 +56,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   } = useGoalForm()
 
   // 目標データを取得
-  const { goals, addGoal } = useGoalsDb()
+  const { goals, addGoal, updateGoal, deleteGoal: deleteGoalFromDb } = useGoalsDb()
   
   // セッション状態を取得
   const { isSessionActive } = useSessions()
@@ -266,19 +272,25 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
         calculatedHours: goalFormData.calculatedHours
       }
 
-      const result = await addGoal(goalData)
+      // 編集モードか新規追加モードか判定
+      const result = editingGoalId 
+        ? await updateGoal(editingGoalId, goalData)
+        : await addGoal(goalData)
       
-      if (result.success && result.data) {
-        // 追加した目標を選択状態に
-        setSelectedGoal(result.data)
-        sessionStorage.setItem('currentSelectedGoal', result.data)
+      if (result.success) {
+        if (!editingGoalId && result.data) {
+          // 新規追加の場合：追加した目標を選択状態に
+          setSelectedGoal(result.data)
+          sessionStorage.setItem('currentSelectedGoal', result.data)
+        }
         // フォームを閉じてリセット
         setShowGoalForm(false)
+        setEditingGoalId(null)
         resetGoalForm({})
         setDontDoTags([])
       }
     } catch (error) {
-      setOperationError(t('errors.goal_add_failed'))
+      setOperationError(editingGoalId ? t('goals.update_error') : t('errors.goal_add_failed'))
     } finally {
       setIsSubmittingGoal(false)
     }
@@ -287,8 +299,70 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   // 目標フォームキャンセル
   const handleCancelGoalForm = () => {
     setShowGoalForm(false)
+    setEditingGoalId(null)
     resetGoalForm({})
     setDontDoTags([])
+  }
+
+  // 目標編集ハンドラー
+  const handleEditGoal = (goalId: string) => {
+    const goal = activeGoals.find(g => g.id === goalId)
+    if (!goal) return
+    
+    // フォームに目標データを設定
+    const parsedDontList = goal.dont_list ? JSON.parse(goal.dont_list as string) : []
+    setDontDoTags(Array.isArray(parsedDontList) ? parsedDontList : [])
+    
+    resetGoalForm({
+      title: goal.title,
+      deadline: goal.deadline || '',
+      weekdayHours: String(goal.weekday_hours || 0),
+      weekendHours: String(goal.weekend_hours || 0),
+      calculatedHours: goal.target_duration || 0
+    })
+    
+    setEditingGoalId(goalId)
+    setShowGoalForm(true)
+  }
+
+  // 削除確認ダイアログを開く
+  const handleOpenDeleteConfirm = (goalId: string) => {
+    setGoalToDelete(goalId)
+    setShowDeleteConfirm(true)
+  }
+
+  // 目標削除ハンドラー
+  const handleDeleteGoal = async () => {
+    if (!goalToDelete) return
+    
+    setIsDeletingGoal(true)
+    try {
+      const result = await deleteGoalFromDb(goalToDelete)
+      
+      if (result.success) {
+        // 削除された目標が選択中の場合、別の目標を選択
+        if (selectedGoal === goalToDelete) {
+          const remainingGoals = activeGoals.filter(g => g.id !== goalToDelete)
+          if (remainingGoals.length > 0) {
+            setSelectedGoal(remainingGoals[0].id)
+            sessionStorage.setItem('currentSelectedGoal', remainingGoals[0].id)
+          } else {
+            setSelectedGoal('')
+            sessionStorage.removeItem('currentSelectedGoal')
+          }
+        }
+        
+        // ダイアログを閉じる
+        setShowDeleteConfirm(false)
+        setGoalToDelete(null)
+      } else {
+        setOperationError(t('goals.delete_error'))
+      }
+    } catch (error) {
+      setOperationError(t('goals.delete_error'))
+    } finally {
+      setIsDeletingGoal(false)
+    }
   }
 
 
@@ -359,8 +433,23 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
           {/* 右側のボタン群 */}
           <div className="flex items-center gap-2">
             {activeGoals.length > 0 && (
-              <Select value={selectedGoal} onValueChange={setSelectedGoal}>
-                <SelectTrigger className="w-auto bg-gray-800/60 border-gray-700 hover:bg-gray-700/80 text-gray-300 hover:text-white text-xs h-7 px-2.5 gap-1 rounded-lg transition-colors">
+              <Select 
+                value={selectedGoal} 
+                onValueChange={(value) => {
+                  setSelectedGoal(value)
+                  // 循環矢印を180度回転（累積）
+                  setRotationDegree(prev => prev + 180)
+                }}
+              >
+                <SelectTrigger 
+                  className="w-auto bg-gray-800/60 border-gray-700 hover:bg-gray-700/80 text-gray-300 hover:text-white text-xs h-7 px-2.5 gap-1 rounded-lg transition-colors focus:ring-0 focus:ring-offset-0"
+                  icon={
+                    <RefreshCw 
+                      className="h-3.5 w-3.5 opacity-70 transition-transform duration-500" 
+                      style={{ transform: `rotate(${rotationDegree}deg)` }}
+                    />
+                  }
+                >
                   <span>{t('focus.change_goal')}</span>
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
@@ -443,7 +532,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     {isSubmittingGoal ? (
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      t('goals.addGoal')
+                      editingGoalId ? t('common.save') : t('goals.addGoal')
                     )}
                   </Button>
                 </div>
@@ -550,18 +639,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               {/* CURRENT FOCUS セクション */}
               <div className="space-y-3">
                 {/* 目標情報 */}
-                <div 
-                  className={`flex items-center gap-4 py-2 ${activeGoals.length === 0 ? 'cursor-pointer group' : ''}`}
-                  onClick={(e) => {
-                    // ボタンをクリックした場合は何もしない
-                    if ((e.target as HTMLElement).closest('button')) {
-                      return
-                    }
-                    if (activeGoals.length === 0) {
-                      setShowGoalForm(true)
-                    }
-                  }}
-                >
+                <div className="flex items-center gap-4 py-2">
                   {/* 目標アイコン（常に同じ） */}
                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-gray-800/80 flex items-center justify-center flex-shrink-0 border border-white/5">
                     <Target className="w-7 h-7 md:w-8 md:h-8 text-gray-300" />
@@ -581,7 +659,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   </div>
                   
                   {/* 編集・削除ボタン（目標がある場合のみ） */}
-                  {activeGoals.length > 0 ? (
+                  {activeGoals.length > 0 && (
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         type="button"
@@ -589,8 +667,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation()
-                          // TODO: 編集機能を実装
-                          console.log('Edit goal:', selectedGoal)
+                          handleEditGoal(selectedGoal)
                         }}
                         className="h-8 w-8 bg-gray-800/60 hover:bg-gray-700/80 text-gray-400 hover:text-white border border-gray-700 rounded-lg"
                       >
@@ -602,17 +679,13 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation()
-                          // TODO: 削除確認モーダルを表示
-                          console.log('Delete goal:', selectedGoal)
+                          handleOpenDeleteConfirm(selectedGoal)
                         }}
                         className="h-8 w-8 bg-gray-800/60 hover:bg-red-700/80 text-gray-400 hover:text-white border border-gray-700 hover:border-red-700 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  ) : (
-                    /* 矢印（目標がない場合のみ） */
-                    <ChevronRight className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors flex-shrink-0" />
                   )}
                 </div>
               </div>
@@ -849,6 +922,44 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
           </AnimatePresence>
         </div>
       </CardContent>
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white text-xl">
+              {t('goals.delete_confirmation_title')}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400 text-base pt-2">
+              {t('goals.delete_confirmation')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteConfirm(false)
+                setGoalToDelete(null)
+              }}
+              disabled={isDeletingGoal}
+              className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/5 hover:text-white"
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteGoal}
+              disabled={isDeletingGoal}
+              className="bg-red-700 hover:bg-red-800 text-white"
+            >
+              {isDeletingGoal ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+              ) : null}
+              {isDeletingGoal ? t('goals.deleting') : t('goals.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
