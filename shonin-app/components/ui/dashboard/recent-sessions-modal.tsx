@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { X, Play, Clock, Eye, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
@@ -47,6 +48,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false)
   
   // スクロール位置をリセットするためのref
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -60,6 +62,11 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   // アニメーション状態（早期returnの前に配置する必要がある）
   const [isAnimating, setIsAnimating] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+
+  // マウント状態の管理
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // モバイル判定
   useEffect(() => {
@@ -100,7 +107,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
   // モーダルが開いている間は背景スクロールを無効にする
   useScrollLock(isOpen || isClosing)
 
-  if (!isOpen && !isClosing) return null
+  if (!isOpen && !isClosing || !mounted) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -231,11 +238,11 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
     }
   }
 
-  return (
+  return createPortal(
     <>
       <div 
         className={cn(
-          "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity duration-300",
+          "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
           isAnimating ? "opacity-100" : "opacity-0"
         )}
         onClick={handleClose}
@@ -436,6 +443,7 @@ export function RecentSessionsModal({ isOpen, completedSessions, onClose, onStar
         onClose={handleCloseDetail}
         onStartSimilar={handleStartSimilar}
       />
-    </>
+    </>,
+    document.body
   )
 } 

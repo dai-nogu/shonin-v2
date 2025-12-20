@@ -165,7 +165,7 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
           <div className="relative z-[100]" data-dropdown="date-range">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
                 isMenuOpen ? 'bg-[#0f1115] border-white/20 text-white shadow-lg' : ''
               }`}
             >

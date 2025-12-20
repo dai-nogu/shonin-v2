@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { X, Calendar, MapPin, Star, TrendingUp, MessageSquare, Target, Camera, Image, Play, CloudRain, Cloud, Minus, Sun, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
@@ -30,6 +31,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   const [isAnimating, setIsAnimating] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
+  const [mounted, setMounted] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -52,6 +54,11 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   
   // 目標情報を取得
   const goalInfo = session?.goalId ? getGoal(session.goalId) : null
+
+  // マウント状態の管理
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // モバイル判定
   useEffect(() => {
@@ -94,7 +101,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     }, 300)
   }
 
-  if ((!isOpen && !isClosing) || !session) return null
+  if ((!isOpen && !isClosing) || !session || !mounted) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -352,10 +359,10 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     </div>
   )
 
-  return (
+  return createPortal(
     <div 
       className={cn(
-        "fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
         isAnimating ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       onClick={handleClose}
@@ -528,7 +535,8 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
           </div>
         </CardContent>
       </Card>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -544,6 +552,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   const [isStarting, setIsStarting] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [mounted, setMounted] = useState(false)
   
   // スワイプ機能用の状態
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -567,6 +576,11 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   
   // 目標情報を取得
   const goalInfo = session?.goalId ? getGoal(session.goalId) : null
+
+  // マウント状態の管理
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // モバイル判定
   useEffect(() => {
@@ -646,7 +660,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     }, 300)
   }
 
-  if ((!isOpen && !isClosing) || !session) return null
+  if ((!isOpen && !isClosing) || !session || !mounted) return null
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -966,10 +980,10 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     </div>
   )
 
-  return (
+  return createPortal(
     <div 
       className={cn(
-        "fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
         isAnimating ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       onClick={handleClose}
@@ -1149,7 +1163,8 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
           </div>
         </CardContent>
       </Card>
-    </div>
+    </div>,
+    document.body
   )
 }
 

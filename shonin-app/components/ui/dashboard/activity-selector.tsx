@@ -665,7 +665,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 {/* 目標情報 */}
                 <div className="flex items-center gap-4 py-2">
                   {/* 目標アイコン（常に同じ） */}
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-gray-800/80 flex items-center justify-center flex-shrink-0 border border-white/5">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center flex-shrink-0 border border-white/10">
                     <Target className="w-7 h-7 md:w-8 md:h-8 text-gray-300" />
                   </div>
                   
@@ -693,7 +693,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                           e.stopPropagation()
                           handleEditGoal(selectedGoal)
                         }}
-                        className="h-8 w-8 bg-gray-800/60 hover:bg-gray-700/80 text-gray-400 hover:text-white border border-gray-700 rounded-lg"
+                        className="h-8 w-8 border border-white/10 hover:border-white/20 hover:bg-transparent text-gray-400 rounded-lg"
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
@@ -705,7 +705,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                           e.stopPropagation()
                           handleOpenDeleteConfirm(selectedGoal)
                         }}
-                        className="h-8 w-8 bg-gray-800/60 hover:bg-red-700/80 text-gray-400 hover:text-white border border-gray-700 hover:border-red-700 rounded-lg"
+                        className="h-8 w-8 hover:bg-transparent text-gray-400 border border-white/10 hover:border-red-900 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -961,9 +961,9 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
       {/* 削除確認ダイアログ */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-md">
+        <DialogContent className="bg-[#0f1420] border-white/10 text-white max-w-md rounded-2xl shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-white text-xl">
+            <DialogTitle className="text-white text-xl font-bold">
               {t('goals.delete_confirmation_title')}
             </DialogTitle>
             <DialogDescription className="text-gray-400 text-base pt-2">
@@ -978,7 +978,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 setGoalToDelete(null)
               }}
               disabled={isDeletingGoal}
-              className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/5 hover:text-white"
+              className="bg-transparent border-white/20 text-gray-300 hover:bg-white/5 hover:text-white hover:border-white/30 transition-all"
             >
               {t('common.cancel')}
             </Button>
@@ -986,7 +986,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               variant="destructive"
               onClick={handleDeleteGoal}
               disabled={isDeletingGoal}
-              className="bg-red-700 hover:bg-red-800 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white shadow-lg transition-all"
             >
               {isDeletingGoal ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />

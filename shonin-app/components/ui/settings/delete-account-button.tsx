@@ -148,22 +148,6 @@ export function DeleteAccountButton() {
         <AlertDialogContent 
           className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl"
           onOverlayClick={() => !isDeleting && setDeleteDialogOpen(false)}
-          onInteractOutside={(e) => {
-            if (isDeleting) {
-              e.preventDefault()
-              return
-            }
-            e.preventDefault()
-            setDeleteDialogOpen(false)
-          }}
-          onEscapeKeyDown={(e) => {
-            if (isDeleting) {
-              e.preventDefault()
-              return
-            }
-            e.preventDefault()
-            setDeleteDialogOpen(false)
-          }}
         >
         <AlertDialogHeader>
           <button
