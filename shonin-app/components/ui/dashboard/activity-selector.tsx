@@ -45,6 +45,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const [dontDoTags, setDontDoTags] = useState<string[]>([]) // やめることタグ
   const [isSubmittingGoal, setIsSubmittingGoal] = useState(false) // 目標追加中
   const [rotationDegree, setRotationDegree] = useState(0) // 循環矢印の回転角度
+  const [previousGoalId, setPreviousGoalId] = useState<string>("") // 前回の目標ID
 
   // 目標フォームフック
   const {
@@ -442,6 +443,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               <Select 
                 value={selectedGoal} 
                 onValueChange={(value) => {
+                  // 前回の目標IDを保存
+                  setPreviousGoalId(selectedGoal)
                   // 循環矢印を180度回転（累積）
                   setRotationDegree(prev => prev + 180)
                   // 目標を変更（keyが変わることでアニメーションがトリガーされる）
@@ -453,7 +456,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   icon={
                     <div style={{ perspective: '100px' }}>
                       <RefreshCw 
-                        className="h-3.5 w-3.5 transition-transform duration-500 ease-in-out" 
+                        className="h-3.5 w-3.5 transition-transform ease-in-out" 
                         style={{ 
                           transform: `rotateY(${rotationDegree}deg)`,
                           transformStyle: 'preserve-3d',
@@ -639,25 +642,26 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             ) : (
               <motion.div
                 key={`main-content-${selectedGoal}`}
-                initial={{ rotateY: -180 }}
-                animate={{ 
-                  rotateY: 0
-                }}
-                exit={{ rotateY: 180 }}
-                transition={{ 
+                initial={previousGoalId && previousGoalId !== selectedGoal ? { rotateY: -180 } : { opacity: 0, scale: 0.95 }}
+                animate={previousGoalId && previousGoalId !== selectedGoal ? { rotateY: 0 } : { opacity: 1, scale: 1 }}
+                exit={previousGoalId && previousGoalId !== selectedGoal ? { rotateY: 180 } : { opacity: 0, scale: 0.95 }}
+                transition={previousGoalId && previousGoalId !== selectedGoal ? { 
                   duration: 0.6, 
                   ease: "easeInOut"
+                } : {
+                  duration: 0.2, 
+                  ease: "easeInOut"
                 }}
-                style={{
+                style={previousGoalId && previousGoalId !== selectedGoal ? {
                   transformStyle: "preserve-3d",
-                }}
+                } : {}}
                 ref={activityAreaRef}
                 className="relative"
               >
                 {/* 表面 (コンテンツ) */}
                 <div 
                   className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950 hover:border-white/20 h-full"
-                  style={{ backfaceVisibility: "hidden" }}
+                  style={previousGoalId && previousGoalId !== selectedGoal ? { backfaceVisibility: "hidden" } : {}}
                 >
             <div className="space-y-4">
               {/* CURRENT FOCUS セクション */}
@@ -943,15 +947,17 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
             </div>
                 </div>
 
-                {/* 裏面 (背景のみ) */}
-                <div 
-                  className="absolute inset-0 rounded-xl border border-white/10 bg-gray-950 flex items-center justify-center shadow-lg"
-                  style={{ 
-                    transform: "rotateY(180deg)",
-                    backfaceVisibility: "hidden"
-                  }}
-                >
-                </div>
+                {/* 裏面 (背景のみ - 目標切り替え時のみ表示) */}
+                {previousGoalId && previousGoalId !== selectedGoal && (
+                  <div 
+                    className="absolute inset-0 rounded-xl border border-white/10 bg-gray-950 flex items-center justify-center shadow-lg"
+                    style={{ 
+                      transform: "rotateY(180deg)",
+                      backfaceVisibility: "hidden"
+                    }}
+                  >
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
