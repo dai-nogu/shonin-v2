@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { useTranslations } from 'next-intl'
 import { getWeekStart, getCurrentTime, getDateString } from "@/lib/date-utils"
 import { formatDuration } from "@/lib/format-duration"
+import { ChevronDown } from "lucide-react"
 import type { CompletedSession } from "../time-tracker"
 
 interface WeeklyLineChartProps {
@@ -29,6 +30,21 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
   const pathRef = useRef<SVGPathElement>(null)
   const [pathLength, setPathLength] = useState(0)
   const [isReady, setIsReady] = useState(false)
+
+  // 外側クリックでメニューを閉じる
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-dropdown="date-range"]')) {
+        setIsMenuOpen(false)
+      }
+    }
+    
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   // 日数を取得
   const getDaysCount = () => {
@@ -132,58 +148,70 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
   }
 
   return (
-    <Card className="bg-transparent border-0 shadow-none">
-      <CardHeader className="px-0 pt-0 pb-4">
+    <Card className="bg-transparent border-0 shadow-none group/card">
+      <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-visible">
+        {/* グローエフェクト用のオーバーレイ */}
+        <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl overflow-hidden -z-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent" />
+        </div>
+
+        <CardHeader className="px-0 pt-0 pb-4 relative">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white text-xl md:text-2xl font-bold">
             {t('weekly_chart.title')}
           </CardTitle>
           
-          {/* 切り替えボタン - ホバーで展開 */}
-          <div className="relative z-50">
+          {/* 切り替えボタン - モダンなドロップダウン */}
+          <div className="relative z-[100]" data-dropdown="date-range">
             <button
-              onMouseEnter={() => setIsMenuOpen(true)}
-              onMouseLeave={() => setIsMenuOpen(false)}
-              className={`px-3 py-1.5 text-xs font-medium bg-gray-900 backdrop-blur-sm border border-white/10 transition-all duration-200 min-w-[80px] text-white ${
-                isMenuOpen ? 'rounded-t-lg' : 'rounded-lg hover:bg-gray-700'
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
+                isMenuOpen ? 'bg-[#0f1115] border-white/20 text-white shadow-lg' : ''
               }`}
             >
-              {dateRange === 'week' ? t('weekly_chart.this_week') : dateRange === '2weeks' ? t('weekly_chart.two_weeks') : t('weekly_chart.month')}
+              <span>
+                {dateRange === 'week' ? t('weekly_chart.this_week') : dateRange === '2weeks' ? t('weekly_chart.two_weeks') : t('weekly_chart.month')}
+              </span>
+              <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${isMenuOpen ? 'rotate-180 text-gray-300' : ''}`} />
             </button>
             
-            {/* ドロップダウンコンテンツ - 残りの選択肢のみ */}
-            {isMenuOpen && (
-              <div
-                onMouseEnter={() => setIsMenuOpen(true)}
-                onMouseLeave={() => setIsMenuOpen(false)}
-                className="absolute right-0 top-full w-full overflow-hidden"
-                style={{
-                  animation: 'slideDown 0.2s ease-out'
-                }}
-              >
+            {/* ドロップダウンメニュー */}
+            <div
+              className={`absolute right-0 top-full mt-2 w-32 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-top-right z-[110] ${
+                isMenuOpen 
+                  ? 'opacity-100 scale-100 translate-y-0 visible' 
+                  : 'opacity-0 scale-95 -translate-y-2 invisible pointer-events-none'
+              }`}
+            >
+              <div className="p-1 space-y-0.5">
                 {([
                   { key: 'week', label: t('weekly_chart.this_week') },
                   { key: '2weeks', label: t('weekly_chart.two_weeks') },
                   { key: 'month', label: t('weekly_chart.month') },
-                ] as { key: DateRange; label: string }[]).filter(item => item.key !== dateRange).map((item) => (
+                ] as { key: DateRange; label: string }[]).map((item) => (
                   <button
                     key={item.key}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault()
                       setDateRange(item.key)
                       setIsMenuOpen(false)
                     }}
-                    className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 first:border-t-0 last:rounded-b-lg hover:bg-gray-700"
+                    className={`w-full px-3 py-2 text-xs font-medium text-left rounded-lg transition-colors ${
+                      dateRange === item.key 
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
                   >
                     {item.label}
                   </button>
                 ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-0">
+      <CardContent className="px-0 relative">
         <div className="rounded-xl border border-white/10 p-5">
           {/* 合計表示 */}
           <div className="mb-4 text-center">
@@ -266,7 +294,7 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
                 strokeDasharray={pathLength || 1000}
                 strokeDashoffset={pathLength || 1000}
                 style={{
-                  animation: `drawLine 1.2s cubic-bezier(0.4, 0, 0.2, 1) 2.5s forwards`
+                  animation: `drawLine 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards`
                 }}
               />
 
@@ -276,6 +304,8 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
                 const y = 55 - (d.totalSeconds / maxSeconds) * 50
                 const hasData = d.totalSeconds > 0
                 const animationName = hasData ? 'fadeIn' : 'fadeInDim'
+                // 線の進行に合わせてポイントを表示（線が到達した時に表示）
+                const pointDelay = (i / (chartData.length - 1)) * 1.2
                 return (
                   <circle
                     key={`${animationKey}-${i}`}
@@ -289,7 +319,7 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
                     style={{ 
                       pointerEvents: 'all',
                       opacity: 0,
-                      animation: `${animationName} 0.3s ease-out ${0.1 * i + 1.2}s forwards`,
+                      animation: `${animationName} 0.3s ease-out ${pointDelay}s forwards`,
                     }}
                   />
                 )
@@ -353,6 +383,7 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
           )}
         </div>
       </CardContent>
+      </div>
     </Card>
   )
 }

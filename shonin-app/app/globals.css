@@ -320,3 +320,15 @@
     stroke-dashoffset: 502.65; /* 2 * π * 80 の円周 */
   }
 }
+
+/* ===== カードが奥から手前に出てくるアニメーション ===== */
+@keyframes slideInFromBack {
+  from {
+    opacity: 0;
+    transform: translateZ(-100px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
+}

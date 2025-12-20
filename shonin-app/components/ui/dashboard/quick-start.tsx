@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, MoreVertical, Target } from "lucide-react"
+import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, MoreVertical, Target, ChevronDown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -52,6 +52,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [isMobile, setIsMobile] = useState(false)
   const [previousModal, setPreviousModal] = useState<'activity-count' | 'recent-sessions' | null>(null)
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false)
+  const [animationKey, setAnimationKey] = useState(0)
   
   // 行動管理フック
   const { activities, addActivity } = useActivities()
@@ -78,6 +79,26 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // 外側クリックでメニューを閉じる
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-dropdown="tab-menu"]')) {
+        setIsTabMenuOpen(false)
+      }
+    }
+    
+    if (isTabMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isTabMenuOpen])
+
+  // タブが変わったらアニメーションをトリガー
+  useEffect(() => {
+    setAnimationKey(prev => prev + 1)
+  }, [activeTab])
 
   // セッションから色・アイコン情報を取得、なければ従来のマッピングを使用
   const getActivityStyle = (session: CompletedSession) => {
@@ -380,14 +401,19 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       <div className="space-y-3">
         {activities.map((activity, index) => (
           <div
-            key={`${activity.id}-${activeTab}`}
+            key={`${activity.id}-${activeTab}-${animationKey}`}
             onClick={() => {
               if (isMobile) {
                 handleActivityDetailClick(activity)
               }
             }}
-            className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group hover:border-white/20 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-0.5 ${isMobile ? 'cursor-pointer' : ''}`}
-            style={{ animationDelay: `${index * 50}ms` }}
+            className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group ${isMobile ? 'cursor-pointer' : ''}`}
+            style={{ 
+              animation: `slideInFromBack 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
+              animationDelay: `${index * 80}ms`,
+              opacity: 0,
+              transform: 'translateZ(-100px) scale(0.8)'
+            }}
           >
             {/* 3点ドットボタン（カード右上に配置） */}
             <Button
@@ -568,65 +594,79 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
   return (
     <>
-      <Card className="bg-transparent border-0 shadow-none">
-        <CardHeader className="px-0 pt-0 pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
-              <span className="text-[#fffffC]">
-                {t('quick_start.start_activity')}
-              </span>
-            </CardTitle>
+      <Card className="bg-transparent border-0 shadow-none group/card">
+        <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-visible">
+          {/* グローエフェクト用のオーバーレイ */}
+          <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent" />
+          </div>
+
+          <CardHeader className="px-0 pt-0 pb-4 relative z-10">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
+                <span className="text-[#fffffC]">
+                  {t('quick_start.start_activity')}
+                </span>
+              </CardTitle>
             
-            {/* タブ切り替え - ホバーで展開 */}
-            <div className="relative z-50">
+            {/* タブ切り替え - モダンなドロップダウン */}
+            <div className="relative z-[100]" data-dropdown="tab-menu">
               <button
-                onMouseEnter={() => setIsTabMenuOpen(true)}
-                onMouseLeave={() => setIsTabMenuOpen(false)}
-                className={`px-3 py-1.5 text-xs font-medium bg-gray-900 backdrop-blur-sm border border-white/10 transition-all duration-200 min-w-[100px] text-white ${
-                  isTabMenuOpen ? 'rounded-t-lg' : 'rounded-lg hover:bg-gray-700'
+                onClick={() => setIsTabMenuOpen(!isTabMenuOpen)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
+                  isTabMenuOpen ? 'bg-[#0f1115] border-white/20 text-white shadow-lg' : ''
                 }`}
               >
-                {activeTab === "recent" ? t('quick_start.latest') : t('quick_start.most_recorded')}
+                <span>
+                  {activeTab === "recent" ? t('quick_start.latest') : t('quick_start.most_recorded')}
+                </span>
+                <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${isTabMenuOpen ? 'rotate-180 text-gray-300' : ''}`} />
               </button>
               
-              {/* ドロップダウンコンテンツ - 残りの選択肢のみ */}
-              {isTabMenuOpen && (
-                <div
-                  onMouseEnter={() => setIsTabMenuOpen(true)}
-                  onMouseLeave={() => setIsTabMenuOpen(false)}
-                  className="absolute right-0 top-full w-full overflow-hidden"
-                  style={{
-                    animation: 'slideDown 0.2s ease-out'
-                  }}
-                >
-                  {activeTab === "recent" ? (
-                    <button
-                      onClick={() => {
-                        setActiveTab("most-recorded")
-                        setIsTabMenuOpen(false)
-                      }}
-                      className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 rounded-b-lg hover:bg-gray-700"
-                    >
-                      {t('quick_start.most_recorded')}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setActiveTab("recent")
-                        setIsTabMenuOpen(false)
-                      }}
-                      className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 rounded-b-lg hover:bg-gray-700"
-                    >
-                      {t('quick_start.latest')}
-                    </button>
-                  )}
+              {/* ドロップダウンメニュー - 左側に表示 */}
+              <div
+                className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 w-36 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-right z-[110] ${
+                  isTabMenuOpen 
+                    ? 'opacity-100 scale-100 translate-x-0 visible' 
+                    : 'opacity-0 scale-95 translate-x-2 invisible pointer-events-none'
+                }`}
+              >
+                <div className="p-1 space-y-0.5">
+                  <button
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      setActiveTab("recent")
+                      setIsTabMenuOpen(false)
+                    }}
+                    className={`w-full px-3 py-2 text-xs font-medium text-left rounded-lg transition-colors ${
+                      activeTab === "recent"
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {t('quick_start.latest')}
+                  </button>
+                  <button
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      setActiveTab("most-recorded")
+                      setIsTabMenuOpen(false)
+                    }}
+                    className={`w-full px-3 py-2 text-xs font-medium text-left rounded-lg transition-colors ${
+                      activeTab === "most-recorded"
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {t('quick_start.most_recorded')}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="px-0">
+        <CardContent className="px-0 relative z-10">
           {/* Bento Grid Layout */}
           <div className="w-full">
             {/* タブコンテンツ */}
@@ -680,6 +720,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
             </div>
           </div>
         </CardContent>
+        </div>
       </Card>
 
 

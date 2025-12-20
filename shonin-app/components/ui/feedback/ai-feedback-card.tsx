@@ -118,9 +118,14 @@ export const AIFeedbackCard = memo(function AIFeedbackCard({
       </div>
 
       {/* メインコンテンツカード */}
-      <div className="border border-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-lg backdrop-blur-sm">
+      <div className="border border-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-10 shadow-lg backdrop-blur-sm group/card transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden">
+        {/* グローエフェクト用のオーバーレイ */}
+        <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent" />
+        </div>
+
         <div 
-          className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+          className={`transition-opacity duration-300 relative z-10 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
         >
           {renderFeedbackContent()}
         </div>

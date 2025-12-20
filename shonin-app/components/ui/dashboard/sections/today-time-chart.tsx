@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common
 import { Button } from "@/components/ui/common/button"
 import { useTranslations } from 'next-intl'
 import { getCurrentTime, getDateString } from "@/lib/date-utils"
+import { ChevronDown } from "lucide-react"
 import type { CompletedSession } from "../time-tracker"
 
 interface TodayTimeChartProps {
@@ -18,6 +19,21 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('12h')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [animationKey, setAnimationKey] = useState(0)
+  
+  // 外側クリックでメニューを閉じる
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-dropdown="time-range"]')) {
+        setIsMenuOpen(false)
+      }
+    }
+    
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
   
   // 今日のセッション時間を計算
   const todayTotalSeconds = useMemo(() => {
@@ -58,54 +74,64 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
   const strokeDashoffset = circumference - (progressPercentage / 100) * circumference
 
   return (
-    <Card className="bg-transparent border-0 shadow-none">
-      <CardHeader className="px-0 pt-0 pb-4">
+    <Card className="bg-transparent border-0 shadow-none group/card">
+      <div className="rounded-xl border border-white/10 p-6 shadow-lg transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-visible">
+        {/* グローエフェクト用のオーバーレイ */}
+        <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl overflow-hidden -z-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent" />
+        </div>
+
+        <CardHeader className="px-0 pt-0 pb-4 relative">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white text-xl md:text-2xl font-bold">
             {t('today_time.title')}
           </CardTitle>
           
-          {/* 切り替えボタン - ホバーで展開 */}
-          <div className="relative z-50">
+          {/* 切り替えボタン - モダンなドロップダウン */}
+          <div className="relative z-[100]" data-dropdown="time-range">
             <button
-              onMouseEnter={() => setIsMenuOpen(true)}
-              onMouseLeave={() => setIsMenuOpen(false)}
-              className={`px-3 py-1.5 text-xs font-medium bg-gray-900 backdrop-blur-sm border border-white/10 transition-all duration-200 min-w-[60px] text-white ${
-                isMenuOpen ? 'rounded-t-lg' : 'rounded-lg hover:bg-gray-700'
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
+                isMenuOpen ? 'bg-[#0f1115] border-white/20 text-white shadow-lg' : ''
               }`}
             >
-              {timeRange}
+              <span>{timeRange}</span>
+              <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${isMenuOpen ? 'rotate-180 text-gray-300' : ''}`} />
             </button>
             
-            {/* ドロップダウンコンテンツ - 残りの選択肢のみ */}
-            {isMenuOpen && (
-              <div
-                onMouseEnter={() => setIsMenuOpen(true)}
-                onMouseLeave={() => setIsMenuOpen(false)}
-                className="absolute right-0 top-full w-full overflow-hidden"
-                style={{
-                  animation: 'slideDown 0.2s ease-out'
-                }}
-              >
-                {(['6h', '12h', '24h'] as TimeRange[]).filter(range => range !== timeRange).map((range) => (
+            {/* ドロップダウンメニュー */}
+            <div
+              className={`absolute right-0 top-full mt-2 w-24 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-top-right z-[110] ${
+                isMenuOpen 
+                  ? 'opacity-100 scale-100 translate-y-0 visible' 
+                  : 'opacity-0 scale-95 -translate-y-2 invisible pointer-events-none'
+              }`}
+            >
+              <div className="p-1 space-y-0.5">
+                {(['6h', '12h', '24h'] as TimeRange[]).map((range) => (
                   <button
                     key={range}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault()
                       setTimeRange(range)
                       setIsMenuOpen(false)
                     }}
-                    className="w-full px-3 py-1.5 text-xs font-medium text-left transition-colors text-white bg-gray-900 backdrop-blur-sm border border-white/10 border-t-0 first:border-t-0 last:rounded-b-lg hover:bg-gray-700"
+                    className={`w-full px-3 py-2 text-xs font-medium text-left rounded-lg transition-colors ${
+                      timeRange === range 
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
                   >
                     {range}
                   </button>
                 ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-0">
+      <CardContent className="px-0 relative">
         <div className="rounded-xl border border-white/10 p-6">
           {/* 円グラフ */}
           <div className="flex justify-center">
@@ -165,6 +191,7 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
 
         </div>
       </CardContent>
+      </div>
     </Card>
   )
 }

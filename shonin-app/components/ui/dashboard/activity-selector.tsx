@@ -411,18 +411,24 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
   const selectedActivityData = customActivities.find((a) => a.id === selectedActivity)
 
   return (
-    <Card className="bg-transparent border-0 shadow-none">
-      {/* エラーモーダル */}
-      <ErrorModal
-        isOpen={!!operationError}
-        onClose={() => {
-          // エラーステートをクリアしてモーダルを閉じる
-          setOperationError(null)
-        }}
-        message={operationError || ''}
-      />
+    <Card className="bg-transparent border-0 shadow-none group/card">
+      <div className="rounded-xl border border-white/10 p-5 shadow-lg transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] relative overflow-hidden">
+        {/* グローエフェクト用のオーバーレイ */}
+        <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/5 to-transparent" />
+        </div>
 
-      <CardHeader className="px-0 pt-0 pb-4">
+        {/* エラーモーダル */}
+        <ErrorModal
+          isOpen={!!operationError}
+          onClose={() => {
+            // エラーステートをクリアしてモーダルを閉じる
+            setOperationError(null)
+          }}
+          message={operationError || ''}
+        />
+
+        <CardHeader className="px-0 pt-0 pb-4 relative z-10">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white flex items-center text-xl md:text-2xl font-bold">
             <span className="text-[#fffffC]">
@@ -431,33 +437,41 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
           </CardTitle>
           
           {/* 右側のボタン群 */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {activeGoals.length > 0 && (
               <Select 
                 value={selectedGoal} 
                 onValueChange={(value) => {
-                  setSelectedGoal(value)
                   // 循環矢印を180度回転（累積）
                   setRotationDegree(prev => prev + 180)
+                  // 目標を変更（keyが変わることでアニメーションがトリガーされる）
+                  setSelectedGoal(value)
                 }}
               >
                 <SelectTrigger 
-                  className="w-auto bg-gray-800/60 border-gray-700 hover:bg-gray-700/80 text-gray-300 hover:text-white text-xs h-7 px-2.5 gap-1 rounded-lg transition-colors focus:ring-0 focus:ring-offset-0"
+                  className="w-auto bg-[#0f1115]/80 hover:bg-[#0f1115] border-white/10 hover:border-white/20 text-gray-300 hover:text-white text-xs h-8 px-3.5 gap-2 rounded-xl transition-all duration-200 focus:ring-0 focus:ring-offset-0 backdrop-blur-sm shadow-sm"
                   icon={
-                    <RefreshCw 
-                      className="h-3.5 w-3.5 opacity-70 transition-transform duration-500" 
-                      style={{ transform: `rotate(${rotationDegree}deg)` }}
-                    />
+                    <div style={{ perspective: '100px' }}>
+                      <RefreshCw 
+                        className="h-3.5 w-3.5 transition-transform duration-500 ease-in-out" 
+                        style={{ 
+                          transform: `rotateY(${rotationDegree}deg)`,
+                          transformStyle: 'preserve-3d',
+                          backfaceVisibility: 'visible'
+                        }}
+                      />
+                    </div>
                   }
+                  hideChevron={true}
                 >
-                  <span>{t('focus.change_goal')}</span>
+                  <span className="font-medium">{t('focus.change_goal')}</span>
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectContent className="bg-[#0f1115]/95 backdrop-blur-xl border-white/10 rounded-xl shadow-2xl">
                   {activeGoals.map((goal) => (
                     <SelectItem 
                       key={goal.id} 
                       value={goal.id}
-                      className="text-white hover:bg-white/10 text-xs"
+                      className="text-white hover:bg-white/5 text-xs focus:bg-emerald-500/10 focus:text-emerald-400"
                     >
                       {goal.title.length > 20 ? `${goal.title.substring(0, 20)}...` : goal.title}
                     </SelectItem>
@@ -470,18 +484,18 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               variant="ghost"
               size="sm"
               onClick={() => setShowGoalForm(true)}
-              className="h-7 px-2.5 text-xs bg-gray-800/60 hover:bg-gray-700/80 text-gray-300 hover:text-white border border-gray-700 rounded-lg"
+              className="h-8 px-3.5 text-xs bg-[#0f1115]/80 hover:bg-[#0f1115] text-gray-300 hover:text-white border border-white/10 hover:border-white/20 rounded-xl transition-all duration-200 backdrop-blur-sm shadow-sm font-medium"
             >
-              <Plus className="w-3.5 h-3.5 mr-1" />
               {t('focus.add_goal')}
+              <Plus className="w-3.5 h-3.5 ml-1.5" />
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-0 space-y-4 lg:space-y-4">
+      <CardContent className="px-0 space-y-4 lg:space-y-4 relative z-10">
         {/* コンテンツ切り替えコンテナ */}
-        <div>
+        <div style={{ perspective: "1200px" }}>
           <AnimatePresence mode="wait">
             {showGoalForm ? (
               <motion.div
@@ -624,17 +638,27 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               </motion.div>
             ) : (
               <motion.div
-                key="main-content"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                key={`main-content-${selectedGoal}`}
+                initial={{ rotateY: -180 }}
+                animate={{ 
+                  rotateY: 0
+                }}
+                exit={{ rotateY: 180 }}
                 transition={{ 
-                  duration: 0.2, 
+                  duration: 0.6, 
                   ease: "easeInOut"
                 }}
+                style={{
+                  transformStyle: "preserve-3d",
+                }}
                 ref={activityAreaRef}
-                className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950 hover:border-white/20"
+                className="relative"
               >
+                {/* 表面 (コンテンツ) */}
+                <div 
+                  className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950 hover:border-white/20 h-full"
+                  style={{ backfaceVisibility: "hidden" }}
+                >
             <div className="space-y-4">
               {/* CURRENT FOCUS セクション */}
               <div className="space-y-3">
@@ -917,11 +941,23 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 )}
               </div>
             </div>
+                </div>
+
+                {/* 裏面 (背景のみ) */}
+                <div 
+                  className="absolute inset-0 rounded-xl border border-white/10 bg-gray-950 flex items-center justify-center shadow-lg"
+                  style={{ 
+                    transform: "rotateY(180deg)",
+                    backfaceVisibility: "hidden"
+                  }}
+                >
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </CardContent>
+      </div>
 
       {/* 削除確認ダイアログ */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
