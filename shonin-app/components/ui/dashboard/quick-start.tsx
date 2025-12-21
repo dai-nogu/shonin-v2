@@ -1,15 +1,13 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, MoreVertical, Target, ChevronDown } from "lucide-react"
+import { Play, Calendar, Clock, Star, MapPin, BarChart3, History, CalendarDays, Eye, MoreHorizontal, MoreVertical, Target, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/common/card"
 import { Button } from "@/components/ui/common/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTranslations } from 'next-intl'
 
 import { SessionDetailModal } from "./session-detail-modal"
-import { ActivityCountModal } from "./activity-count-modal"
-import { RecentSessionsModal } from "./recent-sessions-modal"
 import { useActivities } from "@/contexts/activities-context"
 import { useGoalsDb } from "@/hooks/use-goals-db"
 import { useSessions } from "@/contexts/sessions-context"
@@ -36,6 +34,8 @@ interface QuickStartProps {
   onStartActivity?: (sessionData: SessionData) => void
 }
 
+const ITEMS_PER_PAGE = 10
+
 export function QuickStart({ completedSessions, onStartActivity }: QuickStartProps) {
   const t = useTranslations()
   
@@ -46,13 +46,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const [activeTab, setActiveTab] = useState("recent")
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedSession, setSelectedSession] = useState<CompletedSession | null>(null)
-  const [showActivityCountModal, setShowActivityCountModal] = useState(false)
-  const [showRecentSessionsModal, setShowRecentSessionsModal] = useState(false)
-  const [recentSessionsFilterMode, setRecentSessionsFilterMode] = useState<'all'>('all')
   const [isMobile, setIsMobile] = useState(false)
-  const [previousModal, setPreviousModal] = useState<'activity-count' | 'recent-sessions' | null>(null)
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false)
   const [animationKey, setAnimationKey] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
   
   // 行動管理フック
   const { activities, addActivity } = useActivities()
@@ -95,9 +92,10 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
   }, [isTabMenuOpen])
 
-  // タブが変わったらアニメーションをトリガー
+  // タブが変わったらアニメーションをトリガー & ページをリセット
   useEffect(() => {
     setAnimationKey(prev => prev + 1)
+    setCurrentPage(1)
   }, [activeTab])
 
   // セッションから色・アイコン情報を取得、なければ従来のマッピングを使用
@@ -174,7 +172,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     return { number: '', text: date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" }) }
   }
 
-  // 行動別（実行回数が多い順）- useMemoで最適化
+  // 行動別（実行回数が多い順、最大100件）- useMemoで最適化
   const mostRecordedActivities = useMemo((): QuickStartActivity[] => {
     const activityStats = new Map<string, { totalTime: number; sessionCount: number; latestSession: CompletedSession }>()
     
@@ -197,7 +195,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
 
     return Array.from(activityStats.entries())
       .sort((a, b) => b[1].sessionCount - a[1].sessionCount) // 実行回数順に変更
-      .slice(0, 3)
+      .slice(0, 100) // 最大100件に制限
       .map(([activityName, stats]) => {
         const activityInfo = getActivityStyle(stats.latestSession)
         const goalInfo = stats.latestSession.goalId ? getGoal(stats.latestSession.goalId) : null
@@ -220,11 +218,11 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       })
   }, [completedSessions, getGoal])
 
-  // 最新のセッション（最新登録順）- useMemoで最適化
+  // 最新のセッション（最新登録順、最大100件）- useMemoで最適化
   const recentActivities = useMemo((): QuickStartActivity[] => {
     return completedSessions
       .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime())
-      .slice(0, 3)
+      .slice(0, 100) // 最大100件に制限
       .map(session => {
         const activityInfo = getActivityStyle(session)
         const goalInfo = session.goalId ? getGoal(session.goalId) : null
@@ -346,8 +344,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
   const handleCloseDetail = () => {
     setShowDetailModal(false)
     setSelectedSession(null)
-    // 詳細モーダルを閉じた時は直接ダッシュボードに戻る（前のモーダルは再表示しない）
-    setPreviousModal(null)
   }
 
   const handleStartSimilar = (sessionData: any) => {
@@ -356,36 +352,9 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
     }
   }
 
-  const handleShowActivityCount = () => {
-    setShowActivityCountModal(true)
-  }
-
-  const handleCloseActivityCount = () => {
-    setShowActivityCountModal(false)
-  }
-
-  const handleActivityCountDetail = (session: CompletedSession) => {
-    // 回数順モーダルを閉じて、詳細モーダルを開く
-    setShowActivityCountModal(false)
-    setPreviousModal('activity-count')
-    setSelectedSession(session)
-    setShowDetailModal(true)
-  }
-
-  const handleShowRecentSessions = () => {
-    setShowRecentSessionsModal(true)
-  }
-
-  const handleCloseRecentSessions = () => {
-    setShowRecentSessionsModal(false)
-  }
-
-  const handleRecentSessionsDetail = (session: CompletedSession) => {
-    // 最新モーダルを閉じて、詳細モーダルを開く
-    setShowRecentSessionsModal(false)
-    setPreviousModal('recent-sessions')
-    setSelectedSession(session)
-    setShowDetailModal(true)
+  // ページネーション処理
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
   const renderActivityList = (activities: QuickStartActivity[], emptyMessage: string) => {
@@ -397,176 +366,216 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
       )
     }
 
+    // ページネーション処理
+    const totalPages = Math.ceil(activities.length / ITEMS_PER_PAGE)
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const paginatedActivities = activities.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+
     return (
-      <div className="space-y-3">
-        {activities.map((activity, index) => (
-          <div
-            key={`${activity.id}-${activeTab}-${animationKey}`}
-            onClick={() => {
-              if (isMobile) {
-                handleActivityDetailClick(activity)
-              }
-            }}
-            className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group ${isMobile ? 'cursor-pointer' : ''}`}
-            style={{ 
-              animation: `slideInFromBack 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
-              animationDelay: `${index * 80}ms`,
-              opacity: 0,
-              transform: 'translateZ(-100px) scale(0.8)'
-            }}
-          >
-            {/* 3点ドットボタン（カード右上に配置） */}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="absolute top-2 right-2 h-5 w-5 rounded-full hover:bg-gray-700/50 text-white hover:text-white border border-white p-0 z-20"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleViewDetail(activity)
+      <div className="flex flex-col h-full">
+        {/* スクロール可能なリスト部分 - 2.5個分の高さで3つ目が半分見える */}
+        <div className="overflow-y-auto max-h-[330px] space-y-3 pr-1">
+          {paginatedActivities.map((activity, index) => (
+            <div
+              key={`${activity.id}-${activeTab}-${animationKey}-${currentPage}`}
+              onClick={() => {
+                if (isMobile) {
+                  handleActivityDetailClick(activity)
+                }
+              }}
+              className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group ${isMobile ? 'cursor-pointer' : ''}`}
+              style={{ 
+                animation: `slideInFromBack 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
+                animationDelay: `${index * 80}ms`,
+                opacity: 0,
+                transform: 'translateZ(-100px) scale(0.8)'
               }}
             >
-              <MoreVertical className="w-3.5 h-3.5" />
-            </Button>
+              {/* 3点ドットボタン（カード右上に配置） */}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute top-2 right-2 h-5 w-5 rounded-full hover:bg-gray-700/50 text-white hover:text-white border border-white p-0 z-20"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleViewDetail(activity)
+                }}
+              >
+                <MoreVertical className="w-3.5 h-3.5" />
+              </Button>
             
-            <div className="flex items-center space-x-4 flex-1 min-w-0 relative z-10">
-              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} text-xl`}>
-                {activity.icon || activity.name.charAt(0)}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-white font-bold truncate text-base lg:text-lg drop-shadow-md">{activity.name}</h3>
+              <div className="flex items-center space-x-4 flex-1 min-w-0 relative z-10">
+                <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center ${activity.color} text-xl`}>
+                  {activity.icon || activity.name.charAt(0)}
                 </div>
 
-                <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
-                  {activeTab === "most-recorded" ? (
-                    <>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-sm font-bold text-emerald-400">{activity.sessionCount}</span>
-                        <span className="text-xs text-gray-300 opacity-90">
-                          {activity.sessionCount === 1 ? t('common.time') : t('common.times')}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center space-x-1">
-                        {activity.date.number ? (
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-white font-bold truncate text-base lg:text-lg drop-shadow-md">{activity.name}</h3>
+                  </div>
+
+                  <div className="flex items-center space-x-3 text-xs lg:text-sm text-gray-300">
+                    {activeTab === "most-recorded" ? (
+                      <>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm font-bold text-emerald-400">{activity.sessionCount}</span>
+                          <span className="text-xs text-gray-300 opacity-90">
+                            {activity.sessionCount === 1 ? t('common.time') : t('common.times')}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center space-x-1">
+                          {activity.date.number ? (
+                            <>
+                              <span className="text-sm font-bold text-emerald-400">{activity.date.number}</span>
+                              <span className="text-xs text-gray-300 opacity-90">{activity.date.text}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-300 font-medium">{activity.date.text}</span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* アクションボタン */}
+              <div className="flex items-center space-x-2 relative z-10 pl-4 pr-6">
+                {/* SP版: 開始ボタン */}
+                {isMobile ? (
+                  <>
+                    {isSessionActive ? (
+                      <TooltipProvider>
+                        <Tooltip delayDuration={0}>
+                          <TooltipTrigger asChild>
+                            <span className="inline-block cursor-not-allowed">
+                              <Button
+                                size="icon"
+                                disabled
+                                className="h-10 w-10 rounded-full bg-gray-700 text-gray-500 opacity-50 pointer-events-none"
+                              >
+                                <Play className="w-4 h-4 fill-current" />
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" align="end">
+                            <p className="text-xs">{t('common.recording_in_progress')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Button
+                        size="icon"
+                        disabled={isStarting}
+                        className={`h-10 w-10 rounded-full shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-110 active:scale-95 ${
+                          startingActivityId === activity.id 
+                            ? "bg-gray-700 cursor-wait" 
+                            : "bg-emerald-700 text-white"
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivityClick(activity)
+                        }}
+                      >
+                        {startingActivityId === activity.id ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4 fill-current ml-0.5" />
+                        )}
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  // PC版: 開始ボタン
+                  <>
+                    {isSessionActive ? (
+                      <TooltipProvider>
+                        <Tooltip delayDuration={0}>
+                          <TooltipTrigger asChild>
+                            <span className="inline-block cursor-not-allowed">
+                              <Button
+                                size="sm"
+                                disabled
+                                className="bg-gray-700 text-gray-500 opacity-50 pointer-events-none px-4"
+                              >
+                                <Play className="w-3 h-3 mr-1.5 fill-current" />
+                                {t('common.start')}
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" align="end">
+                            <p className="text-xs">{t('common.recording_in_progress')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <Button
+                        size="sm"
+                        disabled={isStarting}
+                        className={`px-5 shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+                          startingActivityId === activity.id 
+                            ? "bg-gray-700 cursor-wait" 
+                            : "bg-emerald-700 text-white border-0"
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleActivityClick(activity)
+                        }}
+                      >
+                        {startingActivityId === activity.id ? (
                           <>
-                            <span className="text-sm font-bold text-emerald-400">{activity.date.number}</span>
-                            <span className="text-xs text-gray-300 opacity-90">{activity.date.text}</span>
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                            {t('common.starting')}
                           </>
                         ) : (
-                          <span className="text-xs text-gray-300 font-medium">{activity.date.text}</span>
+                          <>
+                            <Play className="w-3 h-3 mr-1.5 fill-current" />
+                            {t('common.start')}
+                          </>
                         )}
-                      </div>
-                    </>
-                  )}
-                </div>
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* アクションボタン */}
-            <div className="flex items-center space-x-2 relative z-10 pl-4 pr-6">
-              {/* SP版: 開始ボタン */}
-              {isMobile ? (
-                <>
-                  {isSessionActive ? (
-                    <TooltipProvider>
-                      <Tooltip delayDuration={0}>
-                        <TooltipTrigger asChild>
-                          <span className="inline-block cursor-not-allowed">
-                            <Button
-                              size="icon"
-                              disabled
-                              className="h-10 w-10 rounded-full bg-gray-700 text-gray-500 opacity-50 pointer-events-none"
-                            >
-                              <Play className="w-4 h-4 fill-current" />
-                            </Button>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="end">
-                          <p className="text-xs">{t('common.recording_in_progress')}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <Button
-                      size="icon"
-                      disabled={isStarting}
-                      className={`h-10 w-10 rounded-full shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-110 active:scale-95 ${
-                        startingActivityId === activity.id 
-                          ? "bg-gray-700 cursor-wait" 
-                          : "bg-emerald-700 text-white"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleActivityClick(activity)
-                      }}
-                    >
-                      {startingActivityId === activity.id ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current ml-0.5" />
-                      )}
-                    </Button>
-                  )}
-                </>
-              ) : (
-                // PC版: 開始ボタン
-                <>
-                  {isSessionActive ? (
-                    <TooltipProvider>
-                      <Tooltip delayDuration={0}>
-                        <TooltipTrigger asChild>
-                          <span className="inline-block cursor-not-allowed">
-                            <Button
-                              size="sm"
-                              disabled
-                              className="bg-gray-700 text-gray-500 opacity-50 pointer-events-none px-4"
-                            >
-                              <Play className="w-3 h-3 mr-1.5 fill-current" />
-                              {t('common.start')}
-                            </Button>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="end">
-                          <p className="text-xs">{t('common.recording_in_progress')}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <Button
-                      size="sm"
-                      disabled={isStarting}
-                      className={`px-5 shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
-                        startingActivityId === activity.id 
-                          ? "bg-gray-700 cursor-wait" 
-                          : "bg-emerald-700 text-white border-0"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleActivityClick(activity)
-                      }}
-                    >
-                      {startingActivityId === activity.id ? (
-                        <>
-                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                          {t('common.starting')}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3 h-3 mr-1.5 fill-current" />
-                          {t('common.start')}
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </>
-              )}
+        {/* ページネーション（固定表示） */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/5">
+            <div className="text-xs text-gray-400">
+              {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, activities.length)} / {activities.length}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="h-8 w-8 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="text-sm text-gray-300">
+                {currentPage} / {totalPages}
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="h-8 w-8 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-        ))}
+        )}
       </div>
     )
   }
@@ -677,19 +686,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                     mostRecordedActivities,
                     t('quick_start.not_enough_data')
                   )}
-                  {mostRecordedActivities.length > 0 && (
-                    <div className="flex justify-end mt-3">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setShowActivityCountModal(true)}
-                        className="text-gray-400 hover:text-white hover:bg-white/10"
-                      >
-                        <MoreHorizontal className="w-4 h-4 mr-1" />
-                        {t('quick_start.see_more')}
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
 
@@ -698,22 +694,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   {renderActivityList(
                     recentActivities,
                     t('quick_start.no_recent_activity')
-                  )}
-                  {recentActivities.length > 0 && (
-                    <div className="flex justify-end mt-3">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setRecentSessionsFilterMode('all')
-                          setShowRecentSessionsModal(true)
-                        }}
-                        className="text-gray-400 hover:text-white hover:bg-white/10"
-                      >
-                        <MoreHorizontal className="w-4 h-4 mr-1" />
-                        {t('quick_start.see_more')}
-                      </Button>
-                    </div>
                   )}
                 </>
               )}
@@ -730,23 +710,6 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
         session={selectedSession}
         onClose={handleCloseDetail}
         onStartSimilar={handleStartSimilar}
-      />
-
-      <ActivityCountModal
-        isOpen={showActivityCountModal}
-        completedSessions={completedSessions}
-        onClose={handleCloseActivityCount}
-        onStartActivity={onStartActivity}
-        onViewDetail={handleActivityCountDetail}
-      />
-
-      <RecentSessionsModal
-        isOpen={showRecentSessionsModal}
-        completedSessions={completedSessions}
-        onClose={handleCloseRecentSessions}
-        onStartActivity={onStartActivity}
-        onViewDetail={handleRecentSessionsDetail}
-        filterMode={recentSessionsFilterMode}
       />
     </>
   )

@@ -369,7 +369,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
     >
       <Card 
         className={cn(
-          `bg-gray-950 border-gray-800 shadow-2xl max-w-2xl w-full mx-auto transition-all duration-300 ease-out overflow-hidden ring-1 ring-white/5`,
+          `bg-gray-950 border-gray-800 max-w-2xl w-full mx-auto transition-all duration-300 ease-out overflow-hidden ring-1 ring-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]`,
           isMobile && needsFixedHeight ? 'h-[500px] max-h-[85vh]' : 'max-h-[85vh] overflow-y-auto rounded-2xl',
           isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
         )}
@@ -990,7 +990,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
     >
       <Card 
         className={cn(
-          `bg-gray-950 border-gray-800 shadow-2xl max-w-2xl w-full mx-auto transition-all duration-300 ease-out overflow-hidden ring-1 ring-white/5`,
+          `bg-gray-950 border-gray-800 max-w-2xl w-full mx-auto transition-all duration-300 ease-out overflow-hidden ring-1 ring-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]`,
           isMobile && needsFixedHeight ? 'h-[500px] max-h-[85vh]' : 'max-h-[85vh] overflow-y-auto rounded-2xl',
           isAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
         )}
