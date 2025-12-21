@@ -313,7 +313,7 @@ export function WeeklyLineChart({ completedSessions }: WeeklyLineChartProps) {
                     cy={y}
                     r={hoveredDay === i ? "2.5" : "1.5"}
                     fill="#059669"
-                    className="transition-all duration-200 cursor-pointer"
+                    className="transition-all duration-200"
                     onMouseEnter={() => setHoveredDay(i)}
                     onMouseLeave={() => setHoveredDay(null)}
                     style={{ 

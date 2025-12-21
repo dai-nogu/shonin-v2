@@ -118,7 +118,7 @@ export function FocusCard({ initialGoals, onStartSession }: FocusCardProps) {
       <CardContent className="p-6">
         {/* ヘッダー：目標情報 */}
         <div 
-          className="flex items-center space-x-3 mb-4 cursor-pointer group"
+          className="flex items-center space-x-3 mb-4 group"
           onClick={handleEditGoal}
         >
           <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-lg">

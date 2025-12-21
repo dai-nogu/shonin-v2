@@ -277,7 +277,7 @@ function ScreenshotSection() {
               {/* 画像 */}
               <div className="w-full md:w-3/5">
                 <div 
-                  className="relative rounded-2xl border-2 border-gray-700 hover:border-emerald-700 transition-all duration-300 overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 shadow-2xl cursor-pointer group"
+                  className="relative rounded-2xl border-2 border-gray-700 hover:border-emerald-700 transition-all duration-300 overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 shadow-2xl group"
                   onClick={() => setSelectedImage(i)}
                 >
                   <img

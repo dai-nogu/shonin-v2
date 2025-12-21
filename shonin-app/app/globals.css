@@ -122,6 +122,16 @@
       radial-gradient(circle at 100% 0%, hsl(220, 25%, 10%) 0%, transparent 50%);
     background-attachment: fixed;
   }
+  /* cursor:pointerを無効化 */
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  select {
+    cursor: auto !important;
+  }
 }
 
 /* ===== モダンUIアニメーションユーティリティ ===== */

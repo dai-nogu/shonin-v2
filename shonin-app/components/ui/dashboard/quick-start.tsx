@@ -383,7 +383,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
                   handleActivityDetailClick(activity)
                 }
               }}
-              className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group ${isMobile ? 'cursor-pointer' : ''}`}
+              className={`relative overflow-hidden flex items-center justify-between p-4 rounded-xl border border-white/10 transition-all duration-300 group`}
               style={{ 
                 animation: `slideInFromBack 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`,
                 animationDelay: `${index * 80}ms`,

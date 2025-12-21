@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     <>
       <AppSidebar currentPage="dashboard" />
       <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
+        <div className="md:min-h-screen bg-transparent text-white md:pb-0 pb-20">
           {/* Header - SPでのみ表示 */}
           <div className="md:hidden">
             <Header currentPage="dashboard" />

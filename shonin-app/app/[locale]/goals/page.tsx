@@ -13,7 +13,7 @@ export default async function GoalsPage() {
     <>
       <AppSidebar currentPage="goals" />
       <SidebarInset>
-        <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
+        <div className="md:min-h-screen bg-transparent text-white md:pb-0 pb-20">
           <main className="container mx-auto px-4 py-4 lg:py-8">
             <Goals initialGoals={initialGoals} />
           </main>

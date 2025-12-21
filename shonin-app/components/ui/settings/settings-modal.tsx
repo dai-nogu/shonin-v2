@@ -241,7 +241,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   disabled={isSessionActive}
                 >
                   <SelectTrigger className={`w-[23%] bg-transparent border-gray-700 hover:border-gray-600 text-white hover:text-accent-foreground ${
-                    isSessionActive ? 'opacity-50 cursor-not-allowed' : ''
+                    isSessionActive ? 'opacity-50' : ''
                   }`}>
                     <SelectValue>
                       {t(`languages.${currentLocale}`) || currentLocale}
@@ -327,16 +327,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       <AlertDialog open={logoutDialogOpen} onOpenChange={(open) => !isLoggingOut && setLogoutDialogOpen(open)}>
         <AlertDialogContent 
           className="bg-gray-800 border-gray-700 text-white"
-          onInteractOutside={(e) => {
-            if (isLoggingOut) {
-              e.preventDefault()
-            }
-          }}
-          onEscapeKeyDown={(e) => {
-            if (isLoggingOut) {
-              e.preventDefault()
-            }
-          }}
         >
           <AlertDialogHeader>
             <button
@@ -389,16 +379,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => !isDeleting && setDeleteDialogOpen(open)}>
         <AlertDialogContent 
           className="bg-gray-900/95 border border-white/10 text-white backdrop-blur-xl shadow-2xl rounded-2xl"
-          onInteractOutside={(e) => {
-            if (isDeleting) {
-              e.preventDefault()
-            }
-          }}
-          onEscapeKeyDown={(e) => {
-            if (isDeleting) {
-              e.preventDefault()
-            }
-          }}
         >
           <AlertDialogHeader>
             <button

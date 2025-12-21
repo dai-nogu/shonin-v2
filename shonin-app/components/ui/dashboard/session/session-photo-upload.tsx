@@ -48,7 +48,7 @@ export const SessionPhotoUpload = memo(function SessionPhotoUpload({
         <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
           <Plus className={`w-4 h-4 text-gray-400 group-hover:text-white transition-all duration-200 ${showPhotoAccordion ? 'rotate-45' : ''}`} />
         </div>
-        <Label className="text-sm text-gray-400 cursor-pointer group-hover:text-gray-300 transition-colors">
+        <Label className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
           {t('active_session.photos_label')}
         </Label>
         {photos.length > 0 && (

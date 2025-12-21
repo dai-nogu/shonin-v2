@@ -660,7 +660,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
               >
                 {/* 表面 (コンテンツ) */}
                 <div 
-                  className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950 hover:border-white/20 h-full"
+                  className="rounded-xl border border-white/10 p-5 shadow-lg bg-transparent hover:border-white/20 h-full"
                   style={previousGoalId && previousGoalId !== selectedGoal ? { backfaceVisibility: "hidden" } : {}}
                 >
             <div className="space-y-4">
@@ -816,7 +816,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                           }
                         }}
                         maxLength={limits.activityName}
-                        className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm pr-10 h-11 transition-all focus:border-emerald-700/50 focus:ring-emerald-700/20"
+                        className="bg-transparent border-white/10 hover:border-white/20 focus:border-white/20 text-white placeholder-gray-800 text-sm pr-10 h-11 transition-all focus:ring-0 focus:ring-offset-0"
                       />
                       {/* 選択済みクリアボタン */}
                       {selectedActivity && (
@@ -835,9 +835,13 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                       onClick={handleAddFromInput}
                       disabled={!canAddNew}
                       size="icon"
-                      className="bg-gray-800 hover:bg-gray-700 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed h-11 w-11 flex-shrink-0 rounded-lg transition-all"
+                      className={`bg-transparent hover:bg-transparent disabled:opacity-30 disabled:cursor-not-allowed h-11 w-11 flex-shrink-0 rounded-lg transition-all ${
+                        canAddNew 
+                          ? 'border border-white/20' 
+                          : 'border border-white/10'
+                      }`}
                     >
-                      <Plus className="w-5 h-5 text-gray-300" />
+                      <Plus className={`w-5 h-5 transition-colors ${canAddNew ? 'text-white' : 'text-gray-300'}`} />
                     </Button>
                   </div>
 
@@ -877,7 +881,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
                     <Plus className={`w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-all duration-200 ${showLocationInput ? 'rotate-45' : ''}`} />
                   </div>
-                  <Label className="text-gray-400 text-xs tracking-wider cursor-pointer group-hover:text-gray-300 transition-colors">
+                  <Label className="text-gray-400 text-xs tracking-wider group-hover:text-gray-300 transition-colors">
                     {t('session_start.location')}
                   </Label>
                 </button>

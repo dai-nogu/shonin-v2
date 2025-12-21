@@ -102,7 +102,7 @@ export default function PlanPageClient({ userPlan }: PlanPageClientProps) {
   }));
 
   return (
-    <div className="md:min-h-screen bg-gray-950 text-white md:pb-0 pb-20">
+    <div className="md:min-h-screen bg-transparent text-white md:pb-0 pb-20">
       <main className="container mx-auto px-4 py-4 lg:py-6">
         {/* Header Section */}
         <div className="py-6 lg:py-8 text-center lg:mb-12">
