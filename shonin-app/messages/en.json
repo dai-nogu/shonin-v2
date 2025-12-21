@@ -256,6 +256,7 @@
     "saving": "Saving...",
     "cancel": "Cancel",
     "language_settings": "Language",
+    "select_language": "Please select your preferred language.",
     "language_change_notice": "The app will refresh in the new language",
     "language_disabled_message": "Cannot change language while an activity is in progress. Please end the activity first.",
     "account": "Account",
@@ -266,6 +267,7 @@
     "profile_tab": "Profile",
     "account_tab": "Account",
     "account_management": "Account",
+    "manage_plan": "Management subscription",
     "logout": "Logout",
     "logout_confirmation": "Log Out",
     "logout_message": "Are you sure you want to log out?",
@@ -273,6 +275,9 @@
     "logout_error": "An error occurred during logout. Please try again later.",
     "logging_out": "Logging out...",
     "back": "Back",
+    "contact": "Contact",
+    "updates": "Updates",
+    "outage_info": "Service Status",
     "account_deletion": "Leave",
     "account_deletion_confirmation": "Delete Account",
     "account_deletion_error": "Failed to delete account. Please try again.",
@@ -297,8 +302,8 @@
     "deleting": "Deleting..."
   },
   "languages": {
-    "ja": "Japanese (JP)",
-    "en": "English (US)"
+    "ja": "Japanese",
+    "en": "English"
   },
   "activities": {
     "title": "Activities",

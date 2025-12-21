@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Settings, CreditCard, LogOut, User, X } from "lucide-react"
+import { Home, Settings, User } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -16,25 +16,9 @@ import {
   SidebarFooter,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/common/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/settings/alert-dialog"
 import { ActiveUsersBadge } from "@/components/ui/marketing/active-users-badge"
+import { SettingsModal } from "@/components/ui/settings/settings-modal"
 
 interface AppSidebarProps {
   currentPage?: string
@@ -47,11 +31,9 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const params = useParams()
   const locale = (params?.locale as string) || 'ja'
   const [activePage, setActivePage] = useState(currentPage)
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const t = useTranslations()
-  const { user, signOut, loading } = useAuth()
+  const { user, loading } = useAuth()
 
   // ユーザー名を取得（Googleアカウントの名前を使用）
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || ''
@@ -66,19 +48,6 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     },
   ]
 
-  // ログアウト確認ダイアログの処理
-  const handleLogoutConfirm = async () => {
-    setIsLoggingOut(true)
-    setOperationError(null)
-    try {
-      await signOut()
-      router.push(`/${locale}/login`)
-    } catch (error) {
-      setOperationError(t('settings.logout_error'))
-      setIsLoggingOut(false)
-    }
-  }
-
   // パスに基づいてアクティブページを設定（pathnameを優先）
   useEffect(() => {
     if (!pathname) return
@@ -90,8 +59,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
       setActivePage("")
     } else if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
       setActivePage("dashboard")
-    } else if (pathWithoutLocale === "/plan" || pathWithoutLocale.startsWith("/settings")) {
-      // プランや設定ページではサイドバーのメニューをアクティブにしない
+    } else if (pathWithoutLocale === "/plan") {
+      // プランページではサイドバーのメニューをアクティブにしない
       setActivePage("")
     } else {
       // パスが一致しない場合のみcurrentPageを使用
@@ -107,16 +76,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
 
   return (
     <>
-      {/* 処理中のフルスクリーンオーバーレイ */}
-      {isLoggingOut && (
-        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin" />
-            <p className="text-white text-lg font-medium">{t('settings.logging_out')}</p>
-            <p className="text-gray-300 text-sm">{t('common.please_wait')}</p>
-          </div>
-        </div>
-      )}
+      {/* 設定モーダル */}
+      <SettingsModal open={settingsModalOpen} onOpenChange={setSettingsModalOpen} />
 
       <Sidebar className="border-r border-gray-800">
         <SidebarHeader className="border-gray-800 p-2">
@@ -165,124 +126,38 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
         </SidebarGroup>
       </SidebarContent>
 
-      {/* ユーザーメニュー */}
+      {/* 設定ボタン */}
+      <div className="p-2">
+        <button
+          onClick={() => setSettingsModalOpen(true)}
+          className="flex items-center border-gray-600  gap-3 px-2 py-2 text-gray-400 border hover:text-white rounded-full transition-all duration-200 ease-out active:scale-[0.98]"
+        >
+          <Settings className="w-7 h-7" />
+        </button>
+      </div>
+
+      {/* フッター - ユーザー情報 */}
       <SidebarFooter className="border-t border-gray-800">
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="text-gray-300 hover:text-white hover:bg-gray-800 data-[state=open]:bg-gray-800 data-[state=open]:text-white"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    {loading ? (
-                      <span className="h-4 w-20 bg-gray-700 rounded animate-pulse" />
-                    ) : (
-                      <span className="truncate font-medium">{userName}</span>
-                    )}
-                  </div>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-gray-800 border-gray-700"
-                side="top"
-                align="end"
-                sideOffset={4}
-              >
-                <DropdownMenuItem
-                  className="text-gray-300 hover:text-white hover:bg-gray-700 cursor-pointer"
-                  onClick={() => router.push(`/${locale}/plan`)}
-                >
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  {t('navigation.plan')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-gray-300 hover:text-white hover:bg-gray-700 cursor-pointer"
-                  onClick={() => router.push(`/${locale}/settings`)}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  {t('navigation.settings')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem
-                  className="text-red-400 focus:text-white focus:bg-red-500 data-[highlighted]:text-white data-[highlighted]:bg-red-500 cursor-pointer transition-all duration-200"
-                  onClick={() => setLogoutDialogOpen(true)}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t('settings.logout')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <SidebarMenuButton
+              size="lg"
+              className="text-gray-300 hover:text-white hover:bg-gray-800"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
+                <User className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex flex-col items-start">
+                {loading ? (
+                  <span className="h-4 w-20 bg-gray-700 rounded animate-pulse" />
+                ) : (
+                  <span className="truncate font-medium">{userName}</span>
+                )}
+              </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
-      {/* ログアウト確認ダイアログ */}
-      <AlertDialog open={logoutDialogOpen} onOpenChange={(open) => !isLoggingOut && setLogoutDialogOpen(open)}>
-        <AlertDialogContent 
-          className="bg-gray-800 border-gray-700 text-white"
-          onInteractOutside={(e) => {
-            if (isLoggingOut) {
-              e.preventDefault()
-            }
-          }}
-          onEscapeKeyDown={(e) => {
-            if (isLoggingOut) {
-              e.preventDefault()
-            }
-          }}
-        >
-          <AlertDialogHeader>
-            <button
-              onClick={() => !isLoggingOut && setLogoutDialogOpen(false)}
-              disabled={isLoggingOut}
-              className="absolute right-4 top-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 p-0 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <AlertDialogTitle className="text-red-400">
-              {t('settings.logout_confirmation')}
-            </AlertDialogTitle>
-
-            {/* エラー表示 */}
-            {operationError && (
-              <div className="p-4 bg-red-900 border border-red-700 rounded-lg mb-4">
-                <p className="text-red-300 font-semibold text-center mb-2">{operationError}</p>
-                <p className="text-red-400 text-sm text-center">
-                  {t('common.reload_and_retry')}
-                </p>
-              </div>
-            )}
-            
-            <AlertDialogDescription className="text-gray-300">
-              {t('settings.logout_message')}
-              <br />
-              {t('settings.logout_description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <AlertDialogFooter className="flex justify-end">
-            <AlertDialogAction
-              onClick={handleLogoutConfirm}
-              disabled={isLoggingOut}
-              className="bg-red-500 hover:bg-destructive text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoggingOut ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{t('settings.logging_out')}</span>
-                </div>
-              ) : (
-                t('settings.logout')
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <SidebarRail />
       </Sidebar>
