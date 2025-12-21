@@ -134,26 +134,52 @@ const config: Config = {
 				'50%': { transform: 'translateX(6px) translateY(0) rotate(0deg)' },
 				'75%': { transform: 'translateX(3px) translateY(-3px) rotate(-5deg)' },
 			},
-			'line-draw': {
-				'0%': { width: '0%', opacity: '0' },
-				'50%': { width: '100%', opacity: '1' },
-				'100%': { width: '100%', opacity: '0' }
-			}
+		'line-draw': {
+			'0%': { width: '0%', opacity: '0' },
+			'50%': { width: '100%', opacity: '1' },
+			'100%': { width: '100%', opacity: '0' }
 		},
-		animation: {
-			'accordion-down': 'accordion-down 0.2s ease-out',
-			'accordion-up': 'accordion-up 0.2s ease-out',
-			'fade-in': 'fade-in 0.3s ease-out',
-			'fade-in-up': 'fade-in-up 0.4s ease-out',
-			'fade-in-down': 'fade-in-down 0.4s ease-out',
-			'scale-in': 'scale-in 0.2s ease-out',
-			'slide-in-right': 'slide-in-right 0.3s ease-out',
-			'slide-in-left': 'slide-in-left 0.3s ease-out',
-			'shimmer': 'shimmer 2s linear infinite',
-			'glow': 'glow 3s ease-in-out infinite',
-			'writing': 'writing 1s linear infinite',
-			'line-draw': 'line-draw 2s ease-in-out infinite',
+	'slide-in-from-bottom-left': {
+		'0%': { 
+			opacity: '0',
+			transform: 'translate(-50%, -50%) scale(0.85)',
+			transformOrigin: 'bottom left'
+		},
+		'100%': { 
+			opacity: '1',
+			transform: 'translate(-50%, -50%) scale(1)',
+			transformOrigin: 'bottom left'
 		}
+	},
+	'slide-out-to-bottom-left': {
+		'0%': { 
+			opacity: '1',
+			transform: 'translate(-50%, -50%) scale(1)',
+			transformOrigin: 'bottom left'
+		},
+		'100%': { 
+			opacity: '0',
+			transform: 'translate(-50%, -50%) scale(0.85)',
+			transformOrigin: 'bottom left'
+		}
+	}
+	},
+	animation: {
+		'accordion-down': 'accordion-down 0.2s ease-out',
+		'accordion-up': 'accordion-up 0.2s ease-out',
+		'fade-in': 'fade-in 0.3s ease-out',
+		'fade-in-up': 'fade-in-up 0.4s ease-out',
+		'fade-in-down': 'fade-in-down 0.4s ease-out',
+		'scale-in': 'scale-in 0.2s ease-out',
+		'slide-in-right': 'slide-in-right 0.3s ease-out',
+		'slide-in-left': 'slide-in-left 0.3s ease-out',
+		'shimmer': 'shimmer 2s linear infinite',
+		'glow': 'glow 3s ease-in-out infinite',
+		'writing': 'writing 1s linear infinite',
+		'line-draw': 'line-draw 2s ease-in-out infinite',
+		'slide-in-from-bottom-left': 'slide-in-from-bottom-left 0.2s cubic-bezier(0.3, 1, 0.3, 1)',
+		'slide-out-to-bottom-left': 'slide-out-to-bottom-left 0.2s cubic-bezier(0.3, 0, 0.3, 0)',
+	}
   	}
   },
   plugins: [require("tailwindcss-animate")],

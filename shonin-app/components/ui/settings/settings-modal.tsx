@@ -190,7 +190,17 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
       {/* メイン設定モーダル */}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-gray-900 border border-gray-700 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent 
+          className="border border-gray-700 text-white max-w-lg max-h-[90vh] overflow-y-auto"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 50% 0%, hsl(240, 25%, 13%) 0%, transparent 60%),
+              radial-gradient(circle at 0% 0%, hsl(260, 25%, 10%) 0%, transparent 50%),
+              radial-gradient(circle at 100% 0%, hsl(220, 25%, 10%) 0%, transparent 50%)
+            `,
+            backgroundColor: 'hsl(240, 10%, 3.9%)'
+          }}
+        >
           <VisuallyHidden>
             <DialogTitle>{t('settings.title')}</DialogTitle>
           </VisuallyHidden>
