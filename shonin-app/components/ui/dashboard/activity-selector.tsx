@@ -510,7 +510,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   duration: 0.2, 
                   ease: "easeInOut"
                 }}
-                className="rounded-xl border border-white/10 p-5 shadow-lg bg-gray-950"
+                className="rounded-xl border border-white/10 p-5 shadow-lg bg-transparent"
               >
               <div className="space-y-2">
                 <GoalTitleInput
@@ -537,7 +537,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   <Button
                     onClick={handleCancelGoalForm}
                     variant="outline"
-                    className="flex-1 bg-transparent border-gray-600 text-gray-300 hover:bg-white/5 hover:text-white text-sm h-10"
+                    className="flex-1 bg-transparent border-white/10 text-white hover:border-white/20 text-sm h-10"
                   >
                     {t('common.cancel')}
                   </Button>
@@ -582,7 +582,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   value={newActivityName}
                   onChange={(e) => setNewActivityName(e.target.value.slice(0, limits.activityName))}
                   maxLength={limits.activityName}
-                  className="bg-gray-900/50 border-gray-700 focus:border-emerald-700/50 focus:ring-emerald-700/20 text-white placeholder-gray-500 transition-all"
+                  className="bg-transparent border-white/10 focus:border-emerald-700/50 focus:ring-emerald-700/20 text-white placeholder-gray-500 transition-all"
                 />
               </div>
 
@@ -625,8 +625,8 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                     setHoveredColor(null)
                   }}
                   variant="outline"
-                  className="flex-1 bg-transparent border-gray-600 text-gray-300 hover:bg-white/5 hover:text-white text-sm h-10"
-                >
+                  className="flex-1 bg-transparent border-white/10 text-white hover:border-white/20 hover:bg-transparent text-sm h-10"
+                  >
                   {t('session_start.cancel')}
                 </Button>
                 <Button
@@ -878,10 +878,10 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                   onClick={() => setShowLocationInput(!showLocationInput)}
                   className="flex items-center space-x-2 text-left group"
                 >
-                  <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
+                  <div className="w-6 h-6 border border-white/10 rounded-full bg-transparent flex items-center justify-center group-hover:bg-white/5 transition-colors">
                     <Plus className={`w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-all duration-200 ${showLocationInput ? 'rotate-45' : ''}`} />
                   </div>
-                  <Label className="text-gray-400 text-xs tracking-wider group-hover:text-gray-300 transition-colors">
+                  <Label className="text-gray-400 text-xs tracking-wider group-hover:text-white transition-colors">
                     {t('session_start.location')}
                   </Label>
                 </button>
@@ -897,7 +897,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                       value={location}
                       onChange={(e) => setLocation(e.target.value.slice(0, limits.location))}
                       maxLength={limits.location}
-                      className="bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm h-11 focus:border-emerald-700/50 focus:ring-emerald-700/20"
+                      className="bg-transparent border-white/10 hover:border-white/20 text-white placeholder:text-gray-400 text-sm h-11 hover:bg-transparent focus:bg-transparent focus:border-white/20"
                     />
                   </div>
                 )}
@@ -954,7 +954,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
                 {/* 裏面 (背景のみ - 目標切り替え時のみ表示) */}
                 {previousGoalId && previousGoalId !== selectedGoal && (
                   <div 
-                    className="absolute inset-0 rounded-xl border border-white/10 bg-gray-950 flex items-center justify-center shadow-lg"
+                    className="absolute inset-0 rounded-xl border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.15)] flex items-center justify-center"
                     style={{ 
                       transform: "rotateY(180deg)",
                       backfaceVisibility: "hidden"

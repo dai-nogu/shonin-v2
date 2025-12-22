@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Settings, User } from "lucide-react"
+import { Home, Settings } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -13,10 +13,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { useAuth } from "@/contexts/auth-context"
 import { ActiveUsersBadge } from "@/components/ui/marketing/active-users-badge"
 import { SettingsModal } from "@/components/ui/settings/settings-modal"
 
@@ -33,10 +31,6 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const [activePage, setActivePage] = useState(currentPage)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const t = useTranslations()
-  const { user, loading } = useAuth()
-
-  // ユーザー名を取得（Googleアカウントの名前を使用）
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || ''
 
   // next-intlを使用したメニューアイテム（ダッシュボードのみ）
   const menuItems = [
@@ -135,29 +129,6 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
           <Settings className="w-7 h-7" />
         </button>
       </div>
-
-      {/* フッター - ユーザー情報 */}
-      <SidebarFooter className="border-t border-gray-800">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="text-gray-300 hover:text-white hover:bg-gray-800"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
-                <User className="h-4 w-4 text-white" />
-              </div>
-              <div className="flex flex-col items-start">
-                {loading ? (
-                  <span className="h-4 w-20 bg-gray-700 rounded animate-pulse" />
-                ) : (
-                  <span className="truncate font-medium">{userName}</span>
-                )}
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
 
       <SidebarRail />
       </Sidebar>

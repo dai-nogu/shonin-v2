@@ -12,7 +12,7 @@ interface TodayTimeChartProps {
   completedSessions: CompletedSession[]
 }
 
-type TimeRange = '6h' | '12h' | '24h'
+type TimeRange = '0.5h' | '1h' | '3h' | '6h' | '12h' | '24h'
 
 export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
   const t = useTranslations()
@@ -59,6 +59,9 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
 
   // 目標時間（秒単位）
   const targetSeconds = {
+    '0.5h': 0.5 * 3600,
+    '1h': 1 * 3600,
+    '3h': 3 * 3600,
     '6h': 6 * 3600,
     '12h': 12 * 3600,
     '24h': 24 * 3600,
@@ -108,7 +111,7 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
               }`}
             >
               <div className="p-1 space-y-0.5">
-                {(['6h', '12h', '24h'] as TimeRange[]).map((range) => (
+                {(['0.5h', '1h', '3h', '6h', '12h', '24h'] as TimeRange[]).map((range) => (
                   <button
                     key={range}
                     onMouseDown={(e) => {
@@ -146,23 +149,25 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
                   stroke="rgba(255,255,255,0.1)"
                   strokeWidth={strokeWidth}
                 />
-                {/* 進捗の円 */}
-                <circle
-                  key={`progress-${animationKey}`}
-                  cx="100"
-                  cy="100"
-                  r={radius}
-                  fill="none"
-                  stroke="#059669"
-                  strokeWidth={strokeWidth}
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  transform="rotate(-90 100 100)"
-                  style={{
-                    animation: `drawCircle 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-                  }}
-                />
+                {/* 進捗の円 - 0分の時は表示しない */}
+                {todayTotalSeconds > 0 && (
+                  <circle
+                    key={`progress-${animationKey}`}
+                    cx="100"
+                    cy="100"
+                    r={radius}
+                    fill="none"
+                    stroke="#059669"
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    transform="rotate(-90 100 100)"
+                    style={{
+                      animation: `drawCircle 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+                    }}
+                  />
+                )}
               </svg>
               
               {/* 中央のテキスト */}

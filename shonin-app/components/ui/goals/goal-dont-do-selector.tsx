@@ -167,16 +167,16 @@ export function GoalDontDoSelector({
           }}
           disabled={isMaxReached}
           maxLength={20}
-          className="flex-1 bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 text-sm h-10 focus:border-emerald-700/50 focus:ring-emerald-700/20 disabled:opacity-50"
+          className="flex-1 bg-transparent border-white/10 hover:border-white/20 text-white placeholder:text-gray-400 text-sm h-10 hover:bg-transparent focus:bg-transparent focus:border-white/20 disabled:opacity-50"
         />
         <Button
           type="button"
           onClick={handleAddCustomTag}
           disabled={!customInput.trim() || isMaxReached}
           size="icon"
-          className="bg-gray-800 hover:bg-gray-700 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed h-10 w-10 flex-shrink-0 rounded-lg transition-all"
+          className="bg-transparent hover:bg-white/5 border border-white/10 disabled:opacity-30 disabled:cursor-not-allowed h-10 w-10 flex-shrink-0 rounded-lg transition-all"
         >
-          <Plus className="w-4 h-4 text-gray-300" />
+          <Plus className="w-4 h-4 text-white" />
         </Button>
       </div>
       
