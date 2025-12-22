@@ -177,7 +177,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     <>
       {/* 処理中のフルスクリーンオーバーレイ */}
       {(isLoggingOut || isDeleting) && (
-        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center">
+        <div className="fixed inset-0 z-modal bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin" />
             <p className="text-white text-lg font-medium">

@@ -619,7 +619,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               </CardTitle>
             
             {/* タブ切り替え - モダンなドロップダウン */}
-            <div className="relative z-[100]" data-dropdown="tab-menu">
+            <div className="relative z-dropdown" data-dropdown="tab-menu">
               <button
                 onClick={() => setIsTabMenuOpen(!isTabMenuOpen)}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
@@ -634,7 +634,7 @@ export function QuickStart({ completedSessions, onStartActivity }: QuickStartPro
               
               {/* ドロップダウンメニュー - 左側に表示 */}
               <div
-                className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 w-36 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-right z-[110] ${
+                className={`absolute right-full top-1/2 -translate-y-1/2 mr-2 w-36 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-right z-dropdown ${
                   isTabMenuOpen 
                     ? 'opacity-100 scale-100 translate-x-0 visible' 
                     : 'opacity-0 scale-95 translate-x-2 invisible pointer-events-none'

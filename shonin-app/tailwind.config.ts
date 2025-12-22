@@ -75,6 +75,12 @@ const config: Config = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		zIndex: {
+  			'dropdown': '50',
+  			'modal': '100',
+  			'toast': '200',
+  			'tooltip': '9999',
+  		},
   		keyframes: {
   			'accordion-down': {
   				from: {

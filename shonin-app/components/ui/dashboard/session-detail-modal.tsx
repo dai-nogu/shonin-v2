@@ -362,7 +362,7 @@ function SessionDetailModalWithoutPhotos({ isOpen, session, onClose, onStartSimi
   return createPortal(
     <div 
       className={cn(
-        "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-modal p-4 backdrop-blur-sm transition-opacity duration-300",
         isAnimating ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       onClick={handleClose}
@@ -983,7 +983,7 @@ function SessionDetailModalWithPhotos({ isOpen, session, onClose, onStartSimilar
   return createPortal(
     <div 
       className={cn(
-        "fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity duration-300",
+        "fixed inset-0 bg-black/50 flex items-center justify-center z-modal p-4 backdrop-blur-sm transition-opacity duration-300",
         isAnimating ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       onClick={handleClose}

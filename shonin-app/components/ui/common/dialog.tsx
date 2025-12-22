@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-modal bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -38,7 +38,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-[150] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-gradient-to-br from-[#1e293b] to-[#020617] p-6 shadow-[0_0_50px_rgba(255,255,255,0.15)] ring-1 ring-white/10 data-[state=open]:animate-slide-in-from-bottom-left data-[state=closed]:animate-slide-out-to-bottom-left sm:rounded-lg",
+        "fixed left-[50%] top-[50%] z-modal grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-gradient-to-br from-[#1e293b] to-[#020617] p-6 shadow-[0_0_50px_rgba(255,255,255,0.15)] ring-1 ring-white/10 data-[state=open]:animate-slide-in-from-bottom-left data-[state=closed]:animate-slide-out-to-bottom-left sm:rounded-lg",
         className
       )}
       {...props}

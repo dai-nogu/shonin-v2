@@ -847,7 +847,7 @@ export function ActivitySelector({ onStart }: ActivitySelectorProps) {
 
                   {/* サジェストドロップダウン */}
                   {showSuggestions && activityInput && filteredActivities.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-gray-800/95 backdrop-blur-xl border border-gray-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto animate-scale-in origin-top">
+                    <div className="absolute z-dropdown w-full mt-1 bg-gray-800/95 backdrop-blur-xl border border-gray-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto animate-scale-in origin-top">
                       {/* フィルタリングされた既存アクティビティ */}
                       {filteredActivities.map((activity) => (
                         <button

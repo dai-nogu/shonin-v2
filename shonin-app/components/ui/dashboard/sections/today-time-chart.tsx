@@ -88,7 +88,7 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
           </CardTitle>
           
           {/* 切り替えボタン - モダンなドロップダウン */}
-          <div className="relative z-[100]" data-dropdown="time-range">
+          <div className="relative z-dropdown" data-dropdown="time-range">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-[#0f1115]/80 hover:bg-[#0f1115] border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200 text-gray-300 hover:text-white backdrop-blur-sm ${
@@ -101,7 +101,7 @@ export function TodayTimeChart({ completedSessions }: TodayTimeChartProps) {
             
             {/* ドロップダウンメニュー */}
             <div
-              className={`absolute right-0 top-full mt-2 w-24 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-top-right z-[110] ${
+              className={`absolute right-0 top-full mt-2 w-24 overflow-hidden rounded-xl border border-white/10 bg-[#0f1115]/95 backdrop-blur-xl shadow-2xl transition-all duration-200 origin-top-right z-dropdown ${
                 isMenuOpen 
                   ? 'opacity-100 scale-100 translate-y-0 visible' 
                   : 'opacity-0 scale-95 -translate-y-2 invisible pointer-events-none'

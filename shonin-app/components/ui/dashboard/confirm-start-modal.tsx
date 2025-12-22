@@ -58,7 +58,7 @@ export function ConfirmStartModal({ isOpen, activity, onConfirm, onCancel, showT
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-modal p-4"
       onClick={onCancel}
     >
       <Card 
