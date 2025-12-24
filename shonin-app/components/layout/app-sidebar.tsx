@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, usePathname, useParams } from "next/navigation"
 import { useTranslations } from 'next-intl'
-import { Home, Settings } from "lucide-react"
+import { Home, Settings, Target } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -32,13 +32,19 @@ export function AppSidebar({ currentPage = "horizon", onPageChange }: AppSidebar
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const t = useTranslations()
 
-  // next-intlを使用したメニューアイテム（Horizonのみ）
+  // next-intlを使用したメニューアイテム
   const menuItems = [
     {
       title: t('navigation.horizon'),
       url: `/${locale}/horizon`,
       icon: Home,
       id: "horizon",
+    },
+    {
+      title: "GOALS",
+      url: `/${locale}/horizon?view=goals`,
+      icon: Target,
+      id: "goals",
     },
   ]
 
@@ -47,10 +53,15 @@ export function AppSidebar({ currentPage = "horizon", onPageChange }: AppSidebar
     if (!pathname) return
     
     const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
+    const urlParams = new URLSearchParams(window.location.search)
+    const view = urlParams.get('view')
     
     if (pathWithoutLocale === "/session") {
       // セッション中はどのメニューもアクティブにしない
       setActivePage("")
+    } else if (view === "goals") {
+      // クエリパラメータでgoalsが指定されている場合
+      setActivePage("goals")
     } else if (pathWithoutLocale === "/horizon" || pathWithoutLocale === "/" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
       setActivePage("horizon")
     } else if (pathWithoutLocale === "/plan") {

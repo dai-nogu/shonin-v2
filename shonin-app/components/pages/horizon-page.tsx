@@ -28,12 +28,27 @@ import {
   X,
   Smile,
   Meh,
-  Frown
+  Frown,
+  Plus,
+  Pencil,
+  Trash2
 } from "lucide-react";
 import { getActiveGoals } from "@/app/actions/goals";
 import type { Database } from "@/types/database";
 import { useSessions, type CompletedSession } from "@/contexts/sessions-context";
 import { useActivities } from "@/contexts/activities-context";
+import { Goals } from "@/components/pages/goals";
+import { useSearchParams } from "next/navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/common/dialog";
+import { Input } from "@/components/ui/common/input";
+import { Label } from "@/components/ui/common/label";
+import { Button } from "@/components/ui/common/button";
+import { GoalTitleInput } from "@/components/ui/goals/goal-title-input";
+import { GoalDontDoSelector } from "@/components/ui/goals/goal-dont-do-selector";
+import { GoalHoursInputs } from "@/components/ui/goals/goal-hours-inputs";
+import { useGoalForm } from "@/hooks/use-goal-form";
+import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select";
 
 // --- Constants & Types ---
 const THEME_COLOR = "#A5F3FC"; // Orbit particles color
@@ -299,12 +314,16 @@ function Header({ isHidden }: { isHidden: boolean }) {
     )
 }
 
-function Sidebar({ isHidden, onMessengerClick }: { isHidden: boolean; onMessengerClick: () => void }) {
+function Sidebar({ isHidden, onMessengerClick, onGoalsClick }: { 
+  isHidden: boolean; 
+  onMessengerClick: () => void;
+  onGoalsClick: () => void;
+}) {
     const menuItems = [
         { icon: <Eye size={22} />, label: "HORIZON", active: true, description: "観測画面", onClick: undefined },
         { icon: <Archive size={22} />, label: "CHRONICLE", active: false, description: "銀河アーカイブ", onClick: undefined },
         { icon: <MessageSquare size={22} />, label: "MESSENGER", active: false, description: "証人からの手紙", onClick: onMessengerClick },
-        { icon: <Target size={22} />, label: "GOALS", active: false, description: "目標設定", onClick: undefined },
+        { icon: <Target size={22} />, label: "GOALS", active: false, description: "目標設定", onClick: onGoalsClick },
     ];
 
     return (
@@ -359,12 +378,21 @@ function CenterOverlay({
     sessionTime, 
     selectedGoalTitle,
     goalsCache,
-    goalsCacheLoaded
+    goalsCacheLoaded,
+    newGoalTitle,
+    onNewGoalTitleChange,
+    newGoalDontDo,
+    onNewGoalDontDoChange,
+    onGoalInputNext,
+    onActivityCreateNext,
+    onGoalCreateComplete,
+    onGoalCreateCancel,
+    onRefreshCache
 }: { 
     step: FlowStep;
     onStartClick: () => void;
     onGoalSelect: (goal: Goal | null) => void;
-    onActivitySelect: (activity: { id: string; name: string; icon: string | null; color: string }) => void;
+    onActivitySelect: (activity: { id: string; name: string; icon: string | null; color: string } | null) => void;
     onReflectionSave: (data: { moodScore: number; reflection: string }) => void;
     onReflectionSkip: () => void;
     onEndSession: () => void;
@@ -372,6 +400,15 @@ function CenterOverlay({
     selectedGoalTitle?: string;
     goalsCache?: Goal[];
     goalsCacheLoaded?: boolean;
+    newGoalTitle: string;
+    onNewGoalTitleChange: (title: string) => void;
+    newGoalDontDo: string[];
+    onNewGoalDontDoChange: (tags: string[]) => void;
+    onGoalInputNext: () => void;
+    onActivityCreateNext: () => void;
+    onGoalCreateComplete: () => void;
+    onGoalCreateCancel: () => void;
+    onRefreshCache: () => void;
 }) {
     const [time, setTime] = useState("");
 
@@ -460,7 +497,7 @@ function CenterOverlay({
                     >
                         <ActivitySelectScreen 
                             goalTitle={selectedGoalTitle}
-                            onSelect={onActivitySelect} 
+                            onSelect={onActivitySelect}
                         />
                     </motion.div>
                 )}
@@ -522,6 +559,62 @@ function CenterOverlay({
                             sessionTime={sessionTime}
                             onSave={onReflectionSave}
                             onSkip={onReflectionSkip}
+                        />
+                    </motion.div>
+                )}
+
+                {step === 'goal-create-input' && (
+                    <motion.div
+                        key="goal-create-input"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <GoalInputScreen
+                            goalTitle={newGoalTitle}
+                            onTitleChange={onNewGoalTitleChange}
+                            dontDoTags={newGoalDontDo}
+                            onDontDoChange={onNewGoalDontDoChange}
+                            onNext={onGoalInputNext}
+                            onCancel={onGoalCreateCancel}
+                        />
+                    </motion.div>
+                )}
+
+                {step === 'goal-create-activity' && (
+                    <motion.div
+                        key="goal-create-activity"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <ActivityCreateScreen
+                            goalTitle={newGoalTitle}
+                            onNext={onActivityCreateNext}
+                            onCancel={onGoalCreateCancel}
+                            onRefresh={onRefreshCache}
+                        />
+                    </motion.div>
+                )}
+
+                {step === 'goal-create-confirm' && (
+                    <motion.div
+                        key="goal-create-confirm"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <GoalConfirmScreen
+                            goalTitle={newGoalTitle}
+                            dontDoTags={newGoalDontDo}
+                            onComplete={onGoalCreateComplete}
+                            onCancel={onGoalCreateCancel}
                         />
                     </motion.div>
                 )}
@@ -660,9 +753,505 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
 
 type Goal = Database['public']['Tables']['goals']['Row'];
 type Activity = Database['public']['Tables']['activities']['Row'];
-type FlowStep = 'idle' | 'goal-select' | 'activity-select' | 'session-active' | 'reflection';
+type FlowStep = 'idle' | 'goal-select' | 'activity-select' | 'session-active' | 'reflection' | 'goal-create-input' | 'goal-create-activity' | 'goal-create-confirm';
 
-// 目標選択画面
+// 目標とアクティビティの管理画面
+interface GoalsManagementViewProps {
+  onRefresh?: () => void;
+}
+
+function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [goalsLoading, setGoalsLoading] = useState(true);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [dontDoTags, setDontDoTags] = useState<string[]>([]);
+  const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
+
+  const { activities, loading: activitiesLoading, refetch: refetchActivities, addActivity, deleteActivity } = useActivities();
+  const { addGoal: addGoalToDb, updateGoal: updateGoalInDb, deleteGoal: deleteGoalFromDb } = useGoalsDb();
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [activityName, setActivityName] = useState("");
+  const [activityColor, setActivityColor] = useState("bg-sumi");
+  const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
+
+  const {
+    formData: goalFormData,
+    validationErrors: goalValidationErrors,
+    updateField: updateGoalField,
+    validateForm: validateGoalForm,
+    setInitialData: setGoalFormData,
+  } = useGoalForm();
+
+  const colorOptions = [
+    { value: "bg-sumi", label: "墨色", color: "#5a5a5a" },
+    { value: "bg-ai", label: "藍色", color: "#165e83" },
+    { value: "bg-gin-nezu", label: "銀鼠", color: "#9fa0a0" },
+    { value: "bg-seiji", label: "青磁色", color: "#7ebea5" },
+    { value: "bg-usuzumi", label: "薄墨色", color: "#787878" },
+    { value: "bg-hatoba", label: "鳩羽色", color: "#675f7c" },
+  ];
+
+  // 目標を取得
+  useEffect(() => {
+    const fetchGoals = async () => {
+      const result = await getActiveGoals();
+      if (result.success) {
+        setGoals(result.data);
+      }
+      setGoalsLoading(false);
+    };
+    fetchGoals();
+  }, []);
+
+  // 目標追加・編集
+  const handleSaveGoal = async () => {
+    if (!validateGoalForm()) return;
+
+    setIsSubmittingGoal(true);
+    try {
+      const goalData: DbGoalFormData = {
+        title: goalFormData.title,
+        motivation: JSON.stringify(dontDoTags),
+        deadline: goalFormData.deadline,
+        weekdayHours: parseInt(goalFormData.weekdayHours),
+        weekendHours: parseInt(goalFormData.weekendHours),
+        calculatedHours: goalFormData.calculatedHours
+      };
+
+      const result = editingGoal
+        ? await updateGoalInDb(editingGoal.id, goalData)
+        : await addGoalToDb(goalData);
+      
+      if (result.success) {
+        setShowGoalModal(false);
+        setEditingGoal(null);
+        setDontDoTags([]);
+        setGoalFormData({});
+        
+        // 目標を再取得
+        const refreshResult = await getActiveGoals();
+        if (refreshResult.success) {
+          setGoals(refreshResult.data);
+        }
+        onRefresh?.();
+      }
+    } finally {
+      setIsSubmittingGoal(false);
+    }
+  };
+
+  // 目標編集
+  const handleEditGoal = (goal: Goal) => {
+    setEditingGoal(goal);
+    const parsedDontList = goal.dont_list ? JSON.parse(goal.dont_list as string) : [];
+    setDontDoTags(Array.isArray(parsedDontList) ? parsedDontList : []);
+    setGoalFormData({
+      title: goal.title,
+      deadline: goal.deadline || '',
+      weekdayHours: String(goal.weekday_hours || 0),
+      weekendHours: String(goal.weekend_hours || 0),
+      calculatedHours: goal.target_duration || 0
+    });
+    setShowGoalModal(true);
+  };
+
+  // 目標削除
+  const handleDeleteGoal = async (goalId: string) => {
+    if (!confirm('この目標を削除してもよろしいですか？')) return;
+    
+    const result = await deleteGoalFromDb(goalId);
+    if (result.success) {
+      const refreshResult = await getActiveGoals();
+      if (refreshResult.success) {
+        setGoals(refreshResult.data);
+      }
+      onRefresh?.();
+    }
+  };
+
+  // アクティビティ追加
+  const handleAddActivity = async () => {
+    if (!activityName.trim()) return;
+
+    setIsSubmittingActivity(true);
+    try {
+      const result = await addActivity({
+        name: activityName.trim(),
+        icon: null,
+        color: activityColor,
+        goal_id: null
+      });
+
+      if (result.success) {
+        setShowActivityModal(false);
+        setActivityName("");
+        setActivityColor("bg-sumi");
+        refetchActivities();
+        onRefresh?.();
+      }
+    } finally {
+      setIsSubmittingActivity(false);
+    }
+  };
+
+  // アクティビティ削除
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm('このアクティビティを削除してもよろしいですか？')) return;
+    
+    await deleteActivity(activityId);
+    refetchActivities();
+    onRefresh?.();
+  };
+
+  return (
+    <>
+      {/* 目標追加・編集モーダル */}
+      <Dialog open={showGoalModal} onOpenChange={(open) => {
+        setShowGoalModal(open);
+        if (!open) {
+          setEditingGoal(null);
+          setDontDoTags([]);
+          setGoalFormData({});
+        }
+      }}>
+        <DialogContent 
+          className="bg-black/95 border border-[#4FFFB0]/30 text-white max-w-2xl backdrop-blur-xl"
+          style={{ backdropFilter: "blur(20px)" }}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-[#4FFFB0] text-xl tracking-[0.2em]">
+              {editingGoal ? '星座を編集' : '新しい星座を作成'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <GoalTitleInput
+              value={goalFormData.title}
+              onChange={(value) => updateGoalField("title", value)}
+            />
+
+            <GoalDontDoSelector
+              selectedTags={dontDoTags}
+              onChange={setDontDoTags}
+            />
+
+            <GoalHoursInputs
+              deadline={goalFormData.deadline}
+              onDeadlineChange={(value) => updateGoalField("deadline", value)}
+              weekdayHours={goalFormData.weekdayHours}
+              weekendHours={goalFormData.weekendHours}
+              onWeekdayHoursChange={(value) => updateGoalField("weekdayHours", value)}
+              onWeekendHoursChange={(value) => updateGoalField("weekendHours", value)}
+              validationErrors={goalValidationErrors}
+            />
+
+            <div className="flex space-x-3 pt-4">
+              <Button
+                onClick={() => {
+                  setShowGoalModal(false);
+                  setEditingGoal(null);
+                  setDontDoTags([]);
+                  setGoalFormData({});
+                }}
+                variant="outline"
+                className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5"
+              >
+                キャンセル
+              </Button>
+              <Button
+                onClick={handleSaveGoal}
+                disabled={goalFormData.title?.trim() === "" || dontDoTags.length === 0 || isSubmittingGoal}
+                className="flex-1 bg-[#4FFFB0] text-black hover:bg-[#22D3EE]"
+              >
+                {isSubmittingGoal ? (
+                  <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                ) : (
+                  editingGoal ? '保存' : '作成'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* アクティビティ追加モーダル */}
+      <Dialog open={showActivityModal} onOpenChange={setShowActivityModal}>
+        <DialogContent 
+          className="bg-black/95 border border-[#4FFFB0]/30 text-white max-w-md backdrop-blur-xl"
+          style={{ backdropFilter: "blur(20px)" }}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-[#4FFFB0] text-xl tracking-[0.2em]">
+              新しいアクティビティを作成
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300 text-sm">アクティビティ名</Label>
+              <Input
+                value={activityName}
+                onChange={(e) => setActivityName(e.target.value)}
+                placeholder="例: 瞑想、読書、コーディング"
+                className="bg-transparent border-white/20 text-white"
+                maxLength={30}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-300 text-sm">色</Label>
+              <div className="grid grid-cols-6 gap-3">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => setActivityColor(color.value)}
+                    className={`w-10 h-10 rounded-full border-2 transition-all ${
+                      activityColor === color.value 
+                        ? "border-[#4FFFB0] scale-110" 
+                        : "border-transparent hover:border-white/50"
+                    }`}
+                    style={{ backgroundColor: color.color }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <Button
+                onClick={() => {
+                  setShowActivityModal(false);
+                  setActivityName("");
+                  setActivityColor("bg-sumi");
+                }}
+                variant="outline"
+                className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5"
+              >
+                キャンセル
+              </Button>
+              <Button
+                onClick={handleAddActivity}
+                disabled={!activityName.trim() || isSubmittingActivity}
+                className="flex-1 bg-[#4FFFB0] text-black hover:bg-[#22D3EE]"
+              >
+                {isSubmittingActivity ? (
+                  <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                ) : (
+                  "作成"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* メインコンテンツ */}
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* 星座（目標）管理セクション */}
+        <div>
+          <h2 className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
+            style={{ textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" }}
+          >
+            星座を選択
+          </h2>
+          
+          <div className="space-y-4">
+            {goalsLoading ? (
+              <div className="text-center py-8">
+                <div className="text-[#4FFFB0] text-xl tracking-[0.2em]">LOADING...</div>
+              </div>
+            ) : (
+              <>
+                {goals.map((goal) => (
+                  <div
+                    key={goal.id}
+                    className="max-w-[576px] w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300 flex items-center justify-between"
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      backgroundColor: "rgba(0, 0, 0, 0.3)"
+                    }}
+                  >
+                    <span>{goal.title}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditGoal(goal)}
+                        className="p-2 text-gray-400 hover:text-[#4FFFB0] transition-colors"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteGoal(goal.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* 新しい星座を作成ボタン */}
+                <button
+                  onClick={() => setShowGoalModal(true)}
+                  className="w-full py-4 px-6 border-2 border-dashed border-[#4FFFB0]/40 text-[#4FFFB0] text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
+                  style={{
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: "rgba(0, 0, 0, 0.3)"
+                  }}
+                >
+                  <Plus size={24} />
+                  <span>新しい星座を作成</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* アクティビティ管理セクション */}
+        <div className="pt-8 border-t border-white/10">
+          <h2 className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
+            style={{ textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" }}
+          >
+            何をしますか？
+          </h2>
+          
+          <div className="space-y-4">
+            {activitiesLoading ? (
+              <div className="text-center py-8">
+                <div className="text-[#4FFFB0] text-xl tracking-[0.2em]">LOADING...</div>
+              </div>
+            ) : (
+              <>
+                {activities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="max-w-[576px] w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300 flex items-center justify-between"
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      backgroundColor: "rgba(0, 0, 0, 0.3)"
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-3 h-3 ${activity.color} rounded-full`} />
+                      <span>{activity.name}</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteActivity(activity.id)}
+                      className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))}
+
+                {/* 新しいアクティビティを作成ボタン */}
+                <button
+                  onClick={() => setShowActivityModal(true)}
+                  className="w-full py-4 px-6 border-2 border-dashed border-[#4FFFB0]/40 text-[#4FFFB0] text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
+                  style={{
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: "rgba(0, 0, 0, 0.3)"
+                  }}
+                >
+                  <Plus size={24} />
+                  <span>新しいアクティビティを作成</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// 目標入力画面（新規作成）
+interface GoalInputScreenProps {
+  goalTitle: string;
+  onTitleChange: (title: string) => void;
+  dontDoTags: string[];
+  onDontDoChange: (tags: string[]) => void;
+  onNext: () => void;
+  onCancel: () => void;
+}
+
+function GoalInputScreen({ 
+  goalTitle, 
+  onTitleChange, 
+  dontDoTags, 
+  onDontDoChange, 
+  onNext, 
+  onCancel 
+}: GoalInputScreenProps) {
+  const canProceed = goalTitle.trim() !== "";
+
+  return (
+    <div className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        <h2 
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          style={{ 
+            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+          }}
+        >
+          星座を作成
+        </h2>
+      </motion.div>
+
+      <div className="space-y-4 max-w-xl mx-auto">
+        {/* 目標タイトル入力 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="w-full min-w-[500px] py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 text-left block"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            minWidth: 0
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <Input
+            value={goalTitle}
+            onChange={(e) => onTitleChange(e.target.value)}
+            placeholder="例: Web開発をマスターする"
+            className="w-full border-0 bg-transparent text-white text-lg tracking-[0.15em] focus:outline-none placeholder:text-gray-400 p-0"
+            maxLength={50}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          />
+        </motion.button>
+
+        {/* 次へボタン - 常に表示 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          onClick={onNext}
+          disabled={!canProceed}
+          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 block"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            minWidth: 0
+          }}
+        >
+          次へ
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+// 目標選択画面（選択のみ）
 interface GoalSelectScreenProps {
   onSelect: (goal: Goal | null) => void;
   cachedGoals?: Goal[];
@@ -726,7 +1315,7 @@ function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScre
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           onClick={() => onSelect(null)}
-          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
+          className="min-w-[500px] w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
           style={{
             backdropFilter: "blur(8px)",
             backgroundColor: "rgba(0, 0, 0, 0.3)"
@@ -757,10 +1346,201 @@ function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScre
   );
 }
 
-// アクティビティ選択画面
+// アクティビティ作成画面（新規作成）
+interface ActivityCreateScreenProps {
+  goalTitle: string;
+  onNext: () => void;
+  onCancel: () => void;
+  onRefresh?: () => void;
+}
+
+function ActivityCreateScreen({ goalTitle, onNext, onCancel, onRefresh }: ActivityCreateScreenProps) {
+  const { activities, loading: activitiesLoading, refetch: refetchActivities, addActivity } = useActivities();
+  const [activityName, setActivityName] = useState("");
+  const [activityColor, setActivityColor] = useState("bg-sumi");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const colorOptions = [
+    { value: "bg-sumi", label: "墨色", color: "#5a5a5a" },
+    { value: "bg-ai", label: "藍色", color: "#165e83" },
+    { value: "bg-gin-nezu", label: "銀鼠", color: "#9fa0a0" },
+    { value: "bg-seiji", label: "青磁色", color: "#7ebea5" },
+    { value: "bg-usuzumi", label: "薄墨色", color: "#787878" },
+    { value: "bg-hatoba", label: "鳩羽色", color: "#675f7c" },
+  ];
+
+  const handleAddActivity = async () => {
+    if (!activityName.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await addActivity({
+        name: activityName.trim(),
+        icon: null,
+        color: activityColor,
+        goal_id: null
+      });
+
+      if (result.success) {
+        setActivityName("");
+        setActivityColor("bg-sumi");
+        refetchActivities();
+        onRefresh?.();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const canProceed = activities.length > 0;
+
+  return (
+    <div className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        <h2 
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          style={{ 
+            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+          }}
+        >
+          何をしますか？
+        </h2>
+      </motion.div>
+
+      <div className="space-y-6 max-w-xl mx-auto">
+        {/* アクティビティ名入力 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="space-y-3"
+        >
+          <label className="block text-gray-300 text-sm tracking-[0.1em] text-left">
+            アクティビティ名
+          </label>
+          <Input
+            value={activityName}
+            onChange={(e) => setActivityName(e.target.value)}
+            placeholder="例: 瞑想、読書、コーディング"
+            className="w-full min-w-[500px] py-4 px-6 bg-transparent border border-white/20 text-white text-lg tracking-[0.1em] focus:border-[#4FFFB0] focus:outline-none transition-colors"
+            style={{
+              backdropFilter: "blur(8px)",
+              backgroundColor: "rgba(0, 0, 0, 0.3)"
+            }}
+            maxLength={30}
+          />
+        </motion.div>
+
+        {/* 色選択 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="space-y-3"
+        >
+          <label className="block text-gray-300 text-sm tracking-[0.1em] text-left">色</label>
+          <div className="grid grid-cols-6 gap-3">
+            {colorOptions.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => setActivityColor(color.value)}
+                className={`w-12 h-12 rounded-full border-2 transition-all ${
+                  activityColor === color.value 
+                    ? "border-[#4FFFB0] scale-110" 
+                    : "border-transparent hover:border-white/50"
+                }`}
+                style={{ backgroundColor: color.color }}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* 追加ボタン */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          onClick={handleAddActivity}
+          disabled={!activityName.trim() || isSubmitting}
+          className="w-full py-3 border border-white/30 text-white text-sm tracking-[0.15em] hover:bg-white/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)"
+          }}
+        >
+          {isSubmitting ? (
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Plus size={16} />
+              <span>新しいアクティビティを追加</span>
+            </>
+          )}
+        </motion.button>
+
+        {/* 追加されたアクティビティ一覧 */}
+        {activitiesLoading ? (
+          <div className="text-center py-8">
+            <div className="text-[#4FFFB0] text-sm tracking-[0.2em]">LOADING...</div>
+          </div>
+        ) : activities.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="space-y-3 max-h-60 overflow-y-auto"
+          >
+            {activities.map((activity, index) => (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.9 + index * 0.1 }}
+                className="py-3 px-6 border border-white/20 text-white text-sm tracking-[0.1em] flex items-center gap-4"
+                style={{
+                  backdropFilter: "blur(8px)",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)"
+                }}
+              >
+                <div className={`w-3 h-3 ${activity.color} rounded-full`} />
+                <span className="flex-1 text-left">{activity.name}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : null}
+
+        {/* 次へボタン */}
+        {canProceed && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            onClick={onNext}
+            className="w-full py-4 px-6 border border-[#4FFFB0]/60 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
+            style={{
+              boxShadow: '0 0 8px rgba(79, 255, 176, 0.15)',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              backdropFilter: "blur(8px)"
+            }}
+          >
+            <span className="relative z-10">次へ</span>
+            <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+          </motion.button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// アクティビティ選択画面（選択のみ）
 interface ActivitySelectScreenProps {
   goalTitle?: string;
-  onSelect: (activity: { id: string; name: string; icon: string | null; color: string }) => void;
+  onSelect: (activity: { id: string; name: string; icon: string | null; color: string } | null) => void;
 }
 
 function ActivitySelectScreen({ goalTitle, onSelect }: ActivitySelectScreenProps) {
@@ -794,38 +1574,175 @@ function ActivitySelectScreen({ goalTitle, onSelect }: ActivitySelectScreenProps
       </motion.div>
 
       <div className="space-y-4 max-w-xl mx-auto">
-        {activities.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center py-8"
+        {/* アクティビティを選択しない */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          onClick={() => onSelect(null)}
+          className="min-w-[500px] w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)"
+          }}
+        >
+          アクティビティを選択しない
+        </motion.button>
+
+        {/* アクティビティリスト */}
+        {activities.map((activity, index) => (
+          <motion.button
+            key={activity.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 + index * 0.1 }}
+            onClick={() => onSelect(activity)}
+            className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
+            style={{
+              backdropFilter: "blur(8px)",
+              backgroundColor: "rgba(0, 0, 0, 0.3)"
+            }}
           >
-            <p className="text-gray-400 text-sm tracking-[0.1em]">
-              アクティビティがありません
-            </p>
-          </motion.div>
-        ) : (
-          activities.map((activity, index) => (
-            <motion.button
-              key={activity.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
-              onClick={() => onSelect(activity)}
-              className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300 flex items-center gap-4"
-              style={{
-                backdropFilter: "blur(8px)",
-                backgroundColor: "rgba(0, 0, 0, 0.3)"
-              }}
-            >
-              {activity.icon && (
-                <span className="text-2xl">{activity.icon}</span>
-              )}
-              <span className="flex-1 text-left">{activity.name}</span>
-            </motion.button>
-          ))
-        )}
+           {activity.name}
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 目標確認・作成画面（AI）
+interface GoalConfirmScreenProps {
+  goalTitle: string;
+  dontDoTags: string[];
+  onComplete: () => void;
+  onCancel: () => void;
+}
+
+function GoalConfirmScreen({ goalTitle, dontDoTags, onComplete, onCancel }: GoalConfirmScreenProps) {
+  const [isCreating, setIsCreating] = useState(false);
+  const { addGoal } = useGoalsDb();
+  const [deadline, setDeadline] = useState("");
+  const [weekdayHours, setWeekdayHours] = useState("1");
+  const [weekendHours, setWeekendHours] = useState("1");
+
+  const handleCreate = async () => {
+    setIsCreating(true);
+    try {
+      const goalData: DbGoalFormData = {
+        title: goalTitle,
+        motivation: JSON.stringify(dontDoTags),
+        deadline: deadline,
+        weekdayHours: parseInt(weekdayHours) || 1,
+        weekendHours: parseInt(weekendHours) || 1,
+        calculatedHours: 0
+      };
+
+      const result = await addGoal(goalData);
+      if (result.success) {
+        onComplete();
+      }
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  return (
+    <div className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        <h2 
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          style={{ 
+            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+          }}
+        >
+          星座を作成
+        </h2>
+      </motion.div>
+
+      <div className="space-y-6 max-w-xl mx-auto">
+        {/* 目標の確認 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="p-6 border border-white/20"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)"
+          }}
+        >
+          <div className="text-left space-y-4">
+            <div>
+              <label className="block text-gray-400 text-xs tracking-[0.1em] mb-2">星座名</label>
+              <p className="text-white text-lg tracking-[0.1em]">{goalTitle}</p>
+            </div>
+            <div>
+              <label className="block text-gray-400 text-xs tracking-[0.1em] mb-2">やらないこと</label>
+              <div className="flex flex-wrap gap-2">
+                {dontDoTags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 border border-[#4FFFB0]/30 text-[#4FFFB0] text-xs tracking-[0.1em]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 期限設定（オプション） */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <GoalHoursInputs
+            deadline={deadline}
+            onDeadlineChange={setDeadline}
+            weekdayHours={weekdayHours}
+            weekendHours={weekendHours}
+            onWeekdayHoursChange={setWeekdayHours}
+            onWeekendHoursChange={setWeekendHours}
+            validationErrors={{ weekdayHours: "", weekendHours: "" }}
+          />
+        </motion.div>
+
+        {/* 作成ボタン */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          onClick={handleCreate}
+          disabled={isCreating}
+          className="w-full py-4 px-6 border border-[#4FFFB0]/60 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            boxShadow: isCreating ? 'none' : '0 0 8px rgba(79, 255, 176, 0.15)',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        >
+          {isCreating ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>作成中...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={20} />
+              <span className="relative z-10">星座を作成（AI）</span>
+            </>
+          )}
+          {!isCreating && (
+            <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+          )}
+        </motion.button>
       </div>
     </div>
   );
@@ -1007,6 +1924,10 @@ export function HorizonPage() {
 
   // Flow管理
   const [flowStep, setFlowStep] = useState<FlowStep>('idle');
+  
+  // Goals作成用のデータ
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [newGoalDontDo, setNewGoalDontDo] = useState<string[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   
   const [sessionMemories, setSessionMemories] = useState<SessionMemory[]>([]);
@@ -1108,7 +2029,14 @@ export function HorizonPage() {
     setFlowStep('activity-select');
   };
 
-  const handleActivitySelect = async (activity: { id: string; name: string; icon: string | null; color: string }) => {
+  const handleActivitySelect = async (activity: { id: string; name: string; icon: string | null; color: string } | null) => {
+    if (!activity) {
+      // アクティビティを選択しない場合は、開始画面に戻る
+      console.log('No activity selected, returning to idle');
+      setFlowStep('idle');
+      return;
+    }
+    
     console.log('Activity selected:', activity.name);
     
     // まず画面遷移
@@ -1221,6 +2149,38 @@ export function HorizonPage() {
     setHoveredMemory(memory);
   };
 
+  const handleGoalsClick = () => {
+    // 目標作成フローを開始
+    setFlowStep('goal-create-input');
+    setNewGoalTitle("");
+    setNewGoalDontDo([]);
+  };
+
+  const handleGoalInputNext = () => {
+    // アクティビティ作成画面へ
+    setFlowStep('goal-create-activity');
+  };
+
+  const handleActivityCreateNext = () => {
+    // 確認画面へ
+    setFlowStep('goal-create-confirm');
+  };
+
+  const handleGoalCreateComplete = () => {
+    // 目標作成完了 → idle画面に戻る
+    setFlowStep('idle');
+    setNewGoalTitle("");
+    setNewGoalDontDo([]);
+    refreshCache();
+  };
+
+  const handleGoalCreateCancel = () => {
+    // キャンセル → idle画面に戻る
+    setFlowStep('idle');
+    setNewGoalTitle("");
+    setNewGoalDontDo([]);
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden" style={{ backgroundColor: '#000000' }}>
       
@@ -1305,7 +2265,11 @@ export function HorizonPage() {
 
       {/* UI Layers */}
       <Header isHidden={flowStep !== 'idle'} />
-      <Sidebar isHidden={flowStep !== 'idle'} onMessengerClick={() => setShowMessenger(true)} />
+      <Sidebar 
+        isHidden={flowStep !== 'idle'} 
+        onMessengerClick={() => setShowMessenger(true)}
+        onGoalsClick={handleGoalsClick}
+      />
       <CenterOverlay 
         step={flowStep}
         onStartClick={handleStartClick}
@@ -1318,6 +2282,15 @@ export function HorizonPage() {
         selectedGoalTitle={selectedGoal?.title}
         goalsCache={goalsCache}
         goalsCacheLoaded={goalsCacheLoaded}
+        newGoalTitle={newGoalTitle}
+        onNewGoalTitleChange={setNewGoalTitle}
+        newGoalDontDo={newGoalDontDo}
+        onNewGoalDontDoChange={setNewGoalDontDo}
+        onGoalInputNext={handleGoalInputNext}
+        onActivityCreateNext={handleActivityCreateNext}
+        onGoalCreateComplete={handleGoalCreateComplete}
+        onGoalCreateCancel={handleGoalCreateCancel}
+        onRefreshCache={refreshCache}
       />
       <RightConstellation />
       <Footer />
