@@ -23,7 +23,7 @@ interface AppSidebarProps {
   onPageChange?: (pageId: string) => void
 }
 
-export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSidebarProps) {
+export function AppSidebar({ currentPage = "horizon", onPageChange }: AppSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const params = useParams()
@@ -32,13 +32,13 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const t = useTranslations()
 
-  // next-intlを使用したメニューアイテム（ダッシュボードのみ）
+  // next-intlを使用したメニューアイテム（Horizonのみ）
   const menuItems = [
     {
-      title: t('navigation.dashboard'),
-      url: `/${locale}/dashboard`,
+      title: t('navigation.horizon'),
+      url: `/${locale}/horizon`,
       icon: Home,
-      id: "dashboard",
+      id: "horizon",
     },
   ]
 
@@ -51,8 +51,8 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: AppSideb
     if (pathWithoutLocale === "/session") {
       // セッション中はどのメニューもアクティブにしない
       setActivePage("")
-    } else if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
-      setActivePage("dashboard")
+    } else if (pathWithoutLocale === "/horizon" || pathWithoutLocale === "/" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
+      setActivePage("horizon")
     } else if (pathWithoutLocale === "/plan") {
       // プランページではサイドバーのメニューをアクティブにしない
       setActivePage("")

@@ -20,13 +20,13 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
   const [activePage, setActivePage] = useState(currentPage)
   const t = useTranslations()
 
-  // next-intlを使用したメニューアイテム（ダッシュボードと設定のみ）
+  // next-intlを使用したメニューアイテム（Horizonと設定のみ）
   const menuItems = [
     {
-      id: "dashboard",
-      label: t('navigation.dashboard'),
+      id: "horizon",
+      label: t('navigation.horizon'),
       icon: Home,
-      url: `/${locale}/dashboard`,
+      url: `/${locale}/horizon`,
     },
     {
       id: "settings",
@@ -42,8 +42,8 @@ export function BottomNavigation({ currentPage, onPageChange }: BottomNavigation
     
     const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
     
-    if (pathWithoutLocale === "/dashboard" || pathWithoutLocale === "/" || pathWithoutLocale === "/session" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
-      setActivePage("dashboard")
+    if (pathWithoutLocale === "/horizon" || pathWithoutLocale === "/" || pathWithoutLocale === "/session" || pathWithoutLocale === "/goals" || pathWithoutLocale.startsWith("/goals/")) {
+      setActivePage("horizon")
     } else if (pathWithoutLocale === "/settings" || pathWithoutLocale.startsWith("/settings/") || pathWithoutLocale === "/plan") {
       setActivePage("settings")
     } else {

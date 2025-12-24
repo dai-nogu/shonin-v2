@@ -32,7 +32,9 @@
     "total": "合計",
     "read_more": "続きを読む",
     "please_wait": "しばらくお待ちください...",
-    "see_all": "すべて見る"
+    "see_all": "すべて見る",
+    "hours": "時間",
+    "minutes": "分"
   },
   "timer": {
     "title": "タイマー",
@@ -60,7 +62,7 @@
     "month": "30日間"
   },
   "navigation": {
-    "dashboard": "ダッシュボード",
+    "horizon": "Horizon",
     "calendar": "カレンダー",
     "goals": "目標",
     "feedback": "手紙",
@@ -106,7 +108,14 @@
       "description": "最近の記録から素早く開始",
       "noRecentActivities": "最近の記録がありません",
       "noYesterdayActivities": "昨日の記録がありません"
-    }
+    },
+    "daily_message_title": "今日のメッセージ",
+    "daily_message_description": "今日の振り返りを見る",
+    "daily_message_from_shonin": "Shoninより",
+    "generate_message": "メッセージを見る",
+    "refresh_message": "更新する",
+    "generating_message": "メッセージを生成中...",
+    "no_sessions_today": "今日はまだ記録がありません"
   },
   "session_detail": {
     "title": "セッション詳細",
@@ -294,7 +303,24 @@
     "confirm_deletion": "本当にアカウントを削除しますか？",
     "no": "いいえ",
     "delete": "削除する",
-    "deleting": "削除中..."
+    "deleting": "削除中...",
+    "horizon_settings": "星座設定",
+    "horizon_settings_description": "あなたの目標と期間設定が、星座を形成する要素になります",
+    "active_goals": "アクティブな目標",
+    "active_goals_description": "現在取り組んでいる目標の数",
+    "goals_unit": "個",
+    "total_goal_hours": "目標総時間",
+    "total_goal_hours_description": "すべての目標の合計時間",
+    "nearest_deadline": "最も近い締め切り",
+    "nearest_deadline_description": "次に迫っている目標の締め切り",
+    "days_remaining": "残り{days}日",
+    "deadline_passed": "期限を過ぎています",
+    "manage_goals": "目標を管理",
+    "view_horizon": "星座を見る",
+    "daily_message": "今日のメッセージ",
+    "view_daily_message": "今日の振り返りを見る",
+    "daily_message_description": "今日のセッションを振り返ったメッセージを見る",
+    "view_message": "見る"
   },
   "languages": {
     "ja": "日本語 (JP)",
@@ -348,7 +374,9 @@
     "ACTIVITY_NOT_FOUND": "アクティビティが見つかりません",
     "GENERIC_ERROR": "エラーが発生しました。再度お試しください。",
     "NETWORK_ERROR": "ネットワークエラーが発生しました",
-    "VALIDATION_ERROR": "入力内容を確認してください"
+    "VALIDATION_ERROR": "入力内容を確認してください",
+    "upgrade_required": "この機能はStandardプラン以上でご利用いただけます",
+    "retry": "再試行"
   },
   "success": {
     "saved": "保存しました",
@@ -463,7 +491,7 @@
   "session_page": {
     "not_found_title": "セッションが見つかりません",
     "not_found_description": "アクティブなセッションがありません。",
-    "back_to_dashboard": "ダッシュボードに戻る",
+    "back_to_horizon": "Horizonに戻る",
     "save_failed": "保存に失敗しました"
   },
   "plan": {
@@ -702,7 +730,7 @@
       "tagline": "See the unseen.",
       "copyright": "© 2025 Shonin. All rights reserved.",
       "product": "プロダクト",
-      "dashboard": "ダッシュボード",
+      "horizon": "Horizon",
       "pricing": "料金プラン",
       "company": "会社情報",
       "about": "私たちについて",

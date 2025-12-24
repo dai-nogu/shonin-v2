@@ -20,13 +20,23 @@ import {
   Mail,
   Activity,
   Radio,
-  Sparkles
+  Sparkles,
+  Archive,
+  Volume2,
+  Eye,
+  Target,
+  X,
+  Smile,
+  Meh,
+  Frown
 } from "lucide-react";
+import { getActiveGoals } from "@/app/actions/goals";
+import type { Database } from "@/types/database";
+import { useSessions, type CompletedSession } from "@/contexts/sessions-context";
+import { useActivities } from "@/contexts/activities-context";
 
 // --- Constants & Types ---
-const THEME_COLOR = "#A5F3FC"; // Cyan-200 equivalent
-const GLOW_COLOR = "#22D3EE"; // Cyan-400 equivalent
-const BG_COLOR = "#020409";
+const THEME_COLOR = "#A5F3FC"; // Orbit particles color
 
 // --- 3D Components ---
 
@@ -106,8 +116,30 @@ function Moon() {
   );
 }
 
-function OrbitParticles({ count = 800, radius = 3.5 }) {
+// セッションの記録データ型
+interface SessionMemory {
+  id: string;
+  angle: number;
+  radius: number;
+  time: string;
+  memory: string;
+  color: string;
+}
+
+function OrbitParticles({ 
+  count = 800, 
+  radius = 3.5, 
+  sessionMemories = [],
+  onParticleHover
+}: { 
+  count?: number; 
+  radius?: number; 
+  sessionMemories?: SessionMemory[];
+  onParticleHover?: (memory: SessionMemory | null) => void;
+}) {
   const points = useRef<THREE.Points>(null);
+  const { camera, raycaster, pointer } = useThree();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Generate particles in a ring/orbit
   const particles = useMemo(() => {
@@ -126,27 +158,66 @@ function OrbitParticles({ count = 800, radius = 3.5 }) {
     return temp;
   }, [count, radius]);
 
-  // 回転なし
+  // Session memory particles
+  const memoryParticles = useMemo(() => {
+    return sessionMemories.map(mem => {
+      const x = Math.cos(mem.angle) * mem.radius;
+      const y = Math.sin(mem.angle) * mem.radius * 0.2;
+      const z = Math.sin(mem.angle) * mem.radius;
+      return { ...mem, position: new THREE.Vector3(x, y, z) };
+    });
+  }, [sessionMemories]);
 
   return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particles.length / 3}
-          array={particles}
-          itemSize={3}
+    <group>
+      {/* Background orbit particles */}
+      <points ref={points}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[particles, 3]}
+            count={particles.length / 3}
+            array={particles}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.02}
+          color={THEME_COLOR}
+          transparent
+          opacity={0.6}
+          blending={THREE.AdditiveBlending}
+          sizeAttenuation={true}
         />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.02}
-        color={THEME_COLOR}
-        transparent
-        opacity={0.6}
-        blending={THREE.AdditiveBlending}
-        sizeAttenuation={true}
-      />
-    </points>
+      </points>
+
+      {/* Session memory particles - larger and interactive */}
+      {memoryParticles.map((mem, index) => (
+        <mesh
+          key={mem.id}
+          position={mem.position}
+          onPointerEnter={() => {
+            setHoveredIndex(index);
+            onParticleHover?.(mem);
+          }}
+          onPointerLeave={() => {
+            setHoveredIndex(null);
+            onParticleHover?.(null);
+          }}
+        >
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshBasicMaterial
+            color={mem.color}
+            transparent
+            opacity={hoveredIndex === index ? 1 : 0.8}
+            blending={THREE.AdditiveBlending}
+          />
+          {hoveredIndex === index && (
+            <pointLight color={mem.color} intensity={2} distance={2} />
+          )}
+        </mesh>
+      ))}
+    </group>
   );
 }
 
@@ -166,7 +237,10 @@ function FloatingText({ text, position, fontSize = 0.1 }: { text: string; positi
 }
 
 
-function SceneContent() {
+function SceneContent({ sessionMemories, onMemoryHover }: { 
+  sessionMemories: SessionMemory[];
+  onMemoryHover: (memory: SessionMemory | null) => void;
+}) {
   const { camera } = useThree();
   
   // Mouse parallax effect could go here
@@ -184,8 +258,16 @@ function SceneContent() {
       </Float>
 
       <group rotation={[0.4, 0, 0.2]}>
-         <OrbitParticles radius={3.2} count={600} />
-         <OrbitParticles radius={4.5} count={300} />
+         <OrbitParticles 
+           radius={3.2} 
+           count={600} 
+         />
+         <OrbitParticles 
+           radius={4.5} 
+           count={300} 
+           sessionMemories={sessionMemories}
+           onParticleHover={onMemoryHover}
+         />
       </group>
     </>
   );
@@ -193,56 +275,104 @@ function SceneContent() {
 
 // --- UI Components ---
 
-function Header() {
+function Header({ isHidden }: { isHidden: boolean }) {
     return (
-        <header className="fixed top-0 left-0 w-full p-8 z-10 flex justify-between items-start pointer-events-none">
+        <motion.header 
+            initial={{ opacity: 1 }}
+            animate={{ opacity: isHidden ? 0 : 1 }}
+            transition={{ duration: 0.8 }}
+            className="fixed top-0 left-0 w-full p-8 z-10 flex justify-between items-start pointer-events-none"
+        >
             <div className="flex items-center gap-3 pointer-events-auto cursor-pointer">
-                <div className="w-8 h-8 rounded-full border border-[#4FFFB0] flex items-center justify-center">
-                    <div className="w-4 h-4 bg-[#4FFFB0] rounded-sm transform rotate-45"></div>
+                <div className="w-8 h-8 rounded-full border flex items-center justify-center" style={{ borderColor: '#4FFFB0' }}>
+                    <div className="w-4 h-4 rounded-sm transform rotate-45" style={{ backgroundColor: '#4FFFB0' }}></div>
                 </div>
-                <h1 className="text-2xl font-light tracking-[0.2em] text-white font-sans">
+                <h1 style={{ fontSize: '24px', letterSpacing: '0.2em', color: '#dbdbdb' }}>
                     SHONIN
                 </h1>
             </div>
             
-             <div className="text-[#4FFFB0]/60 text-xs tracking-widest border border-[#4FFFB0]/30 px-3 py-1 rounded-full">
+            <div style={{ color: '#dbdbdb', fontSize: '12px', letterSpacing: '0.1em', border: '1px solid #4FFFB0', padding: '4px 12px', borderRadius: '9999px' }}>
                 SYSTEM OPTIMAL
             </div>
-        </header>
+        </motion.header>
     )
 }
 
-function Sidebar() {
+function Sidebar({ isHidden, onMessengerClick }: { isHidden: boolean; onMessengerClick: () => void }) {
     const menuItems = [
-        { icon: <Activity size={20} />, label: "HORIZON", active: true },
-        { icon: <History size={20} />, label: "HISTORY", active: false },
-        { icon: <Radio size={20} />, label: "ORBIT", active: false },
-        { icon: <MessageSquare size={20} />, label: "MESSENGER", active: false },
+        { icon: <Eye size={22} />, label: "HORIZON", active: true, description: "観測画面", onClick: undefined },
+        { icon: <Archive size={22} />, label: "CHRONICLE", active: false, description: "銀河アーカイブ", onClick: undefined },
+        { icon: <MessageSquare size={22} />, label: "MESSENGER", active: false, description: "証人からの手紙", onClick: onMessengerClick },
+        { icon: <Target size={22} />, label: "GOALS", active: false, description: "目標設定", onClick: undefined },
     ];
 
     return (
-        <nav className="fixed left-0 top-1/2 -translate-y-1/2 p-8 z-10 hidden md:flex flex-col gap-12 pointer-events-none">
+        <motion.nav 
+            initial={{ opacity: 1 }}
+            animate={{ opacity: isHidden ? 0 : 1 }}
+            transition={{ duration: 0.8 }}
+            className="fixed left-0 top-1/2 -translate-y-1/2 p-8 z-10 hidden md:flex flex-col gap-12 pointer-events-none"
+        >
             {menuItems.map((item, index) => (
-                <div key={index} className={`flex items-center gap-4 group pointer-events-auto cursor-pointer transition-all duration-300 ${item.active ? 'opacity-100 translate-x-2' : 'opacity-50 hover:opacity-100 hover:translate-x-1'}`}>
-                    <div className={`text-[#4FFFB0] transition-transform duration-300 ${item.active ? 'scale-110' : 'scale-100'}`}>
+                <div 
+                    key={index}
+                    onClick={item.onClick}
+                    className="flex items-center gap-4 pointer-events-auto transition-all duration-300 hover:translate-x-1"
+                    style={{
+                        cursor: item.onClick ? 'pointer' : (item.active ? 'default' : 'not-allowed'),
+                        opacity: item.active ? 1 : (item.onClick ? 0.7 : 0.5)
+                    }}
+                >
+                    <div style={{ color: '#4FFFB0' }}>
                         {item.icon}
                     </div>
-                    <span className="text-white text-xs tracking-[0.2em] font-light">
-                        {item.label}
-                    </span>
+                    <div className="flex flex-col">
+                        <span style={{ color: '#dbdbdb', fontSize: '14px', letterSpacing: '0.2em', marginBottom: '4px' }}>
+                            {item.label}
+                        </span>
+                        <span style={{ color: '#dbdbdb', fontSize: '11px', letterSpacing: '0.05em' }}>
+                            {item.description}
+                        </span>
+                    </div>
                     {item.active && (
                          <motion.div 
                             layoutId="active-indicator"
-                            className="absolute -left-4 w-1 h-1 bg-[#4FFFB0] rounded-full shadow-[0_0_10px_#4FFFB0]"
+                            className="absolute -left-4 w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: '#4FFFB0', boxShadow: '0 0 12px #4FFFB0' }}
                          />
                     )}
                 </div>
             ))}
-        </nav>
+        </motion.nav>
     );
 }
 
-function CenterOverlay() {
+function CenterOverlay({ 
+    step, 
+    onStartClick, 
+    onGoalSelect,
+    onActivitySelect,
+    onReflectionSave,
+    onReflectionSkip,
+    onEndSession,
+    sessionTime, 
+    selectedGoalTitle,
+    goalsCache,
+    goalsCacheLoaded
+}: { 
+    step: FlowStep;
+    onStartClick: () => void;
+    onGoalSelect: (goal: Goal | null) => void;
+    onActivitySelect: (activity: { id: string; name: string; icon: string | null; color: string }) => void;
+    onReflectionSave: (data: { moodScore: number; reflection: string }) => void;
+    onReflectionSkip: () => void;
+    onEndSession: () => void;
+    sessionTime: string;
+    selectedGoalTitle?: string;
+    goalsCache?: Goal[];
+    goalsCacheLoaded?: boolean;
+}) {
     const [time, setTime] = useState("");
 
     useEffect(() => {
@@ -256,82 +386,176 @@ function CenterOverlay() {
     }, []);
 
     return (
-        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-10">
-            <div className="text-center">
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-[#4FFFB0] tracking-[0.3em] text-sm mb-4 font-light uppercase"
-                    style={{ 
-                        textShadow: "0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(79, 255, 176, 0.5)" 
-                    }}
-                >
-                    Orbit
-                </motion.div>
-                
-                <motion.div
-                     initial={{ opacity: 0, scale: 0.9 }}
-                     animate={{ opacity: 1, scale: 1 }}
-                     transition={{ delay: 0.8, duration: 0.8 }}
-                     className="relative"
-                >
-                    <h1 
-                        className="text-white text-8xl font-light tracking-tighter mb-2" 
-                        style={{ 
-                            textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 60px rgba(79, 255, 176, 0.2)" 
-                        }}
+        <div className={`fixed inset-0 ${step === 'session-active' ? 'pointer-events-none' : 'pointer-events-none'} flex items-center justify-center z-10`}>
+            <AnimatePresence mode="wait">
+                {step === 'idle' && (
+                    <motion.div 
+                        key="idle"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-center"
                     >
-                        {time}
-                    </h1>
-                    <div 
-                        className="text-white/90 text-xl tracking-[0.2em] font-light mb-6"
-                        style={{ 
-                            textShadow: "0 2px 10px rgba(0, 0, 0, 0.8), 0 4px 20px rgba(0, 0, 0, 0.6)" 
-                        }}
-                    >
-                        DEEP FOCUS
-                    </div>
-                    <div 
-                        className="text-[#4FFFB0] text-xs tracking-widest mb-12"
-                        style={{ 
-                            textShadow: "0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(79, 255, 176, 0.5)" 
-                        }}
-                    >
-                        LUMINOSITY +1.5%
-                    </div>
-                </motion.div>
+                        <motion.div
+                             initial={{ opacity: 0, scale: 0.9 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             transition={{ delay: 0.8, duration: 0.8 }}
+                             className="relative"
+                        >
+                            <h1 
+                                className="text-white text-8xl font-light tracking-tighter mb-12" 
+                                style={{ 
+                                    textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 60px rgba(79, 255, 176, 0.2)" 
+                                }}
+                            >
+                                {time}
+                            </h1>
+                        </motion.div>
 
-                <motion.button 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2 }}
-                    className="pointer-events-auto px-8 py-3 border border-[#4FFFB0]/50 text-[#4FFFB0] text-xs tracking-[0.2em] hover:bg-[#4FFFB0]/10 hover:border-[#4FFFB0] transition-all duration-300 uppercase relative overflow-hidden group"
-                >
-                    <span className="relative z-10">Trace to Begin</span>
-                    <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-out" />
-                </motion.button>
-            </div>
+                        <motion.button 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.2 }}
+                            onClick={onStartClick}
+                            className="pointer-events-auto px-12 py-4 border border-[#4FFFB0]/40 text-white text-3xl font-light tracking-[0.3em] hover:bg-[#4FFFB0]/10 hover:border-[#4FFFB0] hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                            style={{ 
+                                textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 40px rgba(79, 255, 176, 0.2)",
+                                backdropFilter: "blur(4px)"
+                            }}
+                        >
+                            <span className="relative z-10">
+                                START
+                            </span>
+                            <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+                        </motion.button>
+                    </motion.div>
+                )}
+
+                {step === 'goal-select' && (
+                    <motion.div
+                        key="goal-select"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <GoalSelectScreen 
+                            onSelect={onGoalSelect}
+                            cachedGoals={goalsCache}
+                            cacheLoaded={goalsCacheLoaded}
+                        />
+                    </motion.div>
+                )}
+
+                {step === 'activity-select' && (
+                    <motion.div
+                        key="activity-select"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <ActivitySelectScreen 
+                            goalTitle={selectedGoalTitle}
+                            onSelect={onActivitySelect} 
+                        />
+                    </motion.div>
+                )}
+
+                {step === 'session-active' && (
+                    <motion.div
+                        key="session-active"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-center"
+                    >
+                        <motion.div
+                             initial={{ opacity: 0, scale: 0.9 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             transition={{ delay: 0.3, duration: 0.8 }}
+                             className="relative"
+                        >
+                            <h1 
+                                className="text-white text-8xl font-light tracking-tighter mb-12" 
+                                style={{ 
+                                    textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 80px rgba(79, 255, 176, 0.4)" 
+                                }}
+                            >
+                                {sessionTime}
+                            </h1>
+                        </motion.div>
+
+                        <motion.button 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6 }}
+                            onClick={onEndSession}
+                            className="pointer-events-auto px-12 py-4 border border-[#4FFFB0]/40 text-white text-3xl font-light tracking-[0.3em] hover:bg-[#4FFFB0]/10 hover:border-[#4FFFB0] hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                            style={{ 
+                                textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 40px rgba(79, 255, 176, 0.2)",
+                                backdropFilter: "blur(4px)"
+                            }}
+                        >
+                            <span className="relative z-10">
+                                END
+                            </span>
+                            <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+                        </motion.button>
+                    </motion.div>
+                )}
+
+                {step === 'reflection' && (
+                    <motion.div
+                        key="reflection"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <ReflectionScreen 
+                            sessionTime={sessionTime}
+                            onSave={onReflectionSave}
+                            onSkip={onReflectionSkip}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
 
-function RightPanel() {
+function RightConstellation() {
     return (
         <div className="fixed right-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none hidden md:block">
             <div className="relative">
                 {/* Connecting Line */}
-                <div className="absolute top-1/2 right-full w-24 h-[1px] bg-gradient-to-l from-[#4FFFB0]/50 to-transparent mr-4"></div>
-                <div className="absolute top-1/2 right-full w-2 h-2 border border-[#4FFFB0] rounded-full mr-4 -translate-y-1/2 bg-[#020409]"></div>
+                <div className="absolute top-1/2 left-full w-24 h-[1px] ml-4" style={{ background: 'linear-gradient(to right, #fff, transparent)' }}></div>
+                <div className="absolute top-1/2 left-full w-2 h-2 border rounded-full ml-4 -translate-y-1/2" style={{ borderColor: '#fff', backgroundColor: '#000' }}></div>
                 
-                <div className="flex flex-col items-center pointer-events-auto">
-                    <div className="w-16 h-16 border border-[#4FFFB0] flex items-center justify-center mb-4 relative group cursor-pointer hover:bg-[#4FFFB0]/10 transition-colors">
-                        <Mail className="text-[#4FFFB0]" size={24} />
-                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#4FFFB0] animate-pulse"></div>
+                <div className="flex flex-col items-center pointer-events-auto cursor-pointer">
+                    <div className="relative w-16 h-16 mb-3">
+                        {/* Simplified Constellation Graph */}
+                        <svg viewBox="0 0 100 100" className="w-full h-full">
+                            <path d="M20,80 L40,60 L70,70 L80,30 L50,20 L30,40 Z" fill="none" stroke="#fff" strokeWidth="2" />
+                            <circle cx="20" cy="80" r="3" fill="#fff" />
+                            <circle cx="40" cy="60" r="3" fill="#fff" />
+                            <circle cx="70" cy="70" r="3" fill="#fff" />
+                            <circle cx="80" cy="30" r="3" fill="#fff" />
+                            <circle cx="50" cy="20" r="3" fill="#fff" />
+                            <circle cx="30" cy="40" r="3" fill="#fff" />
+                        </svg>
                     </div>
                     <div className="text-center">
-                        <div className="text-[#4FFFB0] text-xs tracking-[0.2em] mb-1">MESSENGER</div>
-                        <div className="text-white/60 text-[10px] tracking-widest">UNOPENED LETTER FROM SHONIN</div>
+                        <div style={{ color: '#dbdbdb', fontSize: '12px', letterSpacing: '0.2em', marginBottom: '4px', cursor: 'pointer' }}>CONSTELLATION</div>
+                        <div style={{ color: '#dbdbdb', fontSize: '10px', letterSpacing: '0.15em', cursor: 'pointer' }}>
+                            WEEKLY PROGRESS
+                        </div>
                     </div>
                 </div>
             </div>
@@ -339,28 +563,428 @@ function RightPanel() {
     )
 }
 
+function MessengerModal({ onClose }: { onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
+      className="relative w-full h-full flex items-center justify-center p-8"
+    >
+      {/* 閉じるボタン */}
+      <button
+        onClick={onClose}
+        className="absolute top-8 right-8 text-white hover:text-[#4FFFB0] transition-colors duration-300 z-50"
+        style={{
+          fontSize: '14px',
+          letterSpacing: '0.2em',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        <X size={24} />
+        CLOSE
+      </button>
+
+      {/* メッセージコンテンツ */}
+      <div className="max-w-4xl w-full space-y-8">
+        {/* 週次メッセージ */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="border border-[#4FFFB0]/30 p-8 backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-[#4FFFB0] text-xl tracking-[0.2em] mb-2">WEEKLY LETTER</h3>
+              <p className="text-gray-400 text-sm tracking-[0.1em]">週次メッセージ</p>
+            </div>
+            <div className="text-gray-500 text-sm tracking-[0.15em]">
+              2024.12.24
+            </div>
+          </div>
+          <div className="text-white text-base leading-relaxed tracking-[0.05em]">
+            <p className="mb-4">
+              この一週間、あなたは13.6時間にわたって3つの大切な目標に取り組みました。
+              特に「瞑想の習慣化」では、毎日欠かさず記録を続けています。
+            </p>
+            <p className="mb-4">
+              According to Confirmation Bias、あなたが「間違えたら情報が増える」「判断が改善って実装」と考えているのは、成長への意識の表れです。
+            </p>
+            <p className="text-gray-300">
+              月曜日のキックオフを続けながら、「早起きで夜更かし」という習慣を見直すことで、
+              さらに自分中心の成長を実感できるでしょう。
+            </p>
+          </div>
+        </motion.div>
+
+        {/* 月次メッセージ */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="border border-[#22D3EE]/30 p-8 backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-[#22D3EE] text-xl tracking-[0.2em] mb-2">MONTHLY LETTER</h3>
+              <p className="text-gray-400 text-sm tracking-[0.1em]">月次メッセージ</p>
+            </div>
+            <div className="text-gray-500 text-sm tracking-[0.15em]">
+              2024.12.01
+            </div>
+          </div>
+          <div className="text-white text-base leading-relaxed tracking-[0.05em]">
+            <p className="mb-4">
+              12月、あなたは54時間の努力を積み重ねました。
+              この時間は、確実にあなたの成長の軌跡として刻まれています。
+            </p>
+            <p className="mb-4">
+              継続することの価値を伝えます。毎日の小さな一歩が、
+              やがて大きな変化を生み出します。
+            </p>
+            <p className="text-gray-300">
+              来月も、あなたの努力の証人であり続けます。
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+
+type Goal = Database['public']['Tables']['goals']['Row'];
+type Activity = Database['public']['Tables']['activities']['Row'];
+type FlowStep = 'idle' | 'goal-select' | 'activity-select' | 'session-active' | 'reflection';
+
+// 目標選択画面
+interface GoalSelectScreenProps {
+  onSelect: (goal: Goal | null) => void;
+  cachedGoals?: Goal[];
+  cacheLoaded?: boolean;
+}
+
+function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScreenProps) {
+  const [goals, setGoals] = useState<Goal[]>(cachedGoals || []);
+  const [loading, setLoading] = useState(!cacheLoaded);
+
+  useEffect(() => {
+    // キャッシュがある場合は使用
+    if (cachedGoals && cacheLoaded) {
+      setGoals(cachedGoals);
+      setLoading(false);
+      return;
+    }
+
+    // キャッシュがない場合のみフェッチ
+    const fetchGoals = async () => {
+      const result = await getActiveGoals();
+      if (result.success) {
+        setGoals(result.data);
+      }
+      setLoading(false);
+    };
+    fetchGoals();
+  }, [cachedGoals, cacheLoaded]);
+
+  if (loading) {
+    return (
+      <div className="text-center">
+        <div className="text-[#4FFFB0] text-xl tracking-[0.2em]">
+          LOADING...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        <h2 
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          style={{ 
+            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+          }}
+        >
+          星座を選択
+        </h2>
+      </motion.div>
+
+      <div className="space-y-4 max-w-xl mx-auto">
+        {/* 星座を選択しない */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          onClick={() => onSelect(null)}
+          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)"
+          }}
+        >
+          星座を選択しない
+        </motion.button>
+
+        {/* 目標リスト */}
+        {goals.map((goal, index) => (
+          <motion.button
+            key={goal.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 + index * 0.1 }}
+            onClick={() => onSelect(goal)}
+            className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
+            style={{
+              backdropFilter: "blur(8px)",
+              backgroundColor: "rgba(0, 0, 0, 0.3)"
+            }}
+          >
+            {goal.title}
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// アクティビティ選択画面
+interface ActivitySelectScreenProps {
+  goalTitle?: string;
+  onSelect: (activity: { id: string; name: string; icon: string | null; color: string }) => void;
+}
+
+function ActivitySelectScreen({ goalTitle, onSelect }: ActivitySelectScreenProps) {
+  const { activities, loading } = useActivities();
+
+  if (loading) {
+    return (
+      <div className="text-center">
+        <div className="text-[#4FFFB0] text-xl tracking-[0.2em]">
+          LOADING...
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8 }}
+      >
+        <h2 
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          style={{ 
+            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+          }}
+        >
+          何をしますか？
+        </h2>
+      </motion.div>
+
+      <div className="space-y-4 max-w-xl mx-auto">
+        {activities.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center py-8"
+          >
+            <p className="text-gray-400 text-sm tracking-[0.1em]">
+              アクティビティがありません
+            </p>
+          </motion.div>
+        ) : (
+          activities.map((activity, index) => (
+            <motion.button
+              key={activity.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+              onClick={() => onSelect(activity)}
+              className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300 flex items-center gap-4"
+              style={{
+                backdropFilter: "blur(8px)",
+                backgroundColor: "rgba(0, 0, 0, 0.3)"
+              }}
+            >
+              {activity.icon && (
+                <span className="text-2xl">{activity.icon}</span>
+              )}
+              <span className="flex-1 text-left">{activity.name}</span>
+            </motion.button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 振り返り画面
+interface ReflectionScreenProps {
+  sessionTime: string;
+  onSave: (data: {
+    moodScore: number;
+    reflection: string;
+  }) => void;
+  onSkip: () => void;
+}
+
+function ReflectionScreen({ sessionTime, onSave, onSkip }: ReflectionScreenProps) {
+  const [moodScore, setMoodScore] = useState<number>(3);
+  const [reflection, setReflection] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = () => {
+    // すぐに画面を戻す
+    onSave({
+      moodScore,
+      reflection: reflection.trim()
+    });
+    // 保存処理はバックグラウンドで実行される
+  };
+
+  const moodOptions = [
+    { value: 1, icon: <Frown size={32} />, label: "困難", color: "#64748B" },
+    { value: 2, icon: <Frown size={32} />, label: "疲労", color: "#94A3B8" },
+    { value: 3, icon: <Meh size={32} />, label: "普通", color: "#A5F3FC" },
+    { value: 4, icon: <Smile size={32} />, label: "良好", color: "#22D3EE" },
+    { value: 5, icon: <Smile size={32} />, label: "充実", color: "#4FFFB0" },
+  ];
+
+  return (
+    <div className="text-center max-w-2xl mx-auto px-6">
+      {/* ヘッダー */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mb-8"
+      >
+        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-8">軌跡の記録</h2>
+        <div className="text-white text-5xl font-light tracking-tighter" 
+          style={{ 
+            textShadow: "0 0 30px rgba(79, 255, 176, 0.3)" 
+          }}
+        >
+          {sessionTime}
+        </div>
+      </motion.div>
+
+      {/* 気分の選択 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="mb-8"
+      >
+        <label className="block text-[#4FFFB0] text-sm tracking-[0.2em] mb-4">
+          心の状態
+        </label>
+        <div className="flex justify-center gap-3">
+          {moodOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setMoodScore(option.value)}
+              className="flex flex-col items-center gap-2 p-3 border transition-all duration-300 hover:scale-105"
+              style={{
+                borderColor: moodScore === option.value ? option.color : 'rgba(255, 255, 255, 0.2)',
+                backgroundColor: moodScore === option.value ? `${option.color}20` : 'rgba(0, 0, 0, 0.3)',
+                color: moodScore === option.value ? option.color : '#dbdbdb',
+                backdropFilter: "blur(8px)"
+              }}
+            >
+              {option.icon}
+              <span className="text-xs tracking-[0.1em]">{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* 振り返り */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="mb-8"
+      >
+        <label className="block text-[#4FFFB0] text-sm tracking-[0.2em] mb-3">
+          軌跡を刻む
+        </label>
+        <textarea
+          value={reflection}
+          onChange={(e) => setReflection(e.target.value)}
+          placeholder="この時間で感じたこと、発見したこと、次への想いを記録しましょう..."
+          className="w-full p-4 border border-white/20 text-white tracking-[0.05em] leading-relaxed focus:border-[#4FFFB0] focus:outline-none transition-colors duration-300 resize-none"
+          rows={6}
+          style={{ 
+            fontSize: '14px',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        />
+        <p className="text-gray-500 text-xs tracking-[0.1em] mt-2">
+          {reflection.length} 文字
+        </p>
+      </motion.div>
+
+      {/* ボタン */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+        className="flex gap-4"
+      >
+        <button
+          onClick={onSkip}
+          disabled={isLoading}
+          className="flex-1 py-3 border border-white/30 text-white tracking-[0.2em] hover:bg-white/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ 
+            fontSize: '14px',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        >
+          スキップ
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isLoading}
+          className="flex-1 py-3 border border-[#4FFFB0]/60 text-white tracking-[0.2em] hover:bg-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ 
+            fontSize: '14px',
+            boxShadow: isLoading ? 'none' : '0 0 8px rgba(79, 255, 176, 0.15)',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        >
+          <span className="relative z-10">
+            {isLoading ? '記録中...' : '記録を刻む'}
+          </span>
+          {!isLoading && (
+            <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+          )}
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
 function Footer() {
     return (
-        <footer className="fixed bottom-0 left-0 w-full p-8 z-10 flex justify-between items-end pointer-events-none">
-             <div className="flex items-center gap-4 pointer-events-auto group cursor-pointer">
-                 <div className="relative w-12 h-12">
-                    {/* Simplified Constellation Graph */}
-                    <svg viewBox="0 0 100 100" className="w-full h-full opacity-60 group-hover:opacity-100 transition-opacity">
-                        <path d="M20,80 L40,60 L70,70 L80,30 L50,20 L30,40 Z" fill="none" stroke="#4FFFB0" strokeWidth="2" />
-                        <circle cx="20" cy="80" r="3" fill="#fff" />
-                        <circle cx="40" cy="60" r="3" fill="#fff" />
-                        <circle cx="70" cy="70" r="3" fill="#fff" />
-                        <circle cx="80" cy="30" r="3" fill="#fff" />
-                        <circle cx="50" cy="20" r="3" fill="#fff" />
-                        <circle cx="30" cy="40" r="3" fill="#fff" />
-                    </svg>
-                 </div>
-                 <div className="text-white/40 text-[10px] tracking-[0.2em] group-hover:text-white/80 transition-colors">
-                     WEEKLY CONSTELLATION
-                 </div>
-             </div>
-             
-             <div className="text-white/20 text-[10px] tracking-widest">
+        <footer className="fixed bottom-0 left-0 w-full p-8 z-10 flex justify-center items-end pointer-events-none">
+             <div style={{ color: '#dbdbdb', fontSize: '10px', letterSpacing: '0.2em' }}>
                  CO-EXIST
              </div>
         </footer>
@@ -368,38 +992,335 @@ function Footer() {
 }
 
 export function HorizonPage() {
+  // Sessions Context
+  const { 
+    currentSession,
+    isSessionActive,
+    formattedTime,
+    startSession,
+    endSession,
+    saveSession
+  } = useSessions();
+
+  // Activities Context
+  const { refetch: refetchActivities } = useActivities();
+
+  // Flow管理
+  const [flowStep, setFlowStep] = useState<FlowStep>('idle');
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  
+  const [sessionMemories, setSessionMemories] = useState<SessionMemory[]>([]);
+  const [hoveredMemory, setHoveredMemory] = useState<SessionMemory | null>(null);
+  const [showMessenger, setShowMessenger] = useState(false);
+  const [completedSessionTime, setCompletedSessionTime] = useState("00:00");
+
+  // 目標とアクティビティのキャッシュ
+  const [goalsCache, setGoalsCache] = useState<Goal[]>([]);
+  const [goalsCacheLoaded, setGoalsCacheLoaded] = useState(false);
+
+  // キャッシュを更新する関数
+  const refreshCache = async () => {
+    console.log('Refreshing cache...');
+    // 目標を再取得
+    const goalsResult = await getActiveGoals();
+    if (goalsResult.success) {
+      setGoalsCache(goalsResult.data);
+      console.log('Goals cache updated:', goalsResult.data.length, 'goals');
+    }
+    // アクティビティを再取得
+    await refetchActivities();
+    console.log('Activities cache updated');
+  };
+
+  // グローバルイベントリスナーでキャッシュ更新を受け取る
+  useEffect(() => {
+    const handleCacheRefresh = () => {
+      refreshCache();
+    };
+
+    // カスタムイベントをリッスン
+    window.addEventListener('refresh-horizon-cache', handleCacheRefresh);
+
+    return () => {
+      window.removeEventListener('refresh-horizon-cache', handleCacheRefresh);
+    };
+  }, []);
+
+  // 初期ロード時に目標を取得してキャッシュ
+  useEffect(() => {
+    const loadGoals = async () => {
+      const result = await getActiveGoals();
+      if (result.success) {
+        setGoalsCache(result.data);
+      }
+      setGoalsCacheLoaded(true);
+    };
+    loadGoals();
+  }, []);
+
+  // 初期のセッションメモリーをモック
+  useEffect(() => {
+    const mockMemories: SessionMemory[] = [
+      {
+        id: '1',
+        angle: Math.PI * 0.2,
+        radius: 4.5,
+        time: '14:30',
+        memory: '集中の波紋が広がった瞬間',
+        color: '#4FFFB0'
+      },
+      {
+        id: '2',
+        angle: Math.PI * 0.6,
+        radius: 4.5,
+        time: '16:15',
+        memory: '静寂の中で思考が深まる',
+        color: '#22D3EE'
+      },
+      {
+        id: '3',
+        angle: Math.PI * 1.2,
+        radius: 4.5,
+        time: '19:00',
+        memory: '新たな発見の光',
+        color: '#A5F3FC'
+      },
+    ];
+    setSessionMemories(mockMemories);
+  }, []);
+
+  // セッションがアクティブになったらflowStepを更新
+  // ただし、idleに戻った後は自動遷移しない
+  useEffect(() => {
+    if (isSessionActive && flowStep !== 'session-active' && flowStep !== 'reflection' && flowStep !== 'idle') {
+      setFlowStep('session-active');
+    }
+  }, [isSessionActive, flowStep]);
+
+  const handleStartClick = () => {
+    // START → 目標選択画面へ
+    setFlowStep('goal-select');
+  };
+
+  const handleGoalSelect = (goal: Goal | null) => {
+    setSelectedGoal(goal);
+    // 目標選択 → アクティビティ選択画面へ
+    setFlowStep('activity-select');
+  };
+
+  const handleActivitySelect = async (activity: { id: string; name: string; icon: string | null; color: string }) => {
+    console.log('Activity selected:', activity.name);
+    
+    // まず画面遷移
+    setFlowStep('session-active');
+    
+    // アニメーションが完了してからセッションを開始（1.2秒後）
+    setTimeout(async () => {
+      await startSession({
+        activityId: activity.id,
+        activityName: activity.name,
+        startTime: new Date(),
+        location: "",
+        notes: "",
+        activityColor: activity.color || "#4FFFB0",
+        activityIcon: activity.icon || undefined,
+        goalId: selectedGoal?.id,
+      });
+      console.log('Session started after animation');
+    }, 1200);
+  };
+
+  const handleEndSession = () => {
+    console.log('END SESSION clicked');
+    console.log('Current flowStep:', flowStep);
+    console.log('isSessionActive:', isSessionActive);
+    
+    // セッション時間を保存
+    setCompletedSessionTime(formattedTime);
+    
+    // セッションを終了状態にする
+    endSession();
+    
+    // 振り返り画面へ遷移
+    setFlowStep('reflection');
+    console.log('FlowStep set to reflection');
+  };
+
+  const handleReflectionSave = async (data: {
+    moodScore: number;
+    reflection: string;
+  }) => {
+    if (!currentSession) return;
+
+    // すぐにidle状態に戻る（UIを即座に更新）
+    setFlowStep('idle');
+    setSelectedGoal(null);
+
+    // 新しいセッションメモリーを追加
+    const newMemory: SessionMemory = {
+      id: Date.now().toString(),
+      angle: Math.random() * Math.PI * 2,
+      radius: 4.5,
+      time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+      memory: data.reflection || '光の残滓が軌道に刻まれた',
+      color: ['#4FFFB0', '#22D3EE', '#A5F3FC'][Math.floor(Math.random() * 3)]
+    };
+    setSessionMemories(prev => [...prev, newMemory]);
+
+    // バックグラウンドでセッションをデータベースに保存
+    const completedSession: CompletedSession = {
+      id: "", // saveSessionで設定される
+      activityId: currentSession.activityId,
+      activityName: currentSession.activityName,
+      startTime: currentSession.startTime,
+      endTime: new Date(),
+      duration: Math.floor((new Date().getTime() - currentSession.startTime.getTime()) / 1000),
+      location: currentSession.location || "",
+      notes: data.reflection,
+      activityColor: currentSession.activityColor,
+      activityIcon: currentSession.activityIcon,
+      goalId: selectedGoal?.id,
+      mood: data.moodScore,
+    };
+
+    // 非同期でバックグラウンド保存
+    saveSession(completedSession).catch((error) => {
+      console.error('セッション保存エラー:', error);
+    });
+  };
+
+  const handleReflectionSkip = async () => {
+    if (!currentSession) return;
+
+    // すぐにidle状態に戻る（UIを即座に更新）
+    setFlowStep('idle');
+    setSelectedGoal(null);
+
+    // バックグラウンドでセッションを保存（振り返りなし）
+    const completedSession: CompletedSession = {
+      id: "",
+      activityId: currentSession.activityId,
+      activityName: currentSession.activityName,
+      startTime: currentSession.startTime,
+      endTime: new Date(),
+      duration: Math.floor((new Date().getTime() - currentSession.startTime.getTime()) / 1000),
+      location: currentSession.location || "",
+      notes: "",
+      activityColor: currentSession.activityColor,
+      activityIcon: currentSession.activityIcon,
+      goalId: selectedGoal?.id,
+    };
+
+    // 非同期でバックグラウンド保存
+    saveSession(completedSession).catch((error) => {
+      console.error('セッション保存エラー:', error);
+    });
+  };
+
+  const handleMemoryHover = (memory: SessionMemory | null) => {
+    setHoveredMemory(memory);
+  };
+
   return (
-    <div className="relative w-full h-screen bg-[#020409] overflow-hidden selection:bg-[#4FFFB0]/30">
+    <div className="relative w-full h-screen overflow-hidden" style={{ backgroundColor: '#000000' }}>
       
       {/* 3D Scene */}
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 12], fov: 45 }}>
-          <SceneContent />
+          <SceneContent 
+            sessionMemories={sessionMemories}
+            onMemoryHover={handleMemoryHover}
+          />
         </Canvas>
       </div>
 
-      {/* Decorative Border Frame */}
-      <div className="fixed inset-4 border border-[#4FFFB0]/20 pointer-events-none z-20 rounded-sm">
-          <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#4FFFB0]"></div>
-          <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#4FFFB0]"></div>
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#4FFFB0]"></div>
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#4FFFB0]"></div>
-      </div>
+      {/* Moon Effects Overlay - ビネット効果 */}
+      <div 
+        className="absolute inset-0 z-5 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at center, rgba(0, 0, 0, 0.3) 20%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0.8) 80%)",
+        }}
+      />
+      
+      {/* Moon Effects Overlay - ノイズテクスチャ */}
+      <div 
+        className="absolute inset-0 z-5 pointer-events-none opacity-40 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"
+        style={{
+          mixBlendMode: 'overlay',
+          maskImage: 'radial-gradient(circle at center, black 45%, transparent 70%)',
+          WebkitMaskImage: 'radial-gradient(circle at center, black 45%, transparent 70%)'
+        }}
+      />
+
+      {/* Memory Hover Tooltip */}
+      <AnimatePresence>
+        {hoveredMemory && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-1/4 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+          >
+            <div className="relative">
+              {/* 波紋エフェクト */}
+              <motion.div
+                className="absolute inset-0 rounded-full border"
+                style={{ borderColor: '#4FFFB0' }}
+                animate={{ scale: [1, 1.5, 2], opacity: [0.5, 0.2, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              
+              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid #4FFFB0', padding: '16px 24px' }}>
+                <div style={{ color: '#dbdbdb', fontSize: '12px', letterSpacing: '0.2em', marginBottom: '4px' }}>
+                  {hoveredMemory.time}
+                </div>
+                <div style={{ color: '#dbdbdb', fontSize: '14px', letterSpacing: '0.05em' }}>
+                  {hoveredMemory.memory}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Messenger Modal Overlay - 月を暗くする */}
+      <AnimatePresence>
+        {showMessenger && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-50"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(8px)'
+            }}
+          >
+            <MessengerModal onClose={() => setShowMessenger(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* UI Layers */}
-      <Header />
-      <Sidebar />
-      <CenterOverlay />
-      <RightPanel />
-      <Footer />
-      
-      {/* Screen Effects */}
-      <div className="absolute inset-0 pointer-events-none z-30" 
-           style={{
-               background: "radial-gradient(circle at center, transparent 0%, #020409 120%)",
-           }}
+      <Header isHidden={flowStep !== 'idle'} />
+      <Sidebar isHidden={flowStep !== 'idle'} onMessengerClick={() => setShowMessenger(true)} />
+      <CenterOverlay 
+        step={flowStep}
+        onStartClick={handleStartClick}
+        onGoalSelect={handleGoalSelect}
+        onActivitySelect={handleActivitySelect}
+        onReflectionSave={handleReflectionSave}
+        onReflectionSkip={handleReflectionSkip}
+        onEndSession={handleEndSession}
+        sessionTime={flowStep === 'reflection' ? completedSessionTime : formattedTime}
+        selectedGoalTitle={selectedGoal?.title}
+        goalsCache={goalsCache}
+        goalsCacheLoaded={goalsCacheLoaded}
       />
-      <div className="absolute inset-0 pointer-events-none z-30 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+      <RightConstellation />
+      <Footer />
     </div>
   );
 }

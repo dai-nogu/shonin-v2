@@ -234,6 +234,36 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               </div>
             </section>
 
+            {/* デイリーメッセージセクション */}
+            <section className="space-y-1">
+              <div className="pb-1">
+                <h3 className="text-sm text-gray-400">
+                  {t('settings.daily_message')}
+                </h3>
+              </div>
+              <div className="rounded-xl border border-gray-700 p-5 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-white font-medium">
+                      {t('settings.view_daily_message')}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {t('settings.daily_message_description')}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      router.push(`/${locale}/daily-message`)
+                      onOpenChange(false)
+                    }}
+                    className="px-6 py-2 bg-purple-700 hover:bg-purple-600 text-white rounded-md"
+                  >
+                    {t('settings.view_message')}
+                  </Button>
+                </div>
+              </div>
+            </section>
+
             {/* 言語設定セクション */}
             <section className="space-y-1">
               <div className="pb-1 border-gray-700">

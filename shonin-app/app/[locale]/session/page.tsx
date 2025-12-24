@@ -47,8 +47,8 @@ export default function SessionPage() {
     try {
       setIsSaving(true)
       const sessionId = await saveSession(sessionData)
-      // 保存完了後にダッシュボードに戻る
-      router.push('/dashboard')
+      // 保存完了後にHorizonに戻る
+      router.push('/horizon')
       return sessionId
     } catch (error) {
       setIsSaving(false)
@@ -75,7 +75,7 @@ export default function SessionPage() {
   if (loading || isSaving || isInitialLoad) {
     return (
       <>
-        <AppSidebar currentPage="dashboard" />
+        <AppSidebar currentPage="horizon" />
         <SidebarInset>
           <div className="min-h-screen pb-20 flex items-center justify-center">
             <div className="text-center">
@@ -86,7 +86,7 @@ export default function SessionPage() {
             </div>
           </div>
         </SidebarInset>
-        <BottomNavigation currentPage="dashboard" />
+        <BottomNavigation currentPage="horizon" />
       </>
     )
   }
@@ -95,7 +95,7 @@ export default function SessionPage() {
   if (!isSessionActive || !currentSession) {
     return (
       <>
-        <AppSidebar currentPage="dashboard" />
+        <AppSidebar currentPage="horizon" />
         <SidebarInset>
           <div className="min-h-screen pb-20">
             <div className="container mx-auto px-4 py-4 lg:py-8">
@@ -103,23 +103,23 @@ export default function SessionPage() {
                 <h1 className="text-2xl font-bold mb-4">{tSessionPage('not_found_title')}</h1>
                 <p className="text-muted-foreground mb-6">{tSessionPage('not_found_description')}</p>
                 <button 
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => router.push('/horizon')}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg"
                 >
-                  {tSessionPage('back_to_dashboard')}
+                  {tSessionPage('back_to_horizon')}
                 </button>
               </div>
             </div>
           </div>
         </SidebarInset>
-        <BottomNavigation currentPage="dashboard" />
+        <BottomNavigation currentPage="horizon" />
       </>
     )
   }
 
   return (
     <>
-      <AppSidebar currentPage="dashboard" />
+      <AppSidebar currentPage="horizon" />
       <SidebarInset>
         <div className="min-h-screen pb-20">
           <div className="container mx-auto px-4 py-4 lg:py-8">
@@ -134,7 +134,7 @@ export default function SessionPage() {
           </div>
         </div>
       </SidebarInset>
-      <BottomNavigation currentPage="dashboard" />
+      <BottomNavigation currentPage="horizon" />
     </>
   )
 } 

@@ -32,7 +32,9 @@
     "total": "Total",
     "read_more": "Read more",
     "please_wait": "Please wait...",
-    "see_all": "See All"
+    "see_all": "See All",
+    "hours": "hours",
+    "minutes": "min"
   },
   "timer": {
     "title": "Timer",
@@ -60,7 +62,7 @@
     "month": "30 Days"
   },
   "navigation": {
-    "dashboard": "Dashboard",
+    "horizon": "Horizon",
     "calendar": "Calendar",
     "goals": "Goals",
     "feedback": "Letters",
@@ -106,7 +108,14 @@
       "description": "History from recent activities",
       "noRecentActivities": "No recent activities",
       "noYesterdayActivities": "No activities from yesterday"
-    }
+    },
+    "daily_message_title": "Today's Message",
+    "daily_message_description": "Reflect on your day",
+    "daily_message_from_shonin": "From Shonin",
+    "generate_message": "View Message",
+    "refresh_message": "Refresh",
+    "generating_message": "Generating message...",
+    "no_sessions_today": "No sessions recorded today yet"
   },
   "session_detail": {
     "title": "Details",
@@ -298,7 +307,24 @@
     "confirm_deletion": "Are you sure you want to delete your account?",
     "no": "No",
     "delete": "Delete",
-    "deleting": "Deleting..."
+    "deleting": "Deleting...",
+    "horizon_settings": "Constellation Settings",
+    "horizon_settings_description": "Your goals and time settings form the elements of your constellation",
+    "active_goals": "Active Goals",
+    "active_goals_description": "Number of goals you're currently working on",
+    "goals_unit": "goals",
+    "total_goal_hours": "Total Goal Hours",
+    "total_goal_hours_description": "Combined hours across all goals",
+    "nearest_deadline": "Nearest Deadline",
+    "nearest_deadline_description": "Your next approaching goal deadline",
+    "days_remaining": "{days} days left",
+    "deadline_passed": "Deadline has passed",
+    "manage_goals": "Manage Goals",
+    "view_horizon": "View Constellation",
+    "daily_message": "Daily Message",
+    "view_daily_message": "View today's reflection",
+    "daily_message_description": "See a message reflecting on your day's sessions",
+    "view_message": "View"
   },
   "languages": {
     "ja": "Japanese",
@@ -352,7 +378,9 @@
     "ACTIVITY_NOT_FOUND": "Activity not found",
     "GENERIC_ERROR": "An error occurred. Please try again.",
     "NETWORK_ERROR": "Network error occurred",
-    "VALIDATION_ERROR": "Please check your input"
+    "VALIDATION_ERROR": "Please check your input",
+    "upgrade_required": "This feature requires Standard plan or higher",
+    "retry": "Retry"
   },
   "success": {
     "saved": "Saved",
@@ -467,7 +495,7 @@
   "session_page": {
     "not_found_title": "Focus Not Found",
     "not_found_description": "There are no active focuses.",
-    "back_to_dashboard": "Back to Dashboard",
+    "back_to_horizon": "Back to Horizon",
     "save_failed": "Failed to save"
   },
   "plan": {
@@ -706,7 +734,7 @@
       "tagline": "See the unseen.",
       "copyright": "© 2025 Shonin. All rights reserved.",
       "product": "Product",
-      "dashboard": "Dashboard",
+      "horizon": "Horizon",
       "pricing": "Pricing",
       "company": "Company",
       "about": "About Us",

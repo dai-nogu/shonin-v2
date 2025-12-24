@@ -13,6 +13,7 @@ import { useGoalForm } from "@/hooks/use-goal-form"
 import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db"
 import { useAuthRedirect } from "@/hooks/use-auth-redirect"
 import { useTranslations } from 'next-intl'
+import { refreshHorizonCache } from "@/lib/cache-utils"
 
 export function GoalAddContainer() {
   const router = useRouter()
@@ -56,6 +57,9 @@ export function GoalAddContainer() {
       if (handleAuthError(result)) return
       
       if (result.success) {
+        // Horizon画面のキャッシュを更新
+        refreshHorizonCache()
+        
         // フェードアウトアニメーションを開始
         setIsExiting(true)
         

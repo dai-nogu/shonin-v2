@@ -2,6 +2,7 @@
 
 import { createContext, useContext, ReactNode } from "react"
 import { useActivitiesDb } from "@/hooks/use-activities-db"
+import { refreshHorizonCache } from "@/lib/cache-utils"
 import type { Result } from "@/types/result"
 
 export interface Activity {
@@ -40,11 +41,21 @@ export function ActivitiesProvider({ children }: ActivitiesProviderProps) {
   } = useActivitiesDb()
 
   const addActivity = async (activity: Omit<Activity, "id">) => {
-    return await addActivityDb(activity)
+    const result = await addActivityDb(activity)
+    // 成功したらHorizon画面のキャッシュを更新
+    if (result.success) {
+      refreshHorizonCache()
+    }
+    return result
   }
 
   const deleteActivity = async (activityId: string) => {
-    return await deleteActivityDb(activityId)
+    const result = await deleteActivityDb(activityId)
+    // 成功したらHorizon画面のキャッシュを更新
+    if (result.success) {
+      refreshHorizonCache()
+    }
+    return result
   }
 
   return (

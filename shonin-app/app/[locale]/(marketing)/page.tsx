@@ -453,7 +453,7 @@ function PricingSection({ locale }: { locale: string }) {
               </div>
 
               <Link
-                href={`/${locale}/dashboard`}
+                href={`/${locale}/horizon`}
                 className="block w-full py-4 text-center bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
               >
                 {t('starter.cta')}
@@ -501,7 +501,7 @@ function PricingSection({ locale }: { locale: string }) {
               </div>
 
               <Link
-                href={`/${locale}/dashboard`}
+                href={`/${locale}/horizon`}
                 className="block w-full py-4 text-center bg-emerald-700 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 font-medium"
               >
                 {t('standard.cta')}
@@ -549,7 +549,7 @@ function PricingSection({ locale }: { locale: string }) {
               </div>
 
               <Link
-                href={`/${locale}/dashboard`}
+                href={`/${locale}/horizon`}
                 className="block w-full py-4 text-center bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium"
               >
                 {t('premium.cta')}
@@ -601,8 +601,8 @@ function Footer({ locale }: { locale: string }) {
             <h4 className="font-bold mb-3 text-white">{t('product')}</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <Link href={`/${locale}/dashboard`} className="hover:text-white transition-colors">
-                  {t('dashboard')}
+                <Link href={`/${locale}/horizon`} className="hover:text-white transition-colors">
+                  {t('horizon')}
                 </Link>
               </li>
               <li>

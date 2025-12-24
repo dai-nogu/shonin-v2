@@ -13,6 +13,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { formatISODateForLocale } from '@/lib/i18n-utils'
 import { useSubscriptionContext } from "@/contexts/subscription-context"
 import { GoalLimitModal } from "@/components/ui/goals/goal-limit-modal"
+import { refreshHorizonCache } from "@/lib/cache-utils"
 import type { Database } from '@/types/database'
 import {
   AlertDialog,
@@ -185,6 +186,9 @@ export function Goals({ initialGoals }: GoalsProps) {
       // 削除成功時のみダイアログを閉じる
       setDeleteDialogOpen(false)
       setSelectedGoalId(null)
+      
+      // Horizon画面のキャッシュを更新
+      refreshHorizonCache()
     } else {
       // エラー時はダイアログを閉じてからエラーを表示
       setDeleteDialogOpen(false)
