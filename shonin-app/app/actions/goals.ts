@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Database } from '@/types/database'
+import type { Database, ConstellationNode, ConstellationEdge, ConstellationData } from '@/types/database'
 import type { Result } from '@/types/result'
 import { success, failure } from '@/types/result'
 import { getPlanLimits, type PlanType } from '@/types/subscription'
@@ -374,5 +374,142 @@ export async function getActiveGoals(): Promise<Result<Goal[]>> {
     // エラーコードを取得して返す
     const code = getErrorCode(error)
     return failure('Failed to fetch active goals', code || 'GOAL_FETCH_FAILED')
+  }
+}
+
+// 目標に星座データを追加または更新
+export async function updateGoalConstellation(
+  goalId: string,
+  constellation: ConstellationData,
+  existingGoals?: Goal[]
+): Promise<Result<void>> {
+  try {
+    const user = await getCurrentUser()
+    const supabase = await getSupabaseClient()
+
+    // 既存の星座位置を取得
+    let goals = existingGoals;
+    if (!goals) {
+      const goalsResult = await getActiveGoals();
+      goals = goalsResult.success ? goalsResult.data : [];
+    }
+
+    // 既存の星座との重なりを避ける位置を計算
+    const position = calculateConstellationPosition(goals);
+
+    const { error } = await supabase
+      .from('goals')
+      .update({
+        constellation_nodes: constellation.nodes as unknown as ConstellationNode[],
+        constellation_edges: constellation.edges as unknown as ConstellationEdge[],
+        constellation_symbol: constellation.symbolName,
+        constellation_message: constellation.message,
+        constellation_position_x: position.x,
+        constellation_position_y: position.y,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', goalId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      safeError('星座データ更新エラー', { error, goalId, userId: user.id })
+      return failure('Failed to update constellation', 'CONSTELLATION_UPDATE_FAILED')
+    }
+
+    // キャッシュを再検証
+    revalidatePath('/goals')
+    revalidatePath('/dashboard')
+    revalidatePath('/horizon')
+
+    return success(undefined)
+  } catch (error) {
+    // エラーコードを取得して返す
+    const code = getErrorCode(error)
+    return failure('Failed to update constellation', code || 'CONSTELLATION_UPDATE_FAILED')
+  }
+}
+
+// 星座の配置位置を計算（既存の星座と重ならないように）
+function calculateConstellationPosition(existingGoals: Goal[]): { x: number; y: number } {
+  // 既存の星座の位置を取得
+  const existingPositions = existingGoals
+    .filter(g => g.constellation_position_x !== null && g.constellation_position_y !== null)
+    .map(g => ({ x: g.constellation_position_x!, y: g.constellation_position_y! }));
+
+  // 配置可能なエリア（月の周りの空間）
+  // 月は中心にあるので、その周りに星座を配置
+  const minDistance = 1.5; // 星座間の最小距離
+
+  // ランダムな位置を試行
+  let attempts = 0;
+  const maxAttempts = 100;
+  
+  while (attempts < maxAttempts) {
+    // ランダムな角度と距離で位置を決定
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 4 + Math.random() * 3; // 月から4〜7の距離
+    
+    const x = Math.cos(angle) * distance;
+    const y = Math.sin(angle) * distance;
+
+    // 既存の星座との距離をチェック
+    const tooClose = existingPositions.some(pos => {
+      const dx = pos.x - x;
+      const dy = pos.y - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      return dist < minDistance;
+    });
+
+    if (!tooClose) {
+      return { x, y };
+    }
+
+    attempts++;
+  }
+
+  // どうしても見つからない場合はランダムな位置を返す
+  const angle = Math.random() * Math.PI * 2;
+  const distance = 4 + Math.random() * 3;
+  return {
+    x: Math.cos(angle) * distance,
+    y: Math.sin(angle) * distance
+  };
+}
+
+// 目標から星座データを削除
+export async function deleteGoalConstellation(goalId: string): Promise<Result<void>> {
+  try {
+    const user = await getCurrentUser()
+    const supabase = await getSupabaseClient()
+
+    const { error } = await supabase
+      .from('goals')
+      .update({
+        constellation_nodes: null,
+        constellation_edges: null,
+        constellation_symbol: null,
+        constellation_message: null,
+        constellation_position_x: null,
+        constellation_position_y: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', goalId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      safeError('星座データ削除エラー', { error, goalId, userId: user.id })
+      return failure('Failed to delete constellation', 'CONSTELLATION_DELETE_FAILED')
+    }
+
+    // キャッシュを再検証
+    revalidatePath('/goals')
+    revalidatePath('/dashboard')
+    revalidatePath('/horizon')
+
+    return success(undefined)
+  } catch (error) {
+    // エラーコードを取得して返す
+    const code = getErrorCode(error)
+    return failure('Failed to delete constellation', code || 'CONSTELLATION_DELETE_FAILED')
   }
 } 

@@ -165,6 +165,12 @@ export interface Database {
           current_value: number | null
           unit: string | null
           status: string | null
+          constellation_nodes: ConstellationNode[] | null
+          constellation_edges: ConstellationEdge[] | null
+          constellation_symbol: string | null
+          constellation_message: string | null
+          constellation_position_x: number | null
+          constellation_position_y: number | null
           created_at: string
           updated_at: string
         }
@@ -180,6 +186,12 @@ export interface Database {
           current_value?: number | null
           unit?: string | null
           status?: string | null
+          constellation_nodes?: ConstellationNode[] | null
+          constellation_edges?: ConstellationEdge[] | null
+          constellation_symbol?: string | null
+          constellation_message?: string | null
+          constellation_position_x?: number | null
+          constellation_position_y?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -195,6 +207,12 @@ export interface Database {
           current_value?: number | null
           unit?: string | null
           status?: string | null
+          constellation_nodes?: ConstellationNode[] | null
+          constellation_edges?: ConstellationEdge[] | null
+          constellation_symbol?: string | null
+          constellation_message?: string | null
+          constellation_position_x?: number | null
+          constellation_position_y?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -434,4 +452,24 @@ export interface SessionMedia {
 export interface SessionReflection {
   moodScore: number;
   additionalNotes?: string;
+}
+
+// 星座データの型定義
+export interface ConstellationNode {
+  id: number;
+  x: number;
+  y: number;
+  label?: string;
+}
+
+export interface ConstellationEdge {
+  from: number;
+  to: number;
+}
+
+export interface ConstellationData {
+  symbolName: string;
+  nodes: ConstellationNode[];
+  edges: ConstellationEdge[];
+  message: string;
 } 

@@ -33,8 +33,8 @@ import {
   Pencil,
   Trash2
 } from "lucide-react";
-import { getActiveGoals } from "@/app/actions/goals";
-import type { Database } from "@/types/database";
+import { getActiveGoals, updateGoalConstellation } from "@/app/actions/goals";
+import type { Database, ConstellationData } from "@/types/database";
 import { useSessions, type CompletedSession } from "@/contexts/sessions-context";
 import { useActivities } from "@/contexts/activities-context";
 import { Goals } from "@/components/pages/goals";
@@ -49,6 +49,7 @@ import { GoalHoursInputs } from "@/components/ui/goals/goal-hours-inputs";
 import { useGoalForm } from "@/hooks/use-goal-form";
 import { useGoalsDb, type GoalFormData as DbGoalFormData } from "@/hooks/use-goals-db";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/common/select";
+import { ConstellationVisualizer } from "@/components/ui/constellation/constellation-visualizer";
 
 // --- Constants & Types ---
 const THEME_COLOR = "#A5F3FC"; // Orbit particles color
@@ -139,6 +140,73 @@ interface SessionMemory {
   time: string;
   memory: string;
   color: string;
+}
+
+// 星座を3D空間に描画するコンポーネント
+function ConstellationMesh({ goal }: { goal: Goal }) {
+  const lineRefs = useRef<THREE.Line[]>([]);
+  
+  // 星座データがない場合は何も表示しない
+  if (!goal.constellation_nodes || !goal.constellation_edges) {
+    return null;
+  }
+
+  const nodes = goal.constellation_nodes;
+  const edges = goal.constellation_edges;
+
+  // 保存された位置を使用（デフォルトは右上）
+  const offsetX = goal.constellation_position_x ?? 4;
+  const offsetY = goal.constellation_position_y ?? 2;
+  const offsetZ = -2; // 少し奥に配置
+
+  // 星座のスケール（小さめに表示）
+  const scale = 1.2;
+
+  return (
+    <group position={[offsetX, offsetY, offsetZ]}>
+      {/* 星座の線を描画 */}
+      {edges.map((edge, index) => {
+        const fromNode = nodes.find(n => n.id === edge.from);
+        const toNode = nodes.find(n => n.id === edge.to);
+        
+        if (!fromNode || !toNode) return null;
+
+        // 座標を変換（0-1の範囲を-0.5〜0.5の範囲に変換してスケール）
+        const x1 = (fromNode.x - 0.5) * scale;
+        const y1 = -(fromNode.y - 0.5) * scale;
+        const x2 = (toNode.x - 0.5) * scale;
+        const y2 = -(toNode.y - 0.5) * scale;
+
+        return (
+          <line key={`edge-${index}`}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                args={[new Float32Array([x1, y1, 0, x2, y2, 0]), 3]}
+                count={2}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color="#fbbf24" opacity={0.6} transparent linewidth={2} />
+          </line>
+        );
+      })}
+
+      {/* 星座の星（ノード）を描画 */}
+      {nodes.map((node) => {
+        const x = (node.x - 0.5) * scale;
+        const y = -(node.y - 0.5) * scale;
+
+        return (
+          <mesh key={`node-${node.id}`} position={[x, y, 0]}>
+            <sphereGeometry args={[0.05, 16, 16]} />
+            <meshBasicMaterial color="#fbbf24" />
+            {/* グロー効果 */}
+            <pointLight position={[0, 0, 0]} color="#fbbf24" intensity={0.3} distance={0.8} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
 }
 
 function OrbitParticles({ 
@@ -252,9 +320,10 @@ function FloatingText({ text, position, fontSize = 0.1 }: { text: string; positi
 }
 
 
-function SceneContent({ sessionMemories, onMemoryHover }: { 
+function SceneContent({ sessionMemories, onMemoryHover, goals }: { 
   sessionMemories: SessionMemory[];
   onMemoryHover: (memory: SessionMemory | null) => void;
+  goals?: Goal[];
 }) {
   const { camera } = useThree();
   
@@ -284,6 +353,11 @@ function SceneContent({ sessionMemories, onMemoryHover }: {
            onParticleHover={onMemoryHover}
          />
       </group>
+
+      {/* 星座を描画 */}
+      {goals && goals.map((goal) => (
+        <ConstellationMesh key={goal.id} goal={goal} />
+      ))}
     </>
   );
 }
@@ -371,7 +445,6 @@ function CenterOverlay({
     step, 
     onStartClick, 
     onGoalSelect,
-    onActivitySelect,
     onReflectionSave,
     onReflectionSkip,
     onEndSession,
@@ -383,8 +456,15 @@ function CenterOverlay({
     onNewGoalTitleChange,
     newGoalDontDo,
     onNewGoalDontDoChange,
+    newGoalDeadline,
+    onNewGoalDeadlineChange,
+    newConstellationPosition,
+    onNewConstellation,
+    onManageConstellations,
+    onEditConstellation,
+    onDeleteConstellation,
+    onConstellationListBack,
     onGoalInputNext,
-    onActivityCreateNext,
     onGoalCreateComplete,
     onGoalCreateCancel,
     onRefreshCache
@@ -392,7 +472,6 @@ function CenterOverlay({
     step: FlowStep;
     onStartClick: () => void;
     onGoalSelect: (goal: Goal | null) => void;
-    onActivitySelect: (activity: { id: string; name: string; icon: string | null; color: string } | null) => void;
     onReflectionSave: (data: { moodScore: number; reflection: string }) => void;
     onReflectionSkip: () => void;
     onEndSession: () => void;
@@ -404,9 +483,16 @@ function CenterOverlay({
     onNewGoalTitleChange: (title: string) => void;
     newGoalDontDo: string[];
     onNewGoalDontDoChange: (tags: string[]) => void;
+    newGoalDeadline: string;
+    onNewGoalDeadlineChange: (deadline: string) => void;
+    newConstellationPosition: { x: number; y: number } | null;
+    onNewConstellation: () => void;
+    onManageConstellations: () => void;
+    onEditConstellation: (goal: Goal) => void;
+    onDeleteConstellation: (goalId: string) => void;
+    onConstellationListBack: () => void;
     onGoalInputNext: () => void;
-    onActivityCreateNext: () => void;
-    onGoalCreateComplete: () => void;
+    onGoalCreateComplete: (constellation: ConstellationData) => void;
     onGoalCreateCancel: () => void;
     onRefreshCache: () => void;
 }) {
@@ -441,7 +527,7 @@ function CenterOverlay({
                              className="relative"
                         >
                             <h1 
-                                className="text-white text-8xl font-light tracking-tighter mb-12" 
+                                className="text-white text-8xl font-light tracking-tighter mb-6" 
                                 style={{ 
                                     textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 60px rgba(79, 255, 176, 0.2)" 
                                 }}
@@ -486,21 +572,6 @@ function CenterOverlay({
                     </motion.div>
                 )}
 
-                {step === 'activity-select' && (
-                    <motion.div
-                        key="activity-select"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.5 }}
-                        className="pointer-events-auto"
-                    >
-                        <ActivitySelectScreen 
-                            goalTitle={selectedGoalTitle}
-                            onSelect={onActivitySelect}
-                        />
-                    </motion.div>
-                )}
 
                 {step === 'session-active' && (
                     <motion.div
@@ -518,7 +589,7 @@ function CenterOverlay({
                              className="relative"
                         >
                             <h1 
-                                className="text-white text-8xl font-light tracking-tighter mb-12" 
+                                className="text-white text-8xl font-light tracking-tighter mb-6" 
                                 style={{ 
                                     textShadow: "0 4px 20px rgba(0, 0, 0, 0.9), 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 80px rgba(79, 255, 176, 0.4)" 
                                 }}
@@ -563,6 +634,41 @@ function CenterOverlay({
                     </motion.div>
                 )}
 
+                {step === 'goal-create-menu' && (
+                    <motion.div
+                        key="goal-create-menu"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <ConstellationMenuScreen
+                            onNewConstellation={onNewConstellation}
+                            onManageConstellations={onManageConstellations}
+                            onCancel={onGoalCreateCancel}
+                        />
+                    </motion.div>
+                )}
+
+                {step === 'goal-constellation-list' && (
+                    <motion.div
+                        key="goal-constellation-list"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.5 }}
+                        className="pointer-events-auto"
+                    >
+                        <ConstellationListScreen
+                            goals={goalsCache || []}
+                            onEdit={onEditConstellation}
+                            onDelete={onDeleteConstellation}
+                            onBack={onConstellationListBack}
+                        />
+                    </motion.div>
+                )}
+
                 {step === 'goal-create-input' && (
                     <motion.div
                         key="goal-create-input"
@@ -577,47 +683,33 @@ function CenterOverlay({
                             onTitleChange={onNewGoalTitleChange}
                             dontDoTags={newGoalDontDo}
                             onDontDoChange={onNewGoalDontDoChange}
+                            deadline={newGoalDeadline}
+                            onDeadlineChange={onNewGoalDeadlineChange}
                             onNext={onGoalInputNext}
                             onCancel={onGoalCreateCancel}
                         />
                     </motion.div>
                 )}
 
-                {step === 'goal-create-activity' && (
+                {step === 'goal-create-constellation' && (
                     <motion.div
-                        key="goal-create-activity"
+                        key="goal-create-constellation"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.5 }}
                         className="pointer-events-auto"
                     >
-                        <ActivityCreateScreen
-                            goalTitle={newGoalTitle}
-                            onNext={onActivityCreateNext}
+                        <ConstellationVisualizer
+                            goal={newGoalTitle}
+                            deadline={newGoalDeadline}
+                            targetPosition={newConstellationPosition}
+                            onAdd={onGoalCreateComplete}
                             onCancel={onGoalCreateCancel}
-                            onRefresh={onRefreshCache}
                         />
                     </motion.div>
                 )}
 
-                {step === 'goal-create-confirm' && (
-                    <motion.div
-                        key="goal-create-confirm"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.5 }}
-                        className="pointer-events-auto"
-                    >
-                        <GoalConfirmScreen
-                            goalTitle={newGoalTitle}
-                            dontDoTags={newGoalDontDo}
-                            onComplete={onGoalCreateComplete}
-                            onCancel={onGoalCreateCancel}
-                        />
-                    </motion.div>
-                )}
             </AnimatePresence>
         </div>
     );
@@ -753,7 +845,7 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
 
 type Goal = Database['public']['Tables']['goals']['Row'];
 type Activity = Database['public']['Tables']['activities']['Row'];
-type FlowStep = 'idle' | 'goal-select' | 'activity-select' | 'session-active' | 'reflection' | 'goal-create-input' | 'goal-create-activity' | 'goal-create-confirm';
+type FlowStep = 'idle' | 'goal-select' | 'session-active' | 'reflection' | 'goal-create-menu' | 'goal-create-input' | 'goal-create-constellation' | 'goal-constellation-list';
 
 // 目標とアクティビティの管理画面
 interface GoalsManagementViewProps {
@@ -1163,12 +1255,208 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
   );
 }
 
+// 星座作成メニュー画面
+interface ConstellationMenuScreenProps {
+  onNewConstellation: () => void;
+  onManageConstellations: () => void;
+  onCancel: () => void;
+}
+
+function ConstellationMenuScreen({ onNewConstellation, onManageConstellations, onCancel }: ConstellationMenuScreenProps) {
+  return (
+    <div className="text-center max-w-[450px] w-full mx-auto px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mb-8"
+      >
+        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
+      </motion.div>
+
+      <div className="space-y-4">
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          onClick={onNewConstellation}
+          className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        >
+          <span className="relative z-10">新しい星座を作成</span>
+          <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+        </motion.button>
+
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          onClick={onManageConstellations}
+          className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        >
+          <span className="relative z-10">星座の編集・削除</span>
+          <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+        </motion.button>
+
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          onClick={onCancel}
+          className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: "blur(8px)"
+          }}
+        >
+        <span className="relative z-10">キャンセル</span>
+        <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+// 星座一覧・管理画面
+interface ConstellationListScreenProps {
+  goals: Goal[];
+  onEdit: (goal: Goal) => void;
+  onDelete: (goalId: string) => void;
+  onBack: () => void;
+}
+
+function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: ConstellationListScreenProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // 星座データがある目標のみフィルター
+  const constellationGoals = goals.filter(g => g.constellation_nodes && g.constellation_edges);
+
+  const handleDelete = async (goalId: string) => {
+    setDeletingId(goalId);
+    await onDelete(goalId);
+    setDeletingId(null);
+  };
+
+  return (
+    <div className="text-center max-w-3xl mx-auto px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mb-8"
+      >
+        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
+        <p className="text-gray-300 text-sm tracking-[0.1em]">
+          作成した星座を編集または削除できます
+        </p>
+      </motion.div>
+
+      {constellationGoals.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="py-12 text-gray-400 text-sm tracking-[0.1em]"
+        >
+          まだ星座が作成されていません
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-4 max-h-96 overflow-y-auto mb-6"
+        >
+          {constellationGoals.map((goal, index) => (
+            <motion.div
+              key={goal.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+              className="py-4 px-6 border border-white/20 text-white flex items-center gap-4"
+              style={{
+                backdropFilter: "blur(8px)",
+                backgroundColor: "rgba(0, 0, 0, 0.3)"
+              }}
+            >
+              <div className="flex-1 text-left">
+                <div className="text-[#fbbf24] text-lg tracking-[0.1em] mb-1">
+                  {goal.constellation_symbol || '無名の星座'}
+                </div>
+                <div className="text-gray-300 text-sm tracking-[0.05em]">
+                  目標: {goal.title}
+                </div>
+                {goal.constellation_message && (
+                  <div className="text-gray-400 text-xs tracking-[0.05em] mt-2">
+                    {goal.constellation_message}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onEdit(goal)}
+                  className="px-4 py-2 border border-[#4FFFB0]/60 text-[#4FFFB0] text-sm tracking-[0.1em] hover:bg-[#4FFFB0]/20 transition-all duration-300"
+                  style={{
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: "rgba(0, 0, 0, 0.3)"
+                  }}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(goal.id)}
+                  disabled={deletingId === goal.id}
+                  className="px-4 py-2 border border-red-400/60 text-red-400 text-sm tracking-[0.1em] hover:bg-red-400/20 transition-all duration-300 disabled:opacity-50"
+                  style={{
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: "rgba(0, 0, 0, 0.3)"
+                  }}
+                >
+                  {deletingId === goal.id ? (
+                    <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      <motion.button
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        onClick={onBack}
+        className="w-full py-3 px-6 border border-white/30 text-white text-sm tracking-[0.2em] hover:bg-white/10 transition-all duration-300"
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: "blur(8px)"
+        }}
+      >
+        戻る
+      </motion.button>
+    </div>
+  );
+}
+
 // 目標入力画面（新規作成）
 interface GoalInputScreenProps {
   goalTitle: string;
   onTitleChange: (title: string) => void;
   dontDoTags: string[];
   onDontDoChange: (tags: string[]) => void;
+  deadline: string;
+  onDeadlineChange: (deadline: string) => void;
   onNext: () => void;
   onCancel: () => void;
 }
@@ -1177,7 +1465,9 @@ function GoalInputScreen({
   goalTitle, 
   onTitleChange, 
   dontDoTags, 
-  onDontDoChange, 
+  onDontDoChange,
+  deadline,
+  onDeadlineChange,
   onNext, 
   onCancel 
 }: GoalInputScreenProps) {
@@ -1191,7 +1481,7 @@ function GoalInputScreen({
         transition={{ delay: 0.3, duration: 0.8 }}
       >
         <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
           style={{ 
             textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
           }}
@@ -1200,14 +1490,14 @@ function GoalInputScreen({
         </h2>
       </motion.div>
 
-      <div className="space-y-4 max-w-xl mx-auto">
+      <div className="space-y-4 max-w-[450px] w-full mx-auto">
         {/* 目標タイトル入力 */}
         <motion.button
           type="button"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="w-full min-w-[500px] py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 text-left block"
+          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 text-left block"
           style={{
             backdropFilter: "blur(8px)",
             backgroundColor: "rgba(0, 0, 0, 0.3)",
@@ -1229,6 +1519,33 @@ function GoalInputScreen({
           />
         </motion.button>
 
+        {/* 期限入力 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 text-left block"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            minWidth: 0
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <Input
+            type="date"
+            value={deadline}
+            onChange={(e) => onDeadlineChange(e.target.value)}
+            className="w-full border-0 bg-transparent text-white text-lg tracking-[0.15em] focus:outline-none placeholder:text-gray-400 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          />
+        </motion.button>
+
         {/* 次へボタン - 常に表示 */}
         <motion.button
           type="button"
@@ -1237,7 +1554,7 @@ function GoalInputScreen({
           transition={{ delay: 0.6 }}
           onClick={onNext}
           disabled={!canProceed}
-          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 block"
+          className="w-full  py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 block"
           style={{
             backdropFilter: "blur(8px)",
             backgroundColor: "rgba(0, 0, 0, 0.3)",
@@ -1299,7 +1616,7 @@ function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScre
         transition={{ delay: 0.3, duration: 0.8 }}
       >
         <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
           style={{ 
             textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
           }}
@@ -1308,14 +1625,14 @@ function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScre
         </h2>
       </motion.div>
 
-      <div className="space-y-4 max-w-xl mx-auto">
+      <div className="space-y-4 max-w-[450px] w-full mx-auto">
         {/* 星座を選択しない */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           onClick={() => onSelect(null)}
-          className="min-w-[500px] w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
+          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
           style={{
             backdropFilter: "blur(8px)",
             backgroundColor: "rgba(0, 0, 0, 0.3)"
@@ -1402,7 +1719,7 @@ function ActivityCreateScreen({ goalTitle, onNext, onCancel, onRefresh }: Activi
         transition={{ delay: 0.3, duration: 0.8 }}
       >
         <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
           style={{ 
             textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
           }}
@@ -1411,7 +1728,7 @@ function ActivityCreateScreen({ goalTitle, onNext, onCancel, onRefresh }: Activi
         </h2>
       </motion.div>
 
-      <div className="space-y-6 max-w-xl mx-auto">
+      <div className="space-y-6 max-w-[450px] w-full mx-auto">
         {/* アクティビティ名入力 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1426,7 +1743,7 @@ function ActivityCreateScreen({ goalTitle, onNext, onCancel, onRefresh }: Activi
             value={activityName}
             onChange={(e) => setActivityName(e.target.value)}
             placeholder="例: 瞑想、読書、コーディング"
-            className="w-full min-w-[500px] py-4 px-6 bg-transparent border border-white/20 text-white text-lg tracking-[0.1em] focus:border-[#4FFFB0] focus:outline-none transition-colors"
+            className="w-full py-4 px-6 bg-transparent border border-white/20 text-white text-lg tracking-[0.1em] focus:border-[#4FFFB0] focus:outline-none transition-colors"
             style={{
               backdropFilter: "blur(8px)",
               backgroundColor: "rgba(0, 0, 0, 0.3)"
@@ -1538,79 +1855,6 @@ function ActivityCreateScreen({ goalTitle, onNext, onCancel, onRefresh }: Activi
 }
 
 // アクティビティ選択画面（選択のみ）
-interface ActivitySelectScreenProps {
-  goalTitle?: string;
-  onSelect: (activity: { id: string; name: string; icon: string | null; color: string } | null) => void;
-}
-
-function ActivitySelectScreen({ goalTitle, onSelect }: ActivitySelectScreenProps) {
-  const { activities, loading } = useActivities();
-
-  if (loading) {
-    return (
-      <div className="text-center">
-        <div className="text-[#4FFFB0] text-xl tracking-[0.2em]">
-          LOADING...
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-center">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-      >
-        <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
-          style={{ 
-            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
-          }}
-        >
-          何をしますか？
-        </h2>
-      </motion.div>
-
-      <div className="space-y-4 max-w-xl mx-auto">
-        {/* アクティビティを選択しない */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          onClick={() => onSelect(null)}
-          className="min-w-[500px] w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300"
-          style={{
-            backdropFilter: "blur(8px)",
-            backgroundColor: "rgba(0, 0, 0, 0.3)"
-          }}
-        >
-          アクティビティを選択しない
-        </motion.button>
-
-        {/* アクティビティリスト */}
-        {activities.map((activity, index) => (
-          <motion.button
-            key={activity.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 + index * 0.1 }}
-            onClick={() => onSelect(activity)}
-            className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
-            style={{
-              backdropFilter: "blur(8px)",
-              backgroundColor: "rgba(0, 0, 0, 0.3)"
-            }}
-          >
-           {activity.name}
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // 目標確認・作成画面（AI）
 interface GoalConfirmScreenProps {
   goalTitle: string;
@@ -1655,7 +1899,7 @@ function GoalConfirmScreen({ goalTitle, dontDoTags, onComplete, onCancel }: Goal
         transition={{ delay: 0.3, duration: 0.8 }}
       >
         <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-12"
+          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
           style={{ 
             textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
           }}
@@ -1787,9 +2031,9 @@ function ReflectionScreen({ sessionTime, onSave, onSkip }: ReflectionScreenProps
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="mb-8"
+        className="mb-4"
       >
-        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-8">軌跡の記録</h2>
+        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">軌跡の記録</h2>
         <div className="text-white text-5xl font-light tracking-tighter" 
           style={{ 
             textShadow: "0 0 30px rgba(79, 255, 176, 0.3)" 
@@ -1804,11 +2048,8 @@ function ReflectionScreen({ sessionTime, onSave, onSkip }: ReflectionScreenProps
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="mb-8"
+        className="mb-4"
       >
-        <label className="block text-[#4FFFB0] text-sm tracking-[0.2em] mb-4">
-          心の状態
-        </label>
         <div className="flex justify-center gap-3">
           {moodOptions.map((option) => (
             <button
@@ -1834,11 +2075,8 @@ function ReflectionScreen({ sessionTime, onSave, onSkip }: ReflectionScreenProps
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        className="mb-8"
+        className="mb-4"
       >
-        <label className="block text-[#4FFFB0] text-sm tracking-[0.2em] mb-3">
-          軌跡を刻む
-        </label>
         <textarea
           value={reflection}
           onChange={(e) => setReflection(e.target.value)}
@@ -1851,9 +2089,6 @@ function ReflectionScreen({ sessionTime, onSave, onSkip }: ReflectionScreenProps
             backdropFilter: "blur(8px)"
           }}
         />
-        <p className="text-gray-500 text-xs tracking-[0.1em] mt-2">
-          {reflection.length} 文字
-        </p>
       </motion.div>
 
       {/* ボタン */}
@@ -1863,18 +2098,6 @@ function ReflectionScreen({ sessionTime, onSave, onSkip }: ReflectionScreenProps
         transition={{ delay: 0.8, duration: 0.5 }}
         className="flex gap-4"
       >
-        <button
-          onClick={onSkip}
-          disabled={isLoading}
-          className="flex-1 py-3 border border-white/30 text-white tracking-[0.2em] hover:bg-white/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ 
-            fontSize: '14px',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: "blur(8px)"
-          }}
-        >
-          スキップ
-        </button>
         <button
           onClick={handleSave}
           disabled={isLoading}
@@ -1922,12 +2145,18 @@ export function HorizonPage() {
   // Activities Context
   const { refetch: refetchActivities } = useActivities();
 
+  // Goals DB
+  const { addGoal } = useGoalsDb();
+
   // Flow管理
   const [flowStep, setFlowStep] = useState<FlowStep>('idle');
   
   // Goals作成用のデータ
   const [newGoalTitle, setNewGoalTitle] = useState("");
   const [newGoalDontDo, setNewGoalDontDo] = useState<string[]>([]);
+  const [newGoalDeadline, setNewGoalDeadline] = useState("");
+  const [newGoalConstellation, setNewGoalConstellation] = useState<ConstellationData | null>(null);
+  const [newConstellationPosition, setNewConstellationPosition] = useState<{ x: number; y: number } | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   
   const [sessionMemories, setSessionMemories] = useState<SessionMemory[]>([]);
@@ -2023,38 +2252,48 @@ export function HorizonPage() {
     setFlowStep('goal-select');
   };
 
-  const handleGoalSelect = (goal: Goal | null) => {
+  const handleGoalSelect = async (goal: Goal | null) => {
     setSelectedGoal(goal);
-    // 目標選択 → アクティビティ選択画面へ
-    setFlowStep('activity-select');
-  };
-
-  const handleActivitySelect = async (activity: { id: string; name: string; icon: string | null; color: string } | null) => {
-    if (!activity) {
-      // アクティビティを選択しない場合は、開始画面に戻る
-      console.log('No activity selected, returning to idle');
-      setFlowStep('idle');
+    
+    // 星座を選択しない場合は、直接セッション開始
+    if (!goal) {
+      console.log('No goal selected, starting session without goal');
+      setFlowStep('session-active');
+      
+      // アニメーションが完了してからセッションを開始（1.2秒後）
+      setTimeout(async () => {
+        await startSession({
+          activityId: null,
+          activityName: "",
+          startTime: new Date(),
+          location: "",
+          notes: "",
+          activityColor: "#4FFFB0",
+          activityIcon: undefined,
+          goalId: undefined,
+        });
+        console.log('Session started without goal');
+      }, 1200);
       return;
     }
     
-    console.log('Activity selected:', activity.name);
-    
-    // まず画面遷移
+    // 目標選択 → 直接タイマー開始
+    console.log('Goal selected:', goal.title);
     setFlowStep('session-active');
     
     // アニメーションが完了してからセッションを開始（1.2秒後）
     setTimeout(async () => {
       await startSession({
-        activityId: activity.id,
-        activityName: activity.name,
+        activityId: null,
+        activityName: "",
         startTime: new Date(),
         location: "",
         notes: "",
-        activityColor: activity.color || "#4FFFB0",
-        activityIcon: activity.icon || undefined,
-        goalId: selectedGoal?.id,
+        activityColor: "#4FFFB0",
+        activityIcon: undefined,
+        goalId: goal.id,
       });
-      console.log('Session started after animation');
+      console.log('Session started with goal:', goal.title);
     }, 1200);
   };
 
@@ -2150,28 +2389,140 @@ export function HorizonPage() {
   };
 
   const handleGoalsClick = () => {
-    // 目標作成フローを開始
+    // 星座管理メニューを表示
+    setFlowStep('goal-create-menu');
+  };
+
+  const handleNewConstellation = () => {
+    // 新しい星座作成フローを開始
     setFlowStep('goal-create-input');
     setNewGoalTitle("");
     setNewGoalDontDo([]);
+    setNewGoalDeadline("");
+  };
+
+  const handleManageConstellations = () => {
+    // 星座一覧画面へ
+    setFlowStep('goal-constellation-list');
+  };
+
+  const handleEditConstellation = (goal: Goal) => {
+    // 編集機能: 既存の星座データで入力画面を開く
+    setNewGoalTitle(goal.title);
+    setNewGoalDeadline(goal.deadline || "");
+    setNewGoalDontDo([]); // don't_listがあれば復元
+    setFlowStep('goal-create-input');
+  };
+
+  const handleDeleteConstellation = async (goalId: string) => {
+    // 星座データのみ削除（目標は残す）
+    const { deleteGoalConstellation } = await import('@/app/actions/goals');
+    const result = await deleteGoalConstellation(goalId);
+    if (result.success) {
+      console.log('Constellation deleted successfully');
+      await refreshCache();
+    } else {
+      console.error('Failed to delete constellation:', result.error);
+    }
+  };
+
+  const handleConstellationListBack = () => {
+    // メニューに戻る
+    setFlowStep('goal-create-menu');
   };
 
   const handleGoalInputNext = () => {
-    // アクティビティ作成画面へ
-    setFlowStep('goal-create-activity');
+    // 星座の配置位置を事前に計算
+    const position = calculateConstellationPosition(goalsCache);
+    setNewConstellationPosition(position);
+    
+    // 星座生成画面へ
+    setFlowStep('goal-create-constellation');
   };
 
-  const handleActivityCreateNext = () => {
-    // 確認画面へ
-    setFlowStep('goal-create-confirm');
+  // 星座の配置位置を計算（既存の星座と重ならないように）
+  const calculateConstellationPosition = (existingGoals: Goal[]): { x: number; y: number } => {
+    // 既存の星座の位置を取得
+    const existingPositions = existingGoals
+      .filter(g => g.constellation_position_x !== null && g.constellation_position_y !== null)
+      .map(g => ({ x: g.constellation_position_x!, y: g.constellation_position_y! }));
+
+    // 配置可能なエリア（月の周りの空間）
+    const minDistance = 1.5; // 星座間の最小距離
+
+    // ランダムな位置を試行
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    while (attempts < maxAttempts) {
+      // ランダムな角度と距離で位置を決定
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 4 + Math.random() * 3; // 月から4〜7の距離
+      
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+
+      // 既存の星座との距離をチェック
+      const tooClose = existingPositions.some(pos => {
+        const dx = pos.x - x;
+        const dy = pos.y - y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        return dist < minDistance;
+      });
+
+      if (!tooClose) {
+        return { x, y };
+      }
+
+      attempts++;
+    }
+
+    // どうしても見つからない場合はランダムな位置を返す
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 4 + Math.random() * 3;
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance
+    };
   };
 
-  const handleGoalCreateComplete = () => {
-    // 目標作成完了 → idle画面に戻る
+  const handleGoalCreateComplete = async (constellation: ConstellationData) => {
+    // 星座データを保存
+    setNewGoalConstellation(constellation);
+    
+    // DBに目標を保存
+    const goalData: DbGoalFormData = {
+      title: newGoalTitle,
+      motivation: JSON.stringify([]), // dontDoTagsは空で
+      deadline: newGoalDeadline || "",
+      weekdayHours: 1,
+      weekendHours: 1,
+      calculatedHours: 0
+    };
+
+    const result = await addGoal(goalData);
+    if (result.success) {
+      console.log('Goal created successfully with ID:', result.data);
+      
+      // 星座データをgoalsテーブルに保存（既存の目標情報を渡して位置計算）
+      const constellationResult = await updateGoalConstellation(result.data, constellation, goalsCache);
+      if (constellationResult.success) {
+        console.log('Constellation data saved successfully');
+      } else {
+        console.error('Failed to save constellation data:', constellationResult.error);
+      }
+    } else {
+      console.error('Failed to create goal:', result.error);
+    }
+
+    // 目標作成完了 → idle画面に戻る（星座がホームに飛んでいく）
     setFlowStep('idle');
     setNewGoalTitle("");
     setNewGoalDontDo([]);
-    refreshCache();
+    setNewGoalDeadline("");
+    setNewGoalConstellation(null);
+    setNewConstellationPosition(null);
+    await refreshCache();
   };
 
   const handleGoalCreateCancel = () => {
@@ -2179,6 +2530,8 @@ export function HorizonPage() {
     setFlowStep('idle');
     setNewGoalTitle("");
     setNewGoalDontDo([]);
+    setNewGoalDeadline("");
+    setNewConstellationPosition(null);
   };
 
   return (
@@ -2190,6 +2543,7 @@ export function HorizonPage() {
           <SceneContent 
             sessionMemories={sessionMemories}
             onMemoryHover={handleMemoryHover}
+            goals={goalsCache}
           />
         </Canvas>
       </div>
@@ -2274,7 +2628,6 @@ export function HorizonPage() {
         step={flowStep}
         onStartClick={handleStartClick}
         onGoalSelect={handleGoalSelect}
-        onActivitySelect={handleActivitySelect}
         onReflectionSave={handleReflectionSave}
         onReflectionSkip={handleReflectionSkip}
         onEndSession={handleEndSession}
@@ -2286,8 +2639,15 @@ export function HorizonPage() {
         onNewGoalTitleChange={setNewGoalTitle}
         newGoalDontDo={newGoalDontDo}
         onNewGoalDontDoChange={setNewGoalDontDo}
+        newGoalDeadline={newGoalDeadline}
+        onNewGoalDeadlineChange={setNewGoalDeadline}
+        newConstellationPosition={newConstellationPosition}
+        onNewConstellation={handleNewConstellation}
+        onManageConstellations={handleManageConstellations}
+        onEditConstellation={handleEditConstellation}
+        onDeleteConstellation={handleDeleteConstellation}
+        onConstellationListBack={handleConstellationListBack}
         onGoalInputNext={handleGoalInputNext}
-        onActivityCreateNext={handleActivityCreateNext}
         onGoalCreateComplete={handleGoalCreateComplete}
         onGoalCreateCancel={handleGoalCreateCancel}
         onRefreshCache={refreshCache}

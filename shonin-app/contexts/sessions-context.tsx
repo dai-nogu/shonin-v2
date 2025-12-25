@@ -13,7 +13,7 @@ import * as sessionsActions from '@/app/actions/sessions'
 import { safeWarn } from "@/lib/safe-logger"
 
 export interface SessionData {
-  activityId: string
+  activityId: string | null
   activityName: string
   startTime: Date
   location: string
