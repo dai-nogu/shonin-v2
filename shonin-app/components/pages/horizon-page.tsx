@@ -33,7 +33,7 @@ import {
   Pencil,
   Trash2
 } from "lucide-react";
-import { getActiveGoals, updateGoalConstellation } from "@/app/actions/goals";
+import { getActiveGoals, updateGoalConstellation, deleteGoalConstellation, deleteGoal } from "@/app/actions/goals";
 import type { Database, ConstellationData } from "@/types/database";
 import { useSessions, type CompletedSession } from "@/contexts/sessions-context";
 import { useActivities } from "@/contexts/activities-context";
@@ -53,6 +53,38 @@ import { ConstellationVisualizer } from "@/components/ui/constellation/constella
 
 // --- Constants & Types ---
 const THEME_COLOR = "#A5F3FC"; // Orbit particles color
+
+// 共通の戻るボタンコンポーネント
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.button
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      onClick={onClick}
+      className="absolute -top-20 left-0 z-50 p-3 text-white hover:text-[#4FFFB0] transition-colors duration-300"
+      style={{
+        backdropFilter: "blur(8px)",
+        backgroundColor: "rgba(0, 0, 0, 0.3)",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        borderRadius: "50%"
+      }}
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+    </motion.button>
+  );
+}
 
 // --- 3D Components ---
 
@@ -465,6 +497,7 @@ function CenterOverlay({
     onDeleteConstellation,
     onConstellationListBack,
     onGoalInputNext,
+    onConstellationVisualizerBack,
     onGoalCreateComplete,
     onGoalCreateCancel,
     onRefreshCache
@@ -492,6 +525,7 @@ function CenterOverlay({
     onDeleteConstellation: (goalId: string) => void;
     onConstellationListBack: () => void;
     onGoalInputNext: () => void;
+    onConstellationVisualizerBack: () => void;
     onGoalCreateComplete: (constellation: ConstellationData) => void;
     onGoalCreateCancel: () => void;
     onRefreshCache: () => void;
@@ -566,6 +600,8 @@ function CenterOverlay({
                     >
                         <GoalSelectScreen 
                             onSelect={onGoalSelect}
+                            onAddConstellation={onNewConstellation}
+                            onBack={onGoalCreateCancel}
                             cachedGoals={goalsCache}
                             cacheLoaded={goalsCacheLoaded}
                         />
@@ -644,9 +680,10 @@ function CenterOverlay({
                         className="pointer-events-auto"
                     >
                         <ConstellationMenuScreen
+                            goals={goalsCache || []}
                             onNewConstellation={onNewConstellation}
                             onManageConstellations={onManageConstellations}
-                            onCancel={onGoalCreateCancel}
+                            onBack={onGoalCreateCancel}
                         />
                     </motion.div>
                 )}
@@ -686,7 +723,7 @@ function CenterOverlay({
                             deadline={newGoalDeadline}
                             onDeadlineChange={onNewGoalDeadlineChange}
                             onNext={onGoalInputNext}
-                            onCancel={onGoalCreateCancel}
+                            onCancel={onConstellationListBack}
                         />
                     </motion.div>
                 )}
@@ -705,7 +742,7 @@ function CenterOverlay({
                             deadline={newGoalDeadline}
                             targetPosition={newConstellationPosition}
                             onAdd={onGoalCreateComplete}
-                            onCancel={onGoalCreateCancel}
+                            onCancel={onConstellationVisualizerBack}
                         />
                     </motion.div>
                 )}
@@ -713,39 +750,6 @@ function CenterOverlay({
             </AnimatePresence>
         </div>
     );
-}
-
-function RightConstellation() {
-    return (
-        <div className="fixed right-12 top-1/2 -translate-y-1/2 z-10 pointer-events-none hidden md:block">
-            <div className="relative">
-                {/* Connecting Line */}
-                <div className="absolute top-1/2 left-full w-24 h-[1px] ml-4" style={{ background: 'linear-gradient(to right, #fff, transparent)' }}></div>
-                <div className="absolute top-1/2 left-full w-2 h-2 border rounded-full ml-4 -translate-y-1/2" style={{ borderColor: '#fff', backgroundColor: '#000' }}></div>
-                
-                <div className="flex flex-col items-center pointer-events-auto cursor-pointer">
-                    <div className="relative w-16 h-16 mb-3">
-                        {/* Simplified Constellation Graph */}
-                        <svg viewBox="0 0 100 100" className="w-full h-full">
-                            <path d="M20,80 L40,60 L70,70 L80,30 L50,20 L30,40 Z" fill="none" stroke="#fff" strokeWidth="2" />
-                            <circle cx="20" cy="80" r="3" fill="#fff" />
-                            <circle cx="40" cy="60" r="3" fill="#fff" />
-                            <circle cx="70" cy="70" r="3" fill="#fff" />
-                            <circle cx="80" cy="30" r="3" fill="#fff" />
-                            <circle cx="50" cy="20" r="3" fill="#fff" />
-                            <circle cx="30" cy="40" r="3" fill="#fff" />
-                        </svg>
-                    </div>
-                    <div className="text-center">
-                        <div style={{ color: '#dbdbdb', fontSize: '12px', letterSpacing: '0.2em', marginBottom: '4px', cursor: 'pointer' }}>CONSTELLATION</div>
-                        <div style={{ color: '#dbdbdb', fontSize: '10px', letterSpacing: '0.15em', cursor: 'pointer' }}>
-                            WEEKLY PROGRESS
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
 }
 
 function MessengerModal({ onClose }: { onClose: () => void }) {
@@ -1257,69 +1261,61 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
 
 // 星座作成メニュー画面
 interface ConstellationMenuScreenProps {
+  goals: Goal[];
   onNewConstellation: () => void;
   onManageConstellations: () => void;
-  onCancel: () => void;
+  onBack: () => void;
 }
 
-function ConstellationMenuScreen({ onNewConstellation, onManageConstellations, onCancel }: ConstellationMenuScreenProps) {
+function ConstellationMenuScreen({ goals, onNewConstellation, onManageConstellations, onBack }: ConstellationMenuScreenProps) {
+  // 星座データがある目標のみカウント
+  const hasConstellations = goals.some(g => g.constellation_nodes && g.constellation_edges);
+
   return (
-    <div className="text-center max-w-[450px] w-full mx-auto px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="mb-8"
-      >
-        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
-      </motion.div>
-
-      <div className="space-y-4">
-        <motion.button
+    <div className="relative text-center max-w-[450px] w-full mx-auto px-6">
+      <BackButton onClick={onBack} />
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          onClick={onNewConstellation}
-          className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: "blur(8px)"
-          }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mb-8"
         >
-          <span className="relative z-10">新しい星座を作成</span>
-          <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
-        </motion.button>
+          <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
+        </motion.div>
 
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          onClick={onManageConstellations}
-          className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: "blur(8px)"
-          }}
-        >
-          <span className="relative z-10">星座の編集・削除</span>
-          <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
-        </motion.button>
+        <div className="space-y-4">
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            onClick={onNewConstellation}
+            className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              backdropFilter: "blur(8px)"
+            }}
+          >
+            <span className="relative z-10">新しい星座を作成</span>
+            <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+          </motion.button>
 
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          onClick={onCancel}
-          className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: "blur(8px)"
-          }}
-        >
-        <span className="relative z-10">キャンセル</span>
-        <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
-        </motion.button>
-      </div>
+          {hasConstellations && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              onClick={onManageConstellations}
+              className="w-full py-3 px-8 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 hover:border-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                backdropFilter: "blur(8px)"
+              }}
+            >
+              <span className="relative z-10">星座の編集・削除</span>
+              <div className="absolute inset-0 bg-[#4FFFB0]/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+            </motion.button>
+          )}
+        </div>
     </div>
   );
 }
@@ -1345,106 +1341,93 @@ function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: Constellat
   };
 
   return (
-    <div className="text-center max-w-3xl mx-auto px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="mb-8"
-      >
-        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
-        <p className="text-gray-300 text-sm tracking-[0.1em]">
-          作成した星座を編集または削除できます
-        </p>
-      </motion.div>
-
-      {constellationGoals.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="py-12 text-gray-400 text-sm tracking-[0.1em]"
-        >
-          まだ星座が作成されていません
-        </motion.div>
-      ) : (
+    <div className="relative text-center max-w-3xl mx-auto px-6">
+      <BackButton onClick={onBack} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-4 max-h-96 overflow-y-auto mb-6"
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mb-8"
         >
-          {constellationGoals.map((goal, index) => (
-            <motion.div
-              key={goal.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
-              className="py-4 px-6 border border-white/20 text-white flex items-center gap-4"
-              style={{
-                backdropFilter: "blur(8px)",
-                backgroundColor: "rgba(0, 0, 0, 0.3)"
-              }}
-            >
-              <div className="flex-1 text-left">
-                <div className="text-[#fbbf24] text-lg tracking-[0.1em] mb-1">
-                  {goal.constellation_symbol || '無名の星座'}
-                </div>
-                <div className="text-gray-300 text-sm tracking-[0.05em]">
-                  目標: {goal.title}
-                </div>
-                {goal.constellation_message && (
-                  <div className="text-gray-400 text-xs tracking-[0.05em] mt-2">
-                    {goal.constellation_message}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEdit(goal)}
-                  className="px-4 py-2 border border-[#4FFFB0]/60 text-[#4FFFB0] text-sm tracking-[0.1em] hover:bg-[#4FFFB0]/20 transition-all duration-300"
-                  style={{
-                    backdropFilter: "blur(8px)",
-                    backgroundColor: "rgba(0, 0, 0, 0.3)"
-                  }}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(goal.id)}
-                  disabled={deletingId === goal.id}
-                  className="px-4 py-2 border border-red-400/60 text-red-400 text-sm tracking-[0.1em] hover:bg-red-400/20 transition-all duration-300 disabled:opacity-50"
-                  style={{
-                    backdropFilter: "blur(8px)",
-                    backgroundColor: "rgba(0, 0, 0, 0.3)"
-                  }}
-                >
-                  {deletingId === goal.id ? (
-                    <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
-                  ) : (
-                    <Trash2 size={16} />
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          ))}
+          <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
+          <p className="text-gray-300 text-sm tracking-[0.1em]">
+            作成した星座を編集または削除できます
+          </p>
         </motion.div>
-      )}
 
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        onClick={onBack}
-        className="w-full py-3 px-6 border border-white/30 text-white text-sm tracking-[0.2em] hover:bg-white/10 transition-all duration-300"
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: "blur(8px)"
-        }}
-      >
-        戻る
-      </motion.button>
+        {constellationGoals.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="py-12 text-gray-400 text-sm tracking-[0.1em]"
+          >
+            まだ星座が作成されていません
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-4 max-h-96 overflow-y-auto mb-6"
+          >
+            {constellationGoals.map((goal, index) => (
+              <motion.div
+                key={goal.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                className="py-4 px-6 border border-white/20 text-white flex items-center gap-4"
+                style={{
+                  backdropFilter: "blur(8px)",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)"
+                }}
+              >
+                <div className="flex-1 text-left">
+                  <div className="text-[#fbbf24] text-lg tracking-[0.1em] mb-1">
+                    {goal.constellation_symbol || '無名の星座'}
+                  </div>
+                  <div className="text-gray-300 text-sm tracking-[0.05em]">
+                    目標: {goal.title}
+                  </div>
+                  {goal.constellation_message && (
+                    <div className="text-gray-400 text-xs tracking-[0.05em] mt-2">
+                      {goal.constellation_message}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onEdit(goal)}
+                    className="px-4 py-2 border border-[#4FFFB0]/60 text-[#4FFFB0] text-sm tracking-[0.1em] hover:bg-[#4FFFB0]/20 transition-all duration-300"
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      backgroundColor: "rgba(0, 0, 0, 0.3)"
+                    }}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(goal.id)}
+                    disabled={deletingId === goal.id}
+                    className="px-4 py-2 border border-red-400/60 text-red-400 text-sm tracking-[0.1em] hover:bg-red-400/20 transition-all duration-300 disabled:opacity-50"
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      backgroundColor: "rgba(0, 0, 0, 0.3)"
+                    }}
+                  >
+                    {deletingId === goal.id ? (
+                      <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 size={16} />
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
     </div>
   );
 }
@@ -1474,21 +1457,22 @@ function GoalInputScreen({
   const canProceed = goalTitle.trim() !== "";
 
   return (
-    <div className="text-center">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-      >
-        <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
-          style={{ 
-            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
-          }}
+    <div className="relative text-center">
+      <BackButton onClick={onCancel} />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
         >
-          星座を作成
-        </h2>
-      </motion.div>
+          <h2 
+            className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
+            style={{ 
+              textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+            }}
+          >
+            星座を作成
+          </h2>
+        </motion.div>
 
       <div className="space-y-4 max-w-[450px] w-full mx-auto">
         {/* 目標タイトル入力 */}
@@ -1536,9 +1520,10 @@ function GoalInputScreen({
           }}
         >
           <Input
-            type="date"
+            type="text"
             value={deadline}
             onChange={(e) => onDeadlineChange(e.target.value)}
+            placeholder="年 /月/日"
             className="w-full border-0 bg-transparent text-white text-lg tracking-[0.15em] focus:outline-none placeholder:text-gray-400 p-0"
             onClick={(e) => {
               e.stopPropagation();
@@ -1571,11 +1556,13 @@ function GoalInputScreen({
 // 目標選択画面（選択のみ）
 interface GoalSelectScreenProps {
   onSelect: (goal: Goal | null) => void;
+  onAddConstellation?: () => void;
+  onBack?: () => void;
   cachedGoals?: Goal[];
   cacheLoaded?: boolean;
 }
 
-function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScreenProps) {
+function GoalSelectScreen({ onSelect, onAddConstellation, onBack, cachedGoals, cacheLoaded }: GoalSelectScreenProps) {
   const [goals, setGoals] = useState<Goal[]>(cachedGoals || []);
   const [loading, setLoading] = useState(!cacheLoaded);
 
@@ -1608,24 +1595,27 @@ function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScre
     );
   }
 
-  return (
-    <div className="text-center">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-      >
-        <h2 
-          className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
-          style={{ 
-            textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
-          }}
-        >
-          星座を選択
-        </h2>
-      </motion.div>
+  const hasGoals = goals.length > 0;
 
-      <div className="space-y-4 max-w-[450px] w-full mx-auto">
+  return (
+    <div className="relative text-center">
+      {onBack && <BackButton onClick={onBack} />}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+        >
+          <h2 
+            className="text-[#4FFFB0] text-2xl tracking-[0.3em] mb-6"
+            style={{ 
+              textShadow: "0 0 30px rgba(79, 255, 176, 0.5)" 
+            }}
+          >
+            星座を選択
+          </h2>
+        </motion.div>
+
+        <div className="space-y-4 max-w-[450px] w-full mx-auto">
         {/* 星座を選択しない */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
@@ -1640,6 +1630,23 @@ function GoalSelectScreen({ onSelect, cachedGoals, cacheLoaded }: GoalSelectScre
         >
           星座を選択しない
         </motion.button>
+
+        {/* 星座がない場合は星座を追加ボタンを表示 */}
+        {!hasGoals && onAddConstellation && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            onClick={onAddConstellation}
+            className="w-full py-4 px-6 border border-[#4FFFB0]/50 text-[#4FFFB0] text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
+            style={{
+              backdropFilter: "blur(8px)",
+              backgroundColor: "rgba(0, 0, 0, 0.3)"
+            }}
+          >
+            星座を追加
+          </motion.button>
+        )}
 
         {/* 目標リスト */}
         {goals.map((goal, index) => (
@@ -1908,7 +1915,7 @@ function GoalConfirmScreen({ goalTitle, dontDoTags, onComplete, onCancel }: Goal
         </h2>
       </motion.div>
 
-      <div className="space-y-6 max-w-xl mx-auto">
+      <div className="space-y-6 w-[400px] max-w-full mx-auto">
         {/* 目標の確認 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -2415,14 +2422,26 @@ export function HorizonPage() {
   };
 
   const handleDeleteConstellation = async (goalId: string) => {
-    // 星座データのみ削除（目標は残す）
-    const { deleteGoalConstellation } = await import('@/app/actions/goals');
-    const result = await deleteGoalConstellation(goalId);
+    // 目標ごと削除（星座と目標を両方削除）
+    console.log('Deleting goal:', goalId);
+    const result = await deleteGoal(goalId);
     if (result.success) {
-      console.log('Constellation deleted successfully');
+      console.log('Goal deleted successfully');
+      // キャッシュを更新
       await refreshCache();
+      
+      // 削除後、残りの星座の数を確認
+      const remainingConstellations = goalsCache.filter(
+        g => g.id !== goalId && g.constellation_nodes && g.constellation_edges
+      );
+      
+      // 最後の星座を削除した場合はホームに戻る
+      if (remainingConstellations.length === 0) {
+        setFlowStep('idle');
+      }
     } else {
-      console.error('Failed to delete constellation:', result.error);
+      console.error('Failed to delete goal:', result.error);
+      alert('目標の削除に失敗しました: ' + result.error);
     }
   };
 
@@ -2438,6 +2457,11 @@ export function HorizonPage() {
     
     // 星座生成画面へ
     setFlowStep('goal-create-constellation');
+  };
+
+  const handleConstellationVisualizerBack = () => {
+    // 星座作成入力画面に戻る
+    setFlowStep('goal-create-input');
   };
 
   // 星座の配置位置を計算（既存の星座と重ならないように）
@@ -2648,11 +2672,11 @@ export function HorizonPage() {
         onDeleteConstellation={handleDeleteConstellation}
         onConstellationListBack={handleConstellationListBack}
         onGoalInputNext={handleGoalInputNext}
+        onConstellationVisualizerBack={handleConstellationVisualizerBack}
         onGoalCreateComplete={handleGoalCreateComplete}
         onGoalCreateCancel={handleGoalCreateCancel}
         onRefreshCache={refreshCache}
       />
-      <RightConstellation />
       <Footer />
     </div>
   );

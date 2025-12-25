@@ -3,6 +3,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
+// 共通の戻るボタンコンポーネント
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.button
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      onClick={onClick}
+      className="absolute -top-20 left-0 z-50 p-3 text-white hover:text-[#4FFFB0] transition-colors duration-300"
+      style={{
+        backdropFilter: "blur(8px)",
+        backgroundColor: "rgba(0, 0, 0, 0.3)",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        borderRadius: "50%"
+      }}
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+    </motion.button>
+  );
+}
+
 interface ConstellationNode {
   id: number;
   x: number;
@@ -168,7 +200,7 @@ export function ConstellationVisualizer({ goal, deadline, targetPosition, onAdd,
 
   return (
     <motion.div 
-      className="text-center"
+      className="relative text-center"
       animate={isAnimating ? {
         scale: 0.2,
         x: screenPosition.x,
@@ -177,6 +209,7 @@ export function ConstellationVisualizer({ goal, deadline, targetPosition, onAdd,
       } : {}}
       transition={{ duration: 1.2, ease: "easeInOut" }}
     >
+      {onCancel && <BackButton onClick={onCancel} />}
       {/* 星座名 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -295,18 +328,6 @@ export function ConstellationVisualizer({ goal, deadline, targetPosition, onAdd,
           transition={{ delay: 0.5 }}
           className="flex gap-4 justify-center"
         >
-          {onCancel && (
-            <button
-              onClick={onCancel}
-              className="px-8 py-3 border border-white/30 text-white text-lg tracking-[0.2em] hover:bg-white/10 transition-all duration-300"
-              style={{
-                backdropFilter: "blur(8px)",
-                backgroundColor: "rgba(0, 0, 0, 0.3)"
-              }}
-            >
-              キャンセル
-            </button>
-          )}
           <button
             onClick={handleAdd}
             className="px-12 py-3 border border-[#4FFFB0]/60 text-white text-lg tracking-[0.2em] hover:bg-[#4FFFB0]/20 transition-all duration-300 relative overflow-hidden group"
