@@ -746,96 +746,121 @@ function CenterOverlay({
 }
 
 function MessengerModal({ onClose }: { onClose: () => void }) {
+  const [letterType, setLetterType] = useState<'weekly' | 'monthly'>('weekly');
+
+  const weeklyLetter = {
+    title: "WEEKLY LETTER",
+    color: "#4FFFB0",
+    content: (
+      <>
+        <p className="mb-4">
+          この一週間、あなたは13.6時間にわたって3つの大切な目標に取り組みました。
+          特に「瞑想の習慣化」では、毎日欠かさず記録を続けています。
+        </p>
+        <p className="mb-4">
+          According to Confirmation Bias、あなたが「間違えたら情報が増える」「判断が改善って実装」と考えているのは、成長への意識の表れです。
+        </p>
+        <p className="text-gray-300">
+          月曜日のキックオフを続けながら、「早起きで夜更かし」という習慣を見直すことで、
+          さらに自分中心の成長を実感できるでしょう。
+        </p>
+      </>
+    )
+  };
+
+  const monthlyLetter = {
+    title: "MONTHLY LETTER",
+    subtitle: "月次メッセージ",
+    date: "2024.12.01",
+    color: "#22D3EE",
+    content: (
+      <>
+        <p className="mb-4">
+          12月、あなたは54時間の努力を積み重ねました。
+          この時間は、確実にあなたの成長の軌跡として刻まれています。
+        </p>
+        <p className="mb-4">
+          継続することの価値を伝えます。毎日の小さな一歩が、
+          やがて大きな変化を生み出します。
+        </p>
+        <p className="text-gray-300">
+          来月も、あなたの努力の証人であり続けます。
+        </p>
+      </>
+    )
+  };
+
+  const currentLetter = letterType === 'weekly' ? weeklyLetter : monthlyLetter;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3 }}
-      className="relative w-full h-full flex items-center justify-center p-8"
+      className="relative w-[500px] max-w-xl mx-auto pt-15"
     >
-      {/* 閉じるボタン */}
-      <button
-        onClick={onClose}
-        className="absolute top-8 right-8 text-white hover:text-[#4FFFB0] transition-colors duration-300 z-50"
-        style={{
-          fontSize: '14px',
-          letterSpacing: '0.2em',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}
-      >
-        <X size={24} />
-        CLOSE
-      </button>
+      {/* 戻るボタン */}
+      <BackButton onClick={onClose} />
 
       {/* メッセージコンテンツ */}
-      <div className="max-w-4xl w-full space-y-8">
-        {/* 週次メッセージ */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="border border-[#4FFFB0]/30 p-8 backdrop-blur-sm"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-[#4FFFB0] text-xl tracking-[0.2em] mb-2">WEEKLY LETTER</h3>
-              <p className="text-gray-400 text-sm tracking-[0.1em]">週次メッセージ</p>
-            </div>
-            <div className="text-gray-500 text-sm tracking-[0.15em]">
-              2024.12.24
-            </div>
+      <motion.div
+        key={letterType}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        className="border p-8 backdrop-blur-md"
+        style={{ 
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          borderColor: `${currentLetter.color}30`
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 
+              className="text-xl tracking-[0.2em] mb-2"
+              style={{ color: currentLetter.color }}
+            >
+              {currentLetter.title}
+            </h3>
           </div>
-          <div className="text-white text-base leading-relaxed tracking-[0.05em]">
-            <p className="mb-4">
-              この一週間、あなたは13.6時間にわたって3つの大切な目標に取り組みました。
-              特に「瞑想の習慣化」では、毎日欠かさず記録を続けています。
-            </p>
-            <p className="mb-4">
-              According to Confirmation Bias、あなたが「間違えたら情報が増える」「判断が改善って実装」と考えているのは、成長への意識の表れです。
-            </p>
-            <p className="text-gray-300">
-              月曜日のキックオフを続けながら、「早起きで夜更かし」という習慣を見直すことで、
-              さらに自分中心の成長を実感できるでしょう。
-            </p>
-          </div>
-        </motion.div>
+        </div>
+        <div className="text-white text-base leading-relaxed tracking-[0.05em]">
+          {currentLetter.content}
+        </div>
+      </motion.div>
 
-        {/* 月次メッセージ */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="border border-[#22D3EE]/30 p-8 backdrop-blur-sm"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+      {/* スライダー（週次/月次切り替え） */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="flex items-center justify-center gap-4 mt-6"
+      >
+        <button
+          onClick={() => setLetterType('weekly')}
+          className={`px-6 py-3 text-sm tracking-[0.15em] transition-all duration-300 border ${
+            letterType === 'weekly'
+              ? 'border-[#4FFFB0] text-[#4FFFB0] bg-[#4FFFB0]/10'
+              : 'border-white/20 text-gray-400 hover:border-white/40 hover:text-white'
+          }`}
+          style={{ backdropFilter: 'blur(8px)', backgroundColor: letterType === 'weekly' ? 'rgba(79, 255, 176, 0.1)' : 'rgba(0, 0, 0, 0.3)' }}
         >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-[#22D3EE] text-xl tracking-[0.2em] mb-2">MONTHLY LETTER</h3>
-              <p className="text-gray-400 text-sm tracking-[0.1em]">月次メッセージ</p>
-            </div>
-            <div className="text-gray-500 text-sm tracking-[0.15em]">
-              2024.12.01
-            </div>
-          </div>
-          <div className="text-white text-base leading-relaxed tracking-[0.05em]">
-            <p className="mb-4">
-              12月、あなたは54時間の努力を積み重ねました。
-              この時間は、確実にあなたの成長の軌跡として刻まれています。
-            </p>
-            <p className="mb-4">
-              継続することの価値を伝えます。毎日の小さな一歩が、
-              やがて大きな変化を生み出します。
-            </p>
-            <p className="text-gray-300">
-              来月も、あなたの努力の証人であり続けます。
-            </p>
-          </div>
-        </motion.div>
-      </div>
+          週次
+        </button>
+        <button
+          onClick={() => setLetterType('monthly')}
+          className={`px-6 py-3 text-sm tracking-[0.15em] transition-all duration-300 border ${
+            letterType === 'monthly'
+              ? 'border-[#22D3EE] text-[#22D3EE] bg-[#22D3EE]/10'
+              : 'border-white/20 text-gray-400 hover:border-white/40 hover:text-white'
+          }`}
+          style={{ backdropFilter: 'blur(8px)', backgroundColor: letterType === 'monthly' ? 'rgba(34, 211, 238, 0.1)' : 'rgba(0, 0, 0, 0.3)' }}
+        >
+          月次
+        </button>
+      </motion.div>
     </motion.div>
   )
 }
@@ -2646,7 +2671,7 @@ export function HorizonPage() {
         )}
       </AnimatePresence>
 
-      {/* Messenger Modal Overlay - 月を暗くする */}
+      {/* Messenger Modal - 月の中央に表示 */}
       <AnimatePresence>
         {showMessenger && (
           <motion.div
@@ -2654,11 +2679,7 @@ export function HorizonPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-50"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(8px)'
-            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-8"
           >
             <MessengerModal onClose={() => setShowMessenger(false)} />
           </motion.div>
