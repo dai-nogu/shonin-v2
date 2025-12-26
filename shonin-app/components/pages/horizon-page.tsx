@@ -402,7 +402,7 @@ function Header({ isHidden }: { isHidden: boolean }) {
         <motion.header
             initial={{ opacity: 1 }}
             animate={{ opacity: isHidden ? 0 : 1 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.3 }}
             className="fixed top-0 left-0 w-full p-8 z-10 flex justify-between items-start pointer-events-none"
         >
             <div className="flex items-center gap-3 pointer-events-auto cursor-pointer">
@@ -417,24 +417,25 @@ function Header({ isHidden }: { isHidden: boolean }) {
     )
 }
 
-function Sidebar({ isHidden, onMessengerClick, onGoalsClick }: {
+function Sidebar({ isHidden, onMessengerClick, onGoalsClick, onSettingsClick }: {
   isHidden: boolean;
   onMessengerClick: () => void;
   onGoalsClick: () => void;
+  onSettingsClick: () => void;
 }) {
     const menuItems = [
         { icon: <Eye size={22} />, label: "HOME", description: "ホーム", onClick: undefined },
         { icon: <Archive size={22} />, label: "ARCHIVE", description: "銀河アーカイブ", onClick: undefined },
         { icon: <MessageSquare size={22} />, label: "MESSAGES", description: "証人からの手紙", onClick: onMessengerClick },
         { icon: <Target size={22} />, label: "ADD・EDIT", description: "星座作成・編集", onClick: onGoalsClick },
-        { icon: <Settings size={22} />, label: "SETTINGS", description: "設定", onClick: onGoalsClick },
+        { icon: <Settings size={22} />, label: "SETTINGS", description: "設定", onClick: onSettingsClick },
     ];
 
     return (
         <motion.nav
             initial={{ opacity: 1 }}
             animate={{ opacity: isHidden ? 0 : 1 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.3 }}
             className="fixed left-0 top-1/2 -translate-y-1/2 p-8 z-10 hidden md:flex flex-col gap-10 cursor-pointer"
         >
             {menuItems.map((item, index) => (
@@ -491,7 +492,9 @@ function CenterOverlay({
     onGoalCreateComplete,
     onGoalCreateCancel,
     onRefreshCache,
-    editingGoalId
+    editingGoalId,
+    showMessenger,
+    showSettings
 }: { 
     step: FlowStep;
     onStartClick: () => void;
@@ -521,6 +524,8 @@ function CenterOverlay({
     onGoalCreateCancel: () => void;
     onRefreshCache: () => void;
     editingGoalId: string | null;
+    showMessenger: boolean;
+    showSettings: boolean;
 }) {
     const [time, setTime] = useState("");
 
@@ -537,13 +542,13 @@ function CenterOverlay({
     return (
         <div className={`fixed inset-0 ${step === 'session-active' ? 'pointer-events-none' : 'pointer-events-none'} flex items-center justify-center z-10`}>
             <AnimatePresence mode="wait">
-                {step === 'idle' && (
+                {step === 'idle' && !showMessenger && !showSettings && (
                     <motion.div 
                         key="idle"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.5 }}
+                        transition={{ duration: 0.3 }}
                         className="text-center"
                     >
                         <motion.div
@@ -606,7 +611,7 @@ function CenterOverlay({
                         key="session-active"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.5 }}
                         className="text-center"
                     >
@@ -794,10 +799,10 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.5 }}
       className="relative w-[500px] max-w-xl mx-auto pt-15"
     >
       {/* 戻るボタン */}
@@ -806,10 +811,10 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
       {/* メッセージコンテンツ */}
       <motion.div
         key={letterType}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.8 }}
         className="border p-8 backdrop-blur-md"
         style={{ 
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -835,7 +840,7 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.8, duration: 0.8 }}
         className="flex items-center justify-center gap-4 mt-6"
       >
         <button
@@ -863,6 +868,185 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
       </motion.div>
     </motion.div>
   )
+}
+
+// 設定モーダル
+function SettingsModal({ onClose }: { onClose: () => void }) {
+  const [language, setLanguage] = useState<'ja' | 'en'>('ja');
+  const [subscriptionInfo, setSubscriptionInfo] = useState<{
+    nextBillingDate?: string;
+    cancelScheduled?: boolean;
+    cancelDate?: string;
+    planChangeScheduled?: boolean;
+    newPlan?: string;
+    planChangeDate?: string;
+  }>({
+    // 例: 次回更新日がある場合
+    nextBillingDate: '2025年1月26日',
+    // キャンセル予定がある場合
+    // cancelScheduled: true,
+    // cancelDate: '2025年2月1日',
+    // プラン変更予定がある場合
+    // planChangeScheduled: true,
+    // newPlan: 'Pro',
+    // planChangeDate: '2025年2月1日'
+  });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.5 }}
+      className="relative w-[500px] max-w-xl mx-auto pt-15"
+    >
+      {/* 戻るボタン */}
+      <BackButton onClick={onClose} />
+
+      {/* 設定コンテンツ */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.8 }}
+        className="border p-8 backdrop-blur-md"
+        style={{ 
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          borderColor: 'rgba(79, 255, 176, 0.2)'
+        }}
+      >
+        {/* タイトル */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="text-[#4FFFB0] text-2xl tracking-[0.2em]">
+              設定
+            </h3>
+          </div>
+        </div>
+
+        {/* ユーザー情報 */}
+        <div className="mb-4 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-[#4FFFB0]/20 flex items-center justify-center">
+              <User size={24} className="text-[#4FFFB0]" />
+            </div>
+            <div className="text-left flex-1">
+              <h4 className="text-white text-base tracking-[0.1em] mb-1">
+                野口ダイスケ
+              </h4>
+              <p className="text-gray-400 text-xs tracking-[0.05em]">
+                soccer.daisuke.17@gmail.com
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 px-3 py-2 border border-white/30"
+            >
+              <span className="text-white text-xs tracking-[0.1em]">Starter</span>
+            </div>
+            <button className="px-4 py-2 border border-white/30 text-white text-sm tracking-[0.1em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300">
+              Management subscription
+            </button>
+          </div>
+
+          {/* プラン情報・キャンセル予定など */}
+          <div className="mt-4 space-y-2">
+            {/* 次回更新日 */}
+            {subscriptionInfo.nextBillingDate && !subscriptionInfo.cancelScheduled && (
+              <div className="text-gray-400 text-xs tracking-[0.05em]">
+                次回更新日: {subscriptionInfo.nextBillingDate}
+              </div>
+            )}
+
+            {/* キャンセル予定 */}
+            {subscriptionInfo.cancelScheduled && subscriptionInfo.cancelDate && (
+              <div className="px-3 py-2 border border-yellow-500/30 bg-yellow-500/5">
+                <p className="text-yellow-400 text-xs tracking-[0.05em] mb-1">
+                  キャンセル予定
+                </p>
+                <p className="text-gray-400 text-xs tracking-[0.05em]">
+                  {subscriptionInfo.cancelDate}にサブスクリプションが終了します
+                </p>
+              </div>
+            )}
+
+            {/* プラン変更予定 */}
+            {subscriptionInfo.planChangeScheduled && subscriptionInfo.newPlan && subscriptionInfo.planChangeDate && (
+              <div className="px-3 py-2 border border-[#4FFFB0]/30 bg-[#4FFFB0]/5">
+                <p className="text-[#4FFFB0] text-xs tracking-[0.05em] mb-1">
+                  プラン変更予定
+                </p>
+                <p className="text-gray-400 text-xs tracking-[0.05em]">
+                  {subscriptionInfo.planChangeDate}に{subscriptionInfo.newPlan}プランへ変更されます
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Language設定 */}
+        <div className="mb-4">
+          <h4 className="text-white text-sm tracking-[0.15em] mb-3">
+            Language
+          </h4>
+          <Select value={language} onValueChange={(value) => setLanguage(value as 'ja' | 'en')}>
+            <SelectTrigger 
+              className="w-full bg-transparent border border-white/20 text-white hover:border-[#4FFFB0]/50 transition-colors"
+              style={{ backdropFilter: 'blur(8px)' }}
+            >
+              <SelectValue placeholder="Please select your preferred language." />
+            </SelectTrigger>
+            <SelectContent className="bg-black/95 border border-white/20 backdrop-blur-xl">
+              <SelectItem value="en" className="text-white hover:bg-[#4FFFB0]/10 hover:text-[#4FFFB0]">
+                English
+              </SelectItem>
+              <SelectItem value="ja" className="text-white hover:bg-[#4FFFB0]/10 hover:text-[#4FFFB0]">
+                日本語
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Account設定 */}
+        <div className="mb-6">
+          <h4 className="text-white text-sm tracking-[0.15em] mb-3">
+            Account
+          </h4>
+          <div className="space-y-3">
+            <button 
+              className="w-full py-3 px-4 border border-white/20 text-white text-sm tracking-[0.15em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300 text-left"
+              style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+            >
+              Logout
+            </button>
+            <button 
+              className="w-full py-3 px-4 border border-red-400/30 text-red-400 text-sm tracking-[0.15em] hover:border-red-400/60 hover:bg-red-400/5 transition-all duration-300 text-left"
+              style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+            >
+              Leave
+            </button>
+          </div>
+        </div>
+
+        {/* フッターリンク */}
+        <div className="pt-3 border-t border-white/10 flex items-center justify-center gap-6">
+          <a
+            href="#"
+            className="text-gray-400 text-xs tracking-[0.1em] hover:text-white transition-colors duration-300"
+          >
+            Contact
+          </a>
+          <span className="text-gray-600">|</span>
+          <a
+            href="#"
+            className="text-gray-400 text-xs tracking-[0.1em] hover:text-white transition-colors duration-300"
+          >
+            Updates
+          </a>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
 }
 
 type Goal = Database['public']['Tables']['goals']['Row'];
@@ -2183,6 +2367,7 @@ export function HorizonPage() {
   const [sessionMemories, setSessionMemories] = useState<SessionMemory[]>([]);
   const [hoveredMemory, setHoveredMemory] = useState<SessionMemory | null>(null);
   const [showMessenger, setShowMessenger] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [completedSessionTime, setCompletedSessionTime] = useState("00:00");
 
   // 目標とアクティビティのキャッシュ
@@ -2639,59 +2824,43 @@ export function HorizonPage() {
         }}
       />
 
-      {/* Memory Hover Tooltip */}
-      <AnimatePresence>
-        {hoveredMemory && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-            className="fixed top-1/4 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
-          >
-            <div className="relative">
-              {/* 波紋エフェクト */}
-              <motion.div
-                className="absolute inset-0 rounded-full border"
-                style={{ borderColor: '#4FFFB0' }}
-                animate={{ scale: [1, 1.5, 2], opacity: [0.5, 0.2, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid #4FFFB0', padding: '16px 24px' }}>
-                <div style={{ color: '#dbdbdb', fontSize: '12px', letterSpacing: '0.2em', marginBottom: '4px' }}>
-                  {hoveredMemory.time}
-                </div>
-                <div style={{ color: '#dbdbdb', fontSize: '14px', letterSpacing: '0.05em' }}>
-                  {hoveredMemory.memory}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Messenger Modal - 月の中央に表示 */}
       <AnimatePresence>
         {showMessenger && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-8"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-8"
           >
             <MessengerModal onClose={() => setShowMessenger(false)} />
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Settings Modal - 月の中央に表示 */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-8"
+          >
+            <SettingsModal onClose={() => setShowSettings(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* UI Layers */}
-      <Header isHidden={flowStep !== 'idle'} />
+      <Header isHidden={flowStep !== 'idle' || showMessenger || showSettings} />
       <Sidebar 
-        isHidden={flowStep !== 'idle'} 
+        isHidden={flowStep !== 'idle' || showMessenger || showSettings} 
         onMessengerClick={() => setShowMessenger(true)}
         onGoalsClick={handleGoalsClick}
+        onSettingsClick={() => setShowSettings(true)}
       />
       <CenterOverlay 
         step={flowStep}
@@ -2722,6 +2891,8 @@ export function HorizonPage() {
         onGoalCreateCancel={handleGoalCreateCancel}
         onRefreshCache={refreshCache}
         editingGoalId={editingGoalId}
+        showMessenger={showMessenger}
+        showSettings={showSettings}
       />
       <Footer />
     </div>
