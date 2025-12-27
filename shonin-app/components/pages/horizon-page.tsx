@@ -777,6 +777,57 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
     // newPlan: 'Pro',
     // planChangeDate: '2025年2月1日'
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // サブスクリプション管理ボタンのクリックハンドラー
+  const handleManageSubscription = async () => {
+    try {
+      setIsLoading(true);
+
+      // まず、ユーザーがStripe顧客IDを持っているかチェック
+      const checkResponse = await fetch('/api/user');
+      const userData = await checkResponse.json();
+
+      if (userData.stripe_customer_id) {
+        // 既存顧客の場合はBillingポータルへ
+        const response = await fetch('/api/create-portal-session', {
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          throw new Error('ポータルセッションの作成に失敗しました');
+        }
+
+        const { url } = await response.json();
+        window.location.href = url;
+      } else {
+        // 新規顧客の場合はProプランのチェックアウトセッションを作成
+        const formData = new FormData();
+        formData.append('priceId', 'price_1SiwjaIaAOyL3ERQthWjEZps');
+
+        const response = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('チェックアウトセッションの作成に失敗しました');
+        }
+
+        const result = await response.json();
+        if (result.status === 'success' && result.redirectUrl) {
+          window.location.href = result.redirectUrl;
+        } else {
+          throw new Error(result.error || '決済処理中にエラーが発生しました');
+        }
+      }
+    } catch (error) {
+      console.error('サブスクリプション管理エラー:', error);
+      alert('エラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -830,8 +881,12 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             >
               <span className="text-white text-xs tracking-[0.1em]">Starter</span>
             </div>
-            <button className="px-4 py-2 border border-white/30 text-white text-sm tracking-[0.1em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300">
-              Management subscription
+            <button 
+              onClick={handleManageSubscription}
+              disabled={isLoading}
+              className="px-4 py-2 border border-white/30 text-white text-sm tracking-[0.1em] hover:border-[#4FFFB0]/50 hover:bg-[#4FFFB0]/5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? '読み込み中...' : 'Management subscription'}
             </button>
           </div>
 
