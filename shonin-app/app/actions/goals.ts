@@ -364,16 +364,117 @@ export async function completeGoal(id: string): Promise<Result<void>> {
 // アクティブな目標を取得
 export async function getActiveGoals(): Promise<Result<Goal[]>> {
   try {
-    const result = await getGoals()
-    if (!result.success) {
-      return result
+    const user = await getCurrentUser()
+    const supabase = await getSupabaseClient()
+
+    // archived_atがNULLかつstatusがactiveの目標を取得
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .is('archived_at', null)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      safeError('アクティブ目標取得エラー', { error, userId: user.id })
+      return failure('Failed to fetch active goals', 'GOAL_FETCH_FAILED')
     }
-    const activeGoals = result.data.filter(goal => goal.status === 'active')
-    return success(activeGoals)
+
+    return success(data || [])
   } catch (error) {
-    // エラーコードを取得して返す
     const code = getErrorCode(error)
     return failure('Failed to fetch active goals', code || 'GOAL_FETCH_FAILED')
+  }
+}
+
+// アーカイブされた目標を取得
+export async function getArchivedGoals(): Promise<Result<Goal[]>> {
+  try {
+    const user = await getCurrentUser()
+    const supabase = await getSupabaseClient()
+
+    // archived_atがNULLでない目標を取得（アーカイブ日時の降順）
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', user.id)
+      .not('archived_at', 'is', null)
+      .order('archived_at', { ascending: false })
+
+    if (error) {
+      safeError('アーカイブ目標取得エラー', { error, userId: user.id })
+      return failure('Failed to fetch archived goals', 'GOAL_FETCH_FAILED')
+    }
+
+    return success(data || [])
+  } catch (error) {
+    const code = getErrorCode(error)
+    return failure('Failed to fetch archived goals', code || 'GOAL_FETCH_FAILED')
+  }
+}
+
+// 目標をアーカイブする
+export async function archiveGoal(id: string): Promise<Result<void>> {
+  try {
+    const user = await getCurrentUser()
+    const supabase = await getSupabaseClient()
+
+    const { error } = await supabase
+      .from('goals')
+      .update({
+        archived_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      safeError('目標アーカイブエラー', { error, goalId: id, userId: user.id })
+      return failure('Failed to archive goal', 'GOAL_ARCHIVE_FAILED')
+    }
+
+    // キャッシュを再検証
+    revalidatePath('/goals')
+    revalidatePath('/dashboard')
+    revalidatePath('/horizon')
+
+    return success(undefined)
+  } catch (error) {
+    const code = getErrorCode(error)
+    return failure('Failed to archive goal', code || 'GOAL_ARCHIVE_FAILED')
+  }
+}
+
+// 目標のアーカイブを解除する
+export async function unarchiveGoal(id: string): Promise<Result<void>> {
+  try {
+    const user = await getCurrentUser()
+    const supabase = await getSupabaseClient()
+
+    const { error } = await supabase
+      .from('goals')
+      .update({
+        archived_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      safeError('目標アーカイブ解除エラー', { error, goalId: id, userId: user.id })
+      return failure('Failed to unarchive goal', 'GOAL_UNARCHIVE_FAILED')
+    }
+
+    // キャッシュを再検証
+    revalidatePath('/goals')
+    revalidatePath('/dashboard')
+    revalidatePath('/horizon')
+
+    return success(undefined)
+  } catch (error) {
+    const code = getErrorCode(error)
+    return failure('Failed to unarchive goal', code || 'GOAL_UNARCHIVE_FAILED')
   }
 }
 

@@ -171,6 +171,7 @@ export interface Database {
           constellation_message: string | null
           constellation_position_x: number | null
           constellation_position_y: number | null
+          archived_at: string | null  // アーカイブ日時（NULLならアクティブ、値ありならアーカイブ済み）
           created_at: string
           updated_at: string
         }
@@ -192,6 +193,7 @@ export interface Database {
           constellation_message?: string | null
           constellation_position_x?: number | null
           constellation_position_y?: number | null
+          archived_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -213,6 +215,7 @@ export interface Database {
           constellation_message?: string | null
           constellation_position_x?: number | null
           constellation_position_y?: number | null
+          archived_at?: string | null
           created_at?: string
           updated_at?: string
         }

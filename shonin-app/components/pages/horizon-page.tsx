@@ -34,7 +34,7 @@ import {
   Pencil,
   Trash2
 } from "lucide-react";
-import { getActiveGoals, updateGoalConstellation, deleteGoalConstellation, deleteGoal } from "@/app/actions/goals";
+import { getActiveGoals, getArchivedGoals, archiveGoal, unarchiveGoal, updateGoalConstellation, deleteGoalConstellation, deleteGoal } from "@/app/actions/goals";
 import type { Database, ConstellationData } from "@/types/database";
 import { useSessions, type CompletedSession } from "@/contexts/sessions-context";
 import { useActivities } from "@/contexts/activities-context";
@@ -417,15 +417,16 @@ function Header({ isHidden }: { isHidden: boolean }) {
     )
 }
 
-function Sidebar({ isHidden, onMessengerClick, onGoalsClick, onSettingsClick }: {
+function Sidebar({ isHidden, onMessengerClick, onGoalsClick, onSettingsClick, onArchiveClick }: {
   isHidden: boolean;
   onMessengerClick: () => void;
   onGoalsClick: () => void;
   onSettingsClick: () => void;
+  onArchiveClick: () => void;
 }) {
     const menuItems = [
         { icon: <Eye size={22} />, label: "HOME", description: "ホーム", onClick: undefined },
-        { icon: <Archive size={22} />, label: "ARCHIVE", description: "銀河アーカイブ", onClick: undefined },
+        { icon: <Archive size={22} />, label: "ARCHIVE", description: "銀河アーカイブ", onClick: onArchiveClick },
         { icon: <MessageSquare size={22} />, label: "MESSAGES", description: "証人からの手紙", onClick: onMessengerClick },
         { icon: <Target size={22} />, label: "ADD・EDIT", description: "星座作成・編集", onClick: onGoalsClick },
         { icon: <Settings size={22} />, label: "SETTINGS", description: "設定", onClick: onSettingsClick },
@@ -494,7 +495,8 @@ function CenterOverlay({
     onRefreshCache,
     editingGoalId,
     showMessenger,
-    showSettings
+    showSettings,
+    showArchive
 }: { 
     step: FlowStep;
     onStartClick: () => void;
@@ -526,6 +528,7 @@ function CenterOverlay({
     editingGoalId: string | null;
     showMessenger: boolean;
     showSettings: boolean;
+    showArchive: boolean;
 }) {
     const [time, setTime] = useState("");
 
@@ -542,7 +545,7 @@ function CenterOverlay({
     return (
         <div className={`fixed inset-0 ${step === 'session-active' ? 'pointer-events-none' : 'pointer-events-none'} flex items-center justify-center z-10`}>
             <AnimatePresence mode="wait">
-                {step === 'idle' && !showMessenger && !showSettings && (
+                {step === 'idle' && !showMessenger && !showSettings && !showArchive && (
                     <motion.div 
                         key="idle"
                         initial={{ opacity: 0 }}
@@ -592,7 +595,7 @@ function CenterOverlay({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.5 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
                         className="pointer-events-auto"
                     >
                         <GoalSelectScreen 
@@ -612,14 +615,14 @@ function CenterOverlay({
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.5 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
                         className="text-center"
                     >
                         <motion.div
-                             initial={{ opacity: 0, scale: 0.9 }}
-                             animate={{ opacity: 1, scale: 1 }}
-                             transition={{ delay: 0.3, duration: 0.8 }}
-                             className="relative"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3, duration: 0.8 }}
+                            className="relative"
                         >
                             <h1 
                                 className="text-white text-8xl font-light tracking-tighter mb-6" 
@@ -840,7 +843,7 @@ function MessengerModal({ onClose }: { onClose: () => void }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.8 }}
+        transition={{ duration: 0.8 }}
         className="flex items-center justify-center gap-4 mt-6"
       >
         <button
@@ -1371,6 +1374,23 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
                     <span>{goal.title}</span>
                     <div className="flex gap-2">
                       <button
+                        onClick={async () => {
+                          const result = await archiveGoal(goal.id);
+                          if (result.success) {
+                            // リストを再取得
+                            const goalsResult = await getActiveGoals();
+                            if (goalsResult.success) {
+                              setGoals(goalsResult.data);
+                            }
+                            onRefresh?.();
+                          }
+                        }}
+                        className="p-2 text-gray-400 hover:text-yellow-400 transition-colors"
+                        title="アーカイブ"
+                      >
+                        <Archive size={18} />
+                      </button>
+                      <button
                         onClick={() => handleEditGoal(goal)}
                         className="p-2 text-gray-400 hover:text-[#4FFFB0] transition-colors"
                       >
@@ -1542,18 +1562,18 @@ function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: Constellat
     <div className="relative text-center w-[450px] max-w-full mx-auto">
       <BackButton onClick={onBack} />
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
           className="mb-8"
         >
-          <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の管理</h2>
+          <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">星座の編集・削除</h2>
         </motion.div>
 
         {constellationGoals.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
             className="py-12 text-gray-400 text-sm tracking-[0.1em]"
           >
@@ -1561,16 +1581,16 @@ function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: Constellat
           </motion.div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
             className="space-y-4 max-h-96 overflow-y-auto"
           >
             {constellationGoals.map((goal, index) => (
               <motion.div
                 key={goal.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5 + index * 0.1 }}
                 className="py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300 flex items-start gap-4"
                 style={{
@@ -1626,6 +1646,164 @@ function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: Constellat
     </div>
   );
 }
+
+// 銀河アーカイブ画面のProps
+interface GalaxyArchiveScreenProps {
+  onBack: () => void;
+}
+
+// 銀河アーカイブ画面コンポーネント
+function GalaxyArchiveScreen({ onBack }: GalaxyArchiveScreenProps) {
+  const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [unarchivingId, setUnarchivingId] = useState<string | null>(null);
+
+  // アーカイブされた目標を取得
+  useEffect(() => {
+    const loadArchivedGoals = async () => {
+      setLoading(true);
+      const result = await getArchivedGoals();
+      if (result.success) {
+        setArchivedGoals(result.data);
+      }
+      setLoading(false);
+    };
+    loadArchivedGoals();
+  }, []);
+
+  // アーカイブ解除ハンドラー
+  const handleUnarchive = async (goalId: string) => {
+    setUnarchivingId(goalId);
+    const result = await unarchiveGoal(goalId);
+    if (result.success) {
+      // アーカイブリストから削除
+      setArchivedGoals(prev => prev.filter(g => g.id !== goalId));
+    }
+    setUnarchivingId(null);
+  };
+
+  // 日付のフォーマット関数
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '期限なし';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  return (
+    <div className="relative text-center w-[450px] max-w-full mx-auto">
+      <BackButton onClick={onBack} />
+      <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.5 }}
+
+
+        className="mb-4"
+      >
+        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">銀河アーカイブ</h2>
+      </motion.div>
+
+      {loading ? (
+        <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.5 }}
+          className="py-12 flex justify-center"
+        >
+          <div className="w-8 h-8 border-2 border-[#4FFFB0]/30 border-t-[#4FFFB0] rounded-full animate-spin" />
+        </motion.div>
+      ) : archivedGoals.length === 0 ? (
+        <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.5 }}
+        className="py-4 text-gray-400 text-sm tracking-[0.1em]"
+        >
+          アーカイブされた目標はありません
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-4 max-h-96 overflow-y-auto"
+        >
+          {archivedGoals.map((goal, index) => (
+            <motion.div
+              key={goal.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+              className="py-4 px-6 border border-white/30 text-white hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
+              style={{
+                backdropFilter: "blur(8px)",
+                backgroundColor: "rgba(0, 0, 0, 0.3)"
+              }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-1 text-left">
+                  {/* 星座名（あれば） */}
+                  {goal.constellation_symbol && (
+                    <div className="text-[#fbbf24] text-lg tracking-[0.1em] mb-2">
+                      ✨ {goal.constellation_symbol}
+                    </div>
+                  )}
+                  
+                  {/* 目標タイトル */}
+                  <div className="text-white text-lg tracking-[0.15em] mb-2">
+                    {goal.title}
+                  </div>
+
+                  {/* 期限 */}
+                  <div className="text-gray-400 text-sm tracking-[0.05em] mb-1">
+                    期限: {formatDate(goal.deadline)}
+                  </div>
+
+                  {/* アーカイブ日時 */}
+                  {goal.archived_at && (
+                    <div className="text-gray-500 text-xs tracking-[0.05em]">
+                      アーカイブ日: {formatDate(goal.archived_at)}
+                    </div>
+                  )}
+
+                  {/* 星座のメッセージ */}
+                  {goal.constellation_message && (
+                    <div className="text-gray-400 text-xs tracking-[0.05em] mt-3 italic border-l-2 border-[#4FFFB0]/30 pl-3">
+                      "{goal.constellation_message}"
+                    </div>
+                  )}
+                </div>
+
+                {/* アーカイブ解除ボタン */}
+                <button
+                  onClick={() => handleUnarchive(goal.id)}
+                  disabled={unarchivingId === goal.id}
+                  className="px-4 py-2 border border-transparent hover:border-[#4FFFB0]/60 text-[#4FFFB0] text-sm tracking-[0.1em] hover:bg-[#4FFFB0]/20 transition-all duration-300 disabled:opacity-50 whitespace-nowrap"
+                  style={{
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: "rgba(0, 0, 0, 0.3)"
+                  }}
+                >
+                  {unarchivingId === goal.id ? (
+                    <div className="w-4 h-4 border-2 border-[#4FFFB0]/30 border-t-[#4FFFB0] rounded-full animate-spin" />
+                  ) : (
+                    '復元'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 
 // 目標入力画面（新規作成・編集）
 interface GoalInputScreenProps {
@@ -1701,32 +1879,82 @@ function GoalInputScreen({
         </motion.button>
 
         {/* 期限入力 */}
-        <motion.button
-          type="button"
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
-          className="w-full py-4 px-6 border border-white/30 text-white text-lg tracking-[0.15em] hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300 text-left block"
+          transition={{ delay: 0.5 }}
+          className="w-full py-4 px-6 border border-white/30 text-lg tracking-[0.15em] transition-all duration-300"
           style={{
             backdropFilter: "blur(8px)",
             backgroundColor: "rgba(0, 0, 0, 0.3)",
             minWidth: 0
           }}
-          onClick={(e) => {
-            e.preventDefault();
-          }}
         >
-          <Input
-            type="text"
-            value={deadline}
-            onChange={(e) => onDeadlineChange(e.target.value)}
-            placeholder="年 /月/日"
-            className="w-full border-0 bg-transparent text-white text-lg tracking-[0.15em] focus:outline-none placeholder:text-gray-400 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          />
-        </motion.button>
+          <div className="flex gap-3 items-center">
+            {/* 年 */}
+            <select
+              value={deadline.split('/')[0] || ''}
+              onChange={(e) => {
+                const parts = deadline.split('/');
+                const newDeadline = `${e.target.value}/${parts[1] || ''}/${parts[2] || ''}`;
+                onDeadlineChange(newDeadline);
+              }}
+              className="flex-1 bg-transparent border border-white/30 text-white text-base tracking-[0.15em] px-3 py-2 focus:outline-none focus:border-[#4FFFB0] appearance-none cursor-pointer hover:border-[#4FFFB0]/50 transition-colors"
+              style={{
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <option value="" className="bg-gray-900">年</option>
+              {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() + i).map((year) => (
+                <option key={year} value={year} className="bg-gray-900">
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            {/* 月 */}
+            <select
+              value={deadline.split('/')[1] || ''}
+              onChange={(e) => {
+                const parts = deadline.split('/');
+                const newDeadline = `${parts[0] || ''}/${e.target.value}/${parts[2] || ''}`;
+                onDeadlineChange(newDeadline);
+              }}
+              className="flex-1 bg-transparent border border-white/30 text-white text-base tracking-[0.15em] px-3 py-2 focus:outline-none focus:border-[#4FFFB0] appearance-none cursor-pointer hover:border-[#4FFFB0]/50 transition-colors"
+              style={{
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <option value="" className="bg-gray-900">月</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                <option key={month} value={month} className="bg-gray-900">
+                  {month}
+                </option>
+              ))}
+            </select>
+
+            {/* 日 */}
+            <select
+              value={deadline.split('/')[2] || ''}
+              onChange={(e) => {
+                const parts = deadline.split('/');
+                const newDeadline = `${parts[0] || ''}/${parts[1] || ''}/${e.target.value}`;
+                onDeadlineChange(newDeadline);
+              }}
+              className="flex-1 bg-transparent border border-white/30 text-white text-base tracking-[0.15em] px-3 py-2 focus:outline-none focus:border-[#4FFFB0] appearance-none cursor-pointer hover:border-[#4FFFB0]/50 transition-colors"
+              style={{
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <option value="" className="bg-gray-900">日</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                <option key={day} value={day} className="bg-gray-900">
+                  {day}
+                </option>
+              ))}
+            </select>
+          </div>
+        </motion.div>
 
         {/* 次へボタン - 常に表示 */}
         <motion.button
@@ -2368,6 +2596,7 @@ export function HorizonPage() {
   const [hoveredMemory, setHoveredMemory] = useState<SessionMemory | null>(null);
   const [showMessenger, setShowMessenger] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
   const [completedSessionTime, setCompletedSessionTime] = useState("00:00");
 
   // 目標とアクティビティのキャッシュ
@@ -2843,8 +3072,8 @@ export function HorizonPage() {
       <AnimatePresence>
         {showSettings && (
           <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ delay: 0.3, duration: 0.5 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-8"
@@ -2854,13 +3083,29 @@ export function HorizonPage() {
         )}
       </AnimatePresence>
 
+      {/* Archive Modal - 銀河アーカイブ */}
+      <AnimatePresence>
+        {showArchive && (
+          <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-8"
+          >
+            <GalaxyArchiveScreen onBack={() => setShowArchive(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* UI Layers */}
-      <Header isHidden={flowStep !== 'idle' || showMessenger || showSettings} />
+      <Header isHidden={flowStep !== 'idle' || showMessenger || showSettings || showArchive} />
       <Sidebar 
-        isHidden={flowStep !== 'idle' || showMessenger || showSettings} 
+        isHidden={flowStep !== 'idle' || showMessenger || showSettings || showArchive} 
         onMessengerClick={() => setShowMessenger(true)}
         onGoalsClick={handleGoalsClick}
         onSettingsClick={() => setShowSettings(true)}
+        onArchiveClick={() => setShowArchive(true)}
       />
       <CenterOverlay 
         step={flowStep}
@@ -2893,6 +3138,7 @@ export function HorizonPage() {
         editingGoalId={editingGoalId}
         showMessenger={showMessenger}
         showSettings={showSettings}
+        showArchive={showArchive}
       />
       <Footer />
     </div>
