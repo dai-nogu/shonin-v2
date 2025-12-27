@@ -34,7 +34,7 @@ import {
   Pencil,
   Trash2
 } from "lucide-react";
-import { getActiveGoals, getArchivedGoals, archiveGoal, unarchiveGoal, updateGoalConstellation, deleteGoalConstellation, deleteGoal } from "@/app/actions/goals";
+import { getGoals, getActiveGoals, getArchivedGoals, archiveGoal, unarchiveGoal, updateGoalConstellation, deleteGoalConstellation, deleteGoal } from "@/app/actions/goals";
 import type { Database, ConstellationData } from "@/types/database";
 import { useSessions, type CompletedSession } from "@/contexts/sessions-context";
 import { useActivities } from "@/contexts/activities-context";
@@ -165,16 +165,6 @@ function Moon() {
   );
 }
 
-// セッションの記録データ型
-interface SessionMemory {
-  id: string;
-  angle: number;
-  radius: number;
-  time: string;
-  memory: string;
-  color: string;
-}
-
 // 星座を3D空間に描画するコンポーネント
 function ConstellationMesh({ goal }: { goal: Goal }) {
   const lineRefs = useRef<THREE.Line[]>([]);
@@ -242,101 +232,6 @@ function ConstellationMesh({ goal }: { goal: Goal }) {
   );
 }
 
-function OrbitParticles({ 
-  count = 800, 
-  radius = 3.5, 
-  sessionMemories = [],
-  onParticleHover
-}: { 
-  count?: number; 
-  radius?: number; 
-  sessionMemories?: SessionMemory[];
-  onParticleHover?: (memory: SessionMemory | null) => void;
-}) {
-  const points = useRef<THREE.Points>(null);
-  const { camera, raycaster, pointer } = useThree();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  // Generate particles in a ring/orbit
-  const particles = useMemo(() => {
-    const temp = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      // Distribute in a ring with some thickness
-      const r = radius + (Math.random() - 0.5) * 0.5; 
-      // Add some vertical spread for 3D feel
-      const y = (Math.random() - 0.5) * 0.5; 
-      
-      temp[i * 3] = Math.cos(angle) * r;     // x
-      temp[i * 3 + 1] = Math.sin(angle) * r * 0.2 + y; // y (tilted slightly)
-      temp[i * 3 + 2] = Math.sin(angle) * r; // z
-    }
-    return temp;
-  }, [count, radius]);
-
-  // Session memory particles
-  const memoryParticles = useMemo(() => {
-    return sessionMemories.map(mem => {
-      const x = Math.cos(mem.angle) * mem.radius;
-      const y = Math.sin(mem.angle) * mem.radius * 0.2;
-      const z = Math.sin(mem.angle) * mem.radius;
-      return { ...mem, position: new THREE.Vector3(x, y, z) };
-    });
-  }, [sessionMemories]);
-
-  return (
-    <group>
-      {/* Background orbit particles */}
-      <points ref={points}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[particles, 3]}
-            count={particles.length / 3}
-            array={particles}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <pointsMaterial
-          size={0.02}
-          color={THEME_COLOR}
-          transparent
-          opacity={0.6}
-          blending={THREE.AdditiveBlending}
-          sizeAttenuation={true}
-        />
-      </points>
-
-      {/* Session memory particles - larger and interactive */}
-      {memoryParticles.map((mem, index) => (
-        <mesh
-          key={mem.id}
-          position={mem.position}
-          onPointerEnter={() => {
-            setHoveredIndex(index);
-            onParticleHover?.(mem);
-          }}
-          onPointerLeave={() => {
-            setHoveredIndex(null);
-            onParticleHover?.(null);
-          }}
-        >
-          <sphereGeometry args={[0.08, 16, 16]} />
-          <meshBasicMaterial
-            color={mem.color}
-            transparent
-            opacity={hoveredIndex === index ? 1 : 0.8}
-            blending={THREE.AdditiveBlending}
-          />
-          {hoveredIndex === index && (
-            <pointLight color={mem.color} intensity={2} distance={2} />
-          )}
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function FloatingText({ text, position, fontSize = 0.1 }: { text: string; position: [number, number, number]; fontSize?: number }) {
     return (
         <Text
@@ -353,9 +248,7 @@ function FloatingText({ text, position, fontSize = 0.1 }: { text: string; positi
 }
 
 
-function SceneContent({ sessionMemories, onMemoryHover, goals }: {
-  sessionMemories: SessionMemory[];
-  onMemoryHover: (memory: SessionMemory | null) => void;
+function SceneContent({ goals }: {
   goals?: Goal[];
 }) {
   const { camera } = useThree();
@@ -373,19 +266,6 @@ function SceneContent({ sessionMemories, onMemoryHover, goals }: {
       <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
         <Moon />
       </Float>
-
-      <group rotation={[0.4, 0, 0.2]}>
-         <OrbitParticles
-           radius={3.2}
-           count={600}
-         />
-         <OrbitParticles
-           radius={4.5}
-           count={300}
-           sessionMemories={sessionMemories}
-           onParticleHover={onMemoryHover}
-         />
-      </group>
 
       {/* 星座を描画 */}
       {goals && goals.map((goal) => (
@@ -426,9 +306,9 @@ function Sidebar({ isHidden, onMessengerClick, onGoalsClick, onSettingsClick, on
 }) {
     const menuItems = [
         { icon: <Eye size={22} />, label: "HOME", description: "ホーム", onClick: undefined },
-        { icon: <Archive size={22} />, label: "ARCHIVE", description: "銀河アーカイブ", onClick: onArchiveClick },
-        { icon: <MessageSquare size={22} />, label: "MESSAGES", description: "証人からの手紙", onClick: onMessengerClick },
         { icon: <Target size={22} />, label: "ADD・EDIT", description: "星座作成・編集", onClick: onGoalsClick },
+        { icon: <MessageSquare size={22} />, label: "MESSAGES", description: "証人からの手紙", onClick: onMessengerClick },
+        { icon: <Archive size={22} />, label: "ARCHIVE", description: "銀河アーカイブ", onClick: onArchiveClick },
         { icon: <Settings size={22} />, label: "SETTINGS", description: "設定", onClick: onSettingsClick },
     ];
 
@@ -487,6 +367,7 @@ function CenterOverlay({
     onManageConstellations,
     onEditConstellation,
     onDeleteConstellation,
+    onArchiveConstellation,
     onConstellationListBack,
     onGoalInputNext,
     onConstellationVisualizerBack,
@@ -519,6 +400,7 @@ function CenterOverlay({
     onManageConstellations: () => void;
     onEditConstellation: (goal: Goal) => void;
     onDeleteConstellation: (goalId: string) => void;
+    onArchiveConstellation: (goalId: string) => void;
     onConstellationListBack: () => void;
     onGoalInputNext: () => void;
     onConstellationVisualizerBack: () => void;
@@ -701,6 +583,7 @@ function CenterOverlay({
                             goals={goalsCache || []}
                             onEdit={onEditConstellation}
                             onDelete={onDeleteConstellation}
+                            onArchive={onArchiveConstellation}
                             onBack={onConstellationListBack}
                         />
                     </motion.div>
@@ -1073,7 +956,6 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
   const { addGoal: addGoalToDb, updateGoal: updateGoalInDb, deleteGoal: deleteGoalFromDb } = useGoalsDb();
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [activityName, setActivityName] = useState("");
-  const [activityColor, setActivityColor] = useState("bg-sumi");
   const [isSubmittingActivity, setIsSubmittingActivity] = useState(false);
 
   const {
@@ -1083,15 +965,6 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
     validateForm: validateGoalForm,
     setInitialData: setGoalFormData,
   } = useGoalForm();
-
-  const colorOptions = [
-    { value: "bg-sumi", label: "墨色", color: "#5a5a5a" },
-    { value: "bg-ai", label: "藍色", color: "#165e83" },
-    { value: "bg-gin-nezu", label: "銀鼠", color: "#9fa0a0" },
-    { value: "bg-seiji", label: "青磁色", color: "#7ebea5" },
-    { value: "bg-usuzumi", label: "薄墨色", color: "#787878" },
-    { value: "bg-hatoba", label: "鳩羽色", color: "#675f7c" },
-  ];
 
   // 目標を取得
   useEffect(() => {
@@ -1180,14 +1053,13 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
       const result = await addActivity({
         name: activityName.trim(),
         icon: null,
-        color: activityColor,
+        color: "bg-sumi",
         goal_id: null
       });
 
       if (result.success) {
         setShowActivityModal(false);
         setActivityName("");
-        setActivityColor("bg-sumi");
         refetchActivities();
         onRefresh?.();
       }
@@ -1298,31 +1170,11 @@ function GoalsManagementView({ onRefresh }: GoalsManagementViewProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-gray-300 text-sm">色</Label>
-              <div className="grid grid-cols-6 gap-3">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    onClick={() => setActivityColor(color.value)}
-                    className={`w-10 h-10 rounded-full border-2 transition-all ${
-                      activityColor === color.value 
-                        ? "border-[#4FFFB0] scale-110" 
-                        : "border-transparent hover:border-white/50"
-                    }`}
-                    style={{ backgroundColor: color.color }}
-                  />
-                ))}
-              </div>
-            </div>
-
             <div className="flex space-x-3 pt-4">
               <Button
                 onClick={() => {
                   setShowActivityModal(false);
                   setActivityName("");
-                  setActivityColor("bg-sumi");
                 }}
                 variant="outline"
                 className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5"
@@ -1490,8 +1342,8 @@ interface ConstellationMenuScreenProps {
 }
 
 function ConstellationMenuScreen({ goals, onNewConstellation, onManageConstellations, onBack }: ConstellationMenuScreenProps) {
-  // 星座データがある目標のみカウント
-  const hasConstellations = goals.some(g => g.constellation_nodes && g.constellation_edges);
+  // 星座データがある目標のみカウント（アーカイブされていないもののみ）
+  const hasConstellations = goals.some(g => g.constellation_nodes && g.constellation_edges && !g.archived_at);
 
   return (
     <div className="relative text-center w-[450px] max-w-full mx-auto">
@@ -1543,19 +1395,27 @@ interface ConstellationListScreenProps {
   goals: Goal[];
   onEdit: (goal: Goal) => void;
   onDelete: (goalId: string) => void;
+  onArchive: (goalId: string) => void;
   onBack: () => void;
 }
 
-function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: ConstellationListScreenProps) {
+function ConstellationListScreen({ goals, onEdit, onDelete, onArchive, onBack }: ConstellationListScreenProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
 
-  // 星座データがある目標のみフィルター
-  const constellationGoals = goals.filter(g => g.constellation_nodes && g.constellation_edges);
+  // 星座データがある目標のみフィルター（アーカイブされていないもののみ）
+  const constellationGoals = goals.filter(g => g.constellation_nodes && g.constellation_edges && !g.archived_at);
 
   const handleDelete = async (goalId: string) => {
     setDeletingId(goalId);
     await onDelete(goalId);
     setDeletingId(null);
+  };
+
+  const handleArchive = async (goalId: string) => {
+    setArchivingId(goalId);
+    await onArchive(goalId);
+    setArchivingId(null);
   };
 
   return (
@@ -1624,6 +1484,21 @@ function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: Constellat
                     <Pencil size={16} />
                   </button>
                   <button
+                    onClick={() => handleArchive(goal.id)}
+                    disabled={archivingId === goal.id}
+                    className="px-4 py-2 border border-transparent hover:border-amber-400/60 text-amber-400 text-sm tracking-[0.1em] hover:bg-amber-400/20 transition-all duration-300 disabled:opacity-50"
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      backgroundColor: "rgba(0, 0, 0, 0.3)"
+                    }}
+                  >
+                    {archivingId === goal.id ? (
+                      <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                    ) : (
+                      <Archive size={16} />
+                    )}
+                  </button>
+                  <button
                     onClick={() => handleDelete(goal.id)}
                     disabled={deletingId === goal.id}
                     className="px-4 py-2 border border-transparent hover:border-red-400/60 text-red-400 text-sm tracking-[0.1em] hover:bg-red-400/20 transition-all duration-300 disabled:opacity-50"
@@ -1650,34 +1525,36 @@ function ConstellationListScreen({ goals, onEdit, onDelete, onBack }: Constellat
 // 銀河アーカイブ画面のProps
 interface GalaxyArchiveScreenProps {
   onBack: () => void;
+  goalsCache: Goal[];
+  onRefresh: () => Promise<void>;
 }
 
 // 銀河アーカイブ画面コンポーネント
-function GalaxyArchiveScreen({ onBack }: GalaxyArchiveScreenProps) {
-  const [archivedGoals, setArchivedGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+function GalaxyArchiveScreen({ onBack, goalsCache, onRefresh }: GalaxyArchiveScreenProps) {
   const [unarchivingId, setUnarchivingId] = useState<string | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
 
-  // アーカイブされた目標を取得
-  useEffect(() => {
-    const loadArchivedGoals = async () => {
-      setLoading(true);
-      const result = await getArchivedGoals();
-      if (result.success) {
-        setArchivedGoals(result.data);
-      }
-      setLoading(false);
-    };
-    loadArchivedGoals();
-  }, []);
+  // キャッシュからアーカイブされた目標をフィルタリング
+  const archivedGoals = useMemo(() => {
+    return goalsCache.filter(g => g.archived_at !== null).sort((a, b) => {
+      // アーカイブ日時の降順でソート
+      const dateA = new Date(a.archived_at!).getTime();
+      const dateB = new Date(b.archived_at!).getTime();
+      return dateB - dateA;
+    });
+  }, [goalsCache]);
 
   // アーカイブ解除ハンドラー
   const handleUnarchive = async (goalId: string) => {
     setUnarchivingId(goalId);
     const result = await unarchiveGoal(goalId);
     if (result.success) {
-      // アーカイブリストから削除
-      setArchivedGoals(prev => prev.filter(g => g.id !== goalId));
+      // キャッシュを更新
+      await onRefresh();
+      // 詳細画面を閉じる
+      setSelectedGoal(null);
+    } else {
+      alert('アーカイブ解除に失敗しました: ' + result.error);
     }
     setUnarchivingId(null);
   };
@@ -1689,38 +1566,103 @@ function GalaxyArchiveScreen({ onBack }: GalaxyArchiveScreenProps) {
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  return (
-    <div className="relative text-center w-[450px] max-w-full mx-auto">
-      <BackButton onClick={onBack} />
-      <motion.div
-          initial={{ opacity: 0, y: 20 }}
+  // 詳細画面が開いている場合
+  if (selectedGoal) {
+    return (
+      <div className="relative text-center w-[450px] max-w-full mx-auto">
+        <BackButton onClick={() => setSelectedGoal(null)} />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+        </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.5 }}
+          className="border border-[#4FFFB0]/30 p-5"
+          style={{
+            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)"
+          }}
+        >
+          {/* 星座名（あれば） */}
+          {selectedGoal.constellation_symbol && (
+            <div className="text-[#fbbf24] text-xl tracking-[0.15em] mb-2">
+              {selectedGoal.constellation_symbol}
+            </div>
+          )}
+          
+          {/* 目標タイトル */}
+          <h3 className="text-white text-xl tracking-[0.15em] mb-3">
+            {selectedGoal.title}
+          </h3>
 
+          {/* 星座のメッセージ */}
+          {selectedGoal.constellation_message && (
+            <div className="text-white text-base tracking-[0.05em] leading-relaxed mt-4 text-left">
+              <span className="text-white text-xs block mb-1">メッセージ</span>
+              <span className="italic">"{selectedGoal.constellation_message}"</span>
+            </div>
+          )}
+
+          {/* アーカイブ日時 */}
+          {selectedGoal.archived_at && (
+            <div className="text-white text-xs tracking-[0.1em] mt-3 text-right">
+              アーカイブ日: {formatDate(selectedGoal.archived_at)}
+            </div>
+          )}
+
+          {/* アーカイブ解除ボタン */}
+          <button
+            onClick={() => handleUnarchive(selectedGoal.id)}
+            disabled={unarchivingId === selectedGoal.id}
+            className="mt-4 px-6 py-3 border border-transparent hover:border-[#4FFFB0]/60 text-[#4FFFB0] text-base tracking-[0.15em] hover:bg-[#4FFFB0]/20 transition-all duration-300 disabled:opacity-50"
+            style={{
+              backdropFilter: "blur(8px)",
+              backgroundColor: "rgba(0, 0, 0, 0.3)"
+            }}
+          >
+            {unarchivingId === selectedGoal.id ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-[#4FFFB0]/30 border-t-[#4FFFB0] rounded-full animate-spin" />
+                <span>復元中...</span>
+              </div>
+            ) : (
+              '復元'
+            )}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // 一覧画面
+  return (
+    <div className="relative text-center w-[450px] max-w-full mx-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.5 }}
         className="mb-4"
       >
-        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em] mb-4">銀河アーカイブ</h2>
+      <BackButton onClick={onBack} />
+        <h2 className="text-[#4FFFB0] text-3xl tracking-[0.2em]">アーカイブ一覧</h2>
       </motion.div>
 
-      {loading ? (
+      {archivedGoals.length === 0 ? (
         <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.5 }}
-          className="py-12 flex justify-center"
-        >
-          <div className="w-8 h-8 border-2 border-[#4FFFB0]/30 border-t-[#4FFFB0] rounded-full animate-spin" />
-        </motion.div>
-      ) : archivedGoals.length === 0 ? (
-        <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.5 }}
-        className="py-4 text-gray-400 text-sm tracking-[0.1em]"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.5 }}
+          className="py-4 text-gray-400 text-sm tracking-[0.1em]"
         >
           アーカイブされた目標はありません
         </motion.div>
@@ -1730,7 +1672,7 @@ function GalaxyArchiveScreen({ onBack }: GalaxyArchiveScreenProps) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.5 }}
-          className="space-y-4 max-h-96 overflow-y-auto"
+          className="space-y-4 overflow-y-auto"
         >
           {archivedGoals.map((goal, index) => (
             <motion.div
@@ -1738,7 +1680,7 @@ function GalaxyArchiveScreen({ onBack }: GalaxyArchiveScreenProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
+              transition={{ duration: 0.5 }}
               className="py-4 px-6 border border-white/30 text-white hover:border-[#4FFFB0] hover:bg-[#4FFFB0]/10 transition-all duration-300"
               style={{
                 backdropFilter: "blur(8px)",
@@ -1747,53 +1689,29 @@ function GalaxyArchiveScreen({ onBack }: GalaxyArchiveScreenProps) {
             >
               <div className="flex items-start gap-4">
                 <div className="flex-1 text-left">
-                  {/* 星座名（あれば） */}
-                  {goal.constellation_symbol && (
-                    <div className="text-[#fbbf24] text-lg tracking-[0.1em] mb-2">
-                      ✨ {goal.constellation_symbol}
-                    </div>
-                  )}
-                  
                   {/* 目標タイトル */}
                   <div className="text-white text-lg tracking-[0.15em] mb-2">
                     {goal.title}
                   </div>
 
-                  {/* 期限 */}
-                  <div className="text-gray-400 text-sm tracking-[0.05em] mb-1">
-                    期限: {formatDate(goal.deadline)}
-                  </div>
-
                   {/* アーカイブ日時 */}
                   {goal.archived_at && (
-                    <div className="text-gray-500 text-xs tracking-[0.05em]">
+                    <div className="text-white text-xs tracking-[0.05em]">
                       アーカイブ日: {formatDate(goal.archived_at)}
-                    </div>
-                  )}
-
-                  {/* 星座のメッセージ */}
-                  {goal.constellation_message && (
-                    <div className="text-gray-400 text-xs tracking-[0.05em] mt-3 italic border-l-2 border-[#4FFFB0]/30 pl-3">
-                      "{goal.constellation_message}"
                     </div>
                   )}
                 </div>
 
-                {/* アーカイブ解除ボタン */}
+                {/* 詳細ボタン */}
                 <button
-                  onClick={() => handleUnarchive(goal.id)}
-                  disabled={unarchivingId === goal.id}
-                  className="px-4 py-2 border border-transparent hover:border-[#4FFFB0]/60 text-[#4FFFB0] text-sm tracking-[0.1em] hover:bg-[#4FFFB0]/20 transition-all duration-300 disabled:opacity-50 whitespace-nowrap"
+                  onClick={() => setSelectedGoal(goal)}
+                  className="px-4 py-2 border border-transparent hover:border-[#4FFFB0]/60 text-[#4FFFB0] text-sm tracking-[0.1em] hover:bg-[#4FFFB0]/20 transition-all duration-300 whitespace-nowrap"
                   style={{
                     backdropFilter: "blur(8px)",
                     backgroundColor: "rgba(0, 0, 0, 0.3)"
                   }}
                 >
-                  {unarchivingId === goal.id ? (
-                    <div className="w-4 h-4 border-2 border-[#4FFFB0]/30 border-t-[#4FFFB0] rounded-full animate-spin" />
-                  ) : (
-                    '復元'
-                  )}
+                  詳細
                 </button>
               </div>
             </motion.div>
@@ -1992,9 +1910,9 @@ function GoalSelectScreen({ onSelect, onAddConstellation, onBack, cachedGoals, c
   const [loading, setLoading] = useState(!cacheLoaded);
 
   useEffect(() => {
-    // キャッシュがある場合は使用
+    // キャッシュがある場合は使用（アーカイブされていない目標のみ）
     if (cachedGoals && cacheLoaded) {
-      setGoals(cachedGoals);
+      setGoals(cachedGoals.filter(g => !g.archived_at));
       setLoading(false);
       return;
     }
@@ -2592,8 +2510,6 @@ export function HorizonPage() {
   // 編集モード用の状態
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   
-  const [sessionMemories, setSessionMemories] = useState<SessionMemory[]>([]);
-  const [hoveredMemory, setHoveredMemory] = useState<SessionMemory | null>(null);
   const [showMessenger, setShowMessenger] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
@@ -2606,8 +2522,8 @@ export function HorizonPage() {
   // キャッシュを更新する関数
   const refreshCache = async () => {
     console.log('Refreshing cache...');
-    // 目標を再取得
-    const goalsResult = await getActiveGoals();
+    // 目標を再取得（アーカイブ含む全ての目標を取得）
+    const goalsResult = await getGoals();
     if (goalsResult.success) {
       setGoalsCache(goalsResult.data);
       console.log('Goals cache updated:', goalsResult.data.length, 'goals');
@@ -2631,47 +2547,16 @@ export function HorizonPage() {
     };
   }, []);
 
-  // 初期ロード時に目標を取得してキャッシュ
+  // 初期ロード時に目標を取得してキャッシュ（アーカイブ含む全ての目標）
   useEffect(() => {
     const loadGoals = async () => {
-      const result = await getActiveGoals();
+      const result = await getGoals();
       if (result.success) {
         setGoalsCache(result.data);
       }
       setGoalsCacheLoaded(true);
     };
     loadGoals();
-  }, []);
-
-  // 初期のセッションメモリーをモック
-  useEffect(() => {
-    const mockMemories: SessionMemory[] = [
-      {
-        id: '1',
-        angle: Math.PI * 0.2,
-        radius: 4.5,
-        time: '14:30',
-        memory: '集中の波紋が広がった瞬間',
-        color: '#4FFFB0'
-      },
-      {
-        id: '2',
-        angle: Math.PI * 0.6,
-        radius: 4.5,
-        time: '16:15',
-        memory: '静寂の中で思考が深まる',
-        color: '#22D3EE'
-      },
-      {
-        id: '3',
-        angle: Math.PI * 1.2,
-        radius: 4.5,
-        time: '19:00',
-        memory: '新たな発見の光',
-        color: '#A5F3FC'
-      },
-    ];
-    setSessionMemories(mockMemories);
   }, []);
 
   // セッションがアクティブになったらflowStepを更新
@@ -2758,17 +2643,6 @@ export function HorizonPage() {
     setFlowStep('idle');
     setSelectedGoal(null);
 
-    // 新しいセッションメモリーを追加
-    const newMemory: SessionMemory = {
-      id: Date.now().toString(),
-      angle: Math.random() * Math.PI * 2,
-      radius: 4.5,
-      time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-      memory: data.reflection || '光の残滓が軌道に刻まれた',
-      color: ['#4FFFB0', '#22D3EE', '#A5F3FC'][Math.floor(Math.random() * 3)]
-    };
-    setSessionMemories(prev => [...prev, newMemory]);
-
     // バックグラウンドでセッションをデータベースに保存
     const completedSession: CompletedSession = {
       id: "", // saveSessionで設定される
@@ -2817,10 +2691,6 @@ export function HorizonPage() {
     saveSession(completedSession).catch((error) => {
       console.error('セッション保存エラー:', error);
     });
-  };
-
-  const handleMemoryHover = (memory: SessionMemory | null) => {
-    setHoveredMemory(memory);
   };
 
   const handleGoalsClick = () => {
@@ -2872,6 +2742,30 @@ export function HorizonPage() {
     } else {
       console.error('Failed to delete goal:', result.error);
       alert('目標の削除に失敗しました: ' + result.error);
+    }
+  };
+
+  const handleArchiveConstellation = async (goalId: string) => {
+    // 目標をアーカイブ（星座を見えなくする）
+    console.log('Archiving goal:', goalId);
+    const result = await archiveGoal(goalId);
+    if (result.success) {
+      console.log('Goal archived successfully');
+      // キャッシュを更新
+      await refreshCache();
+      
+      // アーカイブ後、残りの星座の数を確認
+      const remainingConstellations = goalsCache.filter(
+        g => g.id !== goalId && g.constellation_nodes && g.constellation_edges && !g.archived_at
+      );
+      
+      // 最後の星座をアーカイブした場合はホームに戻る
+      if (remainingConstellations.length === 0) {
+        setFlowStep('idle');
+      }
+    } else {
+      console.error('Failed to archive goal:', result.error);
+      alert('目標のアーカイブに失敗しました: ' + result.error);
     }
   };
 
@@ -3028,8 +2922,6 @@ export function HorizonPage() {
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 12], fov: 45 }}>
           <SceneContent 
-            sessionMemories={sessionMemories}
-            onMemoryHover={handleMemoryHover}
             goals={goalsCache}
           />
         </Canvas>
@@ -3072,10 +2964,10 @@ export function HorizonPage() {
       <AnimatePresence>
         {showSettings && (
           <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          transition={{ duration: 0.5 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-8"
           >
             <SettingsModal onClose={() => setShowSettings(false)} />
@@ -3087,13 +2979,17 @@ export function HorizonPage() {
       <AnimatePresence>
         {showArchive && (
           <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
+          transition={{ duration: 0.5 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-8"
           >
-            <GalaxyArchiveScreen onBack={() => setShowArchive(false)} />
+            <GalaxyArchiveScreen 
+              onBack={() => setShowArchive(false)} 
+              goalsCache={goalsCache}
+              onRefresh={refreshCache}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -3129,6 +3025,7 @@ export function HorizonPage() {
         onManageConstellations={handleManageConstellations}
         onEditConstellation={handleEditConstellation}
         onDeleteConstellation={handleDeleteConstellation}
+        onArchiveConstellation={handleArchiveConstellation}
         onConstellationListBack={handleConstellationListBack}
         onGoalInputNext={handleGoalInputNext}
         onConstellationVisualizerBack={handleConstellationVisualizerBack}
